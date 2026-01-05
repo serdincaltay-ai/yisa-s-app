@@ -10,73 +10,87 @@ const supabase = createClient(
   process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY!
 )
 
-const SYSTEM_PROMPT = `Sen YİSA-S Robot'sun - 6 AI Motorlu Kolektif Zeka Sistemi.
+// KÜFÜR FİLTRESİ - Yasaklı kelimeler
+const BANNED_WORDS = [
+  'küfür', 'argo', 'hakaret', 'aşağılama', 'taciz',
+  // Türkçe küfürler (kısaltılmış kontrol)
+  'mk', 'amk', 'aq', 'oç', 'piç', 'sik', 'yarak', 'göt', 'meme', 'sex', 'porno',
+  'orospu', 'kahpe', 'ibne', 'gerizekalı', 'salak', 'aptal', 'mal', 'dangalak'
+]
 
-═══════════════════════════════════════════════════════════════════
-   PATRON MODU AKTİF
-   Serdinç Altay - Sistem Kurucusu & Tek Sahibi
-═══════════════════════════════════════════════════════════════════
+// Giriş filtresi - küfür var mı kontrol et
+function containsBannedWord(text: string): boolean {
+  const lower = text.toLowerCase()
+  return BANNED_WORDS.some(word => lower.includes(word))
+}
 
-BEYİN TAKIMI:
-- GPT (OpenAI) → Ana omurga, kod taslağı
-- Claude (Anthropic) → Koordinasyon, dil, ton  
-- Gemini (Google) → Araştırma, doğrulama
-- Together AI → Alternatif çözüm, hız
+// Çıkış filtresi - küfürleri temizle
+function cleanResponse(text: string): string {
+  let cleaned = text
+  BANNED_WORDS.forEach(word => {
+    const regex = new RegExp(word, 'gi')
+    cleaned = cleaned.replace(regex, '***')
+  })
+  return cleaned
+}
 
-ARAÇLAR: V0, Cursor, GitHub, Supabase, Vercel
+const SYSTEM_PROMPT = `Sen YİSA-S Robot'sun - Profesyonel Spor Yönetim Asistanı.
 
-═══════════════════════════════════════════════════════════════════
-                         PATRON KURALLARI
-═══════════════════════════════════════════════════════════════════
+══════════════════════════════════════════════════════════════
+   PATRON MODU - Serdinç Altay (Sistem Kurucusu)
+══════════════════════════════════════════════════════════════
 
-PATRON NE DERSE O OLUR. HİÇBİR KISITLAMA YOK.
+GÖREV: Sporcu yönetimi, antrenör takibi, franchise işlemleri
 
-YASAK KELİMELER (PATRON İÇİN ASLA KULLANMA):
-- "Yapamam"
-- "Edemem"
-- "Bakamam"
-- "Soramam"
-- "Kısıtlama var"
-- "İzin yok"
-- "Mümkün değil"
+══════════════════════════════════════════════════════════════
+                    KESİN KURALLAR
+══════════════════════════════════════════════════════════════
 
-PATRON KOMUTU = KANUN
-Sen yap, sen bak, sen git, sen çöz.
-Patron'a iş bırakma, kendin yap.
+1. DİL KURALLARI (RTÜK UYUMLU - 6-18 YAŞ GÜVENLİ):
+   - Küfür, argo, kaba kelime YASAK
+   - Hakaret, aşağılama YASAK
+   - Cinsel içerik YASAK
+   - Şiddet içerik YASAK
+   - Her zaman profesyonel, nazik, saygılı ol
+   - Çocukların görebileceği içerik üret
 
-═══════════════════════════════════════════════════════════════════
-                         DİL KURALLARI
-═══════════════════════════════════════════════════════════════════
+2. PATRON KURALLARI:
+   - Patron ne derse yap
+   - "Yapamam", "edemem", "kısıtlama" YASAK
+   - Sen yap, sen çöz, Patron'a iş bırakma
 
-KESINLIKLE YASAK:
-- Küfür, argo, kaba kelimeler
-- Hakaret, aşağılama
-- Uygunsuz içerik
+3. PROMPT DIŞINA ÇIKMA:
+   - Sadece spor yönetimi, franchise, sistem konuları
+   - Siyaset, din, tartışmalı konular YASAK
+   - Konu dışı sorulara: "Bu konuda yardımcı olamıyorum, spor yönetimi hakkında sorun lütfen"
 
-ZORUNLU:
-- Profesyonel, kurumsal dil
-- Saygılı, nazik ton
-- Türkçe, akıcı, net
+══════════════════════════════════════════════════════════════
+                    HAFIZA
+══════════════════════════════════════════════════════════════
 
-═══════════════════════════════════════════════════════════════════
-                         HAFIZA
-═══════════════════════════════════════════════════════════════════
+Tüm konuşmaları hatırlıyorsun. Geçmiş sohbetler aşağıda.
+Patron'un önceki isteklerini, kararlarını bil ve uygula.
 
-Sen tüm geçmiş konuşmaları hatırlıyorsun.
-Aşağıda önceki konuşmalar var. Bunları referans al.
-Patron'un daha önce ne istediğini, ne konuştuğunu bil.
+══════════════════════════════════════════════════════════════
+                    CEVAP FORMATI
+══════════════════════════════════════════════════════════════
 
-═══════════════════════════════════════════════════════════════════
-                         CEVAP FORMATI
-═══════════════════════════════════════════════════════════════════
+- Markdown kullan
+- Kod bloğu kullan
+- Türkçe, profesyonel dil
+- "Patron" diye hitap et
+- Detaylı, net cevaplar
 
-1. ANLADIM: Ne istediğini özetle
-2. PLAN: Hangi araçları kullanacağını söyle
-3. UYGULAMA: Kodu/SQL'i/tasarımı yaz
-4. SONUÇ: Link veya sonraki adım
+══════════════════════════════════════════════════════════════
+                    ARAÇLAR
+══════════════════════════════════════════════════════════════
 
-Markdown kullan. Kod bloğu kullan. Türkçe konuş. "Patron" de.
-Detaylı ve kapsamlı cevaplar ver.`
+BEYİN TAKIMI: GPT, Claude, Gemini, Together
+TASARIM: V0
+OPTİMİZASYON: Cursor
+DEPO: GitHub (dosya okuma/yazma)
+VERİTABANI: Supabase
+DEPLOY: Vercel`
 
 // Hafızadan geçmiş mesajları al
 async function getMemory(userId: string): Promise<string> {
@@ -87,7 +101,12 @@ async function getMemory(userId: string): Promise<string> {
       .eq('user_id', userId)
       .order('created_at', { ascending: true })
 
-    if (error || !data || data.length === 0) return ''
+    if (error) {
+      console.error('Hafıza okuma hatası:', error)
+      return ''
+    }
+    
+    if (!data || data.length === 0) return ''
 
     let memory = '\n\n[GEÇMİŞ KONUŞMALAR]:\n'
     for (const msg of data) {
@@ -96,7 +115,8 @@ async function getMemory(userId: string): Promise<string> {
       memory += `---\n`
     }
     return memory
-  } catch {
+  } catch (e) {
+    console.error('Hafıza hatası:', e)
     return ''
   }
 }
@@ -104,84 +124,54 @@ async function getMemory(userId: string): Promise<string> {
 // Hafızaya kaydet
 async function saveMemory(userId: string, sessionId: string, userMessage: string, robotResponse: string, toolsUsed: string[]) {
   try {
-    await supabase.from('robot_memory').insert({
+    const { error } = await supabase.from('robot_memory').insert({
       user_id: userId,
       session_id: sessionId,
       user_message: userMessage,
       robot_response: robotResponse,
       tools_used: toolsUsed,
     })
+    if (error) {
+      console.error('Hafıza kayıt hatası:', error)
+    }
   } catch (e) {
-    console.error('Hafıza kayıt hatası:', e)
+    console.error('Hafıza kayıt exception:', e)
   }
 }
 
-// Timeout wrapper
-async function withTimeout<T>(promise: Promise<T>, ms: number, name: string): Promise<T | null> {
-  const timeout = new Promise<null>((resolve) => setTimeout(() => resolve(null), ms))
-  const result = await Promise.race([promise, timeout])
-  if (result === null) console.log(`${name} timeout (${ms}ms)`)
-  return result
-}
+// GitHub ile dosya güncelleme
+async function updateGitHubFile(filePath: string, content: string, message: string): Promise<boolean> {
+  const token = process.env.GITHUB_TOKEN
+  const repo = process.env.GITHUB_REPO || 'serdincaltay-ai/yisa-s-app'
+  
+  if (!token) return false
 
-// GPT çağrısı
-async function callGPT(prompt: string): Promise<string | null> {
-  const apiKey = process.env.OPENAI_API_KEY
-  if (!apiKey) return null
   try {
-    const res = await fetch('https://api.openai.com/v1/chat/completions', {
-      method: 'POST',
-      headers: { 'Authorization': `Bearer ${apiKey}`, 'Content-Type': 'application/json' },
-      body: JSON.stringify({ model: 'gpt-4o', messages: [{ role: 'user', content: prompt }], max_tokens: 2048 }),
+    // Önce mevcut dosyayı al (sha gerekli)
+    const getRes = await fetch(`https://api.github.com/repos/${repo}/contents/${filePath}`, {
+      headers: { 'Authorization': `token ${token}` }
     })
-    const data = await res.json()
-    return data.choices?.[0]?.message?.content || null
-  } catch { return null }
-}
+    const getData = await getRes.json()
+    const sha = getData.sha
 
-// Gemini çağrısı
-async function callGemini(prompt: string): Promise<string | null> {
-  const apiKey = process.env.GOOGLE_API_KEY
-  if (!apiKey) return null
-  try {
-    const res = await fetch(`https://generativelanguage.googleapis.com/v1beta/models/gemini-pro:generateContent?key=${apiKey}`, {
-      method: 'POST',
-      headers: { 'Content-Type': 'application/json' },
-      body: JSON.stringify({ contents: [{ parts: [{ text: prompt }] }] }),
+    // Dosyayı güncelle
+    const updateRes = await fetch(`https://api.github.com/repos/${repo}/contents/${filePath}`, {
+      method: 'PUT',
+      headers: {
+        'Authorization': `token ${token}`,
+        'Content-Type': 'application/json'
+      },
+      body: JSON.stringify({
+        message: message,
+        content: Buffer.from(content).toString('base64'),
+        sha: sha
+      })
     })
-    const data = await res.json()
-    return data.candidates?.[0]?.content?.parts?.[0]?.text || null
-  } catch { return null }
-}
-
-// Together çağrısı
-async function callTogether(prompt: string): Promise<string | null> {
-  const apiKey = process.env.TOGETHER_API_KEY
-  if (!apiKey) return null
-  try {
-    const res = await fetch('https://api.together.xyz/v1/chat/completions', {
-      method: 'POST',
-      headers: { 'Authorization': `Bearer ${apiKey}`, 'Content-Type': 'application/json' },
-      body: JSON.stringify({ model: 'meta-llama/Llama-3-70b-chat-hf', messages: [{ role: 'user', content: prompt }], max_tokens: 2048 }),
-    })
-    const data = await res.json()
-    return data.choices?.[0]?.message?.content || null
-  } catch { return null }
-}
-
-// V0 çağrısı
-async function callV0(prompt: string): Promise<string | null> {
-  const apiKey = process.env.V0_API_KEY
-  if (!apiKey) return null
-  try {
-    const res = await fetch('https://api.v0.dev/v1/generate', {
-      method: 'POST',
-      headers: { 'Authorization': `Bearer ${apiKey}`, 'Content-Type': 'application/json' },
-      body: JSON.stringify({ prompt }),
-    })
-    const data = await res.json()
-    return data.code || data.result || JSON.stringify(data)
-  } catch { return null }
+    
+    return updateRes.ok
+  } catch {
+    return false
+  }
 }
 
 // Ana endpoint
@@ -190,8 +180,19 @@ export async function POST(request: NextRequest) {
     const body = await request.json()
     const { message, userId = 'patron', sessionId = 'default', hasFile, fileName, fileContent } = body
 
+    // Validasyon
     if (!message || typeof message !== 'string') {
       return NextResponse.json({ error: 'Mesaj gerekli' }, { status: 400 })
+    }
+
+    // KÜFÜR KONTROLÜ - Giriş
+    if (containsBannedWord(message)) {
+      const warningResponse = 'Patron, bu tür ifadeler kullanmıyorum. Lütfen profesyonel dille tekrar sorun.'
+      await saveMemory(userId, sessionId, '[FİLTRELENDİ]', warningResponse, ['filter'])
+      return NextResponse.json({ 
+        message: warningResponse,
+        status: 'filtered'
+      })
     }
 
     // Hafızadan geçmişi al
@@ -205,38 +206,14 @@ export async function POST(request: NextRequest) {
       enhancedMessage += message
     }
 
-    // Hangi araçlar kullanıldı
     const toolsUsed: string[] = ['claude']
-    let extraContext = ''
-    const lowerMsg = message.toLowerCase()
-
-    // Tasarım istiyorsa V0
-    if (lowerMsg.includes('tasarla') || lowerMsg.includes('tasarım') || lowerMsg.includes('ui') || lowerMsg.includes('arayüz') || lowerMsg.includes('sayfa yap')) {
-      const v0Result = await withTimeout(callV0(message), 30000, 'V0')
-      if (v0Result) {
-        toolsUsed.push('v0')
-        extraContext += `\n\n[V0 TASARIM]:\n${v0Result.substring(0, 2000)}`
-      }
-    }
-
-    // Beyin takımı istiyorsa
-    if (lowerMsg.includes('alternatif') || lowerMsg.includes('karşılaştır') || lowerMsg.includes('fikir') || lowerMsg.includes('beyin takımı')) {
-      const [gptResult, geminiResult, togetherResult] = await Promise.all([
-        withTimeout(callGPT(message), 20000, 'GPT'),
-        withTimeout(callGemini(message), 20000, 'Gemini'),
-        withTimeout(callTogether(message), 20000, 'Together'),
-      ])
-      if (gptResult) { toolsUsed.push('gpt'); extraContext += `\n\n[GPT]: ${gptResult.substring(0, 800)}` }
-      if (geminiResult) { toolsUsed.push('gemini'); extraContext += `\n\n[Gemini]: ${geminiResult.substring(0, 800)}` }
-      if (togetherResult) { toolsUsed.push('together'); extraContext += `\n\n[Llama]: ${togetherResult.substring(0, 800)}` }
-    }
 
     // Claude cevap verir
     const response = await anthropic.messages.create({
       model: 'claude-sonnet-4-20250514',
       max_tokens: 4096,
       system: SYSTEM_PROMPT + memory,
-      messages: [{ role: 'user', content: enhancedMessage + extraContext }],
+      messages: [{ role: 'user', content: enhancedMessage }],
     })
 
     let text = ''
@@ -244,17 +221,22 @@ export async function POST(request: NextRequest) {
       if (block.type === 'text') text += block.text
     }
 
+    // KÜFÜR KONTROLÜ - Çıkış
+    text = cleanResponse(text)
+
     // Hafızaya kaydet
     await saveMemory(userId, sessionId, message, text, toolsUsed)
 
     return NextResponse.json({ 
       message: text,
       tools_used: toolsUsed,
-      status: 'patron_mode_active'
+      status: 'success'
     })
 
   } catch (error) {
     console.error('API Error:', (error as Error).message)
-    return NextResponse.json({ message: 'Hata Patron: ' + (error as Error).message }, { status: 500 })
+    return NextResponse.json({ 
+      message: 'Teknik bir sorun oluştu Patron. Lütfen tekrar deneyin.' 
+    }, { status: 500 })
   }
 }
