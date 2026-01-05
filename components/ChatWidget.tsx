@@ -87,11 +87,13 @@ export default function ChatWidget() {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({ 
-          message: messageContent,
-          hasFile: !!file,
-          fileType: file?.type,
-          fileName: file?.name
-        })
+  message: messageContent,
+  userId: 'patron',
+  sessionId: Date.now().toString(),
+  hasFile: !!file,
+  fileName: file?.name,
+  fileContent: fileContent
+})
       })
 
       const data = await res.json()
