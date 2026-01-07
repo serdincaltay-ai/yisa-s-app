@@ -1,4 +1,3 @@
-ts
 import { createClient } from "@supabase/supabase-js";
 
 export async function GET() {
@@ -13,7 +12,10 @@ export async function GET() {
   }
 
   const supabase = createClient(url, serviceKey);
-  const { data, error } = await supabase.from("tenants").select("id").limit(1);
+  const { data, error } = await supabase
+    .from("tenants")
+    .select("id")
+    .limit(1);
 
   if (error) {
     return Response.json({ ok: false, error: error.message }, { status: 500 });
