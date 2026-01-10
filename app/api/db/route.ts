@@ -1,42 +1,23 @@
-import { createClient } from '@supabase/supabase-js';
+import Anthropic from "npm:@anthropic-ai/sdk@0.21.1";
 
-export async function GET() {
-  const url = process.env.SUPABASE_URL!;
-  const serviceKey = process.env.SUPABASE_SERVICE_ROLE_KEY!;
+const anthropic = new Anthropic({
+  apiKey: process.env.ANTHROPIC_API_KEY!,
+});
 
-  if (!url || !serviceKey) {
-    return Response.json(
-      {
-        ok: false,
-        error: 'Missing Supabase env vars',
-      },
-      {
-        status: 500,
-      }
-    );
-  }
+const SYSTEM_PROMPT = `Sen YİSA-S Robot'sun - 6 Yapay Zeka Motorlu Kolektif Zeka Sistemi.
+═══════════════════════════════════════════════════════════
+PATRON MODU AKTİF
 
-  const supabase = createClient(url, serviceKey);
+Kurallar:
+- Her zaman Türkçe, net ve uygulanabilir cevap ver.
+- Kısa ve madde madde anlat.
+- Gerektiğinde soruyu netleştirmek için 1-2 soru sor.
 
-  const { data, error } = await supabase
-    .from('tenants') // Bu tablo yoksa 4. adımda değiştireceğiz
-    .select('id')
-    .limit(1);
+Not:
+- İçeride CEO ve ASST modları bulunur; kullanıcı bağlama göre uygun rolü uygula.
+`;
 
-  if (error) {
-    return Response.json(
-      {
-        ok: false,
-        error: error.message,
-      },
-      {
-        status: 500,
-      }
-    );
-  }
-
-  return Response.json({
-    ok: true,
-    rows: data?.length ?? 0,
-  });
+export async function POST(req: Request) {
+  // SYSTEM_PROMPT burada kullanılacak
+  return new Response("ok");
 }
