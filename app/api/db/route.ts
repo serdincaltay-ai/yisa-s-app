@@ -19,7 +19,7 @@ export async function GET() {
   const supabase = createClient(url, serviceKey);
 
   const { data, error } = await supabase
-    .from('tenants')
+    .from('tenants') // Bu tablo yoksa 4. adımda değiştireceğiz
     .select('id')
     .limit(1);
 
