@@ -1,17 +1,13 @@
+ts
 import { createClient } from "@supabase/supabase-js";
 
 export async function GET() {
-  const url = process.env.NEXT_PUBLIC_SUPABASE_URL!;
-  const serviceKey = process.env.SUPABASE_SERVICE_ROLE_KEY!;
 
-  if (!url || !serviceKey) {
-    return Response.json(
-      { ok: false, error: "Missing SUPABASE env vars" },
-      { status: 500 }
-    );
+@@ -13,12 +12,15 @@
   }
 
   const supabase = createClient(url, serviceKey);
+  const { data, error } = await supabase.from("tenants").select("id").limit(1);
   const { data, error } = await supabase
     .from("tenants")
     .select("id")
