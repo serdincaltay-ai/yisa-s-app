@@ -3,34 +3,29 @@
 import { useState } from 'react'
 import { useRouter } from 'next/navigation'
 import { supabase } from '@/lib/supabase'
-import { createClient } from '@supabase/supabase-js'
-
-const supabase = createClient(
-  process.env.NEXT_PUBLIC_SUPABASE_URL!,
-  process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY!
-)
 
 export default function LoginPage() {
   const [email, setEmail] = useState('')
+  const [password, setPassword] = useState('')
+  const [loading, setLoading] = useState(false)
+  const [error, setError] = useState('')
+  const router = useRouter()
 
-@@ -16,7 +21,7 @@ export default function LoginPage() {
+  const handleLogin = async (e: React.FormEvent) => {
+    e.preventDefault()
     setLoading(true)
     setError('')
 
     const { error } = await supabase.auth.signInWithPassword({
-    const { data, error } = await supabase.auth.signInWithPassword({
       email,
       password,
     })
 
-@@ -25,14 +30,15 @@ export default function LoginPage() {
+    if (error) {
       setError('E-posta veya şifre hatalı')
       setLoading(false)
     } else {
       router.push('/dashboard')
-      // Cookie'ye token kaydet
-      document.cookie = `sb-access-token=${data.session?.access_token}; path=/; max-age=604800`
-      router.push('/panel/dashboard')
     }
   }
 
@@ -41,8 +36,8 @@ export default function LoginPage() {
         <div className="text-center mb-8">
           <div className="w-16 h-16 rounded-2xl bg-gradient-to-br from-amber-500 to-orange-600 flex items-center justify-center mx-auto mb-4">
             <span className="text-slate-900 font-bold text-2xl">Y</span>
-
-@@ -41,7 +47,6 @@ export default function LoginPage() {
+          </div>
+          <h1 className="text-2xl font-bold text-white">YİSA-S</h1>
           <p className="text-slate-400">Patron Paneli</p>
         </div>
 
@@ -50,8 +45,17 @@ export default function LoginPage() {
         <form onSubmit={handleLogin} className="bg-slate-800/50 border border-slate-700 rounded-2xl p-8">
           <h2 className="text-xl font-semibold text-white mb-6 text-center">Giriş Yap</h2>
 
+          {error && (
+            <div className="mb-4 p-3 bg-red-500/10 border border-red-500/30 rounded-lg text-red-400 text-sm">
+              {error}
+            </div>
+          )}
 
-@@ -59,7 +64,6 @@ export default function LoginPage() {
+          <div className="mb-4">
+            <label className="block text-sm text-slate-400 mb-2">E-posta</label>
+            <input
+              type="email"
+              value={email}
               onChange={(e) => setEmail(e.target.value)}
               required
               className="w-full px-4 py-3 bg-slate-900 border border-slate-700 rounded-xl text-white focus:border-amber-500 focus:outline-none"
@@ -59,8 +63,11 @@ export default function LoginPage() {
             />
           </div>
 
-
-@@ -71,24 +75,23 @@
+          <div className="mb-6">
+            <label className="block text-sm text-slate-400 mb-2">Şifre</label>
+            <input
+              type="password"
+              value={password}
               onChange={(e) => setPassword(e.target.value)}
               required
               className="w-full px-4 py-3 bg-slate-900 border border-slate-700 rounded-xl text-white focus:border-amber-500 focus:outline-none"
@@ -72,7 +79,6 @@ export default function LoginPage() {
             type="submit"
             disabled={loading}
             className="w-full py-3 bg-gradient-to-r from-amber-500 to-orange-600 text-slate-900 font-semibold rounded-xl hover:shadow-lg hover:shadow-amber-500/30 transition-all disabled:opacity-50"
-            className="w-full py-3 bg-gradient-to-r from-amber-500 to-orange-600 text-slate-900 font-semibold rounded-xl hover:shadow-lg transition-all disabled:opacity-50"
           >
             {loading ? 'Giriş yapılıyor...' : 'Giriş Yap'}
           </button>
