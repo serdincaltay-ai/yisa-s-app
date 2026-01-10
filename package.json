@@ -1,18 +1,22 @@
 {
   "name": "yisa-s-app",
+  "version": "1.0.0",
   "private": true,
   "scripts": {
     "dev": "next dev",
-    "build": "next build",
-    "start": "next start",
+
+@@ -9,10 +8,21 @@
     "worker": "node worker/index.js"
   },
   "dependencies": {
+    "@anthropic-ai/sdk": "^0.24.0",
+    "@supabase/supabase-js": "^2.39.7",
     "next": "14.2.35",
     "react": "18.2.0",
+    "react-dom": "18.2.0"
     "react-dom": "18.2.0",
     "@supabase/supabase-js": "^2.39.7",
-    "@anthropic-ai/sdk": "^0.32.0",
+    "@anthropic-ai/sdk": "^0.24.0",
     "framer-motion": "^11.0.0",
     "lucide-react": "^0.460.0"
   },
