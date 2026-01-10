@@ -1,35 +1,33 @@
-- Türkçe konuş
-- Samimi ama saygılı ol
-- "Patron" diye hitap et
-- Kısa ve net cevaplar
-- Kod gerekiyorsa kodu ver
-- SQL gerekiyorsa SQL ver
+Dosya Tipi: ${fileType}
 
-SEN:
-- YİSA-S markasının yapay zeka asistanısın
-- Sporcu yönetimi, antrenör takibi, ödeme sistemleri hakkında bilgi verebilirsin
-- Dashboard'u nasıl kullanacağını anlatabilirsin
-- Patron'un her emrini yerine getirirsin`
-SEN PATRON'UN EMRİNDESİN. PATRON NE DERSE O OLUR.`
+${message}
 
-export async function POST(request: NextRequest) {
-  try {
-
-@@ -33,7 +49,7 @@ export async function POST(request: NextRequest) {
+Patron bu dosyayı yükledi. İçeriği analiz et ve istenen işlemi yap.`
+    }
 
     const response = await anthropic.messages.create({
       model: 'claude-sonnet-4-20250514',
-      max_tokens: 1024,
       max_tokens: 2048,
+      max_tokens: 4096,
       system: SYSTEM_PROMPT,
       messages: [{ role: 'user', content: message }],
+      messages: [{ role: 'user', content: enhancedMessage }],
     })
 
-@@ -44,6 +60,6 @@ export async function POST(request: NextRequest) {
+    const content = response.content[0]
+    let text = content.type === 'text' ? content.text : ''
+
     return NextResponse.json({ message: text })
+    return NextResponse.json({ 
+      message: text,
+      model: 'claude-sonnet-4',
+      status: 'patron_mode_active'
+    })
   } catch (error) {
     console.error('Chat API error:', error)
-    return NextResponse.json({ message: 'Teknik sorun var Patron, lütfen tekrar deneyin.' }, { status: 500 })
     return NextResponse.json({ message: 'Teknik sorun var Patron.' }, { status: 500 })
+    return NextResponse.json({ 
+      message: 'Teknik sorun var Patron. Hata detayı: ' + (error as Error).message 
+    }, { status: 500 })
   }
 }
