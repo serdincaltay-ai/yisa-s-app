@@ -1,215 +1,135 @@
 'use client'
 
-import { useState, useRef, useEffect } from 'react'
+import { useEffect, useState } from 'react'
 import { useRouter } from 'next/navigation'
-import { createClient } from '@supabase/supabase-js'
-import { Send, Paperclip, X, FileText, Image, LogOut } from 'lucide-react'
-
-const supabase = createClient(
-  process.env.NEXT_PUBLIC_SUPABASE_URL!,
-  process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY!
-)
-
-interface Message {
-  id: string
-  role: 'user' | 'assistant'
-  content: string
-  file?: { name: string; type: string }
-}
+import { supabase } from '@/lib/supabase'
+import { LogOut, Home, Users, Settings, BarChart3, MessageSquare } from 'lucide-react'
 
 export default function DashboardPage() {
   const [user, setUser] = useState<any>(null)
-  const [messages, setMessages] = useState<Message[]>([
-    { id: '1', role: 'assistant', content: 'Merhaba Patron! Ben YİSA-S Robot. Emrinizdeyim.' }
-  ])
-  const [input, setInput] = useState('')
-  const [loading, setLoading] = useState(false)
-  const [file, setFile] = useState<File | null>(null)
-  const [fileContent, setFileContent] = useState('')
-  const messagesEndRef = useRef<HTMLDivElement>(null)
-  const fileInputRef = useRef<HTMLInputElement>(null)
-  const textareaRef = useRef<HTMLTextAreaElement>(null)
+  const [loading, setLoading] = useState(true)
   const router = useRouter()
 
   useEffect(() => {
-    getUser()
+    checkUser()
   }, [])
 
-  useEffect(() => {
-    messagesEndRef.current?.scrollIntoView({ behavior: 'smooth' })
-  }, [messages])
-
-  useEffect(() => {
-    if (textareaRef.current) {
-      textareaRef.current.style.height = 'auto'
-      textareaRef.current.style.height = Math.min(textareaRef.current.scrollHeight, 150) + 'px'
-    }
-  }, [input])
-
-  const getUser = async () => {
+  const checkUser = async () => {
     const { data: { user } } = await supabase.auth.getUser()
-    if (user) setUser(user)
-  }
-
-  const handleLogout = async () => {
-    await supabase.auth.signOut()
-    document.cookie = 'sb-access-token=; path=/; max-age=0'
-    router.push('/')
-  }
-
-  const handleFileSelect = async (e: React.ChangeEvent<HTMLInputElement>) => {
-    const selectedFile = e.target.files?.[0]
-    if (!selectedFile) return
-    setFile(selectedFile)
-    if (selectedFile.type.startsWith('text/') || selectedFile.name.match(/\.(txt|md|json|csv)$/)) {
-      setFileContent(await selectedFile.text())
-    }
-  }
-
-  const removeFile = () => {
-    setFile(null)
-    setFileContent('')
-    if (fileInputRef.current) fileInputRef.current.value = ''
-  }
-
-  const sendMessage = async () => {
-    if ((!input.trim() && !file) || loading) return
-
-    let messageContent = input.trim()
-    if (file && fileContent) {
-      messageContent = `[Dosya: ${file.name}]\n\n${fileContent.substring(0, 3000)}\n\n${messageContent || 'Analiz et.'}`
-    }
-
-    const userMessage: Message = {
-      id: Date.now().toString(),
-      role: 'user',
-      content: input.trim() || `Dosya: ${file?.name}`,
-      file: file ? { name: file.name, type: file.type } : undefined
-    }
-
-    setMessages(prev => [...prev, userMessage])
-    setInput('')
-    removeFile()
-    setLoading(true)
-
-    try {
-      const res = await fetch('/api/chat', {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({
-          message: messageContent,
-          userId: 'patron',
-          sessionId: Date.now().toString(),
-          hasFile: !!file,
-          fileName: file?.name,
-          fileContent
-        })
-      })
-      const data = await res.json()
-      setMessages(prev => [...prev, {
-        id: (Date.now() + 1).toString(),
-        role: 'assistant',
-        content: data.message || 'Hata oluştu.'
-      }])
-    } catch {
-      setMessages(prev => [...prev, {
-        id: (Date.now() + 1).toString(),
-        role: 'assistant',
-        content: 'Bağlantı hatası.'
-      }])
+    if (!user) {
+      router.push('/')
+    } else {
+      setUser(user)
     }
     setLoading(false)
   }
 
-  const handleKeyDown = (e: React.KeyboardEvent) => {
-    if (e.key === 'Enter' && !e.shiftKey) {
-      e.preventDefault()
-      sendMessage()
-    }
+  const handleLogout = async () => {
+    await supabase.auth.signOut()
+    router.push('/')
+  }
+
+  if (loading) {
+    return (
+      <div className="min-h-screen flex items-center justify-center bg-slate-950">
+        <div className="text-amber-500">Yükleniyor...</div>
+      </div>
+    )
   }
 
   return (
-    <div className="min-h-screen bg-slate-950 flex flex-col">
-      {/* Header */}
-      <header className="bg-slate-900 border-b border-slate-800 p-4">
-        <div className="max-w-4xl mx-auto flex items-center justify-between">
-          <div className="flex items-center gap-3">
-            <div className="w-10 h-10 rounded-xl bg-gradient-to-br from-amber-500 to-orange-600 flex items-center justify-center">
-              <span className="text-slate-900 font-bold">Y</span>
-            </div>
-            <div>
-              <h1 className="text-xl font-bold text-white">YİSA-S Patron Paneli</h1>
-              <p className="text-xs text-emerald-400">Robot Aktif</p>
-            </div>
+    <div className="min-h-screen bg-slate-950 flex">
+      {/* Sidebar */}
+      <aside className="w-64 bg-slate-900 border-r border-slate-800 p-4">
+        {/* Logo */}
+        <div className="flex items-center gap-3 mb-8">
+          <div className="w-10 h-10 rounded-xl bg-gradient-to-br from-amber-500 to-orange-600 flex items-center justify-center">
+            <span className="text-slate-900 font-bold">Y</span>
           </div>
-          <div className="flex items-center gap-4">
-            <span className="text-sm text-slate-400">{user?.email}</span>
-            <button onClick={handleLogout} className="p-2 text-slate-400 hover:text-red-400">
-              <LogOut size={20} />
-            </button>
+          <div>
+            <h1 className="font-bold text-white">YİSA-S</h1>
+            <p className="text-xs text-slate-500">Patron Paneli</p>
           </div>
         </div>
-      </header>
 
-      {/* Messages */}
-      <div className="flex-1 overflow-y-auto p-4">
-        <div className="max-w-4xl mx-auto space-y-4">
-          {messages.map((msg) => (
-            <div key={msg.id} className={`flex ${msg.role === 'user' ? 'justify-end' : 'justify-start'}`}>
-              <div className={`max-w-[80%] px-4 py-3 rounded-2xl ${msg.role === 'user' ? 'bg-amber-500 text-slate-900' : 'bg-slate-800 text-white'}`}>
-                {msg.file && (
-                  <div className="flex items-center gap-2 mb-2 text-xs opacity-75">
-                    {msg.file.type.startsWith('image/') ? <Image size={14} /> : <FileText size={14} />}
-                    {msg.file.name}
-                  </div>
-                )}
-                <div className="whitespace-pre-wrap">{msg.content}</div>
-              </div>
-            </div>
-          ))}
-          {loading && (
-            <div className="flex justify-start">
-              <div className="bg-slate-800 text-white px-4 py-3 rounded-2xl animate-pulse">Yazıyor...</div>
-            </div>
-          )}
-          <div ref={messagesEndRef} />
-        </div>
-      </div>
+        {/* Menu */}
+        <nav className="space-y-2">
+          <a href="/dashboard" className="flex items-center gap-3 px-4 py-3 rounded-xl bg-amber-500/10 text-amber-400">
+            <Home size={20} />
+            Ana Sayfa
+          </a>
+          <a href="#" className="flex items-center gap-3 px-4 py-3 rounded-xl text-slate-400 hover:bg-slate-800 hover:text-white transition-colors">
+            <Users size={20} />
+            Sporcular
+          </a>
+          <a href="#" className="flex items-center gap-3 px-4 py-3 rounded-xl text-slate-400 hover:bg-slate-800 hover:text-white transition-colors">
+            <BarChart3 size={20} />
+            Raporlar
+          </a>
+          <a href="#" className="flex items-center gap-3 px-4 py-3 rounded-xl text-slate-400 hover:bg-slate-800 hover:text-white transition-colors">
+            <MessageSquare size={20} />
+            Mesajlar
+          </a>
+          <a href="#" className="flex items-center gap-3 px-4 py-3 rounded-xl text-slate-400 hover:bg-slate-800 hover:text-white transition-colors">
+            <Settings size={20} />
+            Ayarlar
+          </a>
+        </nav>
 
-      {/* File Preview */}
-      {file && (
-        <div className="max-w-4xl mx-auto px-4">
-          <div className="p-2 bg-slate-800 rounded-lg flex items-center justify-between mb-2">
-            <div className="flex items-center gap-2 text-sm text-slate-300">
-              <FileText size={16} />
-              <span className="truncate max-w-[300px]">{file.name}</span>
-            </div>
-            <button onClick={removeFile} className="text-red-400"><X size={16} /></button>
-          </div>
-        </div>
-      )}
-
-      {/* Input */}
-      <div className="bg-slate-900 border-t border-slate-800 p-4">
-        <div className="max-w-4xl mx-auto flex gap-2 items-end">
-          <input type="file" ref={fileInputRef} onChange={handleFileSelect} className="hidden" />
-          <button onClick={() => fileInputRef.current?.click()} className="p-3 text-slate-400 hover:text-amber-500 rounded-xl">
-            <Paperclip size={20} />
-          </button>
-          <textarea
-            ref={textareaRef}
-            value={input}
-            onChange={(e) => setInput(e.target.value)}
-            onKeyDown={handleKeyDown}
-            placeholder="Komutunuzu yazın Patron..."
-            rows={1}
-            className="flex-1 px-4 py-3 bg-slate-800 border border-slate-700 rounded-xl text-white placeholder-slate-500 focus:outline-none focus:border-amber-500 resize-none"
-          />
-          <button onClick={sendMessage} disabled={loading || (!input.trim() && !file)} className="p-3 bg-gradient-to-r from-amber-500 to-orange-600 rounded-xl disabled:opacity-50">
-            <Send size={20} className="text-slate-900" />
+        {/* Logout */}
+        <div className="absolute bottom-4 left-4 right-4">
+          <button
+            onClick={handleLogout}
+            className="flex items-center gap-3 px-4 py-3 w-full rounded-xl text-slate-400 hover:bg-red-500/10 hover:text-red-400 transition-colors"
+          >
+            <LogOut size={20} />
+            Çıkış Yap
           </button>
         </div>
-      </div>
+      </aside>
+
+      {/* Main Content */}
+      <main className="flex-1 p-8">
+        {/* Header */}
+        <div className="mb-8">
+          <h1 className="text-2xl font-bold text-white">Hoş Geldin, Patron! 👋</h1>
+          <p className="text-slate-400">{user?.email}</p>
+        </div>
+
+        {/* Stats */}
+        <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6 mb-8">
+          <div className="bg-slate-800/50 border border-slate-700 rounded-2xl p-6">
+            <p className="text-slate-400 text-sm mb-1">Toplam Sporcu</p>
+            <p className="text-3xl font-bold text-white">0</p>
+          </div>
+          <div className="bg-slate-800/50 border border-slate-700 rounded-2xl p-6">
+            <p className="text-slate-400 text-sm mb-1">Aktif Antrenör</p>
+            <p className="text-3xl font-bold text-white">0</p>
+          </div>
+          <div className="bg-slate-800/50 border border-slate-700 rounded-2xl p-6">
+            <p className="text-slate-400 text-sm mb-1">Bu Ay Gelir</p>
+            <p className="text-3xl font-bold text-amber-400">₺0</p>
+          </div>
+          <div className="bg-slate-800/50 border border-slate-700 rounded-2xl p-6">
+            <p className="text-slate-400 text-sm mb-1">Demo Talepleri</p>
+            <p className="text-3xl font-bold text-emerald-400">0</p>
+          </div>
+        </div>
+
+        {/* Empty State */}
+        <div className="bg-slate-800/50 border border-slate-700 rounded-2xl p-12 text-center">
+          <div className="w-20 h-20 rounded-full bg-slate-700 flex items-center justify-center mx-auto mb-4">
+            <span className="text-4xl">🎯</span>
+          </div>
+          <h2 className="text-xl font-semibold text-white mb-2">Dashboard Hazır!</h2>
+          <p className="text-slate-400 mb-6">
+            Bu alan senin için boş bırakıldı. İstediğin şekilde tasarlayabilirsin.
+          </p>
+          <p className="text-slate-500 text-sm">
+            Robot ile konuşarak ne eklemek istediğini söyleyebilirsin.
+          </p>
+        </div>
+      </main>
     </div>
   )
 }
