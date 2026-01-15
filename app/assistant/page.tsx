@@ -64,9 +64,6 @@ export default function AssistantPage() {
     });
 
     await loadMessages(conversationId);
-
-    // ŞİMDİLİK: robot cevabını “simüle” etmiyoruz.
-    // Bir sonraki adımda: USER mesajı -> robot_intent -> job -> worker -> ROBOT mesajı.
   }
 
   async function onPickFile(file: File) {
