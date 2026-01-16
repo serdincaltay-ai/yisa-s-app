@@ -123,3 +123,4 @@ function Stat({ title, value }: { title: string; value: number }) {
     </div>
   );
 }
+import AssistantPanel from "@/components/AssistantPanel";
