@@ -13,7 +13,7 @@ interface Message {
 export default function ChatWidget() {
   const [isOpen, setIsOpen] = useState(false)
   const [messages, setMessages] = useState<Message[]>([
-    { id: '1', role: 'assistant', content: 'Merhaba Patron! 👋 Ben YİSA-S Robot. Emrinizdeyim. Ne yapmamı istersiniz?' }
+    { id: '1', role: 'assistant', content: 'Merhaba Patron! Ben YİSA-S Robot. Emrinizdeyim. Ne yapmamı istersiniz?' }
   ])
   const [input, setInput] = useState('')
   const [loading, setLoading] = useState(false)
@@ -88,17 +88,13 @@ export default function ChatWidget() {
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({ 
           message: messageContent,
+          userId: 'patron',
+          sessionId: Date.now().toString(),
           hasFile: !!file,
           fileType: file?.type,
-          fileName: file?.name
+          fileName: file?.name,
+          fileContent: fileContent
         })
-  message: messageContent,
-  userId: 'patron',
-  sessionId: Date.now().toString(),
-  hasFile: !!file,
-  fileName: file?.name,
-  fileContent: fileContent
-})
       })
 
       const data = await res.json()
@@ -136,15 +132,14 @@ export default function ChatWidget() {
 
       {isOpen && (
         <div className="fixed bottom-6 right-6 w-[400px] h-[600px] bg-slate-900 border border-slate-700 rounded-2xl shadow-2xl flex flex-col z-50">
-          {/* Header */}
           <div className="flex items-center justify-between p-4 border-b border-slate-700">
             <div className="flex items-center gap-3">
               <div className="w-10 h-10 rounded-xl bg-gradient-to-br from-amber-500 to-orange-600 flex items-center justify-center">
-                <span className="text-xl">🤖</span>
+                <span className="text-xl">Y</span>
               </div>
               <div>
                 <h3 className="font-semibold text-white">YİSA-S Robot</h3>
-                <p className="text-xs text-emerald-400">● Patron Modu - Sınırsız Yetki</p>
+                <p className="text-xs text-emerald-400">Patron Modu Aktif</p>
               </div>
             </div>
             <button onClick={() => setIsOpen(false)} className="p-2 hover:bg-slate-800 rounded-lg">
@@ -152,7 +147,6 @@ export default function ChatWidget() {
             </button>
           </div>
 
-          {/* Messages */}
           <div className="flex-1 overflow-y-auto p-4 space-y-4">
             {messages.map((msg) => (
               <div key={msg.id} className={`flex ${msg.role === 'user' ? 'justify-end' : 'justify-start'}`}>
@@ -175,7 +169,6 @@ export default function ChatWidget() {
             <div ref={messagesEndRef} />
           </div>
 
-          {/* File Preview */}
           {file && (
             <div className="mx-4 mb-2 p-2 bg-slate-800 rounded-lg flex items-center justify-between">
               <div className="flex items-center gap-2 text-sm text-slate-300">
@@ -188,7 +181,6 @@ export default function ChatWidget() {
             </div>
           )}
 
-          {/* Input */}
           <div className="p-4 border-t border-slate-700">
             <div className="flex gap-2 items-end">
               <input
@@ -210,7 +202,7 @@ export default function ChatWidget() {
                 value={input}
                 onChange={(e) => setInput(e.target.value)}
                 onKeyDown={handleKeyDown}
-                placeholder="Mesajınızı yazın... (Shift+Enter: Yeni satır)"
+                placeholder="Mesajınızı yazın..."
                 rows={1}
                 className="flex-1 px-4 py-2 bg-slate-800 border border-slate-700 rounded-xl text-white placeholder-slate-500 focus:outline-none focus:border-amber-500 resize-none min-h-[40px] max-h-[120px]"
               />
@@ -222,7 +214,6 @@ export default function ChatWidget() {
                 <Send className="w-5 h-5 text-slate-900" />
               </button>
             </div>
-            <p className="text-xs text-slate-500 mt-2 text-center">Shift+Enter: Yeni satır | Enter: Gönder</p>
           </div>
         </div>
       )}
