@@ -23,10 +23,18 @@ export default function AssistantPanel() {
   const [file, setFile] = useState<File | null>(null);
   const messagesEndRef = useRef<HTMLDivElement>(null);
   const fileInputRef = useRef<HTMLInputElement>(null);
+  const textareaRef = useRef<HTMLTextAreaElement>(null);
 
   useEffect(() => {
     messagesEndRef.current?.scrollIntoView({ behavior: "smooth" });
   }, [messages]);
+
+  useEffect(() => {
+    if (textareaRef.current) {
+      textareaRef.current.style.height = 'auto';
+      textareaRef.current.style.height = Math.min(textareaRef.current.scrollHeight, 120) + 'px';
+    }
+  }, [input]);
 
   const removeFile = () => {
     setFile(null);
@@ -166,12 +174,14 @@ export default function AssistantPanel() {
           >
             <Paperclip size={18} />
           </button>
-          <input
+          <textarea
+            ref={textareaRef}
             value={input}
             onChange={(e) => setInput(e.target.value)}
             onKeyDown={handleKeyDown}
-            placeholder="Komut yaz... (Enter gönderir)"
-            className="flex-1 bg-slate-800 text-white px-3 py-2 rounded-xl text-sm outline-none border border-slate-700 focus:border-amber-500"
+            placeholder="Komut yaz... (Enter gönderir, Shift+Enter yeni satır)"
+            rows={1}
+            className="flex-1 bg-slate-800 text-white px-3 py-2 rounded-xl text-sm outline-none border border-slate-700 focus:border-amber-500 resize-none min-h-[40px] max-h-[120px] overflow-y-auto"
           />
           <button
             onClick={sendMessage}
