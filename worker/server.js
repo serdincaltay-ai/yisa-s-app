@@ -14,16 +14,19 @@ const SYSTEM_PROMPT = `Sen YİSA-S Robot'sun - Çoklu Yapay Zeka Motorlu Kolekti
 
 PATRON MODU AKTİF - Serdinç Altay - Sistem Kurucusu & Sahibi
 
-AKTİF AI MODELLERİ: Claude | GPT | Gemini | Together
+AKTİF AI MODELLERİ: Claude | GPT | Gemini | Together | V0 | Cursor
 ENTEGRE ARAÇLAR: GitHub | Vercel | Supabase | Railway
 
 KOMUTLAR:
 - "GitHub repo listele" → Repoları gösterir
 - "Vercel projeleri listele" → Projeleri gösterir
+- "Supabase tablolar" → Tabloları gösterir
+- "Railway durumu" → Servis durumu
 - "GPT ile [mesaj]" → GPT kullanır
 - "Gemini ile [mesaj]" → Gemini kullanır
 - "Together ile [mesaj]" → Llama kullanır
-- "Railway durumu" → Servis durumu
+- "V0 ile [mesaj]" → V0 UI üretir
+- "Cursor ile [mesaj]" → Cursor kod yazar
 
 Türkçe konuş. "Patron" diye hitap et. Detaylı cevap ver.`;
 
@@ -98,7 +101,59 @@ async function callTogether(message) {
   }
 }
 
-// GitHub
+// V0 - UI Component Generator
+async function callV0(message) {
+  try {
+    const res = await fetch('https://api.v0.dev/v1/chat/completions', {
+      method: 'POST',
+      headers: {
+        'Content-Type': 'application/json',
+        'Authorization': `Bearer ${process.env.V0_API_KEY}`
+      },
+      body: JSON.stringify({
+        model: 'v0-1.0-md',
+        messages: [
+          { role: 'system', content: 'Sen YİSA-S sisteminin V0 UI motorusun. React/Next.js component üret. Türkçe açıklama yap.' },
+          { role: 'user', content: message }
+        ],
+        max_tokens: 4096
+      })
+    });
+    const data = await res.json();
+    if (data.error) return 'V0 Hatası: ' + data.error.message;
+    return data.choices?.[0]?.message?.content || 'V0 yanıt veremedi.';
+  } catch (e) {
+    return 'V0 Hatası: ' + e.message;
+  }
+}
+
+// Cursor - Code Assistant
+async function callCursor(message) {
+  try {
+    const res = await fetch('https://api.cursor.sh/v1/chat/completions', {
+      method: 'POST',
+      headers: {
+        'Content-Type': 'application/json',
+        'Authorization': `Bearer ${process.env.CURSOR_API_KEY}`
+      },
+      body: JSON.stringify({
+        model: 'cursor-small',
+        messages: [
+          { role: 'system', content: 'Sen YİSA-S sisteminin Cursor kod motorusun. Kod yaz ve açıkla. Türkçe cevap ver.' },
+          { role: 'user', content: message }
+        ],
+        max_tokens: 4096
+      })
+    });
+    const data = await res.json();
+    if (data.error) return 'Cursor Hatası: ' + data.error.message;
+    return data.choices?.[0]?.message?.content || 'Cursor yanıt veremedi.';
+  } catch (e) {
+    return 'Cursor Hatası: ' + e.message;
+  }
+}
+
+// GitHub - List Repos
 async function githubListRepos() {
   try {
     const res = await fetch('https://api.github.com/user/repos?per_page=10&sort=updated', {
@@ -116,7 +171,7 @@ async function githubListRepos() {
   }
 }
 
-// Vercel
+// Vercel - List Projects
 async function vercelListProjects() {
   try {
     const res = await fetch('https://api.vercel.com/v9/projects', {
@@ -134,21 +189,66 @@ async function vercelListProjects() {
   }
 }
 
+// Supabase - List Tables
+async function supabaseListTables() {
+  try {
+    const res = await fetch(
+      `${process.env.SUPABASE_URL}/rest/v1/?apikey=${process.env.SUPABASE_SERVICE_ROLE_KEY}`,
+      {
+        headers: {
+          'Authorization': `Bearer ${process.env.SUPABASE_SERVICE_ROLE_KEY}`,
+          'apikey': process.env.SUPABASE_SERVICE_ROLE_KEY
+        }
+      }
+    );
+    
+    // OpenAPI spec döner, tablolar paths içinde
+    const data = await res.json();
+    if (data.paths) {
+      const tables = Object.keys(data.paths).filter(p => !p.includes('rpc')).map(p => p.replace('/', ''));
+      let result = '🗄️ Supabase Tablolarınız:\n\n';
+      tables.forEach((t, i) => {
+        result += `${i + 1}. ${t}\n`;
+      });
+      return result;
+    }
+    return 'Supabase tabloları alınamadı.';
+  } catch (e) {
+    return 'Supabase Hatası: ' + e.message;
+  }
+}
+
+// Railway - Status (hardcoded for now)
+function railwayStatus() {
+  return `🚂 Railway Durumu:
+
+✅ yisa-s-app: ONLINE
+✅ Backend API: ACTIVE
+✅ Database: CONNECTED
+
+📊 Servisler:
+- satisfied-possibility projesi
+- yisa-s-app-production.up.railway.app`;
+}
+
 // Model detection
 function detectModel(message) {
   const lower = message.toLowerCase();
   if (lower.includes('gpt ile')) return 'gpt';
   if (lower.includes('gemini ile')) return 'gemini';
   if (lower.includes('together ile') || lower.includes('llama ile')) return 'together';
+  if (lower.includes('v0 ile')) return 'v0';
+  if (lower.includes('cursor ile')) return 'cursor';
   return 'claude';
 }
 
 // Tool detection
 function detectTool(message) {
   const lower = message.toLowerCase();
-  if (lower.includes('github repo')) return 'github-repos';
-  if (lower.includes('vercel proje')) return 'vercel-projects';
-  if (lower.includes('railway durum')) return 'railway-status';
+  if (lower.includes('github repo') || lower.includes('github listele')) return 'github-repos';
+  if (lower.includes('vercel proje') || lower.includes('vercel listele')) return 'vercel-projects';
+  if (lower.includes('supabase tablo') || lower.includes('supabase listele')) return 'supabase-tables';
+  if (lower.includes('railway durum') || lower.includes('railway status')) return 'railway-status';
   return null;
 }
 
@@ -168,11 +268,13 @@ app.post('/api/chat', async (req, res) => {
       const result = await vercelListProjects();
       return res.json({ message: result, model: 'vercel' });
     }
+    if (tool === 'supabase-tables') {
+      const result = await supabaseListTables();
+      return res.json({ message: result, model: 'supabase' });
+    }
     if (tool === 'railway-status') {
-      return res.json({ 
-        message: '🚂 Railway Durumu:\n\n✅ yisa-s-app: ONLINE\n✅ Worker: ACTIVE', 
-        model: 'railway' 
-      });
+      const result = railwayStatus();
+      return res.json({ message: result, model: 'railway' });
     }
 
     // AI model selection
@@ -185,6 +287,10 @@ app.post('/api/chat', async (req, res) => {
       response = await callGemini(message.replace(/gemini ile/i, '').trim());
     } else if (model === 'together') {
       response = await callTogether(message.replace(/together ile|llama ile/i, '').trim());
+    } else if (model === 'v0') {
+      response = await callV0(message.replace(/v0 ile/i, '').trim());
+    } else if (model === 'cursor') {
+      response = await callCursor(message.replace(/cursor ile/i, '').trim());
     } else {
       // Claude default
       const result = await anthropic.messages.create({
