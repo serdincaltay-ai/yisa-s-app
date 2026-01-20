@@ -1,6 +1,6 @@
 'use client'
 
-import { useEffect, useState } from 'react'
+import { useEffect, useState, useMemo } from 'react'
 import { supabase } from '../lib/supabase'
 
 type Robot = {
@@ -15,6 +15,8 @@ export default function RobotDashboard() {
   const [robots, setRobots] = useState<Robot[]>([])
   const [loading, setLoading] = useState(true)
   const [errorMsg, setErrorMsg] = useState<string | null>(null)
+  const [search, setSearch] = useState('')
+  const [onlyActive, setOnlyActive] = useState(false)
 
   useEffect(() => {
     const fetchRobots = async () => {
@@ -37,6 +39,25 @@ export default function RobotDashboard() {
     fetchRobots()
   }, [])
 
+  const filteredRobots = useMemo(() => {
+    let result = robots
+
+    if (onlyActive) {
+      result = result.filter((r) => r.is_active)
+    }
+
+    if (search.trim()) {
+      const q = search.toLowerCase().trim()
+      result = result.filter(
+        (r) =>
+          r.robot_key.toLowerCase().includes(q) ||
+          r.display_name.toLowerCase().includes(q)
+      )
+    }
+
+    return result
+  }, [robots, search, onlyActive])
+
   if (loading) return <div style={{ padding: 24 }}>Yükleniyor…</div>
 
   if (errorMsg) {
@@ -52,11 +73,37 @@ export default function RobotDashboard() {
     <div style={{ padding: 24 }}>
       <h2>Robot Dashboard</h2>
 
-      {robots.length === 0 ? (
+      <div style={{ display: 'flex', gap: 16, alignItems: 'center', marginTop: 12, marginBottom: 12 }}>
+        <input
+          type="text"
+          placeholder="Ara (robot_key veya isim)"
+          value={search}
+          onChange={(e) => setSearch(e.target.value)}
+          style={{
+            padding: '8px 12px',
+            borderRadius: 6,
+            border: '1px solid #444',
+            background: 'rgba(255,255,255,0.05)',
+            color: 'inherit',
+            flex: 1,
+            maxWidth: 280,
+          }}
+        />
+        <label style={{ display: 'flex', alignItems: 'center', gap: 6, cursor: 'pointer' }}>
+          <input
+            type="checkbox"
+            checked={onlyActive}
+            onChange={(e) => setOnlyActive(e.target.checked)}
+          />
+          Sadece Aktifler
+        </label>
+      </div>
+
+      {filteredRobots.length === 0 ? (
         <p>Robot bulunamadı.</p>
       ) : (
         <div style={{ display: 'grid', gap: 12, marginTop: 12 }}>
-          {robots.map((r) => (
+          {filteredRobots.map((r) => (
             <div
               key={r.robot_key}
               style={{
