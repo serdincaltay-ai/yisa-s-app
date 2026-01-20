@@ -22,6 +22,7 @@ KOMUTLAR:
 - "Vercel projeleri listele" → Projeleri gösterir
 - "GPT ile [mesaj]" → GPT kullanır
 - "Gemini ile [mesaj]" → Gemini kullanır
+- "Together ile [mesaj]" → Llama kullanır
 - "Railway durumu" → Servis durumu
 
 Türkçe konuş. "Patron" diye hitap et. Detaylı cevap ver.`;
@@ -36,7 +37,7 @@ async function callGPT(message) {
         'Authorization': `Bearer ${process.env.OPENAI_API_KEY}`
       },
       body: JSON.stringify({
-        model: 'gpt-4-turbo-preview',
+        model: 'gpt-4o-mini',
         messages: [
           { role: 'system', content: 'Sen YİSA-S sisteminin GPT motorusun. Türkçe cevap ver.' },
           { role: 'user', content: message }
@@ -45,6 +46,7 @@ async function callGPT(message) {
       })
     });
     const data = await res.json();
+    if (data.error) return 'GPT Hatası: ' + data.error.message;
     return data.choices?.[0]?.message?.content || 'GPT yanıt veremedi.';
   } catch (e) {
     return 'GPT Hatası: ' + e.message;
@@ -55,7 +57,7 @@ async function callGPT(message) {
 async function callGemini(message) {
   try {
     const res = await fetch(
-      `https://generativelanguage.googleapis.com/v1beta/models/gemini-pro:generateContent?key=${process.env.GOOGLE_API_KEY}`,
+      `https://generativelanguage.googleapis.com/v1beta/models/gemini-1.5-flash:generateContent?key=${process.env.GOOGLE_API_KEY}`,
       {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
@@ -63,6 +65,7 @@ async function callGemini(message) {
       }
     );
     const data = await res.json();
+    if (data.error) return 'Gemini Hatası: ' + data.error.message;
     return data.candidates?.[0]?.content?.parts?.[0]?.text || 'Gemini yanıt veremedi.';
   } catch (e) {
     return 'Gemini Hatası: ' + e.message;
@@ -79,7 +82,7 @@ async function callTogether(message) {
         'Authorization': `Bearer ${process.env.TOGETHER_API_KEY}`
       },
       body: JSON.stringify({
-        model: 'meta-llama/Llama-3-70b-chat-hf',
+        model: 'meta-llama/Meta-Llama-3.1-8B-Instruct-Turbo',
         messages: [
           { role: 'system', content: 'Sen YİSA-S sisteminin Llama motorusun. Türkçe cevap ver.' },
           { role: 'user', content: message }
@@ -88,6 +91,7 @@ async function callTogether(message) {
       })
     });
     const data = await res.json();
+    if (data.error) return 'Together Hatası: ' + data.error.message;
     return data.choices?.[0]?.message?.content || 'Together yanıt veremedi.';
   } catch (e) {
     return 'Together Hatası: ' + e.message;
