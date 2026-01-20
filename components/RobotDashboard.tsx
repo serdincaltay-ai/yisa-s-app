@@ -1,6 +1,6 @@
 'use client'
 
-import { useEffect, useState } from 'react'
+import { useEffect, useMemo, useState } from 'react'
 import { supabase } from '../lib/supabase'
 
 type Robot = {
@@ -14,12 +14,16 @@ type Robot = {
 export default function RobotDashboard() {
   const [robots, setRobots] = useState<Robot[]>([])
   const [loading, setLoading] = useState(true)
-  const [errorMsg, setErrorMsg] = useState<string | null>(null)
+  const [error, setError] = useState<string | null>(null)
+  const [searchTerm, setSearchTerm] = useState('')
+  const [showActiveOnly, setShowActiveOnly] = useState(false)
 
   useEffect(() => {
     const fetchRobots = async () => {
-      setErrorMsg(null)
       try {
+        setLoading(true)
+        setError(null)
+
         const { data, error } = await supabase
           .from('robots')
           .select('robot_key,display_name,layer,is_active,created_at')
@@ -28,7 +32,7 @@ export default function RobotDashboard() {
         if (error) throw error
         setRobots((data ?? []) as Robot[])
       } catch (e: any) {
-        setErrorMsg(e?.message ?? 'Robot verisi alınamadı')
+        setError(e?.message ?? 'Bir hata oluştu')
       } finally {
         setLoading(false)
       }
@@ -37,52 +41,110 @@ export default function RobotDashboard() {
     fetchRobots()
   }, [])
 
-  if (loading) return <div style={{ padding: 24 }}>Yükleniyor…</div>
+  const filteredRobots = useMemo(() => {
+    const q = searchTerm.trim().toLowerCase()
+    return robots.filter((r) => {
+      const matchesSearch =
+        q.length === 0 ||
+        r.robot_key.toLowerCase().includes(q) ||
+        r.display_name.toLowerCase().includes(q)
 
-  if (errorMsg) {
-    return (
-      <div style={{ padding: 24 }}>
-        <h2>Robot Dashboard</h2>
-        <p style={{ color: 'tomato' }}>Hata: {errorMsg}</p>
-      </div>
-    )
+      const matchesActive = !showActiveOnly || r.is_active
+      return matchesSearch && matchesActive
+    })
+  }, [robots, searchTerm, showActiveOnly])
+
+  const grouped = useMemo(() => {
+    const groups: Record<number, Robot[]> = {}
+    for (const r of filteredRobots) {
+      const layer = Number(r.layer ?? 0)
+      if (!groups[layer]) groups[layer] = []
+      groups[layer].push(r)
+    }
+    return groups
+  }, [filteredRobots])
+
+  const sortedLayers = useMemo(
+    () => Object.keys(grouped).map(Number).sort((a, b) => a - b),
+    [grouped]
+  )
+
+  const layerTitle = (layer: number) => {
+    if (layer === 0) return 'Layer 0 — Ana Kadro'
+    if (layer === 1) return 'Layer 1 — Destek / QA'
+    return `Layer ${layer}`
   }
 
-  return (
-    <div style={{ padding: 24 }}>
-      <h2>Robot Dashboard</h2>
+  if (loading) return <div className="p-6">Yükleniyor...</div>
 
-      {robots.length === 0 ? (
-        <p>Robot bulunamadı.</p>
+  if (error) return <div className="p-6 text-red-400">Hata: {error}</div>
+
+  return (
+    <div className="p-6">
+      <h1 className="text-2xl font-bold mb-4">Robot Dashboard</h1>
+
+      {/* Filtreler */}
+      <div className="mb-4 flex flex-col md:flex-row gap-3 md:items-center">
+        <input
+          type="text"
+          placeholder="Robot key veya isim ara..."
+          value={searchTerm}
+          onChange={(e) => setSearchTerm(e.target.value)}
+          className="px-3 py-2 rounded-md border border-white/10 bg-black/20 w-full md:max-w-md"
+        />
+
+        <label className="flex items-center gap-2 select-none">
+          <input
+            type="checkbox"
+            checked={showActiveOnly}
+            onChange={(e) => setShowActiveOnly(e.target.checked)}
+          />
+          Sadece Aktifler
+        </label>
+
+        <div className="text-sm opacity-70 md:ml-auto">
+          Toplam {filteredRobots.length} robot
+        </div>
+      </div>
+
+      {/* Gruplar */}
+      {sortedLayers.length === 0 ? (
+        <div className="py-10 opacity-70">Arama kriterlerinize uygun robot bulunamadı.</div>
       ) : (
-        <div style={{ display: 'grid', gap: 12, marginTop: 12 }}>
-          {robots.map((r) => (
-            <div
-              key={r.robot_key}
-              style={{
-                border: '1px solid #333',
-                borderRadius: 10,
-                padding: 12,
-                background: 'rgba(255,255,255,0.03)',
-              }}
-            >
-              <div style={{ display: 'flex', justifyContent: 'space-between' }}>
-                <strong>{r.display_name}</strong>
-                <span
-                  style={{
-                    padding: '2px 8px',
-                    borderRadius: 999,
-                    background: r.is_active ? '#1a7f37' : '#b42318',
-                    color: 'white',
-                    fontSize: 12,
-                  }}
-                >
-                  {r.is_active ? 'Aktif' : 'Pasif'}
-                </span>
+        <div className="space-y-6">
+          {sortedLayers.map((layer) => (
+            <div key={layer}>
+              <div className="flex items-baseline gap-2 mb-3">
+                <h2 className="text-lg font-semibold">{layerTitle(layer)}</h2>
+                <span className="text-sm opacity-70">({grouped[layer].length})</span>
               </div>
 
-              <div style={{ opacity: 0.85, marginTop: 6 }}>
-                Kod: {r.robot_key} · Layer: {r.layer}
+              <div className="grid gap-3">
+                {grouped[layer].map((r) => (
+                  <div
+                    key={r.robot_key}
+                    className="border border-white/10 rounded-xl p-4 bg-black/20"
+                  >
+                    <div className="flex justify-between items-start">
+                      <div>
+                        <div className="font-semibold">{r.display_name}</div>
+                        <div className="opacity-80 mt-1">
+                          Kod: {r.robot_key} · Layer: {r.layer}
+                        </div>
+                      </div>
+
+                      <span
+                        className={`px-3 py-1 rounded-full text-sm ${
+                          r.is_active
+                            ? 'bg-green-600/80 text-white'
+                            : 'bg-red-600/80 text-white'
+                        }`}
+                      >
+                        {r.is_active ? 'Aktif' : 'Pasif'}
+                      </span>
+                    </div>
+                  </div>
+                ))}
               </div>
             </div>
           ))}
