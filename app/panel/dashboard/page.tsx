@@ -2,13 +2,8 @@
 
 import { useState, useRef, useEffect } from 'react'
 import { useRouter } from 'next/navigation'
-import { createClient } from '@supabase/supabase-js'
+import { getSupabase } from '@/lib/supabase'
 import { Send, Paperclip, X, FileText, Image, LogOut } from 'lucide-react'
-
-const supabase = createClient(
-  process.env.NEXT_PUBLIC_SUPABASE_URL!,
-  process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY!
-)
 
 interface Message {
   id: string
@@ -47,11 +42,13 @@ export default function DashboardPage() {
   }, [input])
 
   const getUser = async () => {
+    const supabase = getSupabase()
     const { data: { user } } = await supabase.auth.getUser()
     if (user) setUser(user)
   }
 
   const handleLogout = async () => {
+    const supabase = getSupabase()
     await supabase.auth.signOut()
     document.cookie = 'sb-access-token=; path=/; max-age=0'
     router.push('/')
