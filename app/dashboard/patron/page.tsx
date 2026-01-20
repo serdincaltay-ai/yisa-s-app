@@ -3,6 +3,7 @@
 import { useEffect, useMemo, useState } from "react";
 import { createClient } from "@supabase/supabase-js";
 import AssistantPanel from "@/components/AssistantPanel";
+import RobotDashboard from "@/components/RobotDashboard";
 
 const supabase = createClient(
   process.env.NEXT_PUBLIC_SUPABASE_URL!,
@@ -77,6 +78,9 @@ export default function PatronDashboard() {
         <Stat title="Done" value={jobStats.done} />
         <Stat title="Error" value={jobStats.error} />
       </div>
+
+      {/* Robot Kadrosu */}
+      <RobotDashboard />
 
       {/* Inbox */}
       <div className="rounded-2xl border border-zinc-800 bg-zinc-900/40 p-4">
