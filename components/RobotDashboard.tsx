@@ -37,18 +37,13 @@ export default function RobotDashboard() {
     fetchRobots()
   }, [])
 
-  if (loading) {
-    return <div style={{ padding: 24 }}>Yükleniyor…</div>
-  }
+  if (loading) return <div style={{ padding: 24 }}>Yükleniyor…</div>
 
   if (errorMsg) {
     return (
       <div style={{ padding: 24 }}>
         <h2>Robot Dashboard</h2>
         <p style={{ color: 'tomato' }}>Hata: {errorMsg}</p>
-        <p style={{ opacity: 0.8 }}>
-          (Bu hata genelde RLS/Policy veya Supabase key/URL ayarıyla ilgilidir.)
-        </p>
       </div>
     )
   }
@@ -85,6 +80,7 @@ export default function RobotDashboard() {
                   {r.is_active ? 'Aktif' : 'Pasif'}
                 </span>
               </div>
+
               <div style={{ opacity: 0.85, marginTop: 6 }}>
                 Kod: {r.robot_key} · Layer: {r.layer}
               </div>
