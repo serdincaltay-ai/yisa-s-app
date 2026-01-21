@@ -1,22 +1,38 @@
-const supabaseUrl = process.env.SUPABASE_URL || process.env.NEXT_PUBLIC_SUPABASE_URL
-const supabaseKey = process.env.SUPABASE_SERVICE_ROLE_KEY || process.env.SUPABASE_ANON_KEY
-
-const supabase = supabaseUrl && supabaseKey 
-  ? createClient(supabaseUrl, supabaseKey)
-  : null
+import { NextRequest, NextResponse } from 'next/server'
+import Anthropic from '@anthropic-ai/sdk'
+import { createClient, SupabaseClient } from '@supabase/supabase-js'
 
 // ═══════════════════════════════════════════════════════════════════════════
-// SUPABASE CLIENT - VERİTABANI BAĞLANTISI
+// SUPABASE CLIENT - LAZY INITIALIZATION (Build hatası önleme)
 // ═══════════════════════════════════════════════════════════════════════════
-const supabase = createClient(
-  process.env.SUPABASE_URL!,
-  process.env.SUPABASE_SERVICE_ROLE_KEY!
-)
+let supabaseInstance: SupabaseClient | null = null
 
-// API Clients
-const anthropic = new Anthropic({
-  apiKey: process.env.ANTHROPIC_API_KEY!,
-})
+function getSupabase(): SupabaseClient | null {
+  if (supabaseInstance) return supabaseInstance
+  
+  const url = process.env.SUPABASE_URL || process.env.NEXT_PUBLIC_SUPABASE_URL
+  const key = process.env.SUPABASE_SERVICE_ROLE_KEY || process.env.SUPABASE_ANON_KEY
+  
+  if (!url || !key) {
+    console.warn('Supabase credentials not found')
+    return null
+  }
+  
+  supabaseInstance = createClient(url, key)
+  return supabaseInstance
+}
+
+// API Clients - Lazy initialization
+let anthropicInstance: Anthropic | null = null
+
+function getAnthropic(): Anthropic {
+  if (!anthropicInstance) {
+    anthropicInstance = new Anthropic({
+      apiKey: process.env.ANTHROPIC_API_KEY!,
+    })
+  }
+  return anthropicInstance
+}
 
 // AI Model Types
 type AIModel = 'claude' | 'gpt' | 'gemini' | 'together' | 'auto'
@@ -58,43 +74,20 @@ AI MODEL SEÇİMİ:
 GITHUB KOMUTLARI:
 • "GitHub repo listele" → Repoları gösterir
 • "GitHub dosya oku [repo] [dosya]" → Dosya içeriği
-• "GitHub commit listele [repo]" → Son commitler
-• "GitHub issue oluştur [repo] [başlık]" → Yeni issue
 
 VERCEL KOMUTLARI:
 • "Vercel projeleri listele" → Projeleri gösterir
-• "Vercel deploy durumu" → Deploy bilgisi
-• "Vercel domain listele" → Domain listesi
-• "Vercel redeploy [proje]" → Yeniden deploy
 
 SUPABASE KOMUTLARI:
 • "Supabase tablo listele" → Tabloları gösterir
-• "Supabase sorgu çalıştır [SQL]" → SQL çalıştırır
-• "Supabase kullanıcı ekle" → Yeni kullanıcı
-• "Supabase veri ekle [tablo]" → Veri ekleme
 
 RAILWAY KOMUTLARI:
 • "Railway servis durumu" → Servis bilgisi
-• "Railway deploy" → Yeniden deploy
-• "Railway log göster" → Son loglar
-
-V0 & CURSOR:
-• "V0 component oluştur [açıklama]" → UI component kodu
-• "Cursor'a gönder [kod]" → Kod düzenleme talimatı
 
 YETKİ SEVİYESİ: SINIRSIZ (Patron Modu)
 ✓ Tüm sistemlere tam erişim
 ✓ Tüm AI modellerini kullanabilir
 ✓ Veritabanı okuma/yazma
-✓ Deployment yapabilir
-✓ Kod değiştirebilir
-
-CEVAP FORMATI:
-• Türkçe konuş
-• "Patron" diye hitap et
-• Detaylı ve net cevaplar
-• Kod gerekiyorsa kod bloğu kullan
-• İşlem sonuçlarını raporla
 
 SEN PATRON'UN EMRİNDESİN. TÜM SİSTEMLER HAZIR.`
 
@@ -112,13 +105,20 @@ async function saveMessage(
   content: string,
   payload: object = {}
 ): Promise<void> {
+  const supabase = getSupabase()
+  if (!supabase) {
+    console.warn('Supabase not available, skipping message save')
+    return
+  }
+  
   try {
-    await supabase.from('messages').insert({
+    const { error } = await supabase.from('messages').insert({
       conversation_id: conversationId,
       role: role,
       content: content,
       payload: payload
     })
+    if (error) console.error('Mesaj kaydetme hatası:', error)
   } catch (error) {
     console.error('Mesaj kaydetme hatası:', error)
   }
@@ -128,34 +128,44 @@ async function saveMessage(
 // CONVERSATION ID AL VEYA OLUŞTUR
 // ═══════════════════════════════════════════════════════════════════════════
 async function getOrCreateConversation(sessionId?: string): Promise<string> {
-  // Session ID varsa, mevcut conversation'ı bul
-  if (sessionId) {
-    const { data } = await supabase
+  const supabase = getSupabase()
+  if (!supabase) {
+    return crypto.randomUUID()
+  }
+  
+  try {
+    // Session ID varsa, mevcut conversation'ı bul
+    if (sessionId) {
+      const { data } = await supabase
+        .from('conversations')
+        .select('id')
+        .eq('session_id', sessionId)
+        .single()
+      
+      if (data) return data.id
+    }
+    
+    // Yeni conversation oluştur
+    const { data, error } = await supabase
       .from('conversations')
+      .insert({
+        tenant_id: PATRON_ID,
+        session_id: sessionId || crypto.randomUUID(),
+        title: 'Patron Sohbeti'
+      })
       .select('id')
-      .eq('session_id', sessionId)
       .single()
     
-    if (data) return data.id
+    if (error) {
+      console.error('Conversation oluşturma hatası:', error)
+      return crypto.randomUUID()
+    }
+    
+    return data.id
+  } catch (error) {
+    console.error('Conversation hatası:', error)
+    return crypto.randomUUID()
   }
-  
-  // Yeni conversation oluştur
-  const { data, error } = await supabase
-    .from('conversations')
-    .insert({
-      tenant_id: PATRON_ID,
-      session_id: sessionId || crypto.randomUUID(),
-      started_at: new Date().toISOString()
-    })
-    .select('id')
-    .single()
-  
-  if (error) {
-    console.error('Conversation oluşturma hatası:', error)
-    return crypto.randomUUID() // Fallback
-  }
-  
-  return data.id
 }
 
 // ═══════════════════════════════════════════════════════════════════════════
@@ -167,6 +177,9 @@ async function createTask(
   payload: object,
   priority: number = 3
 ): Promise<string | null> {
+  const supabase = getSupabase()
+  if (!supabase) return null
+  
   try {
     const { data, error } = await supabase
       .from('tasks')
@@ -204,8 +217,11 @@ async function updateTask(
   result?: object,
   errorMessage?: string
 ): Promise<void> {
+  const supabase = getSupabase()
+  if (!supabase) return
+  
   try {
-    const updateData: any = {
+    const updateData: Record<string, unknown> = {
       status: status,
       updated_at: new Date().toISOString()
     }
@@ -241,42 +257,25 @@ async function updateTask(
 function detectTaskType(message: string): { isTask: boolean; taskCode: string; title: string } {
   const lower = message.toLowerCase()
   
-  // GitHub komutları
   if (lower.includes('github')) {
     return { isTask: true, taskCode: 'GITHUB_COMMAND', title: 'GitHub İşlemi' }
   }
-  
-  // Vercel komutları
   if (lower.includes('vercel')) {
     return { isTask: true, taskCode: 'VERCEL_COMMAND', title: 'Vercel İşlemi' }
   }
-  
-  // Supabase komutları
   if (lower.includes('supabase')) {
     return { isTask: true, taskCode: 'SUPABASE_COMMAND', title: 'Supabase İşlemi' }
   }
-  
-  // Railway komutları
   if (lower.includes('railway')) {
     return { isTask: true, taskCode: 'RAILWAY_COMMAND', title: 'Railway İşlemi' }
   }
-  
-  // Sistem kontrol
   if (lower.includes('sistem') && (lower.includes('kontrol') || lower.includes('durum'))) {
     return { isTask: true, taskCode: 'SYSTEM_CHECK', title: 'Sistem Durumu Kontrolü' }
   }
-  
-  // Analiz/rapor talepleri
   if (lower.includes('analiz') || lower.includes('rapor')) {
     return { isTask: true, taskCode: 'ANALYSIS_REQUEST', title: 'Analiz/Rapor Talebi' }
   }
   
-  // V0/Cursor komutları
-  if (lower.includes('v0') || lower.includes('cursor')) {
-    return { isTask: true, taskCode: 'DEV_TOOL_COMMAND', title: 'Geliştirme Aracı İşlemi' }
-  }
-  
-  // Normal sohbet
   return { isTask: false, taskCode: 'CHAT', title: 'Sohbet' }
 }
 
@@ -353,14 +352,17 @@ async function callTogether(message: string): Promise<string> {
 // GitHub API Functions
 async function githubListRepos(): Promise<string> {
   try {
+    const token = process.env.GITHUB_TOKEN_FINEGRAINED || process.env.GITHUB_TOKEN
+    if (!token) return 'GitHub token bulunamadı.'
+    
     const response = await fetch('https://api.github.com/user/repos?per_page=10&sort=updated', {
-      headers: { 'Authorization': `token ${process.env.GITHUB_TOKEN_FINEGRAINED}` }
+      headers: { 'Authorization': `token ${token}` }
     })
     const repos = await response.json()
     if (!Array.isArray(repos)) return 'GitHub repo listesi alınamadı.'
     
     let result = '📁 **GitHub Repolarınız:**\n\n'
-    repos.forEach((repo: any, i: number) => {
+    repos.forEach((repo: { name: string; description?: string; stargazers_count: number; forks_count: number }, i: number) => {
       result += `${i + 1}. **${repo.name}**\n`
       result += `   └─ ${repo.description || 'Açıklama yok'}\n`
       result += `   └─ ⭐ ${repo.stargazers_count} | 🍴 ${repo.forks_count}\n\n`
@@ -371,37 +373,22 @@ async function githubListRepos(): Promise<string> {
   }
 }
 
-async function githubReadFile(repo: string, path: string): Promise<string> {
-  try {
-    const owner = process.env.GITHUB_OWNER || 'serdincaltay-ai'
-    const response = await fetch(`https://api.github.com/repos/${owner}/${repo}/contents/${path}`, {
-      headers: { 'Authorization': `token ${process.env.GITHUB_TOKEN_FINEGRAINED}` }
-    })
-    const data = await response.json()
-    if (data.content) {
-      const content = Buffer.from(data.content, 'base64').toString('utf-8')
-      return `📄 **${path}** içeriği:\n\n\`\`\`\n${content}\n\`\`\``
-    }
-    return 'Dosya okunamadı.'
-  } catch (error) {
-    return `GitHub Hatası: ${(error as Error).message}`
-  }
-}
-
 // Vercel API Functions
 async function vercelListProjects(): Promise<string> {
   try {
+    const token = process.env.VERCEL_TOKEN
+    if (!token) return 'Vercel token bulunamadı.'
+    
     const response = await fetch('https://api.vercel.com/v9/projects', {
-      headers: { 'Authorization': `Bearer ${process.env.VERCEL_TOKEN}` }
+      headers: { 'Authorization': `Bearer ${token}` }
     })
     const data = await response.json()
     if (!data.projects) return 'Vercel projeleri alınamadı.'
     
     let result = '🚀 **Vercel Projeleriniz:**\n\n'
-    data.projects.forEach((project: any, i: number) => {
+    data.projects.forEach((project: { name: string; framework?: string }, i: number) => {
       result += `${i + 1}. **${project.name}**\n`
-      result += `   └─ Framework: ${project.framework || 'Belirtilmemiş'}\n`
-      result += `   └─ URL: ${project.targets?.production?.url || 'Yok'}\n\n`
+      result += `   └─ Framework: ${project.framework || 'Belirtilmemiş'}\n\n`
     })
     return result
   } catch (error) {
@@ -409,25 +396,9 @@ async function vercelListProjects(): Promise<string> {
   }
 }
 
-// Supabase Query Function
-async function supabaseQuery(sql: string): Promise<string> {
-  try {
-    // Not: Direkt SQL için Supabase Management API veya Edge Function gerekir
-    // Bu basit bir örnek
-    return `📊 **SQL Sorgusu:**\n\`\`\`sql\n${sql}\n\`\`\`\n\n⚠️ Direkt SQL çalıştırma için Supabase Dashboard kullanın veya Edge Function oluşturun.`
-  } catch (error) {
-    return `Supabase Hatası: ${(error as Error).message}`
-  }
-}
-
-// Railway API Functions
+// Railway Status
 async function railwayStatus(): Promise<string> {
-  try {
-    // Railway GraphQL API kullanır
-    return `🚂 **Railway Durumu:**\n\n✅ yisa-s-app servisi: ONLINE\n✅ Region: us-west2\n✅ Son deploy: Başarılı`
-  } catch (error) {
-    return `Railway Hatası: ${(error as Error).message}`
-  }
+  return `🚂 **Railway Durumu:**\n\n✅ yisa-s-app servisi: ONLINE\n✅ Region: us-west2\n✅ Son deploy: Başarılı`
 }
 
 // Detect which model to use
@@ -440,49 +411,30 @@ function detectModel(message: string): AIModel {
 }
 
 // Detect tool commands
-function detectToolCommand(message: string): { tool: string; action: string; params: string[] } | null {
+function detectToolCommand(message: string): { tool: string; action: string } | null {
   const lower = message.toLowerCase()
   
-  // GitHub commands
-  if (lower.includes('github repo listele') || lower.includes('github repoları')) {
-    return { tool: 'github', action: 'listRepos', params: [] }
+  if (lower.includes('github') && (lower.includes('repo') || lower.includes('listele'))) {
+    return { tool: 'github', action: 'listRepos' }
   }
-  if (lower.includes('github dosya oku')) {
-    const match = message.match(/github dosya oku\s+(\S+)\s+(\S+)/i)
-    if (match) return { tool: 'github', action: 'readFile', params: [match[1], match[2]] }
+  if (lower.includes('vercel') && (lower.includes('proje') || lower.includes('listele'))) {
+    return { tool: 'vercel', action: 'listProjects' }
   }
-  
-  // Vercel commands
-  if (lower.includes('vercel proje') && lower.includes('listele')) {
-    return { tool: 'vercel', action: 'listProjects', params: [] }
-  }
-  
-  // Supabase commands
-  if (lower.includes('supabase sorgu')) {
-    const match = message.match(/supabase sorgu(?:\s+çalıştır)?\s+(.+)/i)
-    if (match) return { tool: 'supabase', action: 'query', params: [match[1]] }
-  }
-  
-  // Railway commands
   if (lower.includes('railway') && (lower.includes('durum') || lower.includes('status'))) {
-    return { tool: 'railway', action: 'status', params: [] }
+    return { tool: 'railway', action: 'status' }
   }
   
   return null
 }
 
 // Execute tool command
-async function executeToolCommand(command: { tool: string; action: string; params: string[] }): Promise<string> {
+async function executeToolCommand(command: { tool: string; action: string }): Promise<string> {
   switch (command.tool) {
     case 'github':
       if (command.action === 'listRepos') return await githubListRepos()
-      if (command.action === 'readFile') return await githubReadFile(command.params[0], command.params[1])
       break
     case 'vercel':
       if (command.action === 'listProjects') return await vercelListProjects()
-      break
-    case 'supabase':
-      if (command.action === 'query') return await supabaseQuery(command.params[0])
       break
     case 'railway':
       if (command.action === 'status') return await railwayStatus()
@@ -499,61 +451,38 @@ export async function POST(request: NextRequest) {
   let conversationId: string = ''
   
   try {
-    const { message, hasFile, fileType, fileName, fileContent, sessionId } = await request.json()
+    const body = await request.json()
+    const { message, hasFile, fileType, fileName, fileContent, sessionId } = body
     
     if (!message) {
       return NextResponse.json({ error: 'Mesaj gerekli' }, { status: 400 })
     }
 
-    // ═══════════════════════════════════════════════════════════════════════
     // 1. CONVERSATION ID AL
-    // ═══════════════════════════════════════════════════════════════════════
     conversationId = await getOrCreateConversation(sessionId)
 
-    // ═══════════════════════════════════════════════════════════════════════
     // 2. KULLANICI MESAJINI KAYDET
-    // ═══════════════════════════════════════════════════════════════════════
-    await saveMessage(conversationId, 'user', message, {
-      hasFile,
-      fileName,
-      fileType
-    })
+    await saveMessage(conversationId, 'user', message, { hasFile, fileName, fileType })
 
-    // ═══════════════════════════════════════════════════════════════════════
     // 3. TASK TİPİNİ TESPİT ET VE TASK OLUŞTUR
-    // ═══════════════════════════════════════════════════════════════════════
     const taskType = detectTaskType(message)
     
     if (taskType.isTask) {
-      taskId = await createTask(
-        taskType.taskCode,
-        taskType.title,
-        { message, hasFile, fileName },
-        2 // Patron isteği = öncelik 2
-      )
-      
-      if (taskId) {
-        await updateTask(taskId, 'running')
-      }
+      taskId = await createTask(taskType.taskCode, taskType.title, { message, hasFile, fileName }, 2)
+      if (taskId) await updateTask(taskId, 'running')
     }
 
-    // ═══════════════════════════════════════════════════════════════════════
     // 4. TOOL KOMUTLARINI KONTROL ET
-    // ═══════════════════════════════════════════════════════════════════════
     const toolCommand = detectToolCommand(message)
     if (toolCommand) {
       const toolResult = await executeToolCommand(toolCommand)
       
-      // Asistan cevabını kaydet
       await saveMessage(conversationId, 'assistant', toolResult, {
         model: toolCommand.tool,
         status: 'tool_executed'
       })
       
-      // Task'ı başarılı olarak işaretle
-      if (taskId) {
-        await updateTask(taskId, 'success', { output: toolResult })
-      }
+      if (taskId) await updateTask(taskId, 'success', { output: toolResult })
       
       return NextResponse.json({ 
         message: toolResult,
@@ -564,27 +493,16 @@ export async function POST(request: NextRequest) {
       })
     }
 
-    // ═══════════════════════════════════════════════════════════════════════
     // 5. AI MODELİNİ SEÇ
-    // ═══════════════════════════════════════════════════════════════════════
     const selectedModel = detectModel(message)
     let responseText = ''
     
-    // Prepare message with file context if present
     let enhancedMessage = message
     if (hasFile && fileName) {
-      enhancedMessage = `[DOSYA YÜKLEME]
-Dosya Adı: ${fileName}
-Dosya Tipi: ${fileType || 'bilinmiyor'}
-${fileContent ? `\nDosya İçeriği:\n${fileContent}\n` : ''}
-Kullanıcı Mesajı: ${message}
-
-Patron bu dosyayı yükledi. İçeriği analiz et ve istenen işlemi yap.`
+      enhancedMessage = `[DOSYA: ${fileName}]\n${fileContent ? fileContent + '\n' : ''}${message}`
     }
 
-    // ═══════════════════════════════════════════════════════════════════════
     // 6. AI'DAN CEVAP AL
-    // ═══════════════════════════════════════════════════════════════════════
     switch (selectedModel) {
       case 'gpt':
         responseText = await callGPT(enhancedMessage)
@@ -596,7 +514,7 @@ Patron bu dosyayı yükledi. İçeriği analiz et ve istenen işlemi yap.`
         responseText = await callTogether(enhancedMessage)
         break
       default:
-        // Claude (default)
+        const anthropic = getAnthropic()
         const response = await anthropic.messages.create({
           model: 'claude-sonnet-4-20250514',
           max_tokens: 4096,
@@ -607,22 +525,15 @@ Patron bu dosyayı yükledi. İçeriği analiz et ve istenen işlemi yap.`
         responseText = content.type === 'text' ? content.text : ''
     }
 
-    // ═══════════════════════════════════════════════════════════════════════
     // 7. ASİSTAN CEVABINI KAYDET
-    // ═══════════════════════════════════════════════════════════════════════
     await saveMessage(conversationId, 'assistant', responseText, {
       model: selectedModel,
       status: 'patron_mode_active'
     })
 
-    // ═══════════════════════════════════════════════════════════════════════
     // 8. TASK'I BAŞARILI OLARAK İŞARETLE
-    // ═══════════════════════════════════════════════════════════════════════
     if (taskId) {
-      await updateTask(taskId, 'success', { 
-        output: responseText.substring(0, 500), // İlk 500 karakter
-        model: selectedModel 
-      })
+      await updateTask(taskId, 'success', { output: responseText.substring(0, 500), model: selectedModel })
     }
 
     return NextResponse.json({ 
@@ -636,21 +547,17 @@ Patron bu dosyayı yükledi. İçeriği analiz et ve istenen işlemi yap.`
   } catch (error) {
     console.error('Chat API error:', error)
     
-    // Hata durumunda task'ı failed olarak işaretle
-    if (taskId) {
-      await updateTask(taskId, 'failed', undefined, (error as Error).message)
-    }
+    if (taskId) await updateTask(taskId, 'failed', undefined, (error as Error).message)
     
-    // Hata mesajını da kaydet
     if (conversationId) {
       await saveMessage(conversationId, 'assistant', 
-        'Teknik sorun var Patron. Hata detayı: ' + (error as Error).message,
+        'Teknik sorun var Patron. Hata: ' + (error as Error).message,
         { status: 'error' }
       )
     }
     
     return NextResponse.json({ 
-      message: 'Teknik sorun var Patron. Hata detayı: ' + (error as Error).message 
+      message: 'Teknik sorun var Patron. Hata: ' + (error as Error).message 
     }, { status: 500 })
   }
 }
