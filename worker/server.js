@@ -124,7 +124,7 @@ async function callCursor(task) {
 
 async function githubListRepos() {
   const res = await fetch('https://api.github.com/user/repos?per_page=20&sort=updated', {
-    headers: { 'Authorization': `token ${process.env.GITHUB_TOKEN}` }
+    headers: { 'Authorization': `token ${process.env.GITHUB_TOKEN_FINEGRAINED || process.env.GITHUB_TOKEN}` }
   });
   const repos = await res.json();
   return Array.isArray(repos) ? repos.map(r => r.name).join(', ') : 'Alınamadı';
