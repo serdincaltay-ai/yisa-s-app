@@ -4,7 +4,18 @@ import type { NextRequest } from 'next/server'
 export async function middleware(request: NextRequest) {
   const { pathname } = request.nextUrl
 
-  if (pathname.startsWith('/panel') || pathname.startsWith('/dashboard') || pathname.startsWith('/assistant')) {
+  // Kaldırılan sayfalar - ana sayfaya yönlendir
+  if (
+    pathname.startsWith('/assistant') ||
+    pathname.startsWith('/connections') ||
+    pathname.startsWith('/panel') ||
+    (pathname.startsWith('/dashboard') && !pathname.startsWith('/dashboard/patron'))
+  ) {
+    return NextResponse.redirect(new URL('/', request.url))
+  }
+
+  // Patron dashboard için auth kontrolü
+  if (pathname.startsWith('/dashboard/patron')) {
     const supabaseToken = request.cookies.get('sb-access-token')?.value
     
     if (!supabaseToken) {
@@ -12,6 +23,7 @@ export async function middleware(request: NextRequest) {
     }
   }
 
+  // API chat için auth kontrolü
   if (pathname.startsWith('/api/chat')) {
     const supabaseToken = request.cookies.get('sb-access-token')?.value
     
@@ -24,5 +36,11 @@ export async function middleware(request: NextRequest) {
 }
 
 export const config = {
-  matcher: ['/panel/:path*', '/dashboard/:path*', '/assistant/:path*', '/api/chat/:path*']
+  matcher: [
+    '/panel/:path*', 
+    '/dashboard/:path*', 
+    '/assistant/:path*', 
+    '/connections/:path*',
+    '/api/chat/:path*'
+  ]
 }

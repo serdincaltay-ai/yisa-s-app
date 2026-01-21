@@ -16,6 +16,13 @@ export default function HomePage() {
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState("");
   const [checkingAuth, setCheckingAuth] = useState(true);
+  
+  // Şifremi Unuttum state'leri
+  const [showForgotPassword, setShowForgotPassword] = useState(false);
+  const [resetEmail, setResetEmail] = useState("");
+  const [resetLoading, setResetLoading] = useState(false);
+  const [resetError, setResetError] = useState("");
+  const [resetSuccess, setResetSuccess] = useState(false);
 
   useEffect(() => {
     // Zaten giriş yapmışsa dashboard'a yönlendir
@@ -44,6 +51,28 @@ export default function HomePage() {
     } else {
       router.push("/dashboard/patron");
     }
+  };
+
+  const handleForgotPassword = async () => {
+    if (!resetEmail.trim()) {
+      setResetError("Lütfen e-posta adresinizi girin.");
+      return;
+    }
+
+    setResetLoading(true);
+    setResetError("");
+
+    const { error: resetAuthError } = await supabase.auth.resetPasswordForEmail(resetEmail, {
+      redirectTo: `${window.location.origin}/reset-password`,
+    });
+
+    if (resetAuthError) {
+      setResetError(resetAuthError.message);
+    } else {
+      setResetSuccess(true);
+    }
+    
+    setResetLoading(false);
   };
 
   if (checkingAuth) {
@@ -109,7 +138,87 @@ export default function HomePage() {
               {loading ? "Giriş yapılıyor..." : "Giriş Yap"}
             </button>
           </div>
+
+          <div className="mt-4 text-center">
+            <button
+              type="button"
+              onClick={() => setShowForgotPassword(true)}
+              className="text-amber-500 hover:text-amber-400 text-sm transition-colors"
+            >
+              Şifremi Unuttum
+            </button>
+          </div>
         </form>
+
+        {/* Şifremi Unuttum Modal */}
+        {showForgotPassword && (
+          <div className="fixed inset-0 bg-black/50 flex items-center justify-center z-50 p-4">
+            <div className="bg-zinc-900 rounded-2xl p-6 border border-zinc-800 w-full max-w-md">
+              <h3 className="text-xl font-semibold text-white mb-4">Şifre Sıfırlama</h3>
+              
+              {resetSuccess ? (
+                <div className="text-center">
+                  <div className="w-16 h-16 bg-emerald-500/10 rounded-full flex items-center justify-center mx-auto mb-4">
+                    <svg className="w-8 h-8 text-emerald-500" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                      <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M5 13l4 4L19 7" />
+                    </svg>
+                  </div>
+                  <p className="text-zinc-300 mb-4">Şifre sıfırlama linki e-posta adresinize gönderildi.</p>
+                  <button
+                    onClick={() => {
+                      setShowForgotPassword(false);
+                      setResetSuccess(false);
+                      setResetEmail("");
+                    }}
+                    className="text-amber-500 hover:text-amber-400"
+                  >
+                    Giriş sayfasına dön
+                  </button>
+                </div>
+              ) : (
+                <>
+                  {resetError && (
+                    <div className="bg-red-500/10 border border-red-500 text-red-500 px-4 py-2 rounded-xl mb-4 text-sm">
+                      {resetError}
+                    </div>
+                  )}
+                  
+                  <p className="text-zinc-400 text-sm mb-4">
+                    E-posta adresinizi girin. Şifre sıfırlama linki göndereceğiz.
+                  </p>
+                  
+                  <input
+                    type="email"
+                    value={resetEmail}
+                    onChange={(e) => setResetEmail(e.target.value)}
+                    className="w-full bg-zinc-800 border border-zinc-700 rounded-xl px-4 py-3 text-white outline-none focus:border-amber-500 mb-4"
+                    placeholder="ornek@email.com"
+                  />
+                  
+                  <div className="flex gap-3">
+                    <button
+                      onClick={() => {
+                        setShowForgotPassword(false);
+                        setResetError("");
+                        setResetEmail("");
+                      }}
+                      className="flex-1 px-4 py-3 rounded-xl border border-zinc-700 text-zinc-300 hover:bg-zinc-800 transition-colors"
+                    >
+                      İptal
+                    </button>
+                    <button
+                      onClick={handleForgotPassword}
+                      disabled={resetLoading}
+                      className="flex-1 bg-gradient-to-r from-amber-500 to-orange-600 text-white font-semibold py-3 rounded-xl hover:opacity-90 disabled:opacity-50 transition-opacity"
+                    >
+                      {resetLoading ? "Gönderiliyor..." : "Gönder"}
+                    </button>
+                  </div>
+                </>
+              )}
+            </div>
+          </div>
+        )}
 
         <p className="text-center text-zinc-500 text-sm mt-6">
           © 2025 YİSA-S. Tüm hakları saklıdır.

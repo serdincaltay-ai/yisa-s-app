@@ -2,7 +2,8 @@
 
 import { useEffect, useMemo, useState } from "react";
 import { createClient } from "@supabase/supabase-js";
-import AssistantPanel from "@/components/AssistantPanel";
+import { useRouter } from "next/navigation";
+import { LogOut } from "lucide-react";
 
 const supabase = createClient(
   process.env.NEXT_PUBLIC_SUPABASE_URL!,
@@ -30,8 +31,27 @@ type Job = {
 };
 
 export default function PatronDashboard() {
+  const router = useRouter();
   const [inbox, setInbox] = useState<Inbox[]>([]);
   const [jobs, setJobs] = useState<Job[]>([]);
+  const [user, setUser] = useState<any>(null);
+
+  useEffect(() => {
+    // Get user
+    supabase.auth.getUser().then(({ data: { user } }) => {
+      if (!user) {
+        router.push('/');
+      } else {
+        setUser(user);
+      }
+    });
+  }, [router]);
+
+  const handleLogout = async () => {
+    await supabase.auth.signOut();
+    document.cookie = 'sb-access-token=; path=/; max-age=0';
+    router.push('/');
+  };
 
   useEffect(() => {
     (async () => {
@@ -63,11 +83,23 @@ export default function PatronDashboard() {
 
   return (
     <div className="min-h-screen bg-zinc-950 text-zinc-100 p-4 space-y-4">
-      <div className="flex items-end justify-between">
-        <div>
-          <div className="text-2xl font-semibold">Patron Dashboard</div>
-          <div className="text-sm text-zinc-400">Özet + Inbox + Job durumu</div>
+      <div className="flex items-center justify-between">
+        <div className="flex items-center gap-4">
+          <div className="w-12 h-12 bg-gradient-to-br from-amber-500 to-orange-600 rounded-xl flex items-center justify-center">
+            <span className="text-2xl font-bold text-white">Y</span>
+          </div>
+          <div>
+            <div className="text-2xl font-semibold">Patron Dashboard</div>
+            <div className="text-sm text-zinc-400">{user?.email || 'Yükleniyor...'}</div>
+          </div>
         </div>
+        <button
+          onClick={handleLogout}
+          className="flex items-center gap-2 px-4 py-2 rounded-xl bg-zinc-800 hover:bg-red-500/20 hover:text-red-400 transition-colors"
+        >
+          <LogOut size={18} />
+          <span>Çıkış Yap</span>
+        </button>
       </div>
 
       {/* Stat cards */}
@@ -112,8 +144,6 @@ export default function PatronDashboard() {
           ))}
         </div>
       </div>
-
-      <AssistantPanel />
     </div>
   );
 }
