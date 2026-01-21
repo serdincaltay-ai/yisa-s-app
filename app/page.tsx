@@ -2,7 +2,7 @@
 
 import { useEffect, useState } from "react";
 import { createClient } from "@supabase/supabase-js";
-import { useRouter } from "next/navigation";
+import { useRouter, useSearchParams } from "next/navigation";
 
 const supabase = createClient(
   process.env.NEXT_PUBLIC_SUPABASE_URL!,
@@ -11,38 +11,64 @@ const supabase = createClient(
 
 export default function HomePage() {
   const router = useRouter();
+  const searchParams = useSearchParams();
   const [email, setEmail] = useState("");
   const [password, setPassword] = useState("");
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState("");
   const [checkingAuth, setCheckingAuth] = useState(true);
+  const [logoutMessage, setLogoutMessage] = useState("");
 
   useEffect(() => {
-    // Zaten giriş yapmışsa dashboard'a yönlendir
-    supabase.auth.getSession().then(({ data: { session } }) => {
-      if (session) {
-        router.push("/dashboard/patron");
-      } else {
+    // URL'de logout parametresi varsa mesaj göster
+    if (searchParams.get('logout') === 'success') {
+      setLogoutMessage("Oturumunuz başarıyla kapatıldı.");
+      // URL'den parametreyi temizle
+      window.history.replaceState({}, '', '/');
+    }
+
+    // Oturum kontrolü
+    const checkAuth = async () => {
+      try {
+        const { data: { session } } = await supabase.auth.getSession();
+        if (session) {
+          router.push("/dashboard/patron");
+        } else {
+          setCheckingAuth(false);
+        }
+      } catch (err) {
+        console.error('Auth check error:', err);
         setCheckingAuth(false);
       }
-    });
-  }, [router]);
+    };
+
+    checkAuth();
+  }, [router, searchParams]);
 
   const handleLogin = async (e: React.FormEvent) => {
     e.preventDefault();
     setLoading(true);
     setError("");
+    setLogoutMessage("");
 
-    const { error: authError } = await supabase.auth.signInWithPassword({
-      email,
-      password,
-    });
+    try {
+      const { data, error: authError } = await supabase.auth.signInWithPassword({
+        email,
+        password,
+      });
 
-    if (authError) {
-      setError(authError.message);
+      if (authError) {
+        setError(authError.message);
+        setLoading(false);
+      } else if (data.session) {
+        // Cookie'ye token kaydet (middleware için)
+        document.cookie = `sb-access-token=${data.session.access_token}; path=/; max-age=3600; SameSite=Lax`;
+        router.push("/dashboard/patron");
+        router.refresh();
+      }
+    } catch (err) {
+      setError("Giriş sırasında bir hata oluştu.");
       setLoading(false);
-    } else {
-      router.push("/dashboard/patron");
     }
   };
 
@@ -69,6 +95,12 @@ export default function HomePage() {
         {/* Login Form */}
         <form onSubmit={handleLogin} className="bg-zinc-900 rounded-2xl p-6 border border-zinc-800">
           <h2 className="text-xl font-semibold text-white mb-6">Giriş Yap</h2>
+
+          {logoutMessage && (
+            <div className="bg-emerald-500/10 border border-emerald-500 text-emerald-400 px-4 py-2 rounded-xl mb-4 text-sm">
+              {logoutMessage}
+            </div>
+          )}
 
           {error && (
             <div className="bg-red-500/10 border border-red-500 text-red-500 px-4 py-2 rounded-xl mb-4 text-sm">

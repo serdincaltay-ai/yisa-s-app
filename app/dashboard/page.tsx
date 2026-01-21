@@ -25,8 +25,26 @@ export default function DashboardPage() {
   }
 
   const handleLogout = async () => {
-    await supabase.auth.signOut()
-    router.push('/')
+    try {
+      // Supabase oturumunu kapat
+      await supabase.auth.signOut()
+      
+      // Tüm cookie'leri temizle
+      document.cookie.split(";").forEach((c) => {
+        const name = c.split("=")[0].trim();
+        document.cookie = `${name}=; path=/; expires=Thu, 01 Jan 1970 00:00:00 GMT`;
+      });
+      
+      // localStorage temizle
+      localStorage.clear();
+      
+      // Ana sayfaya yönlendir
+      router.push('/?logout=success')
+      router.refresh()
+    } catch (error) {
+      console.error('Çıkış hatası:', error)
+      router.push('/')
+    }
   }
 
   if (loading) {

@@ -2,6 +2,8 @@
 
 import { useEffect, useMemo, useState } from "react";
 import { createClient } from "@supabase/supabase-js";
+import { useRouter } from "next/navigation";
+import { LogOut } from "lucide-react";
 import AssistantPanel from "@/components/AssistantPanel";
 
 const supabase = createClient(
@@ -32,8 +34,16 @@ type Job = {
 export default function PatronDashboard() {
   const [inbox, setInbox] = useState<Inbox[]>([]);
   const [jobs, setJobs] = useState<Job[]>([]);
+  const [user, setUser] = useState<any>(null);
+  const [loggingOut, setLoggingOut] = useState(false);
+  const router = useRouter();
 
   useEffect(() => {
+    // Kullanıcı bilgisini al
+    supabase.auth.getUser().then(({ data: { user } }) => {
+      setUser(user);
+    });
+
     (async () => {
       const { data: inboxData } = await supabase
         .from("patron_inbox")
@@ -52,6 +62,31 @@ export default function PatronDashboard() {
     })();
   }, []);
 
+  const handleLogout = async () => {
+    setLoggingOut(true);
+    try {
+      // Supabase oturumunu kapat
+      await supabase.auth.signOut();
+      
+      // Tüm cookie'leri temizle
+      document.cookie.split(";").forEach((c) => {
+        const name = c.split("=")[0].trim();
+        document.cookie = `${name}=; path=/; expires=Thu, 01 Jan 1970 00:00:00 GMT`;
+      });
+      
+      // localStorage temizle
+      localStorage.clear();
+      
+      // Ana sayfaya yönlendir
+      router.push('/');
+      router.refresh();
+    } catch (error) {
+      console.error('Çıkış hatası:', error);
+    } finally {
+      setLoggingOut(false);
+    }
+  };
+
   const jobStats = useMemo(() => {
     const s = { queued: 0, running: 0, done: 0, error: 0 };
     for (const j of jobs) {
@@ -63,10 +98,23 @@ export default function PatronDashboard() {
 
   return (
     <div className="min-h-screen bg-zinc-950 text-zinc-100 p-4 space-y-4">
-      <div className="flex items-end justify-between">
+      <div className="flex items-center justify-between">
         <div>
           <div className="text-2xl font-semibold">Patron Dashboard</div>
           <div className="text-sm text-zinc-400">Özet + Inbox + Job durumu</div>
+        </div>
+        <div className="flex items-center gap-4">
+          {user && (
+            <span className="text-sm text-zinc-400">{user.email}</span>
+          )}
+          <button
+            onClick={handleLogout}
+            disabled={loggingOut}
+            className="flex items-center gap-2 px-4 py-2 rounded-xl bg-zinc-800 border border-zinc-700 text-zinc-300 hover:bg-red-500/20 hover:text-red-400 hover:border-red-500/50 transition-all disabled:opacity-50"
+          >
+            <LogOut size={18} />
+            <span>{loggingOut ? 'Çıkış yapılıyor...' : 'Çıkış Yap'}</span>
+          </button>
         </div>
       </div>
 
