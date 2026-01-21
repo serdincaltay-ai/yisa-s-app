@@ -1,9 +1,8 @@
 export default function PatronDashboard() {
   return (
-    <div style={{ padding: 24 }}>
-      <h1>Patron Dashboard ✅</h1>
-      <p>Bu sayfa sadece Patron içindir.</p>
-      <p>Asistan: /dashboard/patron/assistant</p>
-    </div>
+    <main className="p-6">
+      <h1 className="text-3xl font-bold">Patron Paneli</h1>
+      <p>Hoş geldiniz.</p>
+    </main>
   );
 }
