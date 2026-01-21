@@ -1,5 +1,14 @@
 import { NextRequest, NextResponse } from 'next/server'
 import Anthropic from '@anthropic-ai/sdk'
+import { createClient } from '@supabase/supabase-js'
+
+// ═══════════════════════════════════════════════════════════════════════════
+// SUPABASE CLIENT - VERİTABANI BAĞLANTISI
+// ═══════════════════════════════════════════════════════════════════════════
+const supabase = createClient(
+  process.env.SUPABASE_URL!,
+  process.env.SUPABASE_SERVICE_ROLE_KEY!
+)
 
 // API Clients
 const anthropic = new Anthropic({
@@ -86,6 +95,188 @@ CEVAP FORMATI:
 
 SEN PATRON'UN EMRİNDESİN. TÜM SİSTEMLER HAZIR.`
 
+// ═══════════════════════════════════════════════════════════════════════════
+// PATRON ID - Sistem sahibi
+// ═══════════════════════════════════════════════════════════════════════════
+const PATRON_ID = '74893063-9842-45f4-9d61-9f4f361ad72f'
+
+// ═══════════════════════════════════════════════════════════════════════════
+// MESAJ KAYDETME FONKSİYONU
+// ═══════════════════════════════════════════════════════════════════════════
+async function saveMessage(
+  conversationId: string,
+  role: 'user' | 'assistant',
+  content: string,
+  payload: object = {}
+): Promise<void> {
+  try {
+    await supabase.from('messages').insert({
+      conversation_id: conversationId,
+      role: role,
+      content: content,
+      payload: payload
+    })
+  } catch (error) {
+    console.error('Mesaj kaydetme hatası:', error)
+  }
+}
+
+// ═══════════════════════════════════════════════════════════════════════════
+// CONVERSATION ID AL VEYA OLUŞTUR
+// ═══════════════════════════════════════════════════════════════════════════
+async function getOrCreateConversation(sessionId?: string): Promise<string> {
+  // Session ID varsa, mevcut conversation'ı bul
+  if (sessionId) {
+    const { data } = await supabase
+      .from('conversations')
+      .select('id')
+      .eq('session_id', sessionId)
+      .single()
+    
+    if (data) return data.id
+  }
+  
+  // Yeni conversation oluştur
+  const { data, error } = await supabase
+    .from('conversations')
+    .insert({
+      tenant_id: PATRON_ID,
+      session_id: sessionId || crypto.randomUUID(),
+      started_at: new Date().toISOString()
+    })
+    .select('id')
+    .single()
+  
+  if (error) {
+    console.error('Conversation oluşturma hatası:', error)
+    return crypto.randomUUID() // Fallback
+  }
+  
+  return data.id
+}
+
+// ═══════════════════════════════════════════════════════════════════════════
+// TASK OLUŞTURMA FONKSİYONU
+// ═══════════════════════════════════════════════════════════════════════════
+async function createTask(
+  taskCode: string,
+  title: string,
+  payload: object,
+  priority: number = 3
+): Promise<string | null> {
+  try {
+    const { data, error } = await supabase
+      .from('tasks')
+      .insert({
+        tenant_id: PATRON_ID,
+        task_code: taskCode,
+        title: title,
+        payload: payload,
+        priority: priority,
+        status: 'pending',
+        created_by_actor_type: 'robot',
+        created_by_robot_code: 'PATRON_ASISTAN'
+      })
+      .select('id')
+      .single()
+    
+    if (error) {
+      console.error('Task oluşturma hatası:', error)
+      return null
+    }
+    
+    return data.id
+  } catch (error) {
+    console.error('Task oluşturma hatası:', error)
+    return null
+  }
+}
+
+// ═══════════════════════════════════════════════════════════════════════════
+// TASK GÜNCELLEME FONKSİYONU
+// ═══════════════════════════════════════════════════════════════════════════
+async function updateTask(
+  taskId: string,
+  status: 'running' | 'success' | 'failed',
+  result?: object,
+  errorMessage?: string
+): Promise<void> {
+  try {
+    const updateData: any = {
+      status: status,
+      updated_at: new Date().toISOString()
+    }
+    
+    if (status === 'running') {
+      updateData.started_at = new Date().toISOString()
+    }
+    
+    if (status === 'success' || status === 'failed') {
+      updateData.finished_at = new Date().toISOString()
+    }
+    
+    if (result) {
+      updateData.result = result
+    }
+    
+    if (errorMessage) {
+      updateData.error_message = errorMessage
+    }
+    
+    await supabase
+      .from('tasks')
+      .update(updateData)
+      .eq('id', taskId)
+  } catch (error) {
+    console.error('Task güncelleme hatası:', error)
+  }
+}
+
+// ═══════════════════════════════════════════════════════════════════════════
+// KOMUT TESPİT - Task mı yoksa sohbet mi?
+// ═══════════════════════════════════════════════════════════════════════════
+function detectTaskType(message: string): { isTask: boolean; taskCode: string; title: string } {
+  const lower = message.toLowerCase()
+  
+  // GitHub komutları
+  if (lower.includes('github')) {
+    return { isTask: true, taskCode: 'GITHUB_COMMAND', title: 'GitHub İşlemi' }
+  }
+  
+  // Vercel komutları
+  if (lower.includes('vercel')) {
+    return { isTask: true, taskCode: 'VERCEL_COMMAND', title: 'Vercel İşlemi' }
+  }
+  
+  // Supabase komutları
+  if (lower.includes('supabase')) {
+    return { isTask: true, taskCode: 'SUPABASE_COMMAND', title: 'Supabase İşlemi' }
+  }
+  
+  // Railway komutları
+  if (lower.includes('railway')) {
+    return { isTask: true, taskCode: 'RAILWAY_COMMAND', title: 'Railway İşlemi' }
+  }
+  
+  // Sistem kontrol
+  if (lower.includes('sistem') && (lower.includes('kontrol') || lower.includes('durum'))) {
+    return { isTask: true, taskCode: 'SYSTEM_CHECK', title: 'Sistem Durumu Kontrolü' }
+  }
+  
+  // Analiz/rapor talepleri
+  if (lower.includes('analiz') || lower.includes('rapor')) {
+    return { isTask: true, taskCode: 'ANALYSIS_REQUEST', title: 'Analiz/Rapor Talebi' }
+  }
+  
+  // V0/Cursor komutları
+  if (lower.includes('v0') || lower.includes('cursor')) {
+    return { isTask: true, taskCode: 'DEV_TOOL_COMMAND', title: 'Geliştirme Aracı İşlemi' }
+  }
+  
+  // Normal sohbet
+  return { isTask: false, taskCode: 'CHAT', title: 'Sohbet' }
+}
+
 // GPT-4 API Call
 async function callGPT(message: string): Promise<string> {
   try {
@@ -160,7 +351,7 @@ async function callTogether(message: string): Promise<string> {
 async function githubListRepos(): Promise<string> {
   try {
     const response = await fetch('https://api.github.com/user/repos?per_page=10&sort=updated', {
-      headers: { 'Authorization': `token ${process.env.GITHUB_TOKEN}` }
+      headers: { 'Authorization': `token ${process.env.GITHUB_TOKEN_FINEGRAINED}` }
     })
     const repos = await response.json()
     if (!Array.isArray(repos)) return 'GitHub repo listesi alınamadı.'
@@ -179,8 +370,9 @@ async function githubListRepos(): Promise<string> {
 
 async function githubReadFile(repo: string, path: string): Promise<string> {
   try {
-    const response = await fetch(`https://api.github.com/repos/${repo}/contents/${path}`, {
-      headers: { 'Authorization': `token ${process.env.GITHUB_TOKEN}` }
+    const owner = process.env.GITHUB_OWNER || 'serdincaltay-ai'
+    const response = await fetch(`https://api.github.com/repos/${owner}/${repo}/contents/${path}`, {
+      headers: { 'Authorization': `token ${process.env.GITHUB_TOKEN_FINEGRAINED}` }
     })
     const data = await response.json()
     if (data.content) {
@@ -249,14 +441,18 @@ function detectToolCommand(message: string): { tool: string; action: string; par
   const lower = message.toLowerCase()
   
   // GitHub commands
-  if (lower.includes('github repo listele')) return { tool: 'github', action: 'listRepos', params: [] }
+  if (lower.includes('github repo listele') || lower.includes('github repoları')) {
+    return { tool: 'github', action: 'listRepos', params: [] }
+  }
   if (lower.includes('github dosya oku')) {
     const match = message.match(/github dosya oku\s+(\S+)\s+(\S+)/i)
     if (match) return { tool: 'github', action: 'readFile', params: [match[1], match[2]] }
   }
   
   // Vercel commands
-  if (lower.includes('vercel proje') && lower.includes('listele')) return { tool: 'vercel', action: 'listProjects', params: [] }
+  if (lower.includes('vercel proje') && lower.includes('listele')) {
+    return { tool: 'vercel', action: 'listProjects', params: [] }
+  }
   
   // Supabase commands
   if (lower.includes('supabase sorgu')) {
@@ -292,26 +488,82 @@ async function executeToolCommand(command: { tool: string; action: string; param
   return 'Komut çalıştırılamadı.'
 }
 
+// ═══════════════════════════════════════════════════════════════════════════
+// ANA API ENDPOINT - POST /api/sohbet
+// ═══════════════════════════════════════════════════════════════════════════
 export async function POST(request: NextRequest) {
+  let taskId: string | null = null
+  let conversationId: string = ''
+  
   try {
-    const { message, hasFile, fileType, fileName, fileContent } = await request.json()
+    const { message, hasFile, fileType, fileName, fileContent, sessionId } = await request.json()
     
     if (!message) {
       return NextResponse.json({ error: 'Mesaj gerekli' }, { status: 400 })
     }
 
-    // Check for tool commands first
+    // ═══════════════════════════════════════════════════════════════════════
+    // 1. CONVERSATION ID AL
+    // ═══════════════════════════════════════════════════════════════════════
+    conversationId = await getOrCreateConversation(sessionId)
+
+    // ═══════════════════════════════════════════════════════════════════════
+    // 2. KULLANICI MESAJINI KAYDET
+    // ═══════════════════════════════════════════════════════════════════════
+    await saveMessage(conversationId, 'user', message, {
+      hasFile,
+      fileName,
+      fileType
+    })
+
+    // ═══════════════════════════════════════════════════════════════════════
+    // 3. TASK TİPİNİ TESPİT ET VE TASK OLUŞTUR
+    // ═══════════════════════════════════════════════════════════════════════
+    const taskType = detectTaskType(message)
+    
+    if (taskType.isTask) {
+      taskId = await createTask(
+        taskType.taskCode,
+        taskType.title,
+        { message, hasFile, fileName },
+        2 // Patron isteği = öncelik 2
+      )
+      
+      if (taskId) {
+        await updateTask(taskId, 'running')
+      }
+    }
+
+    // ═══════════════════════════════════════════════════════════════════════
+    // 4. TOOL KOMUTLARINI KONTROL ET
+    // ═══════════════════════════════════════════════════════════════════════
     const toolCommand = detectToolCommand(message)
     if (toolCommand) {
       const toolResult = await executeToolCommand(toolCommand)
-      return NextResponse.json({ 
-        message: toolResult,
+      
+      // Asistan cevabını kaydet
+      await saveMessage(conversationId, 'assistant', toolResult, {
         model: toolCommand.tool,
         status: 'tool_executed'
       })
+      
+      // Task'ı başarılı olarak işaretle
+      if (taskId) {
+        await updateTask(taskId, 'success', { output: toolResult })
+      }
+      
+      return NextResponse.json({ 
+        message: toolResult,
+        model: toolCommand.tool,
+        status: 'tool_executed',
+        conversationId,
+        taskId
+      })
     }
 
-    // Detect which AI model to use
+    // ═══════════════════════════════════════════════════════════════════════
+    // 5. AI MODELİNİ SEÇ
+    // ═══════════════════════════════════════════════════════════════════════
     const selectedModel = detectModel(message)
     let responseText = ''
     
@@ -327,7 +579,9 @@ Kullanıcı Mesajı: ${message}
 Patron bu dosyayı yükledi. İçeriği analiz et ve istenen işlemi yap.`
     }
 
-    // Call the appropriate AI model
+    // ═══════════════════════════════════════════════════════════════════════
+    // 6. AI'DAN CEVAP AL
+    // ═══════════════════════════════════════════════════════════════════════
     switch (selectedModel) {
       case 'gpt':
         responseText = await callGPT(enhancedMessage)
@@ -350,14 +604,48 @@ Patron bu dosyayı yükledi. İçeriği analiz et ve istenen işlemi yap.`
         responseText = content.type === 'text' ? content.text : ''
     }
 
-    return NextResponse.json({ 
-      message: responseText,
+    // ═══════════════════════════════════════════════════════════════════════
+    // 7. ASİSTAN CEVABINI KAYDET
+    // ═══════════════════════════════════════════════════════════════════════
+    await saveMessage(conversationId, 'assistant', responseText, {
       model: selectedModel,
       status: 'patron_mode_active'
     })
 
+    // ═══════════════════════════════════════════════════════════════════════
+    // 8. TASK'I BAŞARILI OLARAK İŞARETLE
+    // ═══════════════════════════════════════════════════════════════════════
+    if (taskId) {
+      await updateTask(taskId, 'success', { 
+        output: responseText.substring(0, 500), // İlk 500 karakter
+        model: selectedModel 
+      })
+    }
+
+    return NextResponse.json({ 
+      message: responseText,
+      model: selectedModel,
+      status: 'patron_mode_active',
+      conversationId,
+      taskId
+    })
+
   } catch (error) {
     console.error('Chat API error:', error)
+    
+    // Hata durumunda task'ı failed olarak işaretle
+    if (taskId) {
+      await updateTask(taskId, 'failed', undefined, (error as Error).message)
+    }
+    
+    // Hata mesajını da kaydet
+    if (conversationId) {
+      await saveMessage(conversationId, 'assistant', 
+        'Teknik sorun var Patron. Hata detayı: ' + (error as Error).message,
+        { status: 'error' }
+      )
+    }
+    
     return NextResponse.json({ 
       message: 'Teknik sorun var Patron. Hata detayı: ' + (error as Error).message 
     }, { status: 500 })
