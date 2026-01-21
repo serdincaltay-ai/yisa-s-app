@@ -148,6 +148,189 @@ async function supabaseQuery(table, action = 'select') {
   return await res.json();
 }
 
+// ============ GITHUB WRITE ============
+
+async function githubCreateFile(path, content, message = 'Robot: Dosya oluşturuldu') {
+  try {
+    const token = process.env.GITHUB_TOKEN_FINEGRAINED || process.env.GITHUB_TOKEN;
+    if (!token) return { success: false, error: 'GitHub token eksik' };
+
+    const owner = process.env.GITHUB_OWNER || 'serdincaltay-ai';
+    const repo = process.env.GITHUB_REPO || 'yisa-s-app';
+
+    const res = await fetch(`https://api.github.com/repos/${owner}/${repo}/contents/${path}`, {
+      method: 'PUT',
+      headers: {
+        'Authorization': `Bearer ${token}`,
+        'Content-Type': 'application/json',
+        'Accept': 'application/vnd.github+json'
+      },
+      body: JSON.stringify({
+        message,
+        content: Buffer.from(content, 'utf-8').toString('base64')
+      })
+    });
+
+    const data = await res.json();
+
+    if (res.status === 201 && data.commit) {
+      return { success: true, sha: data.commit.sha, url: data.content?.html_url };
+    }
+    if (res.status === 422 || res.status === 409) {
+      return { success: false, error: 'Dosya zaten var (create yerine update kullan)' };
+    }
+    return { success: false, error: data.message || `GitHub hata: ${res.status}` };
+  } catch (e) {
+    return { success: false, error: e.message };
+  }
+}
+
+async function githubGetFile(path) {
+  try {
+    const token = process.env.GITHUB_TOKEN_FINEGRAINED || process.env.GITHUB_TOKEN;
+    if (!token) return { success: false, error: 'GitHub token eksik' };
+
+    const owner = process.env.GITHUB_OWNER || 'serdincaltay-ai';
+    const repo = process.env.GITHUB_REPO || 'yisa-s-app';
+
+    const res = await fetch(`https://api.github.com/repos/${owner}/${repo}/contents/${path}`, {
+      headers: {
+        'Authorization': `Bearer ${token}`,
+        'Accept': 'application/vnd.github+json'
+      }
+    });
+
+    if (res.status === 404) return { success: false, error: 'Dosya bulunamadı' };
+
+    const data = await res.json();
+    if (data.content) {
+      return {
+        success: true,
+        content: Buffer.from(data.content, 'base64').toString('utf-8'),
+        sha: data.sha
+      };
+    }
+    return { success: false, error: 'Dosya içeriği okunamadı' };
+  } catch (e) {
+    return { success: false, error: e.message };
+  }
+}
+
+async function githubUpdateFile(path, content, message = 'Robot: Dosya güncellendi') {
+  try {
+    const token = process.env.GITHUB_TOKEN_FINEGRAINED || process.env.GITHUB_TOKEN;
+    if (!token) return { success: false, error: 'GitHub token eksik' };
+
+    const owner = process.env.GITHUB_OWNER || 'serdincaltay-ai';
+    const repo = process.env.GITHUB_REPO || 'yisa-s-app';
+
+    const existing = await githubGetFile(path);
+    if (!existing.success) {
+      return await githubCreateFile(path, content, message.replace('güncellendi', 'oluşturuldu'));
+    }
+
+    const res = await fetch(`https://api.github.com/repos/${owner}/${repo}/contents/${path}`, {
+      method: 'PUT',
+      headers: {
+        'Authorization': `Bearer ${token}`,
+        'Content-Type': 'application/json',
+        'Accept': 'application/vnd.github+json'
+      },
+      body: JSON.stringify({
+        message,
+        content: Buffer.from(content, 'utf-8').toString('base64'),
+        sha: existing.sha
+      })
+    });
+
+    const data = await res.json();
+    if (data.commit) return { success: true, sha: data.commit.sha, url: data.content?.html_url };
+    return { success: false, error: data.message || 'Bilinmeyen hata' };
+  } catch (e) {
+    return { success: false, error: e.message };
+  }
+}
+
+// ============ RAILWAY ENV ============
+
+async function railwayAddEnv(name, value) {
+  try {
+    const token = process.env.RAILWAY_TOKEN;
+    const projectId = process.env.RAILWAY_PROJECT_ID;
+    const environmentId = process.env.RAILWAY_ENVIRONMENT_ID;
+    const serviceId = process.env.RAILWAY_SERVICE_ID;
+
+    if (!token) return { success: false, error: 'RAILWAY_TOKEN tanımlı değil' };
+    if (!projectId || !environmentId || !serviceId) {
+      return { success: false, error: 'RAILWAY_PROJECT_ID / RAILWAY_ENVIRONMENT_ID / RAILWAY_SERVICE_ID eksik' };
+    }
+
+    const res = await fetch('https://backboard.railway.app/graphql/v2', {
+      method: 'POST',
+      headers: {
+        'Authorization': `Bearer ${token}`,
+        'Content-Type': 'application/json'
+      },
+      body: JSON.stringify({
+        query: `
+          mutation($input: VariableUpsertInput!) {
+            variableUpsert(input: $input)
+          }
+        `,
+        variables: {
+          input: { projectId, environmentId, serviceId, name, value }
+        }
+      })
+    });
+
+    const data = await res.json();
+
+    if (data.data?.variableUpsert) return { success: true, message: `${name} eklendi/güncellendi` };
+    return { success: false, error: data.errors?.[0]?.message || 'Bilinmeyen hata' };
+  } catch (e) {
+    return { success: false, error: e.message };
+  }
+}
+
+// ============ SUPABASE DDL ============
+
+async function supabaseExecSQL(sql) {
+  try {
+    const url = process.env.SUPABASE_URL;
+    const key = process.env.SUPABASE_SERVICE_ROLE_KEY;
+
+    if (!url || !key) return { success: false, error: 'SUPABASE_URL veya SUPABASE_SERVICE_ROLE_KEY eksik' };
+
+    const rpcRes = await fetch(`${url}/rest/v1/rpc/exec_sql`, {
+      method: 'POST',
+      headers: {
+        'Authorization': `Bearer ${key}`,
+        'apikey': key,
+        'Content-Type': 'application/json'
+      },
+      body: JSON.stringify({ query: sql })
+    });
+
+    if (rpcRes.ok) {
+      const data = await rpcRes.json().catch(() => null);
+      return { success: true, result: data };
+    }
+
+    const err = await rpcRes.json().catch(() => ({}));
+    return {
+      success: false,
+      error: `exec_sql RPC yok. Önce Supabase SQL Editor'da RPC oluşturun. (${err?.message || rpcRes.status})`
+    };
+  } catch (e) {
+    return { success: false, error: e.message };
+  }
+}
+
+async function supabaseEnableRLS(tableName) {
+  const sql = `ALTER TABLE public.${tableName} ENABLE ROW LEVEL SECURITY;`;
+  return await supabaseExecSQL(sql);
+}
+
 // ============ MASTER ORCHESTRATOR ============
 
 const MASTER_PROMPT = `Sen YİSA-S Ana Asistan'sın. Patron Serdinç Altay'ın kişisel AI asistanısın.
@@ -163,10 +346,10 @@ MEVCUT AI'LAR:
 - Cursor: Kod yazma, hata düzeltme, PR oluşturma
 
 ARAÇLAR:
-- GitHub: Repo yönetimi
+- GitHub: Repo yönetimi, dosya oluşturma/güncelleme
 - Vercel: Deployment
-- Supabase: Veritabanı
-- Railway: Backend
+- Supabase: Veritabanı, RLS yönetimi
+- Railway: Backend, env yönetimi
 
 ROBOTLAR (Supabase'de tanımlı):
 - CEO, COO, CTO, CFO, CMO, CPO, CSO, CCO, CHRO
@@ -194,7 +377,6 @@ async function masterOrchestrate(userMessage) {
   let report = '';
   
   try {
-    // 1. Plan yap
     const planResult = await anthropic.messages.create({
       model: 'claude-sonnet-4-20250514',
       max_tokens: 1024,
@@ -209,7 +391,6 @@ async function masterOrchestrate(userMessage) {
       const jsonMatch = planText.match(/\{[\s\S]*\}/);
       plan = jsonMatch ? JSON.parse(jsonMatch[0]) : null;
     } catch {
-      // Basit soru, direkt cevapla
       const direct = await anthropic.messages.create({
         model: 'claude-sonnet-4-20250514',
         max_tokens: 4096,
@@ -231,7 +412,6 @@ async function masterOrchestrate(userMessage) {
 
     report += `🎯 **GÖREV:** ${plan.plan}\n\n`;
 
-    // 2. AI'ları çalıştır
     const aiResults = {};
     
     if (plan.ai_tasks && plan.ai_tasks.length > 0) {
@@ -252,7 +432,6 @@ async function masterOrchestrate(userMessage) {
       report += `\n`;
     }
 
-    // 3. Araçları çalıştır
     if (plan.tools && plan.tools.length > 0) {
       report += `🔧 **ARAÇLAR:**\n`;
       
@@ -268,7 +447,6 @@ async function masterOrchestrate(userMessage) {
       report += `\n`;
     }
 
-    // 4. Final işlem
     if (plan.final_action === 'v0' && aiResults.gpt) {
       report += `🎨 **V0 ÜRETİM:**\n`;
       const v0Result = await callV0(aiResults.gpt);
@@ -283,7 +461,6 @@ async function masterOrchestrate(userMessage) {
       }
     }
 
-    // 5. Sonuçları birleştir
     if (Object.keys(aiResults).length > 0) {
       report += `📋 **SONUÇLAR:**\n\n`;
       
@@ -297,7 +474,6 @@ async function masterOrchestrate(userMessage) {
         report += `**Together Değerlendirmesi:**\n${aiResults.together}\n\n`;
       }
 
-      // Claude final düzenleme
       const finalEdit = await anthropic.messages.create({
         model: 'claude-sonnet-4-20250514',
         max_tokens: 2048,
@@ -325,6 +501,9 @@ function detectQuickCommand(msg) {
   if (m.includes('railway durum')) return 'railway';
   if (m.includes('sistem kur') || m.includes('robotu kur')) return 'setup';
   if (m.includes('robot listele')) return 'robots';
+  if (m.includes('assistant sayfası') || m.includes('assistant oluştur')) return 'create_assistant';
+  if (m.includes('railway env') || m.includes('railway değişken')) return 'railway_env';
+  if (m.includes('rls düzelt') || m.includes('rls etkinleştir')) return 'fix_rls';
   return null;
 }
 
@@ -361,7 +540,71 @@ app.post('/api/chat', async (req, res) => {
       });
     }
 
-    // Master Orchestrator
+    if (cmd === 'create_assistant') {
+      const pageContent = `'use client'
+
+import RobotDashboard from '@/components/RobotDashboard'
+
+export default function AssistantPage() {
+  return (
+    <div className="min-h-screen bg-gray-900">
+      <RobotDashboard />
+    </div>
+  )
+}
+`;
+
+      const path = 'app/assistant/page.tsx';
+      const existing = await githubGetFile(path);
+      const result = existing.success
+        ? await githubUpdateFile(path, pageContent, 'Robot: /assistant sayfası güncellendi')
+        : await githubCreateFile(path, pageContent, 'Robot: /assistant sayfası oluşturuldu');
+
+      if (result.success) {
+        return res.json({
+          message: `✅ **/assistant sayfası hazır!**\n\n📁 Dosya: ${path}\n🔗 URL: ${result.url || 'GitHub'}\n\nVercel otomatik deploy tetikleyecek. 2-3 dk bekleyin.`,
+          model: 'github'
+        });
+      }
+      return res.json({ message: `❌ Hata: ${result.error}`, model: 'error' });
+    }
+
+    if (cmd === 'railway_env') {
+      const url = process.env.SUPABASE_URL;
+      const anon = process.env.SUPABASE_ANON_KEY;
+
+      if (!anon) {
+        return res.json({
+          message: `❌ **SUPABASE_ANON_KEY tanımlı değil.**\n\nÖnce Railway'e SUPABASE_ANON_KEY ekleyin:\nSupabase → Settings → API → anon public key`,
+          model: 'error'
+        });
+      }
+
+      const env1 = await railwayAddEnv('NEXT_PUBLIC_SUPABASE_URL', url || '');
+      const env2 = await railwayAddEnv('NEXT_PUBLIC_SUPABASE_ANON_KEY', anon);
+
+      return res.json({
+        message:
+          `🚂 **Railway Env Güncelleme:**\n\n` +
+          `1) NEXT_PUBLIC_SUPABASE_URL: ${env1.success ? '✅' : '❌ ' + env1.error}\n` +
+          `2) NEXT_PUBLIC_SUPABASE_ANON_KEY: ${env2.success ? '✅' : '❌ ' + env2.error}`,
+        model: 'railway'
+      });
+    }
+
+    if (cmd === 'fix_rls') {
+      const tables = ['job_types', 'worker_pools', 'routines', 'dashboard_templates', 'instagram_templates', 'slogans', 'franchise_customers'];
+      let report = '🔒 **RLS Düzeltme:**\n\n';
+
+      for (const table of tables) {
+        const result = await supabaseEnableRLS(table);
+        report += `${table}: ${result.success ? '✅' : '❌ ' + result.error}\n`;
+      }
+
+      report += '\n⚠️ RLS açıldı. Her tablo için policy tanımlanmalı.';
+      return res.json({ message: report, model: 'supabase' });
+    }
+
     const response = await masterOrchestrate(message);
     res.json({ message: response, model: 'master' });
 
@@ -372,7 +615,7 @@ app.post('/api/chat', async (req, res) => {
 });
 
 app.get('/health', (req, res) => {
-  res.json({ status: 'ok', version: '2.0-master' });
+  res.json({ status: 'ok', version: '3.0-full' });
 });
 
 const PORT = process.env.PORT || 3001;
