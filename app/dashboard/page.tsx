@@ -4,6 +4,7 @@ import { useEffect, useState } from 'react'
 import { useRouter } from 'next/navigation'
 import { supabase } from '@/lib/supabase'
 import { LogOut, Home, Users, Settings, BarChart3, MessageSquare } from 'lucide-react'
+import AdvancedChat from '@/components/AdvancedChat'
 
 export default function DashboardPage() {
   const [user, setUser] = useState<any>(null)
@@ -26,6 +27,8 @@ export default function DashboardPage() {
 
   const handleLogout = async () => {
     await supabase.auth.signOut()
+    // Clear auth cookie
+    document.cookie = 'sb-access-token=; path=/; expires=Thu, 01 Jan 1970 00:00:00 GMT'
     router.push('/')
   }
 
@@ -130,6 +133,9 @@ export default function DashboardPage() {
           </p>
         </div>
       </main>
+      
+      {/* AI Chat Widget */}
+      <AdvancedChat />
     </div>
   )
 }
