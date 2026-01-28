@@ -1,0 +1,50 @@
+import { NextRequest, NextResponse } from 'next/server'
+
+const ANTHROPIC_URL = 'https://api.anthropic.com/v1/messages'
+
+export async function POST(req: NextRequest) {
+  try {
+    const apiKey = process.env.ANTHROPIC_API_KEY
+    if (!apiKey) {
+      return NextResponse.json(
+        { error: 'ANTHROPIC_API_KEY tanımlı değil' },
+        { status: 500 }
+      )
+    }
+
+    const body = await req.json()
+    const message = typeof body.message === 'string' ? body.message : (body.message ?? 'Merhaba')
+
+    const res = await fetch(ANTHROPIC_URL, {
+      method: 'POST',
+      headers: {
+        'Content-Type': 'application/json',
+        'x-api-key': apiKey,
+        'anthropic-version': '2023-06-01',
+      },
+      body: JSON.stringify({
+        model: 'claude-3-5-haiku-20241022',
+        max_tokens: 1024,
+        system: 'Sen YİSA-S Patron Asistanısın. Kısa, net ve Türkçe yanıt ver.',
+        messages: [{ role: 'user', content: message }],
+      }),
+    })
+
+    if (!res.ok) {
+      const err = await res.text()
+      return NextResponse.json(
+        { error: 'Claude isteği başarısız', detail: err },
+        { status: res.status }
+      )
+    }
+
+    const data = await res.json()
+    const text =
+      data.content?.find((c: { type: string }) => c.type === 'text')?.text ?? 'Yanıt oluşturulamadı.'
+
+    return NextResponse.json({ text })
+  } catch (e) {
+    const err = e instanceof Error ? e.message : String(e)
+    return NextResponse.json({ error: 'Chat hatası', detail: err }, { status: 500 })
+  }
+}
