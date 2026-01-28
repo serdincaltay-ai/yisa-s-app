@@ -1,8 +1,9 @@
 'use client'
 
-import { useState } from 'react'
-import { useRouter } from 'next/navigation'
+import { useState, useEffect } from 'react'
+import { useRouter, useSearchParams } from 'next/navigation'
 import { supabase } from '@/lib/supabase'
+import { canAccessDashboard } from '@/lib/auth/roles'
 
 export default function LoginPage() {
   const [email, setEmail] = useState('')
@@ -10,13 +11,21 @@ export default function LoginPage() {
   const [loading, setLoading] = useState(false)
   const [error, setError] = useState('')
   const router = useRouter()
+  const searchParams = useSearchParams()
+  const unauthorized = searchParams.get('unauthorized') === '1'
+
+  useEffect(() => {
+    supabase.auth.getUser().then(({ data: { user } }) => {
+      if (user && canAccessDashboard(user)) router.replace('/dashboard')
+    })
+  }, [router])
 
   const handleLogin = async (e: React.FormEvent) => {
     e.preventDefault()
     setLoading(true)
     setError('')
 
-    const { error } = await supabase.auth.signInWithPassword({
+    const { data, error } = await supabase.auth.signInWithPassword({
       email,
       password,
     })
@@ -25,7 +34,14 @@ export default function LoginPage() {
       setError('E-posta veya şifre hatalı')
       setLoading(false)
     } else {
-      router.push('/dashboard')
+      const user = data?.user
+      if (user && !canAccessDashboard(user)) {
+        await supabase.auth.signOut()
+        setError('Bu hesap panel erişimine yetkili değil. Sadece Patron, Süper Admin veya Sistem Admini.')
+        setLoading(false)
+      } else {
+        router.push('/dashboard')
+      }
     }
   }
 
@@ -45,6 +61,11 @@ export default function LoginPage() {
         <form onSubmit={handleLogin} className="bg-slate-800/50 border border-slate-700 rounded-2xl p-8">
           <h2 className="text-xl font-semibold text-white mb-6 text-center">Giriş Yap</h2>
 
+          {unauthorized && (
+            <div className="mb-4 p-3 bg-amber-500/10 border border-amber-500/30 rounded-lg text-amber-400 text-sm">
+              Yetkisiz erişim. Panele sadece Patron, Süper Admin veya Sistem Admini girebilir.
+            </div>
+          )}
           {error && (
             <div className="mb-4 p-3 bg-red-500/10 border border-red-500/30 rounded-lg text-red-400 text-sm">
               {error}

@@ -14,6 +14,8 @@ export async function POST(req: NextRequest) {
 
     const body = await req.json()
     const message = typeof body.message === 'string' ? body.message : (body.message ?? 'Merhaba')
+    const taskType = typeof body.taskType === 'string' ? body.taskType : undefined
+    const assignedAI = typeof body.assignedAI === 'string' ? body.assignedAI : 'CLAUDE'
 
     const res = await fetch(ANTHROPIC_URL, {
       method: 'POST',
@@ -42,7 +44,11 @@ export async function POST(req: NextRequest) {
     const text =
       data.content?.find((c: { type: string }) => c.type === 'text')?.text ?? 'Yanıt oluşturulamadı.'
 
-    return NextResponse.json({ text })
+    return NextResponse.json({
+      text,
+      assignedAI: assignedAI || 'CLAUDE',
+      taskType: taskType || 'unknown',
+    })
   } catch (e) {
     const err = e instanceof Error ? e.message : String(e)
     return NextResponse.json({ error: 'Chat hatası', detail: err }, { status: 500 })
