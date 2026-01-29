@@ -2,6 +2,29 @@
 
 **Nasıl kontrol edeceğiniz:** Commit atılmış mı, deploy edilmiş mi, hata/çakışma var mı?
 
+**Git + GitHub + Vercel + Supabase + Railway durumu ve “nasıl devam”:** → **SUAN_DURUM_VE_DEVAM.md**
+
+---
+
+## 0. TEK KOMUTLA DURUM + ÇAKIŞMA KONTROLÜ
+
+Proje klasöründe **PowerShell** açıp şunu çalıştırın:
+
+```powershell
+cd C:\Users\info\OneDrive\Desktop\YISA_S_APP\yisa-s-app
+Write-Host "=== GIT DURUMU ===" -ForegroundColor Cyan
+git status
+Write-Host "`n=== SON 3 COMMIT ===" -ForegroundColor Cyan
+git log --oneline -3
+Write-Host "`n=== REMOTE (GITHUB) ===" -ForegroundColor Cyan
+git remote -v
+Write-Host "`n=== ÇAKIŞMA VAR MI? ===" -ForegroundColor Cyan
+git status | Select-String -Pattern "Unmerged|both modified|conflict"
+if (-not $?) { Write-Host "Çakışma yok." -ForegroundColor Green }
+```
+
+**Çakışma yoksa:** "nothing to commit", "up to date with 'origin/main'" ve "Çakışma yok." görürsünüz.
+
 ---
 
 ## 1. COMMIT KONTROLÜ (Yerelde)
