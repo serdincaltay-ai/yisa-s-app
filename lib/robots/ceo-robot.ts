@@ -165,3 +165,32 @@ export function getRoutineScheduleFromMessage(message: string): ScheduleType | n
   if (/\baylık|her ay|monthly\b/.test(lower)) return 'monthly'
   return null
 }
+
+/** Şirket işi anahtar kelimeleri → CELF'e gider */
+const COMPANY_KEYWORDS = [
+  'şirket', 'yisa-s', 'yisa s', 'franchise', 'sporcu', 'tesis', 'müşteri', 'bayi',
+  'gelir', 'gider', 'rapor', 'bütçe', 'kampanya', 'sözleşme', 'personel', 'sistem',
+  'veri', 'analiz', 'dashboard', 'şablon', 'satış', 'crm', 'destek', 'güvenlik',
+]
+/** Patron özel işi anahtar kelimeleri → CELF'e gitmez, patron_private_tasks */
+const PRIVATE_KEYWORDS = ['benim için', 'şahsi', 'özel', 'kişisel', 'tatil', 'araştır', 'not al']
+
+export type TaskClassification = 'company' | 'private' | 'unclear'
+
+/** İş sınıflandırması: şirket işi (CELF), patron özel işi (private), belirsiz (Patrona sor) */
+export function classifyTask(message: string): TaskClassification {
+  const lower = message.toLowerCase().trim()
+  if (PRIVATE_KEYWORDS.some((k) => lower.includes(k))) return 'private'
+  if (COMPANY_KEYWORDS.some((k) => lower.includes(k))) return 'company'
+  return 'unclear'
+}
+
+/** Patron özel işi mi? */
+export function isPrivateTask(message: string): boolean {
+  return classifyTask(message) === 'private'
+}
+
+/** Belirsiz mi? (Patrona "Şirketle ilgili mi, özel iş mi?" diye sorulacak) */
+export function isTaskClassificationUnclear(message: string): boolean {
+  return classifyTask(message) === 'unclear'
+}

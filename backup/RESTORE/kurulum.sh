@@ -1,6 +1,8 @@
 #!/bin/bash
 set -e
-echo "YİSA-S Sistem Kurulumu Başlıyor..."
+SCRIPT_DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
+cd "$SCRIPT_DIR/../.."
+echo "YİSA-S Sistem Kurulumu Başlıyor... (proje kökü: $(pwd))"
 echo ""
 
 echo "[1/5] Bağımlılıklar yükleniyor..."

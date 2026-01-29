@@ -1,6 +1,8 @@
 @echo off
 chcp 65001 >nul
-echo YİSA-S Sistem Kurulumu Başlıyor...
+cd /d "%~dp0"
+cd ..\..
+echo YİSA-S Sistem Kurulumu Başlıyor... (proje kökü: %CD%)
 echo.
 
 echo [1/5] Bağımlılıklar yükleniyor...
