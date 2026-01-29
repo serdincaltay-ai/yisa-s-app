@@ -1,6 +1,10 @@
 import { NextRequest, NextResponse } from 'next/server'
 import { createClient } from '@supabase/supabase-js'
-import { updatePatronCommand, insertAuditLog } from '@/lib/db/ceo-celf'
+import {
+  updatePatronCommand,
+  insertAuditLog,
+  getPatronCommand,
+} from '@/lib/db/ceo-celf'
 
 export const dynamic = 'force-dynamic'
 
@@ -80,6 +84,18 @@ export async function POST(req: NextRequest) {
     }
 
     const now = new Date().toISOString()
+
+    // Onay öncesi komutu al (onay sonrası aksiyon için payload gerekli)
+    let resultText: string | undefined
+    if (decision === 'approve') {
+      const cmd = await getPatronCommand(commandId)
+      const payload = cmd.output_payload ?? {}
+      resultText =
+        typeof payload.displayText === 'string'
+          ? payload.displayText
+          : undefined
+    }
+
     const status =
       decision === 'approve' ? 'approved' : decision === 'reject' ? 'rejected' : 'modified'
 
@@ -106,6 +122,7 @@ export async function POST(req: NextRequest) {
       command_id: commandId,
       decision,
       status,
+      result: resultText,
       message:
         decision === 'approve'
           ? 'İşlem onaylandı ve uygulandı.'

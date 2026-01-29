@@ -94,6 +94,27 @@ export async function createPatronCommand(params: {
   return { id: data?.id }
 }
 
+export async function getPatronCommand(id: string): Promise<{
+  command?: string
+  output_payload?: Record<string, unknown>
+  error?: string
+}> {
+  const db = getSupabaseServer()
+  if (!db) return { error: 'Supabase bağlantısı yok' }
+
+  const { data, error } = await db
+    .from('patron_commands')
+    .select('command, output_payload')
+    .eq('id', id)
+    .single()
+
+  if (error) return { error: error.message }
+  return {
+    command: data?.command as string | undefined,
+    output_payload: (data?.output_payload as Record<string, unknown>) ?? {},
+  }
+}
+
 export async function updatePatronCommand(
   id: string,
   updates: { status: string; decision?: string; decision_at?: string; modify_text?: string }

@@ -40,7 +40,10 @@ export default function DashboardPage() {
     flow: string
     message: string
     command_id?: string
+    displayText?: string
   } | null>(null)
+  /** Onay/Reddet/Değiştir işlemi sürerken */
+  const [approvalBusy, setApprovalBusy] = useState(false)
   const [stats, setStats] = useState({
     franchiseRevenueMonth: 0,
     expensesMonth: 0,
@@ -134,6 +137,7 @@ export default function DashboardPage() {
               flow: data.flow ?? QUALITY_FLOW.name,
               message: msg,
               command_id: data.command_id,
+              displayText: typeof data.text === 'string' ? data.text : undefined,
             })
           }
           setChatMessages((prev) => [
@@ -433,65 +437,137 @@ export default function DashboardPage() {
             </div>
           )}
           {pendingApproval && (
-            <PatronApprovalUI
-              pendingTask={pendingApproval}
-              onApprove={async () => {
-                if (pendingApproval.command_id) {
-                  try {
-                    await fetch('/api/approvals', {
-                      method: 'POST',
-                      headers: { 'Content-Type': 'application/json' },
-                      body: JSON.stringify({
-                        command_id: pendingApproval.command_id,
-                        decision: 'approve',
-                        user_id: user?.id,
-                      }),
-                    })
-                  } catch {
-                    /* ignore */
-                  }
-                }
-                setPendingApproval(null)
-              }}
-              onReject={async () => {
-                if (pendingApproval.command_id) {
-                  try {
-                    await fetch('/api/approvals', {
-                      method: 'POST',
-                      headers: { 'Content-Type': 'application/json' },
-                      body: JSON.stringify({
-                        command_id: pendingApproval.command_id,
-                        decision: 'reject',
-                        user_id: user?.id,
-                      }),
-                    })
-                  } catch {
-                    /* ignore */
-                  }
-                }
-                setPendingApproval(null)
-              }}
-              onModify={async (modifyText) => {
-                if (pendingApproval.command_id) {
-                  try {
-                    await fetch('/api/approvals', {
-                      method: 'POST',
-                      headers: { 'Content-Type': 'application/json' },
-                      body: JSON.stringify({
-                        command_id: pendingApproval.command_id,
-                        decision: 'modify',
-                        modify_text: modifyText,
-                        user_id: user?.id,
-                      }),
-                    })
-                  } catch {
-                    /* ignore */
-                  }
-                }
-                setChatInput(modifyText)
-                setPendingApproval(null)
-              }}
-            />
+            <>
+              {approvalBusy ? (
+                <div className="patron-approval-panel rounded-2xl border border-amber-500/40 bg-amber-500/10 p-4 text-center text-amber-400">
+                  <p className="font-medium">Çalışıyor...</p>
+                  <p className="text-sm text-slate-400 mt-1">Patron kararı uygulanıyor</p>
+                </div>
+              ) : (
+                <PatronApprovalUI
+                  pendingTask={pendingApproval}
+                  onApprove={async () => {
+                    setApprovalBusy(true)
+                    const msg = pendingApproval.message
+                    try {
+                      const res = await fetch('/api/approvals', {
+                        method: 'POST',
+                        headers: { 'Content-Type': 'application/json' },
+                        body: JSON.stringify({
+                          command_id: pendingApproval.command_id,
+                          decision: 'approve',
+                          user_id: user?.id,
+                        }),
+                      })
+                      const data = await res.json()
+                      const resultText =
+                        data.result ??
+                        pendingApproval.displayText ??
+                        (pendingApproval.aiResponses
+                          .filter((a) => {
+                            const r = a.response as { status?: string; text?: string }
+                            return r?.status === 'ok' && typeof r.text === 'string'
+                          })
+                          .map((a) => (a.response as { text: string }).text)
+                          .pop())
+                      setChatMessages((prev) => [
+                        ...prev,
+                        {
+                          role: 'assistant',
+                          text: `✅ Onaylandı. Sonuç uygulandı.\n\n${resultText ?? 'İşlem tamamlandı.'}`,
+                          aiProviders: pendingApproval.aiResponses
+                            .filter((a) => (a.response as { status?: string })?.status === 'ok')
+                            .map((a) => a.provider),
+                          taskType: pendingApproval.output?.taskType as string,
+                        },
+                      ])
+                    } catch {
+                      setChatMessages((prev) => [
+                        ...prev,
+                        {
+                          role: 'assistant',
+                          text: 'Onay gönderilirken bağlantı hatası. Tekrar deneyin.',
+                          aiProviders: [],
+                        },
+                      ])
+                    } finally {
+                      setPendingApproval(null)
+                      setApprovalBusy(false)
+                    }
+                  }}
+                  onReject={async () => {
+                    setApprovalBusy(true)
+                    try {
+                      await fetch('/api/approvals', {
+                        method: 'POST',
+                        headers: { 'Content-Type': 'application/json' },
+                        body: JSON.stringify({
+                          command_id: pendingApproval.command_id,
+                          decision: 'reject',
+                          user_id: user?.id,
+                        }),
+                      })
+                      setChatMessages((prev) => [
+                        ...prev,
+                        {
+                          role: 'assistant',
+                          text: '❌ İptal edildi.',
+                          aiProviders: [],
+                        },
+                      ])
+                    } catch {
+                      setChatMessages((prev) => [
+                        ...prev,
+                        {
+                          role: 'assistant',
+                          text: 'Red gönderilirken hata. Tekrar deneyin.',
+                          aiProviders: [],
+                        },
+                      ])
+                    } finally {
+                      setPendingApproval(null)
+                      setApprovalBusy(false)
+                    }
+                  }}
+                  onModify={async (modifyText) => {
+                    setApprovalBusy(true)
+                    try {
+                      await fetch('/api/approvals', {
+                        method: 'POST',
+                        headers: { 'Content-Type': 'application/json' },
+                        body: JSON.stringify({
+                          command_id: pendingApproval.command_id,
+                          decision: 'modify',
+                          modify_text: modifyText,
+                          user_id: user?.id,
+                        }),
+                      })
+                      setChatInput(modifyText)
+                      setChatMessages((prev) => [
+                        ...prev,
+                        {
+                          role: 'assistant',
+                          text: 'Değişiklik kaydedildi. Yeni talimatı yukarıya yazıp Gönder ile tekrar işleyin.',
+                          aiProviders: [],
+                        },
+                      ])
+                    } catch {
+                      setChatMessages((prev) => [
+                        ...prev,
+                        {
+                          role: 'assistant',
+                          text: 'Değişiklik gönderilirken hata. Tekrar deneyin.',
+                          aiProviders: [],
+                        },
+                      ])
+                    } finally {
+                      setPendingApproval(null)
+                      setApprovalBusy(false)
+                    }
+                  }}
+                />
+              )}
+            </>
           )}
           <div ref={chatEndRef} />
         </div>

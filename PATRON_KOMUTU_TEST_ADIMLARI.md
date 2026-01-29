@@ -43,12 +43,21 @@ Oluşturulan tablolar:
    - `celf_logs`: `ceo_classify` ve `celf_execute` kayıtları.
    - `patron_commands`: `status = pending` kayıt, `command_id` döner.
 
-### 3.3 Onay sistemi
+### 3.3 Onay sistemi (Onayla / Reddet / Değiştir)
 
 1. “Patron Onayı Bekleniyor” paneli görününce:
-   - **Onayla** → `POST /api/approvals` (decision: approve) → `patron_commands.status = approved`, `audit_log` kaydı.
-   - **Reddet** → decision: reject → `patron_commands.status = rejected`, `audit_log` kaydı.
-   - **Değiştir** → Talimatı yazıp Gönder → decision: modify, `modify_text` kaydedilir; mesaj kutusuna yazılır, yeniden gönderilir.
+   - **Onayla** tıkla:
+     - UI’da “Çalışıyor...” görünür.
+     - `POST /api/approvals` (decision: approve) çağrılır.
+     - İş bitince sohbet alanına “✅ Onaylandı. Sonuç uygulandı.” + sonuç metni eklenir.
+     - Panel kapanır.
+   - **Reddet** tıkla:
+     - `POST /api/approvals` (decision: reject) çağrılır.
+     - Sohbete “❌ İptal edildi.” mesajı eklenir, panel kapanır.
+   - **Değiştir** tıkla:
+     - Talimat kutusu açılır, yeni talimatı yazıp Gönder’e bas.
+     - `POST /api/approvals` (decision: modify, modify_text) çağrılır.
+     - Yeni talimat mesaj kutusuna yazılır; “Değişiklik kaydedildi. Yeni talimatı yukarıya yazıp Gönder ile tekrar işleyin.” mesajı gelir.
 
 2. Supabase’te:
    - `patron_commands`: İlgili satırda `status`, `decision`, `decision_at` güncellenmiş olmalı.
