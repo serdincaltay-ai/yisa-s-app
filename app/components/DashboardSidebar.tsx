@@ -12,13 +12,22 @@ import {
   Bot,
   Building2,
   MessageSquare,
+  Wallet,
+  LayoutTemplate,
+  ClipboardCheck,
+  Store,
 } from 'lucide-react'
 
+/** Patron paneli menüsü: franchise gelir/gider, onay kuyruğu, şablonlar, roller */
 const NAV = [
   { href: '/dashboard', label: 'Ana Sayfa', icon: Home },
   { href: '/dashboard/robots', label: 'Robot Yönetimi', icon: Bot },
-  { href: '/dashboard/users', label: 'Kullanıcı Yönetimi', icon: Users },
-  { href: '/dashboard/facilities', label: 'Tesis Yönetimi', icon: Building2 },
+  { href: '/dashboard/onay-kuyrugu', label: 'Onay Kuyruğu', icon: ClipboardCheck },
+  { href: '/dashboard/franchises', label: "Franchise'lar", icon: Store },
+  { href: '/dashboard/kasa-defteri', label: 'Kasa Defteri', icon: Wallet },
+  { href: '/dashboard/sablonlar', label: 'Şablonlar', icon: LayoutTemplate },
+  { href: '/dashboard/users', label: 'Kullanıcı & Roller', icon: Users },
+  { href: '/dashboard/facilities', label: 'Tesis / Yapılar', icon: Building2 },
   { href: '/dashboard/reports', label: 'Raporlar', icon: BarChart3 },
   { href: '/dashboard/messages', label: 'Mesajlar', icon: MessageSquare },
   { href: '/dashboard/settings', label: 'Ayarlar', icon: Settings },

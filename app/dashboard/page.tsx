@@ -25,10 +25,11 @@ export default function DashboardPage() {
   const [editText, setEditText] = useState('')
   const [showFlow, setShowFlow] = useState(false)
   const [stats, setStats] = useState({
-    athletes: 0,
-    coaches: 0,
-    revenueMonth: 0,
-    demoRequests: 0,
+    franchiseRevenueMonth: 0,
+    expensesMonth: 0,
+    activeFranchises: 0,
+    pendingApprovals: 0,
+    newFranchiseApplications: 0,
   })
   const chatEndRef = useRef<HTMLDivElement>(null)
 
@@ -41,10 +42,11 @@ export default function DashboardPage() {
       .then((r) => r.json())
       .then((d) =>
         setStats({
-          athletes: Number(d?.athletes) || 0,
-          coaches: Number(d?.coaches) || 0,
-          revenueMonth: Number(d?.revenueMonth) || 0,
-          demoRequests: Number(d?.demoRequests) || 0,
+          franchiseRevenueMonth: Number(d?.franchiseRevenueMonth) ?? Number(d?.revenueMonth) ?? 0,
+          expensesMonth: Number(d?.expensesMonth) ?? 0,
+          activeFranchises: Number(d?.activeFranchises) ?? 0,
+          pendingApprovals: Number(d?.pendingApprovals) ?? 0,
+          newFranchiseApplications: Number(d?.newFranchiseApplications) ?? Number(d?.demoRequests) ?? 0,
         })
       )
       .catch(() => {})
@@ -133,22 +135,27 @@ export default function DashboardPage() {
         <p className="text-slate-400">{user?.email ?? '—'}</p>
       </div>
 
-      <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6 mb-8">
+      {/* Patron paneli: franchise gelir, gider, aktif franchise, onay kuyruğu, yeni başvurular */}
+      <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-5 gap-6 mb-8">
         <div className="bg-slate-800/50 border border-slate-700 rounded-2xl p-6">
-          <p className="text-slate-400 text-sm mb-1">Toplam Sporcu</p>
-          <p className="text-3xl font-bold text-white">{stats.athletes}</p>
+          <p className="text-slate-400 text-sm mb-1">Franchise Geliri (Bu Ay)</p>
+          <p className="text-2xl font-bold text-amber-400">₺{stats.franchiseRevenueMonth.toLocaleString('tr-TR')}</p>
         </div>
         <div className="bg-slate-800/50 border border-slate-700 rounded-2xl p-6">
-          <p className="text-slate-400 text-sm mb-1">Aktif Antrenör</p>
-          <p className="text-3xl font-bold text-white">{stats.coaches}</p>
+          <p className="text-slate-400 text-sm mb-1">Gider (Bu Ay)</p>
+          <p className="text-2xl font-bold text-rose-400">₺{stats.expensesMonth.toLocaleString('tr-TR')}</p>
         </div>
         <div className="bg-slate-800/50 border border-slate-700 rounded-2xl p-6">
-          <p className="text-slate-400 text-sm mb-1">Bu Ay Gelir</p>
-          <p className="text-3xl font-bold text-amber-400">₺{stats.revenueMonth.toLocaleString('tr-TR')}</p>
+          <p className="text-slate-400 text-sm mb-1">Aktif Franchise</p>
+          <p className="text-2xl font-bold text-white">{stats.activeFranchises}</p>
         </div>
         <div className="bg-slate-800/50 border border-slate-700 rounded-2xl p-6">
-          <p className="text-slate-400 text-sm mb-1">Demo Talepleri</p>
-          <p className="text-3xl font-bold text-emerald-400">{stats.demoRequests}</p>
+          <p className="text-slate-400 text-sm mb-1">Onay Bekleyen</p>
+          <p className="text-2xl font-bold text-amber-400">{stats.pendingApprovals}</p>
+        </div>
+        <div className="bg-slate-800/50 border border-slate-700 rounded-2xl p-6">
+          <p className="text-slate-400 text-sm mb-1">Yeni Başvuru / Demo</p>
+          <p className="text-2xl font-bold text-emerald-400">{stats.newFranchiseApplications}</p>
         </div>
       </div>
 

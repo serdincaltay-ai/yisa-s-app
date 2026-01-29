@@ -1,0 +1,166 @@
+'use client'
+
+import { useEffect, useState } from 'react'
+import { Check, X, Clock, AlertCircle, RefreshCw } from 'lucide-react'
+
+type ApprovalItem = {
+  id: string
+  type: string
+  title: string
+  description?: string
+  status: string
+  priority?: string
+  created_at: string
+  source?: string
+}
+
+export default function OnayKuyruguPage() {
+  const [items, setItems] = useState<ApprovalItem[]>([])
+  const [loading, setLoading] = useState(true)
+  const [error, setError] = useState<string | null>(null)
+
+  const fetchData = async () => {
+    setLoading(true)
+    setError(null)
+    try {
+      const res = await fetch('/api/approvals')
+      const data = await res.json()
+      setItems(Array.isArray(data?.items) ? data.items : [])
+    } catch {
+      setError('Veri yüklenemedi.')
+      setItems([])
+    } finally {
+      setLoading(false)
+    }
+  }
+
+  useEffect(() => {
+    fetchData()
+  }, [])
+
+  const pending = items.filter((i) => i.status === 'pending')
+  const approved = items.filter((i) => i.status === 'approved')
+  const rejected = items.filter((i) => i.status === 'rejected')
+
+  return (
+    <div className="p-8">
+      <div className="mb-8 flex items-center justify-between">
+        <div>
+          <h1 className="text-2xl font-bold text-white">Onay Kuyruğu</h1>
+          <p className="text-slate-400">Sistemden gelen onay bekleyen işler — Onayla / Reddet / Değiştir.</p>
+        </div>
+        <button
+          type="button"
+          onClick={fetchData}
+          disabled={loading}
+          className="flex items-center gap-2 px-4 py-2 rounded-xl bg-slate-700 hover:bg-slate-600 text-slate-200 text-sm transition-colors disabled:opacity-50"
+        >
+          <RefreshCw size={16} className={loading ? 'animate-spin' : ''} />
+          Yenile
+        </button>
+      </div>
+
+      {error && (
+        <div className="mb-6 p-4 bg-red-500/10 border border-red-500/30 rounded-xl text-red-400 text-sm">
+          {error}
+        </div>
+      )}
+
+      {loading ? (
+        <div className="flex items-center justify-center py-16 text-slate-500">
+          Yükleniyor…
+        </div>
+      ) : items.length === 0 ? (
+        <div className="bg-slate-800/50 border border-slate-700 rounded-2xl p-12 text-center">
+          <AlertCircle className="mx-auto mb-4 text-slate-500" size={48} />
+          <p className="text-slate-400 mb-2">Henüz onay kaydı yok.</p>
+          <p className="text-slate-500 text-sm">
+            <code>approval_queue</code>, <code>pending_approvals</code> veya <code>workflow_tasks</code> tablosu Supabase&apos;de oluşturulduğunda burada listelenecek.
+          </p>
+        </div>
+      ) : (
+        <>
+          <div className="grid grid-cols-3 gap-4 mb-6">
+            <div className="bg-amber-500/10 border border-amber-500/30 rounded-xl p-4">
+              <p className="text-amber-400 text-sm">Bekleyen</p>
+              <p className="text-2xl font-bold text-white">{pending.length}</p>
+            </div>
+            <div className="bg-emerald-500/10 border border-emerald-500/30 rounded-xl p-4">
+              <p className="text-emerald-400 text-sm">Onaylanan</p>
+              <p className="text-2xl font-bold text-white">{approved.length}</p>
+            </div>
+            <div className="bg-red-500/10 border border-red-500/30 rounded-xl p-4">
+              <p className="text-red-400 text-sm">Reddedilen</p>
+              <p className="text-2xl font-bold text-white">{rejected.length}</p>
+            </div>
+          </div>
+
+          <div className="bg-slate-800/50 border border-slate-700 rounded-2xl overflow-hidden">
+            <div className="overflow-x-auto">
+              <table className="w-full text-left">
+                <thead>
+                  <tr className="border-b border-slate-700">
+                    <th className="px-6 py-4 text-slate-400 font-medium text-sm">Tip</th>
+                    <th className="px-6 py-4 text-slate-400 font-medium text-sm">Başlık</th>
+                    <th className="px-6 py-4 text-slate-400 font-medium text-sm">Öncelik</th>
+                    <th className="px-6 py-4 text-slate-400 font-medium text-sm">Durum</th>
+                    <th className="px-6 py-4 text-slate-400 font-medium text-sm">Tarih</th>
+                  </tr>
+                </thead>
+                <tbody>
+                  {items.map((item) => (
+                    <tr key={item.id} className="border-b border-slate-700/50 hover:bg-slate-700/30">
+                      <td className="px-6 py-4 text-white">{item.type}</td>
+                      <td className="px-6 py-4">
+                        <span className="text-white">{item.title}</span>
+                        {item.description && (
+                          <p className="text-slate-500 text-xs mt-1">{item.description}</p>
+                        )}
+                      </td>
+                      <td className="px-6 py-4">
+                        <span
+                          className={`text-xs px-2 py-1 rounded-lg ${
+                            item.priority === 'high'
+                              ? 'bg-rose-500/20 text-rose-400'
+                              : item.priority === 'low'
+                                ? 'bg-slate-500/20 text-slate-400'
+                                : 'bg-amber-500/20 text-amber-400'
+                          }`}
+                        >
+                          {item.priority ?? 'normal'}
+                        </span>
+                      </td>
+                      <td className="px-6 py-4">
+                        {item.status === 'pending' && (
+                          <span className="flex items-center gap-1 text-amber-400 text-sm">
+                            <Clock size={14} /> Bekliyor
+                          </span>
+                        )}
+                        {item.status === 'approved' && (
+                          <span className="flex items-center gap-1 text-emerald-400 text-sm">
+                            <Check size={14} /> Onaylandı
+                          </span>
+                        )}
+                        {item.status === 'rejected' && (
+                          <span className="flex items-center gap-1 text-red-400 text-sm">
+                            <X size={14} /> Reddedildi
+                          </span>
+                        )}
+                        {!['pending', 'approved', 'rejected'].includes(item.status) && (
+                          <span className="text-slate-400 text-sm">{item.status}</span>
+                        )}
+                      </td>
+                      <td className="px-6 py-4 text-slate-500 text-sm">
+                        {item.created_at ? new Date(item.created_at).toLocaleDateString('tr-TR') : '—'}
+                      </td>
+                    </tr>
+                  ))}
+                </tbody>
+              </table>
+            </div>
+          </div>
+        </>
+      )}
+    </div>
+  )
+}

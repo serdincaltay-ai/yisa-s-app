@@ -1,9 +1,21 @@
 import { NextResponse } from 'next/server'
 import { createClient, type SupabaseClient } from '@supabase/supabase-js'
+import { FRANCHISE_SEED } from '@/lib/data/franchises-seed'
 
 export const dynamic = 'force-dynamic'
 
 export interface StatsPayload {
+  /** Patron paneli: franchise satışlarından bu ay gelen gelir */
+  franchiseRevenueMonth: number
+  /** Patron paneli: bu ay toplam gider (kasa defteri) */
+  expensesMonth: number
+  /** Patron paneli: aktif franchise sayısı */
+  activeFranchises: number
+  /** Patron paneli: onay bekleyen iş sayısı */
+  pendingApprovals: number
+  /** Patron paneli: yeni franchise başvurusu / demo talebi */
+  newFranchiseApplications: number
+  /** Eski uyumluluk (franchise panelinde kullanılabilir) */
   athletes: number
   coaches: number
   revenueMonth: number
@@ -11,6 +23,11 @@ export interface StatsPayload {
 }
 
 const DEFAULT: StatsPayload = {
+  franchiseRevenueMonth: 0,
+  expensesMonth: 0,
+  activeFranchises: 0,
+  pendingApprovals: 0,
+  newFranchiseApplications: 0,
   athletes: 0,
   coaches: 0,
   revenueMonth: 0,
@@ -75,7 +92,10 @@ export async function GET() {
   try {
     const supabase = getSupabase()
     if (!supabase) {
-      return NextResponse.json(DEFAULT)
+      return NextResponse.json({
+        ...DEFAULT,
+        activeFranchises: FRANCHISE_SEED.length,
+      })
     }
 
     const athletesTables = ['athletes', 'athlete', 'sporcular', 'profiles']
@@ -104,13 +124,71 @@ export async function GET() {
 
     const revenueMonth = await revenueThisMonth(supabase)
 
+    // Patron paneli: franchise gelir = aynı gelir tablolarından (franchise satışları)
+    const franchiseRevenueMonth = revenueMonth
+    // Aktif franchise: franchises / organizations tablosu
+    const franchiseTables = ['franchises', 'organizations', 'tenants']
+    let activeFranchises = 0
+    for (const t of franchiseTables) {
+      const { n, ok } = await count(t, supabase)
+      if (ok) {
+        activeFranchises = n
+        break
+      }
+    }
+    if (activeFranchises === 0) activeFranchises = FRANCHISE_SEED.length
+    // Onay kuyruğu: approval_queue / pending_approvals (yoksa 0)
+    const approvalTables = ['approval_queue', 'pending_approvals', 'workflow_tasks']
+    let pendingApprovals = 0
+    for (const t of approvalTables) {
+      const { n, ok } = await count(t, supabase)
+      if (ok) {
+        pendingApprovals = n
+        break
+      }
+    }
+    // Gider: expenses / kasa_defteri / payments (type=expense)
+    const expenseTables = ['expenses', 'kasa_defteri', 'outgoing_payments']
+    let expensesMonth = 0
+    for (const t of expenseTables) {
+      try {
+        const { data, error } = await supabase.from(t).select('amount, total, created_at')
+        if (error) continue
+        if (!Array.isArray(data)) continue
+        const now = new Date()
+        const startStr = new Date(now.getFullYear(), now.getMonth(), 1).toISOString().slice(0, 10)
+        let sum = 0
+        for (const row of data) {
+          const r = row as Record<string, unknown>
+          const d = r.created_at ?? r.createdAt
+          const dateStr = typeof d === 'string' ? d.slice(0, 10) : ''
+          if (dateStr >= startStr) {
+            const v = Number(r.amount ?? r.total ?? 0)
+            if (!Number.isNaN(v)) sum += v
+          }
+        }
+        expensesMonth = sum
+        break
+      } catch {
+        continue
+      }
+    }
+
     return NextResponse.json({
+      franchiseRevenueMonth: Math.round(franchiseRevenueMonth),
+      expensesMonth: Math.round(expensesMonth),
+      activeFranchises,
+      pendingApprovals,
+      newFranchiseApplications: demoRequests,
       athletes,
       coaches,
       revenueMonth: Math.round(revenueMonth),
       demoRequests,
     } satisfies StatsPayload)
   } catch {
-    return NextResponse.json(DEFAULT)
+    return NextResponse.json({
+      ...DEFAULT,
+      activeFranchises: FRANCHISE_SEED.length,
+    })
   }
 }
