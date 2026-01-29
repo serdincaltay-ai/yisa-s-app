@@ -1,7 +1,24 @@
 /**
  * YİSA-S Rol bazlı erişim (13 seviye)
- * Patron Paneli: Patron, Süper Admin, Sistem Admini
+ * Talimat Bölüm 1.3: 0 Ziyaretçi … 12 Misafir Sporcu
  */
+
+/** Talimat uyumlu 13 rol (referans) */
+export const ROLE_SYSTEM_13 = [
+  'Ziyaretçi',
+  'Alt Admin',
+  'Tesis Müdürü',
+  'İPTAL',
+  'Sportif Direktör',
+  'Uzman Antrenör',
+  'Antrenör',
+  'Yardımcı/Stajyer',
+  'Kayıt Personeli',
+  'Temizlik Personeli',
+  'Veli',
+  'Sporcu',
+  'Misafir Sporcu',
+] as const
 
 export const ROLE_LEVELS = [
   'Ziyaretçi',

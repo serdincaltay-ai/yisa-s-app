@@ -1,0 +1,18 @@
+# YİSA-S Patron Paneli — Proje Kuralları
+
+## Asistan ve sistem tanımları — Sabit (değiştirilmez)
+
+**Patron talebi:** Asistanın çalışma prensibi, yerleşkesi (yapı), görev tanımları ve OA (organizasyon/asistan) tanımları kesinlikle değişmeyecektir.
+
+- Tüm asistan/robot tanımları **YISA-S-MASTER-DOKUMAN-v2.1-TASLAK.md** (ve onaylanmış Master Doküman) dosyasına göre sabittir.
+- Bölüm 2 (Robot Hiyerarşisi, Patron Asistanı), Bölüm 4 (çekirdek kurallar), Bölüm 2.6.1 (deploy/commit kuralları) referans alınır; kod veya davranış güncellenirken bu tanımlarla uyum korunur.
+- Detay: **ASSISTANT_KURALLARI.md** ve **.cursor/rules/asistan-sabit.mdc**
+
+## Dil
+
+- Kullanıcıya görünen tüm metinler Türkçe (buton, başlık, hata mesajı, placeholder).
+
+## Teknik
+
+- Next.js App Router, TypeScript, Tailwind, Supabase.
+- Ortam: .env.local (NEXT_PUBLIC_SUPABASE_*, ANTHROPIC_API_KEY, NEXT_PUBLIC_SITE_URL).

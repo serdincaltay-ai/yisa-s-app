@@ -2,7 +2,7 @@
 
 **Tarih:** 29 Ocak 2026
 
-## Bu commit’e dahil olanlar
+## Bu commit'e dahil olanlar
 
 - **Patron paneli:** Franchise geliri, gider, aktif franchise, onay kuyruğu, yeni başvuru kartları
 - **Sidebar:** Onay Kuyruğu, Franchise'lar, Kasa Defteri, Şablonlar, Kullanıcı & Roller

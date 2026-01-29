@@ -2,7 +2,7 @@
 
 **Nasıl kontrol edeceğiniz:** Commit atılmış mı, deploy edilmiş mi, hata/çakışma var mı?
 
-**Git + GitHub + Vercel + Supabase + Railway durumu ve “nasıl devam”:** → **SUAN_DURUM_VE_DEVAM.md**
+**Git + GitHub + Vercel + Supabase + Railway durumu ve "nasıl devam":** → **SUAN_DURUM_VE_DEVAM.md**
 
 ---
 
@@ -41,7 +41,7 @@ cd C:\Users\info\OneDrive\Desktop\YISA_S_APP\yisa-s-app
 |-------|-------------|
 | `git status` | Commit edilmemiş değişiklik var mı? Branch main ile uyumlu mu? |
 | `git log --oneline -5` | Son 5 commit (en son commit = en üstte) |
-| `git remote -v` | GitHub’a bağlı mı? (origin) |
+| `git remote -v` | GitHub'a bağlı mı? (origin) |
 
 **Beklenen (her şey tamamsa):**
 
@@ -79,12 +79,12 @@ cd C:\Users\info\OneDrive\Desktop\YISA_S_APP\yisa-s-app
 
 **Hata varsa:**
 
-- Kırmızı "Error" → **View Function Logs** veya **Building** log’una tıklayın.
+- Kırmızı "Error" → **View Function Logs** veya **Building** log'una tıklayın.
 - "Build failed" satırından itibaren hata mesajını okuyun (eksik env, TypeScript hatası, import hatası vb.).
 
 ### 2.2 Canlı site
 
-- **app.yisa-s.com** (veya Vercel’in verdiği URL) açılmalı.
+- **app.yisa-s.com** (veya Vercel'in verdiği URL) açılmalı.
 - Giriş sayfası ve dashboard yüklenmeli; konsol (F12 → Console) ve ağ (Network) sekmesinde kırmızı hata olmamalı.
 
 ---
@@ -99,21 +99,21 @@ cd C:\Users\info\OneDrive\Desktop\YISA_S_APP\yisa-s-app
 
 ### 3.2 Vercel build hatası
 
-- **Belirti:** Deployments’ta kırmızı "Error", e-posta bildirimi.
-- **Kontrol:** Vercel → Proje → Deployments → Hatalı deploy’a tıkla → **Building** veya **Logs**.
+- **Belirti:** Deployments'ta kırmızı "Error", e-posta bildirimi.
+- **Kontrol:** Vercel → Proje → Deployments → Hatalı deploy'a tıkla → **Building** veya **Logs**.
 - **Sık nedenler:** Eksik `NEXT_PUBLIC_*` veya `ANTHROPIC_API_KEY`, TypeScript/lint hatası, yanlış import.
 
 ### 3.3 Supabase / API hatası (canlı sitede)
 
-- **Belirti:** Dashboard’da sayfa açılınca boş liste, "Failed to fetch" veya 500 hatası.
+- **Belirti:** Dashboard'da sayfa açılınca boş liste, "Failed to fetch" veya 500 hatası.
 - **Kontrol:** Tarayıcıda F12 → **Console** ve **Network**; kırmızı satır veya başarısız istek (kırmızı) var mı?
 - **Sık nedenler:** RLS politikası izin vermiyor, tablo/kolon adı uyuşmuyor, env (Supabase URL/Key) yanlış.
 
 ### 3.4 Tablo / kolon uyumsuzluğu (Supabase ↔ Kod)
 
-- **Kontrol:** Supabase’te tablolar oluşturuldu mu? (Siz zaten kontrol ettiniz ✅)
-- **Kod tarafı:** `app/api/franchises/route.ts`, `app/api/expenses/route.ts` vb. dosyalarda kullanılan tablo ve sütun adları, Supabase’teki `franchises`, `expenses` vb. ile aynı mı?
-- Gerekirse Supabase **Table Editor**’da bir tabloya tıklayıp sütun isimlerini karşılaştırın.
+- **Kontrol:** Supabase'te tablolar oluşturuldu mu? (Siz zaten kontrol ettiniz ✅)
+- **Kod tarafı:** `app/api/franchises/route.ts`, `app/api/expenses/route.ts` vb. dosyalarda kullanılan tablo ve sütun adları, Supabase'teki `franchises`, `expenses` vb. ile aynı mı?
+- Gerekirse Supabase **Table Editor**'da bir tabloya tıklayıp sütun isimlerini karşılaştırın.
 
 ---
 
@@ -132,8 +132,8 @@ git remote -v
 ```
 
 - **Commit atılmış mı?** → "nothing to commit" ve "up to date with 'origin/main'" ise evet.
-- **Push gitti mi?** → "up to date with 'origin/main'" ise son commit GitHub’a gönderilmiş demektir.
-- **Deploy edilmiş mi?** → Sadece Vercel Dashboard’dan veya app.yisa-s.com’u açarak doğrulayabilirsiniz; Git’te gösterilmez.
+- **Push gitti mi?** → "up to date with 'origin/main'" ise son commit GitHub'a gönderilmiş demektir.
+- **Deploy edilmiş mi?** → Sadece Vercel Dashboard'dan veya app.yisa-s.com'u açarak doğrulayabilirsiniz; Git'te gösterilmez.
 
 ---
 

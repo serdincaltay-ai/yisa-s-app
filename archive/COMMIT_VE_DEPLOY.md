@@ -27,14 +27,14 @@ git commit -m "YİSA-S Patron Paneli: 10 maddelik geliştirme (G1+G2+G3) tamamla
 
 ---
 
-## 2. Push (GitHub’a gönder)
+## 2. Push (GitHub'a gönder)
 
 ```bash
 git push origin main
 ```
 
-GitHub’a bağlıysa Vercel zaten otomatik deploy alır.  
-Deploy’u Vercel / Railway panellerinden kontrol et.
+GitHub'a bağlıysa Vercel zaten otomatik deploy alır.  
+Deploy'u Vercel / Railway panellerinden kontrol et.
 
 ---
 
@@ -49,7 +49,7 @@ npx vercel --prod
 (Vercel CLI kurulu ve `vercel login` yapılmış olmalı.)
 
 **Railway:**  
-Railway projesi GitHub repo’ya bağlıysa push yeterli. Değilse Railway dashboard’dan “Deploy” tetikle.
+Railway projesi GitHub repo'ya bağlıysa push yeterli. Değilse Railway dashboard'dan "Deploy" tetikle.
 
 ---
 

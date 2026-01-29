@@ -1,9 +1,15 @@
 /**
  * YİSA-S Veri Arşivleme (Katman 3)
- * Arşivleme kuralları, saklama süreleri
+ * Patron DB, Tesis DB, Arşiv DB, Audit DB — AES-256 şifreleme, günlük 02:00 tam yedek
  */
 
 export const VERI_ARSIVLEME_KURALLARI = {
+  /** Şifreleme (Talimat Bölüm 1.1) */
+  SIFRELEME: 'AES-256' as const,
+
+  /** Günlük tam yedek saati (HH:mm) */
+  GUNLUK_YEDEK_SAATI: '02:00' as const,
+
   /** Varsayılan saklama süreleri (gün) */
   SAKLAMA_SURELERI: {
     log: 90,

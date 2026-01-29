@@ -3,6 +3,9 @@
 import { useEffect, useState, useRef } from 'react'
 import { supabase } from '@/lib/supabase'
 import { startTaskFlow, FLOW_DESCRIPTION } from '@/lib/assistant/task-flow'
+import { QUALITY_FLOW } from '@/lib/ai-router'
+import { checkPatronLock } from '@/lib/security/patron-lock'
+import { PatronApprovalUI } from '@/app/components/PatronApproval'
 import { Send, Bot, Check, X, Edit3, ChevronDown, ChevronUp } from 'lucide-react'
 
 type ChatMessage = {
@@ -10,9 +13,13 @@ type ChatMessage = {
   text: string
   assignedAI?: string
   taskType?: string
+  /** Seçenek 2 flow: bu yanıtta çalışan AI listesi */
+  aiProviders?: string[]
 }
 
 type PatronDecision = 'approve' | 'reject' | 'modify'
+
+const STEP_LABELS = ['GPT algılıyor...', 'Claude kontrol ediyor...', 'Patrona sunuluyor...']
 
 export default function DashboardPage() {
   const [user, setUser] = useState<{ email?: string } | null>(null)
@@ -24,6 +31,15 @@ export default function DashboardPage() {
   const [editingIndex, setEditingIndex] = useState<number | null>(null)
   const [editText, setEditText] = useState('')
   const [showFlow, setShowFlow] = useState(false)
+  /** Seçenek 2: flow modu (PATRON → GPT → [Gemini/...] → CLAUDE → ...) */
+  const [useQualityFlow, setUseQualityFlow] = useState(true)
+  const [currentStepLabel, setCurrentStepLabel] = useState<string | null>(null)
+  const [pendingApproval, setPendingApproval] = useState<{
+    output: Record<string, unknown>
+    aiResponses: { provider: string; response: unknown }[]
+    flow: string
+    message: string
+  } | null>(null)
   const [stats, setStats] = useState({
     franchiseRevenueMonth: 0,
     expensesMonth: 0,
@@ -36,6 +52,17 @@ export default function DashboardPage() {
   useEffect(() => {
     supabase.auth.getUser().then(({ data: { user } }) => setUser(user ?? null))
   }, [])
+
+  useEffect(() => {
+    if (!chatSending || !useQualityFlow) return
+    let idx = 0
+    setCurrentStepLabel(STEP_LABELS[0])
+    const t = setInterval(() => {
+      idx = (idx + 1) % STEP_LABELS.length
+      setCurrentStepLabel(STEP_LABELS[idx])
+    }, 2500)
+    return () => clearInterval(t)
+  }, [chatSending, useQualityFlow])
 
   useEffect(() => {
     fetch('/api/stats')
@@ -57,10 +84,11 @@ export default function DashboardPage() {
     if (!msg || chatSending) return
 
     setLockError(null)
-    const flow = startTaskFlow(msg)
+    setPendingApproval(null)
 
-    if (!flow.lockCheck?.allowed) {
-      setLockError(flow.output ?? 'Bu işlem AI için yasaktır.')
+    const lockCheck = checkPatronLock(msg)
+    if (!lockCheck.allowed) {
+      setLockError(lockCheck.reason ?? 'Bu işlem AI için yasaktır.')
       return
     }
 
@@ -68,6 +96,56 @@ export default function DashboardPage() {
     setChatMessages((prev) => [...prev, { role: 'user', text: msg }])
     setChatSending(true)
 
+    if (useQualityFlow) {
+      try {
+        const res = await fetch('/api/chat/flow', {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({ message: msg, user: user ?? undefined }),
+        })
+        const data = await res.json()
+        setCurrentStepLabel(null)
+
+        if (data.error) {
+          setChatMessages((prev) => [
+            ...prev,
+            { role: 'assistant', text: `Hata: ${data.error}`, aiProviders: [] },
+          ])
+        } else {
+          const responses = data.aiResponses ?? []
+          const aiProviders = responses
+            .filter((r: { provider: string; response?: { status?: string; text?: string } }) => {
+              const res = r.response
+              return res && ((res as { status?: string }).status === 'ok' || typeof (res as { text?: string }).text === 'string')
+            })
+            .map((r: { provider: string }) => r.provider)
+          const text = data.text ?? 'Yanıt oluşturuldu.'
+          if (data.status === 'awaiting_patron_approval') {
+            setPendingApproval({
+              output: data.output ?? {},
+              aiResponses: data.aiResponses ?? [],
+              flow: data.flow ?? QUALITY_FLOW.name,
+              message: msg,
+            })
+          }
+          setChatMessages((prev) => [
+            ...prev,
+            { role: 'assistant', text, aiProviders, taskType: data.output?.taskType },
+          ])
+        }
+      } catch {
+        setCurrentStepLabel(null)
+        setChatMessages((prev) => [
+          ...prev,
+          { role: 'assistant', text: 'Bağlantı hatası. Tekrar dene.', aiProviders: [] },
+        ])
+      } finally {
+        setChatSending(false)
+      }
+      return
+    }
+
+    const flow = startTaskFlow(msg)
     const taskType = flow.routerResult?.taskType ?? 'unknown'
     const assignedAI = flow.routerResult?.assignedAI ?? 'GPT'
 
@@ -166,8 +244,19 @@ export default function DashboardPage() {
           </div>
           <div className="flex-1 min-w-0">
             <h2 className="font-semibold text-white">YİSA-S Robot Asistan</h2>
-            <p className="text-xs text-slate-500">Router + Task Flow + Patron Lock — Onayla / Reddet / Değiştir</p>
+            <p className="text-xs text-slate-500">
+              {useQualityFlow ? 'Seçenek 2: Kalite Optimize — GPT → [Gemini/...] → Claude → Patron' : 'Router + Task Flow + Patron Lock'}
+            </p>
           </div>
+          <label className="flex items-center gap-2 text-sm text-slate-400">
+            <input
+              type="checkbox"
+              checked={useQualityFlow}
+              onChange={(e) => setUseQualityFlow(e.target.checked)}
+              className="rounded border-slate-600 bg-slate-800 text-amber-500 focus:ring-amber-500/50"
+            />
+            <span>Seçenek 2 (Kalite)</span>
+          </label>
           <button
             type="button"
             onClick={() => setShowFlow((s) => !s)}
@@ -180,7 +269,9 @@ export default function DashboardPage() {
         {showFlow && (
           <div className="px-6 py-4 border-b border-slate-700 bg-slate-900/50">
             <pre className="text-xs text-slate-300 whitespace-pre-wrap font-mono overflow-x-auto">
-              {FLOW_DESCRIPTION}
+              {useQualityFlow
+                ? `PATRON → GPT (Algılama) → [GEMINI/TOGETHER/V0 gerekiyorsa] → CLAUDE (Düzeltme) → CURSOR (Kod) → GPT (Toplama) → CLAUDE (Son Kontrol) → PATRONA SUN\n\n${QUALITY_FLOW.name} — Kalite: ${QUALITY_FLOW.quality} — Tahmini: ${QUALITY_FLOW.monthlyCost}`
+                : FLOW_DESCRIPTION}
             </pre>
           </div>
         )}
@@ -211,14 +302,38 @@ export default function DashboardPage() {
                     : ''
                 }`}
               >
-                {m.role === 'assistant' && (m.assignedAI || m.taskType) && (
-                  <div className="flex items-center gap-2 mb-2">
-                    <span className="text-[10px] font-medium uppercase tracking-wider px-2 py-0.5 rounded-md bg-amber-500/20 text-amber-400">
-                      {m.assignedAI ?? 'CLAUDE'}
-                    </span>
-                    {m.taskType && m.taskType !== 'unknown' && (
-                      <span className="text-[10px] text-slate-500">{m.taskType}</span>
-                    )}
+                {m.role === 'assistant' && (m.aiProviders?.length ? m.aiProviders.length > 0 : m.assignedAI || m.taskType) && (
+                  <div className="flex flex-wrap items-center gap-2 mb-2">
+                    {m.aiProviders?.length
+                      ? m.aiProviders.map((ai) => (
+                          <span
+                            key={ai}
+                            className="text-[10px] font-medium uppercase tracking-wider px-2 py-0.5 rounded-md text-white"
+                            style={{
+                              backgroundColor:
+                                ai === 'GPT' ? '#10a37f' :
+                                ai === 'CLAUDE' ? '#d97706' :
+                                ai === 'GEMINI' ? '#4285f4' :
+                                ai === 'TOGETHER' ? '#6366f1' :
+                                ai === 'V0' ? '#000' :
+                                ai === 'CURSOR' ? '#00d8ff' :
+                                '#64748b',
+                              color: ai === 'CURSOR' ? '#000' : '#fff',
+                            }}
+                          >
+                            {ai}
+                          </span>
+                        ))
+                      : (
+                        <>
+                          <span className="text-[10px] font-medium uppercase tracking-wider px-2 py-0.5 rounded-md bg-amber-500/20 text-amber-400">
+                            {m.assignedAI ?? 'CLAUDE'}
+                          </span>
+                          {m.taskType && m.taskType !== 'unknown' && (
+                            <span className="text-[10px] text-slate-500">{m.taskType}</span>
+                          )}
+                        </>
+                      )}
                   </div>
                 )}
                 {editingIndex === i && m.role === 'assistant' ? (
@@ -304,9 +419,20 @@ export default function DashboardPage() {
           {chatSending && (
             <div className="flex justify-start">
               <div className="bg-slate-700/80 rounded-2xl px-4 py-3 text-slate-400 text-sm">
-                Yanıt yazılıyor…
+                {currentStepLabel ?? 'Yanıt yazılıyor…'}
               </div>
             </div>
+          )}
+          {pendingApproval && (
+            <PatronApprovalUI
+              pendingTask={pendingApproval}
+              onApprove={() => setPendingApproval(null)}
+              onReject={() => setPendingApproval(null)}
+              onModify={(modifyText) => {
+                setChatInput(modifyText)
+                setPendingApproval(null)
+              }}
+            />
           )}
           <div ref={chatEndRef} />
         </div>

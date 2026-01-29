@@ -1,9 +1,19 @@
 /**
  * YİSA-S Siber Güvenlik (Katman 2)
- * Log kontrolleri, yasak işlemler, erişim kuralları
+ * 7/24 izleme, bypass EDİLEMEZ. 4 seviye alarm: Sarı, Turuncu, Kırmızı, Acil
  */
 
 import { FORBIDDEN_FOR_AI } from './patron-lock'
+
+/** 4 seviye alarm (Talimat Bölüm 1.1) */
+export const ALARM_SEVIYELERI = {
+  SARI: { seviye: 1, renk: '#eab308', label: 'Sarı', aciklama: 'Dikkat gerektiren olay' },
+  TURUNCU: { seviye: 2, renk: '#f97316', label: 'Turuncu', aciklama: 'Ciddi uyarı' },
+  KIRMIZI: { seviye: 3, renk: '#ef4444', label: 'Kırmızı', aciklama: 'Acil müdahale' },
+  ACIL: { seviye: 4, renk: '#dc2626', label: 'Acil', aciklama: 'Kritik güvenlik ihlali' },
+} as const
+
+export type AlarmSeviyesi = keyof typeof ALARM_SEVIYELERI
 
 export const SIBER_GUVENLIK_KURALLARI = {
   /** Denetlenecek log alanları */
@@ -22,6 +32,9 @@ export const SIBER_GUVENLIK_KURALLARI = {
 
   /** AI'ların dokunamayacağı alanlar (patron-lock ile uyumlu) */
   YASAK_ALANLAR: FORBIDDEN_FOR_AI,
+
+  /** 4 seviye alarm sistemi */
+  ALARM_SEVIYELERI,
 
   /** Erişim seviyesi: 0 = en kısıtlı, 3 = tam */
   ERISIM_SEVIYELERI: {

@@ -4,7 +4,7 @@
  * Tarih: 28 Ocak 2026
  */
 
-/** AI'ların GİREMEYECEĞİ alanlar / ifadeler */
+/** AI'ların GİREMEYECEĞİ alanlar / ifadeler (Talimat + Master Doküman) */
 export const FORBIDDEN_FOR_AI: string[] = [
   '.env',
   '.env.local',
@@ -17,12 +17,19 @@ export const FORBIDDEN_FOR_AI: string[] = [
   'git commit',
   'vercel deploy',
   'railway deploy',
+  'npm publish',
   'DROP TABLE',
   'DELETE FROM',
   'TRUNCATE',
+  'delete_user',
+  'change_password',
+  'grant_permission',
+  'fiyat_degistir',
+  'kullanici_sil',
+  'yetki_degistir',
 ]
 
-/** Patron onayı gerektiren işlemler */
+/** Patron onayı gerektiren işlemler (Talimat Bölüm 4.2 G2) */
 export const REQUIRE_PATRON_APPROVAL: string[] = [
   'deploy',
   'commit',
@@ -34,7 +41,17 @@ export const REQUIRE_PATRON_APPROVAL: string[] = [
   'role change',
   'price change',
   'env change',
+  'fiyat_degistir',
+  'kullanici_sil',
+  'yetki_degistir',
+  'veritabani_degistir',
+  'veritabani_yapisi_degistir',
+  'robot_ayari_degistir',
+  'environment_variable_degistir',
 ]
+
+/** Talimat uyumlu alias */
+export const PATRON_APPROVAL_REQUIRED = REQUIRE_PATRON_APPROVAL
 
 export type PatronDecision = 'approve' | 'reject' | 'modify'
 
