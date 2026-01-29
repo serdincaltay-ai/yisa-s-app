@@ -22,7 +22,7 @@ type PatronDecision = 'approve' | 'reject' | 'modify'
 const STEP_LABELS = ['GPT algılıyor...', 'Claude kontrol ediyor...', 'Patrona sunuluyor...']
 
 export default function DashboardPage() {
-  const [user, setUser] = useState<{ email?: string } | null>(null)
+  const [user, setUser] = useState<{ id?: string; email?: string } | null>(null)
   const [chatMessages, setChatMessages] = useState<ChatMessage[]>([])
   const [chatInput, setChatInput] = useState('')
   const [chatSending, setChatSending] = useState(false)
@@ -39,6 +39,7 @@ export default function DashboardPage() {
     aiResponses: { provider: string; response: unknown }[]
     flow: string
     message: string
+    command_id?: string
   } | null>(null)
   const [stats, setStats] = useState({
     franchiseRevenueMonth: 0,
@@ -50,7 +51,9 @@ export default function DashboardPage() {
   const chatEndRef = useRef<HTMLDivElement>(null)
 
   useEffect(() => {
-    supabase.auth.getUser().then(({ data: { user } }) => setUser(user ?? null))
+    supabase.auth.getUser().then(({ data: { user: u } }) =>
+      setUser(u ? { id: u.id, email: u.email ?? undefined } : null)
+    )
   }, [])
 
   useEffect(() => {
@@ -101,7 +104,11 @@ export default function DashboardPage() {
         const res = await fetch('/api/chat/flow', {
           method: 'POST',
           headers: { 'Content-Type': 'application/json' },
-          body: JSON.stringify({ message: msg, user: user ?? undefined }),
+          body: JSON.stringify({
+            message: msg,
+            user: user ?? undefined,
+            user_id: user?.id ?? undefined,
+          }),
         })
         const data = await res.json()
         setCurrentStepLabel(null)
@@ -126,6 +133,7 @@ export default function DashboardPage() {
               aiResponses: data.aiResponses ?? [],
               flow: data.flow ?? QUALITY_FLOW.name,
               message: msg,
+              command_id: data.command_id,
             })
           }
           setChatMessages((prev) => [
@@ -157,6 +165,7 @@ export default function DashboardPage() {
           message: msg,
           taskType,
           assignedAI,
+          user_id: user?.id ?? undefined,
         }),
       })
       const data = await res.json()
@@ -426,9 +435,59 @@ export default function DashboardPage() {
           {pendingApproval && (
             <PatronApprovalUI
               pendingTask={pendingApproval}
-              onApprove={() => setPendingApproval(null)}
-              onReject={() => setPendingApproval(null)}
-              onModify={(modifyText) => {
+              onApprove={async () => {
+                if (pendingApproval.command_id) {
+                  try {
+                    await fetch('/api/approvals', {
+                      method: 'POST',
+                      headers: { 'Content-Type': 'application/json' },
+                      body: JSON.stringify({
+                        command_id: pendingApproval.command_id,
+                        decision: 'approve',
+                        user_id: user?.id,
+                      }),
+                    })
+                  } catch {
+                    /* ignore */
+                  }
+                }
+                setPendingApproval(null)
+              }}
+              onReject={async () => {
+                if (pendingApproval.command_id) {
+                  try {
+                    await fetch('/api/approvals', {
+                      method: 'POST',
+                      headers: { 'Content-Type': 'application/json' },
+                      body: JSON.stringify({
+                        command_id: pendingApproval.command_id,
+                        decision: 'reject',
+                        user_id: user?.id,
+                      }),
+                    })
+                  } catch {
+                    /* ignore */
+                  }
+                }
+                setPendingApproval(null)
+              }}
+              onModify={async (modifyText) => {
+                if (pendingApproval.command_id) {
+                  try {
+                    await fetch('/api/approvals', {
+                      method: 'POST',
+                      headers: { 'Content-Type': 'application/json' },
+                      body: JSON.stringify({
+                        command_id: pendingApproval.command_id,
+                        decision: 'modify',
+                        modify_text: modifyText,
+                        user_id: user?.id,
+                      }),
+                    })
+                  } catch {
+                    /* ignore */
+                  }
+                }
                 setChatInput(modifyText)
                 setPendingApproval(null)
               }}

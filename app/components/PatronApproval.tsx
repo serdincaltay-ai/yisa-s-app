@@ -17,9 +17,11 @@ export interface PendingTask {
 
 interface PatronApprovalUIProps {
   pendingTask: PendingTask
-  onApprove: () => void
-  onReject: () => void
-  onModify?: (modifyText: string) => void
+  commandId?: string
+  userId?: string
+  onApprove: () => void | Promise<void>
+  onReject: () => void | Promise<void>
+  onModify?: (modifyText: string) => void | Promise<void>
 }
 
 export function PatronApprovalUI({

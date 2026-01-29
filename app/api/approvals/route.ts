@@ -1,5 +1,6 @@
-import { NextResponse } from 'next/server'
+import { NextRequest, NextResponse } from 'next/server'
 import { createClient } from '@supabase/supabase-js'
+import { updatePatronCommand, insertAuditLog } from '@/lib/db/ceo-celf'
 
 export const dynamic = 'force-dynamic'
 
@@ -25,7 +26,7 @@ export interface ApprovalItem {
 export async function GET() {
   try {
     const supabase = getSupabase()
-    const tables = ['approval_queue', 'pending_approvals', 'workflow_tasks', 'approvals']
+    const tables = ['patron_commands', 'approval_queue', 'pending_approvals', 'workflow_tasks', 'approvals']
 
     for (const table of tables) {
       if (!supabase) break
@@ -40,7 +41,7 @@ export async function GET() {
       const items: ApprovalItem[] = data.map((row: Record<string, unknown>) => ({
         id: String(row.id ?? row.uuid ?? ''),
         type: String(row.type ?? row.kind ?? 'onay'),
-        title: String(row.title ?? row.subject ?? row.name ?? '—'),
+        title: String(row.title ?? row.subject ?? row.name ?? row.command ?? '—'),
         description: row.description != null ? String(row.description) : undefined,
         status: (row.status as 'pending' | 'approved' | 'rejected') ?? 'pending',
         priority: (row.priority as 'low' | 'normal' | 'high') ?? 'normal',
@@ -53,5 +54,67 @@ export async function GET() {
     return NextResponse.json({ items: [], table: null })
   } catch {
     return NextResponse.json({ items: [], table: null })
+  }
+}
+
+/**
+ * POST /api/approvals — Patron kararı: Onayla / Reddet / Değiştir
+ * Body: { command_id: string, decision: 'approve' | 'reject' | 'modify', user_id?: string, modify_text?: string }
+ */
+export async function POST(req: NextRequest) {
+  try {
+    const body = await req.json()
+    const commandId = typeof body.command_id === 'string' ? body.command_id : undefined
+    const decision = body.decision as 'approve' | 'reject' | 'modify'
+    const userId = typeof body.user_id === 'string' ? body.user_id : undefined
+    const modifyText = typeof body.modify_text === 'string' ? body.modify_text : undefined
+
+    if (!commandId || !decision) {
+      return NextResponse.json(
+        { error: 'command_id ve decision gerekli (approve, reject, modify)' },
+        { status: 400 }
+      )
+    }
+    if (!['approve', 'reject', 'modify'].includes(decision)) {
+      return NextResponse.json({ error: 'Geçersiz decision' }, { status: 400 })
+    }
+
+    const now = new Date().toISOString()
+    const status =
+      decision === 'approve' ? 'approved' : decision === 'reject' ? 'rejected' : 'modified'
+
+    const updateErr = await updatePatronCommand(commandId, {
+      status,
+      decision,
+      decision_at: now,
+      modify_text: modifyText,
+    })
+    if (updateErr.error) {
+      return NextResponse.json({ error: updateErr.error }, { status: 500 })
+    }
+
+    await insertAuditLog({
+      action: decision,
+      entity_type: 'patron_command',
+      entity_id: commandId,
+      user_id: userId,
+      payload: { modify_text: modifyText },
+    })
+
+    return NextResponse.json({
+      ok: true,
+      command_id: commandId,
+      decision,
+      status,
+      message:
+        decision === 'approve'
+          ? 'İşlem onaylandı ve uygulandı.'
+          : decision === 'reject'
+            ? 'İşlem reddedildi.'
+            : 'Değişiklik kaydedildi. Yeniden işlem için mesajı güncelleyip gönderin.',
+    })
+  } catch (e) {
+    const err = e instanceof Error ? e.message : String(e)
+    return NextResponse.json({ error: 'Onay kararı hatası', detail: err }, { status: 500 })
   }
 }

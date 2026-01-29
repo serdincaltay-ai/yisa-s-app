@@ -1,12 +1,20 @@
 /**
  * SEÇENEK 2 - Kalite Optimize Flow API
- * PATRON → GPT → [Gemini/Together/V0] → CLAUDE → CURSOR → GPT → CLAUDE → PATRON
+ * PATRON → CEO (sınıflandır) → CELF (direktörlük) → GPT/Gemini/Claude... → CEO → PATRON ONAY
  * Patron Kararı: 29 Ocak 2026
  */
 
 import { NextRequest, NextResponse } from 'next/server'
-import { routeToAI, type CallAIFn } from '@/lib/ai-router'
+import { routeToAI, detectTaskType, type CallAIFn } from '@/lib/ai-router'
+import { routeToDirector } from '@/lib/robots/ceo-robot'
 import { checkPatronLock } from '@/lib/security/patron-lock'
+import { saveChatMessage } from '@/lib/db/chat-messages'
+import {
+  createCeoTask,
+  updateCeoTask,
+  createPatronCommand,
+  insertCelfLog,
+} from '@/lib/db/ceo-celf'
 
 const ANTHROPIC_URL = 'https://api.anthropic.com/v1/messages'
 const OPENAI_URL = 'https://api.openai.com/v1/chat/completions'
@@ -104,11 +112,23 @@ function getAccumulatedText(inp: Record<string, unknown>, inputMessage: string):
   return typeof inp?.message === 'string' ? inp.message : inputMessage
 }
 
+function taskTypeToLabel(taskType: string): string {
+  const map: Record<string, string> = {
+    research: 'araştırma',
+    design: 'tasarım',
+    code: 'kod',
+    report: 'rapor',
+    general: 'genel',
+  }
+  return map[taskType] ?? taskType
+}
+
 export async function POST(req: NextRequest) {
   try {
     const body = await req.json()
     const message = typeof body.message === 'string' ? body.message : (body.message ?? 'Merhaba')
     const user = body.user ?? null
+    const userId = typeof body.user_id === 'string' ? body.user_id : (user?.id as string | undefined)
 
     const lockCheck = checkPatronLock(message)
     if (!lockCheck.allowed) {
@@ -116,6 +136,28 @@ export async function POST(req: NextRequest) {
         { error: lockCheck.reason ?? 'Bu işlem AI için yasaktır.' },
         { status: 403 }
       )
+    }
+
+    // 1. CEO: Görevi sınıflandır (araştırma/tasarım/kod/genel) ve direktörlüğe yönlendir
+    const taskType = detectTaskType(message)
+    const directorKey = routeToDirector(message)
+    const taskTypeLabel = taskTypeToLabel(taskType)
+
+    const ceoTaskResult = await createCeoTask({
+      user_id: userId,
+      task_description: message,
+      task_type: taskTypeLabel,
+      director_key: directorKey,
+    })
+    const ceoTaskId = ceoTaskResult.id ?? undefined
+    if (ceoTaskId) {
+      await insertCelfLog({
+        ceo_task_id: ceoTaskId,
+        director_key: directorKey ?? 'GENEL',
+        action: 'ceo_classify',
+        input_summary: message.substring(0, 200),
+        output_summary: `${taskTypeLabel} → ${directorKey ?? '—'}`,
+      })
     }
 
     const inputMessage =
@@ -173,6 +215,61 @@ export async function POST(req: NextRequest) {
         ? 'Yanıt oluşturulamadı. API anahtarlarını (.env) kontrol edin.'
         : 'İşlem tamamlandı.')
 
+    const aiProviders = result.aiResponses
+      .filter(
+        (r) =>
+          (r.response as { status?: string })?.status === 'ok' &&
+          (r.response as { text?: string })?.text
+      )
+      .map((r) => r.provider)
+
+    let commandId: string | undefined
+    if (result.status === 'awaiting_patron_approval') {
+      const cmd = await createPatronCommand({
+        user_id: userId,
+        command: message,
+        ceo_task_id: ceoTaskId,
+        output_payload: {
+          ...result.output,
+          displayText: typeof displayText === 'string' ? displayText : JSON.stringify(displayText),
+          aiResponses: result.aiResponses.map((r) => ({
+            provider: r.provider,
+            response: r.response,
+          })),
+        },
+      })
+      commandId = cmd.id
+    }
+
+    if (ceoTaskId) {
+      await updateCeoTask(ceoTaskId, {
+        status: 'completed',
+        result_payload: {
+          taskType: result.output.taskType,
+          displayText: typeof displayText === 'string' ? displayText : JSON.stringify(displayText),
+          aiResponses: result.aiResponses.length,
+        },
+        ...(commandId ? { patron_command_id: commandId } : {}),
+      })
+      await insertCelfLog({
+        ceo_task_id: ceoTaskId,
+        director_key: directorKey ?? 'GENEL',
+        action: 'celf_execute',
+        input_summary: message.substring(0, 200),
+        output_summary: (typeof displayText === 'string' ? displayText : '').substring(0, 300),
+        payload: { providers: aiProviders },
+      })
+    }
+
+    if (userId) {
+      await saveChatMessage({
+        user_id: userId,
+        message,
+        response: typeof displayText === 'string' ? displayText : JSON.stringify(displayText),
+        ai_providers: aiProviders.length ? aiProviders : ['CLAUDE'],
+      })
+    }
+
     return NextResponse.json({
       status: result.status,
       output: result.output,
@@ -183,6 +280,8 @@ export async function POST(req: NextRequest) {
       })),
       flow: result.flow,
       text: typeof displayText === 'string' ? displayText : JSON.stringify(displayText),
+      command_id: commandId,
+      ceo_task_id: ceoTaskId,
     })
   } catch (e) {
     const err = e instanceof Error ? e.message : String(e)

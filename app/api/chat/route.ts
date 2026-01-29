@@ -1,4 +1,5 @@
 import { NextRequest, NextResponse } from 'next/server'
+import { saveChatMessage } from '@/lib/db/chat-messages'
 
 const ANTHROPIC_URL = 'https://api.anthropic.com/v1/messages'
 
@@ -16,6 +17,7 @@ export async function POST(req: NextRequest) {
     const message = typeof body.message === 'string' ? body.message : (body.message ?? 'Merhaba')
     const taskType = typeof body.taskType === 'string' ? body.taskType : undefined
     const assignedAI = typeof body.assignedAI === 'string' ? body.assignedAI : 'CLAUDE'
+    const userId = typeof body.user_id === 'string' ? body.user_id : (body.user?.id as string | undefined)
 
     const res = await fetch(ANTHROPIC_URL, {
       method: 'POST',
@@ -43,6 +45,15 @@ export async function POST(req: NextRequest) {
     const data = await res.json()
     const text =
       data.content?.find((c: { type: string }) => c.type === 'text')?.text ?? 'Yanıt oluşturulamadı.'
+
+    if (userId) {
+      await saveChatMessage({
+        user_id: userId,
+        message,
+        response: text,
+        ai_providers: [assignedAI || 'CLAUDE'],
+      })
+    }
 
     return NextResponse.json({
       text,
