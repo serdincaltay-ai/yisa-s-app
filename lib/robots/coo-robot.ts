@@ -1,11 +1,17 @@
 /**
- * YİSA-S COO Robot - Operasyon yönetimi
- * Katman 6: COO Yardımcı
- * Günlük operasyonlar, tesis/franchise koordinasyonu, süreç takibi
- * Tarih: 28 Ocak 2026
+ * YİSA-S COO Robot - Operasyon yönetimi (Katman 6)
+ * Rutin görevleri zamanında çalıştırır; platform operasyonları.
+ * Tarih: 30 Ocak 2026
  */
 
 import type { DirectorKey } from './celf-center'
+import {
+  getDueRoutineTasks,
+  updateRoutineTaskLastRun,
+  computeNextRun,
+  type RoutineTaskRow,
+  type ScheduleType,
+} from '@/lib/db/routine-tasks'
 
 export type OperationType =
   | 'daily_ops'
@@ -73,4 +79,23 @@ export function mapDirectorToCOO(director: DirectorKey): OperationType {
     CSO_STRATEJI: 'daily_ops',
   }
   return map[director] ?? 'daily_ops'
+}
+
+/** Zamanı gelen rutin görevleri döner (COO çalıştırmak için) */
+export async function getDueRoutines(): Promise<{
+  data?: RoutineTaskRow[]
+  error?: string
+}> {
+  return getDueRoutineTasks()
+}
+
+/** Rutin görev çalıştırıldıktan sonra next_run güncelle */
+export async function markRoutineRun(
+  id: string,
+  schedule: ScheduleType,
+  scheduleTime?: string
+): Promise<{ error?: string }> {
+  const nextRun = computeNextRun(schedule, scheduleTime)
+  if (!nextRun) return { error: 'Geçersiz schedule' }
+  return updateRoutineTaskLastRun(id, nextRun)
 }

@@ -6,8 +6,9 @@
 
 import { NextRequest, NextResponse } from 'next/server'
 import { routeToAI, detectTaskType, type CallAIFn } from '@/lib/ai-router'
-import { routeToDirector } from '@/lib/robots/ceo-robot'
-import { checkPatronLock } from '@/lib/security/patron-lock'
+import { routeToDirector, isRoutineRequest, getRoutineScheduleFromMessage } from '@/lib/robots/ceo-robot'
+import { securityCheck } from '@/lib/robots/security-robot'
+import { archiveTaskResult } from '@/lib/robots/data-robot'
 import { saveChatMessage } from '@/lib/db/chat-messages'
 import {
   createCeoTask,
@@ -130,10 +131,16 @@ export async function POST(req: NextRequest) {
     const user = body.user ?? null
     const userId = typeof body.user_id === 'string' ? body.user_id : (user?.id as string | undefined)
 
-    const lockCheck = checkPatronLock(message)
-    if (!lockCheck.allowed) {
+    const ipAddress = req.headers.get('x-forwarded-for') ?? req.headers.get('x-real-ip') ?? undefined
+    const security = await securityCheck({
+      message,
+      userId,
+      ipAddress,
+      logToDb: true,
+    })
+    if (!security.allowed) {
       return NextResponse.json(
-        { error: lockCheck.reason ?? 'Bu işlem AI için yasaktır.' },
+        { error: security.reason ?? 'Bu işlem AI için yasaktır.', blocked: true },
         { status: 403 }
       )
     }
@@ -270,6 +277,18 @@ export async function POST(req: NextRequest) {
       })
     }
 
+    await archiveTaskResult({
+      taskId: ceoTaskId,
+      directorKey: directorKey ?? undefined,
+      aiProviders,
+      inputCommand: message,
+      outputResult: typeof displayText === 'string' ? displayText : JSON.stringify(displayText),
+      status: 'completed',
+    })
+
+    const routineRequest = isRoutineRequest(message)
+    const routineSchedule = getRoutineScheduleFromMessage(message)
+
     return NextResponse.json({
       status: result.status,
       output: result.output,
@@ -282,6 +301,8 @@ export async function POST(req: NextRequest) {
       text: typeof displayText === 'string' ? displayText : JSON.stringify(displayText),
       command_id: commandId,
       ceo_task_id: ceoTaskId,
+      routine_request: routineRequest,
+      routine_schedule: routineSchedule ?? undefined,
     })
   } catch (e) {
     const err = e instanceof Error ? e.message : String(e)

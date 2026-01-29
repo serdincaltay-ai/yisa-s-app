@@ -1,12 +1,16 @@
 /**
- * YİSA-S CEO Robot - Kural tabanlı organizatör
+ * YİSA-S CEO Robot - Kural tabanlı organizatör (Katman 4)
  * AI YOK. Sadece if/else kuralları.
  * Asistandan gelen işleri CELF'e dağıtır, sonuçları toplar.
+ * "Bu rutin olsun" → routine_tasks'a kaydeder.
  * Deploy / Commit-Push: Sadece Patron onayı ile.
- * Tarih: 28 Ocak 2026
+ * Tarih: 30 Ocak 2026
  */
 
+import { detectTaskType as aiDetectTaskType } from '@/lib/ai-router'
 import { CELF_DIRECTORATES, type DirectorKey } from './celf-center'
+
+export type ScheduleType = 'daily' | 'weekly' | 'monthly'
 
 export const CEO_RULES = {
   /** İş dağıtım kuralları: görev anahtar kelimesi → Direktörlük */
@@ -16,26 +20,32 @@ export const CEO_RULES = {
     gelir: 'CFO',
     gider: 'CFO',
     tahsilat: 'CFO',
+    maliyet: 'CFO',
     teknoloji: 'CTO',
     sistem: 'CTO',
     kod: 'CTO',
     api: 'CTO',
     performans: 'CTO',
+    hata: 'CTO',
     veri: 'CIO',
     database: 'CIO',
     entegrasyon: 'CIO',
     bilgi: 'CIO',
+    tablo: 'CIO',
     kampanya: 'CMO',
     reklam: 'CMO',
     'sosyal medya': 'CMO',
     pazarlama: 'CMO',
+    tanıtım: 'CMO',
     personel: 'CHRO',
     eğitim: 'CHRO',
     'insan kaynakları': 'CHRO',
+    izin: 'CHRO',
     sözleşme: 'CLO',
     patent: 'CLO',
     uyum: 'CLO',
     hukuk: 'CLO',
+    kvkk: 'CLO',
     müşteri: 'CSO_SATIS',
     sipariş: 'CSO_SATIS',
     crm: 'CSO_SATIS',
@@ -44,19 +54,25 @@ export const CEO_RULES = {
     tasarım: 'CPO',
     ürün: 'CPO',
     özellik: 'CPO',
+    ui: 'CPO',
+    sayfa: 'CPO',
     analiz: 'CDO',
     rapor: 'CDO',
     dashboard: 'CDO',
+    istatistik: 'CDO',
     güvenlik: 'CISO',
     audit: 'CISO',
     erişim: 'CISO',
+    şifre: 'CISO',
     destek: 'CCO',
     şikayet: 'CCO',
     memnuniyet: 'CCO',
+    ticket: 'CCO',
     plan: 'CSO_STRATEJI',
     hedef: 'CSO_STRATEJI',
     büyüme: 'CSO_STRATEJI',
     strateji: 'CSO_STRATEJI',
+    vizyon: 'CSO_STRATEJI',
   } as Record<string, DirectorKey>,
 
   /** Deploy / Commit kuralları - PATRON ONAYI ŞART */
@@ -117,4 +133,35 @@ export function detectCEOAction(input: string): CEOAction {
   if (/\bpush\b|git push/.test(lower)) return 'push'
   if (/\bdağıt\b|topla|distribute|collect/.test(lower)) return 'distribute'
   return 'unknown'
+}
+
+/** Görev tipi: araştırma, tasarım, kod, rapor, genel (ai-router ile uyumlu) */
+export function detectTaskType(message: string): string {
+  return aiDetectTaskType(message)
+}
+
+/** "Bu rutin olsun" / "Bunu her gün yap" gibi ifadeleri algılar */
+export function isRoutineRequest(message: string): boolean {
+  const lower = message.toLowerCase().trim()
+  const patterns = [
+    /bu rutin olsun/i,
+    /bunu rutin yap/i,
+    /her gün yap/i,
+    /günlük yap/i,
+    /haftalık yap/i,
+    /aylık yap/i,
+    /rutin olsun/i,
+    /otomatik tekrarla/i,
+    /zamanlanmış görev/i,
+  ]
+  return patterns.some((p) => p.test(lower))
+}
+
+/** Mesajdan sıklık çıkarır: daily, weekly, monthly. Yoksa null (Patrona sorulacak). */
+export function getRoutineScheduleFromMessage(message: string): ScheduleType | null {
+  const lower = message.toLowerCase()
+  if (/\bher gün\b|günlük|daily\b/.test(lower)) return 'daily'
+  if (/\bhaftalık|her hafta|weekly\b/.test(lower)) return 'weekly'
+  if (/\baylık|her ay|monthly\b/.test(lower)) return 'monthly'
+  return null
 }
