@@ -257,7 +257,7 @@ export default function OnayKuyruguPage() {
                             <span className="text-slate-500 text-sm">—</span>
                           )}
                         </td>
-                      )}
+                      ))}
                     </tr>
                   ))}
                 </tbody>
