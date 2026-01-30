@@ -4,6 +4,9 @@ const octokit = new Octokit({
   auth: process.env.GITHUB_TOKEN,
 })
 
+/**
+ * Commit hazırlar (tree ve commit oluşturur).
+ */
 export async function githubPrepareCommit(params: {
   owner: string
   repo: string
@@ -14,6 +17,7 @@ export async function githubPrepareCommit(params: {
   const { owner, repo, branch = 'main', message, files } = params
 
   try {
+    // 1. Mevcut branch'in son commit'ini al
     const { data: refData } = await octokit.git.getRef({
       owner,
       repo,
@@ -21,6 +25,7 @@ export async function githubPrepareCommit(params: {
     })
     const latestCommitSha = refData.object.sha
 
+    // 2. Son commit'in tree'sini al
     const { data: commitData } = await octokit.git.getCommit({
       owner,
       repo,
@@ -28,6 +33,7 @@ export async function githubPrepareCommit(params: {
     })
     const baseTreeSha = commitData.tree.sha
 
+    // 3. Dosyalar için blob oluştur
     const blobs = await Promise.all(
       files.map(async (file) => {
         const { data: blob } = await octokit.git.createBlob({
@@ -40,6 +46,7 @@ export async function githubPrepareCommit(params: {
       })
     )
 
+    // 4. Yeni tree oluştur
     const { data: newTree } = await octokit.git.createTree({
       owner,
       repo,
@@ -47,6 +54,7 @@ export async function githubPrepareCommit(params: {
       tree: blobs,
     })
 
+    // 5. Yeni commit oluştur
     const { data: newCommit } = await octokit.git.createCommit({
       owner,
       repo,
@@ -62,6 +70,9 @@ export async function githubPrepareCommit(params: {
   }
 }
 
+/**
+ * Hazırlanan commit'i branch'e push eder.
+ */
 export async function githubPush(params: {
   owner: string
   repo: string
@@ -84,6 +95,9 @@ export async function githubPush(params: {
   }
 }
 
+/**
+ * Dosyaları oluşturup direkt push eder (CEO auto-deploy için).
+ */
 export async function githubCreateFiles(params: {
   owner: string
   repo: string
