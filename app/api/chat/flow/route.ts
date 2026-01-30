@@ -1,6 +1,6 @@
 /**
  * SEÇENEK 2 - TAM SİSTEM AKIŞI
- * 1) Patron mesaj → GPT imla düzelt → "Bu mu demek istediniz?" + [Şirket İşi] [Özel İş] [Hayır Düzelt]
+ * 1) Patron mesaj → Gemini (önce) veya GPT imla düzelt → "Bu mu demek istediniz?" + [Şirket İşi] [Özel İş] [Hayır Düzelt]
  * 2) Özel İş → Asistan (Claude/Gemini) halleder, CELF'e gitmez → "Kaydet?" → Evet ise patron_private_tasks
  * 3) Şirket İşi → CEO → CELF → Sonuç Patron onayına → Onayla/Reddet/Öneri/Değiştir → Rutin/Bir seferlik
  * Patron Kararı: 30 Ocak 2026
@@ -90,13 +90,15 @@ export async function POST(req: NextRequest) {
       )
     }
 
-    // ─── 1) İLK ADIM: confirm_type yoksa GPT imla düzelt + "Bu mu demek istediniz?" ─
+    // ─── 1) İLK ADIM: confirm_type yoksa Gemini (önce) veya GPT imla düzelt + "Bu mu demek istediniz?" ─
     if (!confirmType) {
       const spell = await correctSpelling(message)
       const confirmation = askConfirmation(spell.correctedMessage)
+      const spellingProvider = spell.provider ?? 'GPT'
       return NextResponse.json({
         status: 'spelling_confirmation',
-        flow: 'GPT imla düzeltme',
+        flow: spellingProvider === 'GEMINI' ? 'Gemini imla düzeltme' : 'GPT imla düzeltme',
+        spellingProvider,
         correctedMessage: confirmation.correctedMessage,
         promptText: confirmation.promptText,
         choices: confirmation.choices,
@@ -111,7 +113,8 @@ export async function POST(req: NextRequest) {
       }
       const privateResultText = await callClaude(
         messageToUse,
-        'Sen Patronun kişisel asistanısın. Şirket verisine erişmeden, kısa ve Türkçe yanıt ver. CELF\'e gitme.'
+        'Sen Patronun kişisel asistanısın. Şirket verisine erişmeden, kısa ve Türkçe yanıt ver. CELF\'e gitme.',
+        'asistan'
       )
       const resultText = privateResultText ?? 'Yanıt oluşturulamadı.'
       await saveChatMessage({

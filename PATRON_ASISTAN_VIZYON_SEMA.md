@@ -109,8 +109,10 @@ PATRON bir şey yazar / komut verir
 │    güncel bilgiye sahip; rutin işlerin takibini yapan aktif API’ler var.          │
 │  · Asistandaki gibi TÜM API’ler CELF’te de var: Claude, GPT, Together, Gemini,   │
 │    V0, Vercel, Cursor, GitHub, Supabase, Railway.                                │
+│  · CELF Gemini'yi çağırır; Gemini görevlendirmeyi yapar (API'leri atar).         │
+│  · En son iş kimde bitiyorsa sonucu CELF'e teslim eder; CELF CEO/Patron'a iletir.│
 │  · Direktörlükler (CFO, CTO, CMO, CLO, …) — hangi iş hangi direktörlük / hangi   │
-│    API; görevlendirme CELF içinde (asistan mantığıyla).                          │
+│    API; görevlendirme CELF içinde Gemini ile (asistan mantığıyla).               │
 │  · Rutin işler: AR-GE, muhasebe, şablon, sosyal medya vb. — veritabanı güncel     │
 │    kalır. CELF üretir/önerir; uygulama ayrı katmanda (COO, platform).            │
 └─────────────────────────────────────────────────────────────────────────────────┘

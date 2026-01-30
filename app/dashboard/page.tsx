@@ -144,9 +144,10 @@ export default function DashboardPage() {
           ])
         } else if (data.status === 'spelling_confirmation') {
           const corrected = data.correctedMessage ?? msg
+          const spellingProvider = data.spellingProvider === 'GEMINI' ? 'GEMINI' : 'GPT'
           setChatMessages((prev) => [
             ...prev,
-            { role: 'assistant', text: `📝 Bu mu demek istediniz?\n\n"${corrected}"`, aiProviders: ['GPT'] },
+            { role: 'assistant', text: `📝 Bu mu demek istediniz?\n\n"${corrected}"`, aiProviders: [spellingProvider] },
           ])
           setPendingSpellingConfirmation({ correctedMessage: corrected, originalMessage: msg })
         } else if (data.status === 'private_done') {
@@ -261,9 +262,10 @@ export default function DashboardPage() {
         ])
       } else if (data.status === 'spelling_confirmation') {
         const corrected = data.correctedMessage ?? correctedMessage
+        const spellingProvider = data.spellingProvider === 'GEMINI' ? 'GEMINI' : 'GPT'
         setChatMessages((prev) => [
           ...prev,
-          { role: 'assistant', text: `📝 Bu mu demek istediniz?\n\n"${corrected}"`, aiProviders: ['GPT'] },
+          { role: 'assistant', text: `📝 Bu mu demek istediniz?\n\n"${corrected}"`, aiProviders: [spellingProvider] },
         ])
         setPendingSpellingConfirmation({ correctedMessage: corrected, originalMessage: correctedMessage })
       } else if (data.status === 'private_done') {

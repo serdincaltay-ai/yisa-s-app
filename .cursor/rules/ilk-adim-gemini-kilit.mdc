@@ -1,0 +1,25 @@
+---
+description: Asistan ilk adım = Gemini (önce), yedek GPT; değiştirme Patron onayı ile.
+alwaysApply: true
+---
+
+# Asistan İlk Adım — Gemini Kilidi
+
+## Kilitlenen davranış
+
+- **İlk adım:** Her Patron mesajında imla düzeltmesi + "Bu mu demek istediniz?" yapan **Gemini** (önce); Gemini yoksa veya hata verirse **GPT** (yedek).
+- **Tek ağız:** Panelde Patron ile konuşan ağız = Gemini (vizyon: PATRON_ASISTAN_VIZYON_SEMA.md).
+
+## Kod referansı
+
+- `lib/ai/gpt-service.ts` — `correctSpelling()` önce Gemini, sonra GPT.
+- `app/api/chat/flow/route.ts` — ilk adımda `spellingProvider` (GEMINI/GPT) döner.
+
+## Ne yapılmaz
+
+- İlk adımı sadece GPT veya sadece Claude yapacak şekilde değiştirmek (Patron onayı olmadan).
+- İlk adım sırasını Gemini sonra yapmak.
+
+## Referans
+
+- `ASISTAN_ILK_ADIM_GEMINI_KILIT.md`
