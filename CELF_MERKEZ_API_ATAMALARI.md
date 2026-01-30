@@ -61,9 +61,39 @@ Diğer 10 direktörlük için önce **Gemini** (görevlendirici) çağrılır. G
 
 ---
 
-## 5. Özet
+## 5. .env.local: CELF için / Asistan için ayrım
+
+Değerler **.env.local** içinde tutulur; bu dokümanda sadece değişken adları yazılır.
+
+### CELF kullandığı .env değişkenleri
+
+| Kullanım | Değişken(ler) | Açıklama |
+|----------|----------------|----------|
+| Orkestratör + CFO, CDO, CSO_STRATEJI | `CELF_GOOGLE_API_KEY` veya `GOOGLE_API_KEY` | Gemini |
+| GPT (CFO, CIO, CMO, CSO_SATIS, CDO, CSO_STRATEJI) | `CELF_OPENAI_API_KEY` veya `OPENAI_API_KEY` | OpenAI |
+| Claude (CTO, CMO, CHRO, CLO, CISO, CCO) | `CELF_ANTHROPIC_API_KEY` veya `ANTHROPIC_API_KEY` | Anthropic |
+| Together (CDO) | `CELF_TOGETHER_API_KEY` veya `TOGETHER_API_KEY` | Together |
+| CPO: V0 | `V0_API_KEY` | V0 tasarım |
+| CPO/CTO: Cursor | `CURSOR_API_KEY` | Cursor inceleme |
+| CTO: GitHub | `GITHUB_TOKEN`, `GITHUB_REPO_OWNER`, `GITHUB_REPO_NAME` | Commit hazırlık |
+| İsteğe bağlı | `VERCEL_TOKEN`, `RAILWAY_TOKEN` | Deploy (Patron onayı sonrası) |
+
+### Asistan kullandığı .env değişkenleri
+
+| Kullanım | Değişken(ler) | Açıklama |
+|----------|----------------|----------|
+| İmla (Gemini) | `ASISTAN_GOOGLE_API_KEY` veya `GOOGLE_API_KEY` | gpt-service imla |
+| Özel iş (Claude) | `ASISTAN_ANTHROPIC_API_KEY` veya `ANTHROPIC_API_KEY` | callClaude(context='asistan') |
+| Chat / imla (GPT) | `ASISTAN_OPENAI_API_KEY` veya `OPENAI_API_KEY` | gpt-service |
+
+**Not:** Aynı anahtarı hem CELF hem Asistan kullanabilir; tek satır (örn. `ANTHROPIC_API_KEY=...`) yeterli. İleride CELF ve Asistan için farklı hesaplar kullanmak istersen `.env.local`'e `CELF_ANTHROPIC_API_KEY` ve `ASISTAN_ANTHROPIC_API_KEY` ayrı yazılır.
+
+---
+
+## 6. Özet
 
 - **CPO:** V0 + Cursor doğrudan.  
 - **CTO:** Claude + Cursor + GitHub (commit hazırlık) doğrudan.  
 - **Diğer 10:** Gemini orkestratör → DELEGATE ile GPT/CLAUDE/GEMINI/TOGETHER.  
-- **Gerçek API çağrısı:** `runCelfDirector` (celf-execute.ts); tetikleyenler: chat/flow ve coo/run-due; isteğe bağlı POST /api/celf?run=true.
+- **Gerçek API çağrısı:** `runCelfDirector` (celf-execute.ts); tetikleyenler: chat/flow ve coo/run-due; isteğe bağlı POST /api/celf?run=true.  
+- **Env:** CELF için `CELF_*` (yoksa genel key), Asistan için `ASISTAN_*` (yoksa genel key); değerler `.env.local`'de.
