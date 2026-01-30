@@ -1,11 +1,25 @@
+/**
+ * YİSA-S GitHub API istemcisi — Commit hazırlama / push
+ * Otomatik deploy YAPMA; commit hazırla, push sadece Patron onayından sonra.
+ * Tarih: 30 Ocak 2026
+ */
 import { Octokit } from '@octokit/rest'
 
 const octokit = new Octokit({
   auth: process.env.GITHUB_TOKEN,
 })
 
+function getKey(): string | undefined {
+  const v = process.env.GITHUB_TOKEN
+  return typeof v === 'string' ? v.trim() || undefined : undefined
+}
+
+export type GithubPrepareResult =
+  | { ok: true; commitSha: string }
+  | { ok: false; error: string }
+
 /**
- * Commit hazırlar (tree ve commit oluşturur).
+ * Repo'da commit hazırlar (blob + tree + commit). Push YAPMAZ.
  */
 export async function githubPrepareCommit(params: {
   owner: string
@@ -13,11 +27,14 @@ export async function githubPrepareCommit(params: {
   branch?: string
   message: string
   files: Array<{ path: string; content: string }>
-}): Promise<{ ok: true; commitSha: string } | { ok: false; error: string }> {
+}): Promise<GithubPrepareResult> {
+  const token = getKey()
+  if (!token) return { ok: false, error: 'GITHUB_TOKEN .env içinde tanımlı değil.' }
+
   const { owner, repo, branch = 'main', message, files } = params
 
   try {
-    // 1. Mevcut branch'in son commit'ini al
+    // 1) base ref
     const { data: refData } = await octokit.git.getRef({
       owner,
       repo,
@@ -25,7 +42,7 @@ export async function githubPrepareCommit(params: {
     })
     const latestCommitSha = refData.object.sha
 
-    // 2. Son commit'in tree'sini al
+    // 2) base commit -> tree
     const { data: commitData } = await octokit.git.getCommit({
       owner,
       repo,
@@ -33,7 +50,7 @@ export async function githubPrepareCommit(params: {
     })
     const baseTreeSha = commitData.tree.sha
 
-    // 3. Dosyalar için blob oluştur
+    // 3) blobs
     const blobs = await Promise.all(
       files.map(async (file) => {
         const { data: blob } = await octokit.git.createBlob({
@@ -42,11 +59,16 @@ export async function githubPrepareCommit(params: {
           content: Buffer.from(file.content).toString('base64'),
           encoding: 'base64',
         })
-        return { path: file.path, sha: blob.sha, mode: '100644' as const, type: 'blob' as const }
-      })
+        return {
+          path: file.path,
+          sha: blob.sha,
+          mode: '100644' as const,
+          type: 'blob' as const,
+        }
+      }),
     )
 
-    // 4. Yeni tree oluştur
+    // 4) tree
     const { data: newTree } = await octokit.git.createTree({
       owner,
       repo,
@@ -54,7 +76,7 @@ export async function githubPrepareCommit(params: {
       tree: blobs,
     })
 
-    // 5. Yeni commit oluştur
+    // 5) commit
     const { data: newCommit } = await octokit.git.createCommit({
       owner,
       repo,
@@ -71,7 +93,7 @@ export async function githubPrepareCommit(params: {
 }
 
 /**
- * Hazırlanan commit'i branch'e push eder.
+ * Hazırlanan commit'i branch'e push eder (ref update).
  */
 export async function githubPush(params: {
   owner: string
@@ -79,6 +101,9 @@ export async function githubPush(params: {
   branch: string
   commitSha: string
 }): Promise<{ ok: true } | { ok: false; error: string }> {
+  const token = getKey()
+  if (!token) return { ok: false, error: 'GITHUB_TOKEN .env içinde tanımlı değil.' }
+
   const { owner, repo, branch, commitSha } = params
 
   try {
@@ -96,7 +121,7 @@ export async function githubPush(params: {
 }
 
 /**
- * Dosyaları oluşturup direkt push eder (CEO auto-deploy için).
+ * Dosyaları commit hazırla + push et (tek çağrı kolaylığı)
  */
 export async function githubCreateFiles(params: {
   owner: string
@@ -105,21 +130,16 @@ export async function githubCreateFiles(params: {
   message: string
   files: Array<{ path: string; content: string }>
 }): Promise<{ ok: true; commitSha: string } | { ok: false; error: string }> {
-  const prepareResult = await githubPrepareCommit(params)
-  if (!prepareResult.ok) {
-    return { ok: false, error: prepareResult.error }
-  }
+  const prepare = await githubPrepareCommit(params)
+  if (!prepare.ok) return { ok: false, error: prepare.error }
 
-  const pushResult = await githubPush({
+  const push = await githubPush({
     owner: params.owner,
     repo: params.repo,
     branch: params.branch ?? 'main',
-    commitSha: prepareResult.commitSha,
+    commitSha: prepare.commitSha,
   })
+  if (!push.ok) return { ok: false, error: push.error }
 
-  if (!pushResult.ok) {
-    return { ok: false, error: pushResult.error }
-  }
-
-  return { ok: true, commitSha: prepareResult.commitSha }
+  return { ok: true, commitSha: prepare.commitSha }
 }
