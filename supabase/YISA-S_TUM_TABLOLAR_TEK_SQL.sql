@@ -1,7 +1,14 @@
 -- ═══════════════════════════════════════════════════════════════════════════════════════
--- YİSA-S TÜM TABLOLAR — TEK SCRIPT
+-- YİSA-S TÜM TABLOLAR — TEK SCRIPT (27 DOSYANIN VERİTABANI ÖZETİ)
 -- Supabase SQL Editor'da bu dosyanın tamamını yapıştırıp Run ile tek seferde çalıştırın.
--- Sıra: Patron/Chat/CEO → CELF/CEO merkez → Robot → v2.1 Operasyon → Maliyet/Satış → COO kuralları
+-- Bu script şunları kapsar:
+--   • Onay bekleyen işler: patron_commands, approval_queue, v_patron_bekleyen_onaylar
+--   • Kullanıcı rolleri: role_permissions (KULLANICI_ROLLERI_SISTEM_ONERILERI)
+--   • Patron / franchise ayrımı: tenants, franchises, approval_queue talep_tipi
+--   • CELF/COO kuralları: director_rules, coo_rules (kural değişikliği Patron onayı)
+--   • CELF maliyet + satış: celf_cost_reports, patron_sales_prices
+--   • Chat, CEO, CELF log, robot, v2.1 operasyon (expenses, deploy_logs, api_usage, vb.)
+-- Sıra: Patron/Chat/CEO → CELF/CEO merkez → Robot → v2.1 Operasyon → Maliyet/Satış → COO → Roller
 -- Tarih: 30 Ocak 2026
 -- ═══════════════════════════════════════════════════════════════════════════════════════
 
@@ -633,8 +640,50 @@ DROP POLICY IF EXISTS "Service can manage coo_rules" ON coo_rules;
 CREATE POLICY "Service can manage coo_rules" ON coo_rules FOR ALL USING (true) WITH CHECK (true);
 
 -- ═══════════════════════════════════════════════════════════════════════════════════════
+-- BÖLÜM 7: KULLANICI ROLLERİ (KULLANICI_ROLLERI_SISTEM_ONERILERI — A1/A2)
+-- Rol ve yetki matrisi tek yerde; panel/API/robotlar bu tabloyu referans alır.
+-- ═══════════════════════════════════════════════════════════════════════════════════════
+
+CREATE TABLE IF NOT EXISTS role_permissions (
+  id UUID PRIMARY KEY DEFAULT gen_random_uuid(),
+  role_code VARCHAR(20) UNIQUE NOT NULL,          -- ROL-0, ROL-1, ... ROL-12
+  role_name TEXT NOT NULL,                        -- Ziyaretçi, Franchise Sahibi, Patron vb.
+  can_trigger_flow BOOLEAN DEFAULT false,         -- Patron Asistan / flow (B1)
+  can_trigger_celf_ceo BOOLEAN DEFAULT false,     -- CELF/CEO tetikleme (B2)
+  panel_route TEXT,                               -- Rol → sayfa yönlendirme (B3)
+  max_pending_commands INTEGER DEFAULT 1,         -- Aynı anda max bekleyen iş (C1/C2)
+  priority INTEGER DEFAULT 5,                     -- Kuyruk önceliği 1=en yüksek (C3)
+  is_active BOOLEAN DEFAULT true,
+  updated_at TIMESTAMPTZ DEFAULT NOW()
+);
+
+CREATE INDEX IF NOT EXISTS idx_role_permissions_role_code ON role_permissions(role_code);
+ALTER TABLE role_permissions ENABLE ROW LEVEL SECURITY;
+DROP POLICY IF EXISTS "Service can manage role_permissions" ON role_permissions;
+CREATE POLICY "Service can manage role_permissions" ON role_permissions FOR ALL USING (true) WITH CHECK (true);
+
+-- Varsayılan roller (Master Doküman / KULLANICI_ROLLERI ile uyumlu)
+INSERT INTO role_permissions (role_code, role_name, can_trigger_flow, can_trigger_celf_ceo, panel_route, max_pending_commands, priority) VALUES
+  ('ROL-0',  'Ziyaretçi',              false, false, '/vitrin',           0, 10),
+  ('ROL-1',  'Franchise Sahibi',       false, false, '/franchise/panel',  1, 7),
+  ('ROL-2',  'Tesis Müdürü',           false, false, '/franchise/panel',  1, 8),
+  ('ROL-10', 'Veli',                   false, false, '/veli',             0, 9),
+  ('ROL-11', 'Sporcu',                 false, false, '/sporcu',            0, 9),
+  ('ROL-12', 'Misafir Sporcu',         false, false, '/vitrin',            0, 10),
+  ('PATRON', 'Patron',                 true,  true,  '/patron',           99, 1)
+ON CONFLICT (role_code) DO UPDATE SET
+  role_name = EXCLUDED.role_name,
+  can_trigger_flow = EXCLUDED.can_trigger_flow,
+  can_trigger_celf_ceo = EXCLUDED.can_trigger_celf_ceo,
+  panel_route = EXCLUDED.panel_route,
+  max_pending_commands = EXCLUDED.max_pending_commands,
+  priority = EXCLUDED.priority,
+  updated_at = NOW();
+
+-- ═══════════════════════════════════════════════════════════════════════════════════════
 -- KURULUM TAMAMLANDI
--- Tüm tablolar, indeksler, RLS ve view'lar tek script ile oluşturuldu.
+-- Tüm tablolar, indeksler, RLS, view'lar ve role_permissions tek script ile oluşturuldu.
+-- Onay bekleyen işler: patron_commands (status=pending), approval_queue (durum=bekliyor).
 -- Seed (örnek franchise) için: supabase/seed-franchise-tuzla-besiktas.sql — v2.1 franchises
 -- şemasına uyarlanarak ayrıca çalıştırılabilir.
 -- ═══════════════════════════════════════════════════════════════════════════════════════

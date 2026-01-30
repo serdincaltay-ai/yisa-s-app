@@ -43,7 +43,7 @@ export const CELF_DIRECTORATES: Record<DirectorKey, Directorate> = {
     tasks: ['bütçe', 'gelir', 'gider', 'tahsilat', 'maliyet'],
     triggers: ['gelir', 'gider', 'bütçe', 'tahsilat', 'maliyet', 'finans'],
     work: 'Supabase finansal veri, rapor',
-    aiProviders: ['GPT', 'GEMINI'],
+    aiProviders: ['GEMINI', 'GPT'], // Gemini önce denenir; key yoksa GPT'ye düşer
     dataAccess: ['payments', 'invoices', 'expenses', 'revenue'],
     readOnly: ['franchise_contracts'],
     protectedData: ['pricing_history'],
