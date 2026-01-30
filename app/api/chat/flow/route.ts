@@ -1,7 +1,8 @@
 /**
- * SEÇENEK 2 - CEO → CELF → Patron Onay (Zincir Zorunlu)
- * Her mesaj: securityCheck → CEO (sınıflandır) → CELF (direktörlük AI'ı) → Sonuç Patron onayına sunulur.
- * Claude direkt cevap vermez; sadece CELF içinde ilgili direktörlükte çalışır.
+ * SEÇENEK 2 - TAM SİSTEM AKIŞI
+ * 1) Patron mesaj → GPT imla düzelt → "Bu mu demek istediniz?" + [Şirket İşi] [Özel İş] [Hayır Düzelt]
+ * 2) Özel İş → Asistan (Claude/Gemini) halleder, CELF'e gitmez → "Kaydet?" → Evet ise patron_private_tasks
+ * 3) Şirket İşi → CEO → CELF → Sonuç Patron onayına → Onayla/Reddet/Öneri/Değiştir → Rutin/Bir seferlik
  * Patron Kararı: 30 Ocak 2026
  */
 
@@ -11,13 +12,12 @@ import {
   routeToDirector,
   isRoutineRequest,
   getRoutineScheduleFromMessage,
-  classifyTask,
 } from '@/lib/robots/ceo-robot'
-import { getDirectorAIProviders, CELF_DIRECTORATES, runCelfChecks, type DirectorKey } from '@/lib/robots/celf-center'
+import { CELF_DIRECTORATES, runCelfChecks, type DirectorKey } from '@/lib/robots/celf-center'
 import { securityCheck } from '@/lib/robots/security-robot'
 import { archiveTaskResult } from '@/lib/robots/data-robot'
 import { saveChatMessage } from '@/lib/db/chat-messages'
-import { savePrivateTask, updatePrivateTaskResult } from '@/lib/db/patron-private'
+import { savePrivateTask } from '@/lib/db/patron-private'
 import { logCelfAudit } from '@/lib/db/celf-audit'
 import {
   createCeoTask,
@@ -25,125 +25,8 @@ import {
   createPatronCommand,
   insertCelfLog,
 } from '@/lib/db/ceo-celf'
-
-const ANTHROPIC_URL = 'https://api.anthropic.com/v1/messages'
-const OPENAI_URL = 'https://api.openai.com/v1/chat/completions'
-const GOOGLE_GEMINI_URL = 'https://generativelanguage.googleapis.com/v1beta/models/gemini-pro:generateContent'
-const TOGETHER_URL = 'https://api.together.xyz/v1/chat/completions'
-
-async function callClaude(message: string, system?: string): Promise<string | null> {
-  const apiKey = process.env.ANTHROPIC_API_KEY
-  if (!apiKey) return null
-  const res = await fetch(ANTHROPIC_URL, {
-    method: 'POST',
-    headers: {
-      'Content-Type': 'application/json',
-      'x-api-key': apiKey,
-      'anthropic-version': '2023-06-01',
-    },
-    body: JSON.stringify({
-      model: 'claude-3-5-haiku-20241022',
-      max_tokens: 1024,
-      system: system ?? 'Sen YİSA-S CELF direktörlük asistanısın. Kısa, net ve Türkçe yanıt ver.',
-      messages: [{ role: 'user', content: message }],
-    }),
-  })
-  if (!res.ok) return null
-  const data = await res.json()
-  return data.content?.find((c: { type: string }) => c.type === 'text')?.text ?? null
-}
-
-async function callOpenAI(message: string): Promise<string | null> {
-  const apiKey = process.env.OPENAI_API_KEY
-  if (!apiKey) return null
-  const res = await fetch(OPENAI_URL, {
-    method: 'POST',
-    headers: { 'Content-Type': 'application/json', Authorization: `Bearer ${apiKey}` },
-    body: JSON.stringify({
-      model: 'gpt-4-turbo-preview',
-      max_tokens: 1024,
-      messages: [
-        { role: 'system', content: 'Sen YİSA-S CELF direktörlük asistanısın. Kısa, net, Türkçe.' },
-        { role: 'user', content: message },
-      ],
-    }),
-  })
-  if (!res.ok) return null
-  const data = await res.json()
-  return data.choices?.[0]?.message?.content ?? null
-}
-
-async function callGemini(message: string): Promise<string | null> {
-  const apiKey = process.env.GOOGLE_API_KEY ?? process.env.GOOGLE_GEMINI_API_KEY
-  if (!apiKey) return null
-  const url = `${GOOGLE_GEMINI_URL}?key=${apiKey}`
-  const res = await fetch(url, {
-    method: 'POST',
-    headers: { 'Content-Type': 'application/json' },
-    body: JSON.stringify({
-      contents: [{ role: 'user', parts: [{ text: message }] }],
-      generationConfig: { maxOutputTokens: 1024 },
-    }),
-  })
-  if (!res.ok) return null
-  const data = await res.json()
-  return data.candidates?.[0]?.content?.parts?.[0]?.text ?? null
-}
-
-async function callTogether(message: string): Promise<string | null> {
-  const apiKey = process.env.TOGETHER_API_KEY
-  if (!apiKey) return null
-  const res = await fetch(TOGETHER_URL, {
-    method: 'POST',
-    headers: { 'Content-Type': 'application/json', Authorization: `Bearer ${apiKey}` },
-    body: JSON.stringify({
-      model: 'meta-llama/Llama-3-70b-chat-hf',
-      max_tokens: 1024,
-      messages: [{ role: 'user', content: message }],
-    }),
-  })
-  if (!res.ok) return null
-  const data = await res.json()
-  return data.choices?.[0]?.message?.content ?? null
-}
-
-/** CELF: Direktörlüğün AI sağlayıcılarından ilk erişilebileni çağırır. Claude sadece burada çalışır. */
-async function runCelfDirector(
-  directorKey: DirectorKey,
-  message: string
-): Promise<{ text: string; provider: string } | null> {
-  const director = CELF_DIRECTORATES[directorKey]
-  const systemHint = director
-    ? `${director.name} (${director.work}). Kısa, net, Türkçe yanıt ver.`
-    : 'YİSA-S asistan. Kısa, net, Türkçe yanıt ver.'
-  const providers = getDirectorAIProviders(directorKey)
-
-  for (const provider of providers) {
-    if (provider === 'V0' || provider === 'CURSOR') continue
-    let out: string | null = null
-    switch (provider) {
-      case 'GPT':
-        out = await callOpenAI(message)
-        if (out) return { text: out, provider: 'GPT' }
-        break
-      case 'CLAUDE':
-        out = await callClaude(message, systemHint)
-        if (out) return { text: out, provider: 'CLAUDE' }
-        break
-      case 'GEMINI':
-        out = await callGemini(message)
-        if (out) return { text: out, provider: 'GEMINI' }
-        break
-      case 'TOGETHER':
-        out = await callTogether(message)
-        if (out) return { text: out, provider: 'TOGETHER' }
-        break
-      default:
-        break
-    }
-  }
-  return null
-}
+import { correctSpelling, askConfirmation } from '@/lib/ai/gpt-service'
+import { runCelfDirector } from '@/lib/ai/celf-execute'
 
 function taskTypeToLabel(taskType: string): string {
   const map: Record<string, string> = {
@@ -163,10 +46,36 @@ export async function POST(req: NextRequest) {
     const user = body.user ?? null
     const userId = typeof body.user_id === 'string' ? body.user_id : (user?.id as string | undefined)
     const ipAddress = req.headers.get('x-forwarded-for') ?? req.headers.get('x-real-ip') ?? undefined
+    const confirmType = body.confirm_type as 'company' | 'private' | undefined
+    const correctedMessage = typeof body.corrected_message === 'string' ? body.corrected_message : undefined
+    const savePrivate = body.save_private === true
+    const privateCommand = typeof body.private_command === 'string' ? body.private_command : undefined
+    const privateResult = typeof body.private_result === 'string' ? body.private_result : undefined
+
+    const messageToUse = correctedMessage ?? message
+
+    // ─── Özel iş "Kaydet?" → Evet: patron_private_tasks'a kaydet ─────────────
+    if (savePrivate && userId && privateCommand && privateResult != null) {
+      const saved = await savePrivateTask({
+        patron_id: userId,
+        command: privateCommand,
+        result: privateResult,
+        task_type: 'genel',
+        ai_providers: ['CLAUDE'],
+      })
+      if (saved.error) {
+        return NextResponse.json({ error: saved.error }, { status: 500 })
+      }
+      return NextResponse.json({
+        status: 'private_saved',
+        message: 'Kendi alanınıza kaydedildi.',
+        flow: 'Patron özel iş → Kaydet',
+      })
+    }
 
     // ─── a) Önce securityCheck ─────────────────────────────────────────────
     const security = await securityCheck({
-      message,
+      message: messageToUse,
       userId,
       ipAddress,
       logToDb: true,
@@ -178,31 +87,33 @@ export async function POST(req: NextRequest) {
       )
     }
 
-    // ─── b) CEO: İş sınıflandırması (şirket / özel / belirsiz) ──────────────
-    const taskClassification = classifyTask(message)
-
-    if (taskClassification === 'unclear') {
+    // ─── 1) İLK ADIM: confirm_type yoksa GPT imla düzelt + "Bu mu demek istediniz?" ─
+    if (!confirmType) {
+      const spell = await correctSpelling(message)
+      const confirmation = askConfirmation(spell.correctedMessage)
       return NextResponse.json({
-        status: 'classification_unclear',
-        message: 'Bu şirketle ilgili mi, yoksa özel bir iş mi?',
-        flow: 'CEO sınıflandırma',
+        status: 'spelling_confirmation',
+        flow: 'GPT imla düzeltme',
+        correctedMessage: confirmation.correctedMessage,
+        promptText: confirmation.promptText,
+        choices: confirmation.choices,
+        message: 'Bu mu demek istediniz? Şirket işi / Özel iş / Hayır düzelt seçin.',
       })
     }
 
-    if (taskClassification === 'private') {
+    // ─── 2) ÖZEL İŞ: CELF'e gitmez, asistan halleder, kaydetme sonra sorulur ─
+    if (confirmType === 'private') {
       if (!userId) {
         return NextResponse.json({ error: 'Özel iş için giriş gerekli.' }, { status: 401 })
       }
-      const privateTask = await savePrivateTask({ patron_id: userId, command: message, task_type: 'genel' })
-      if (privateTask.error) {
-        return NextResponse.json({ error: privateTask.error }, { status: 500 })
-      }
-      const privateResult = await callClaude(message, 'Sen Patronun kişisel asistanısın. Şirket verisine erişmeden, kısa ve Türkçe yanıt ver.')
-      const resultText = privateResult ?? 'Yanıt oluşturulamadı.'
-      if (privateTask.id) await updatePrivateTaskResult(privateTask.id, resultText)
+      const privateResultText = await callClaude(
+        messageToUse,
+        'Sen Patronun kişisel asistanısın. Şirket verisine erişmeden, kısa ve Türkçe yanıt ver. CELF\'e gitme.'
+      )
+      const resultText = privateResultText ?? 'Yanıt oluşturulamadı.'
       await saveChatMessage({
         user_id: userId,
-        message,
+        message: messageToUse,
         response: resultText,
         ai_providers: ['CLAUDE'],
       })
@@ -210,19 +121,21 @@ export async function POST(req: NextRequest) {
         status: 'private_done',
         flow: 'Patron özel iş (CELF\'e gitmez)',
         text: resultText,
-        private_task_id: privateTask.id ?? undefined,
+        command_used: messageToUse,
+        ask_save: true,
+        message: 'İş tamamlandı. Kendi alanınıza kaydetmek ister misiniz?',
       })
     }
 
-    // ─── ŞİRKET İŞİ: CEO → CELF (direktörlük + denetim) → Patron Onay ───────
-    const taskType = detectTaskType(message)
-    let directorKey = routeToDirector(message)
+    // ─── 3) ŞİRKET İŞİ: CEO → CELF (direktörlük + denetim) → Patron Onay ───────
+    const taskType = detectTaskType(messageToUse)
+    let directorKey = routeToDirector(messageToUse)
     if (!directorKey) directorKey = 'CCO' as DirectorKey
     const taskTypeLabel = taskTypeToLabel(taskType)
 
     const ceoTaskResult = await createCeoTask({
       user_id: userId,
-      task_description: message,
+      task_description: messageToUse,
       task_type: taskTypeLabel,
       director_key: directorKey,
     })
@@ -232,7 +145,7 @@ export async function POST(req: NextRequest) {
         ceo_task_id: ceoTaskId,
         director_key: directorKey,
         action: 'ceo_classify',
-        input_summary: message.substring(0, 200),
+        input_summary: messageToUse.substring(0, 200),
         output_summary: `${taskTypeLabel} → ${directorKey}`,
       })
     }
@@ -243,7 +156,7 @@ export async function POST(req: NextRequest) {
       taskId: ceoTaskId,
       requiredData: [],
       affectedData: [],
-      operation: message,
+      operation: messageToUse,
     })
     if (ceoTaskId) {
       await logCelfAudit({
@@ -273,7 +186,7 @@ export async function POST(req: NextRequest) {
     }
 
     // ─── c) CELF: İlgili direktörlük AI'ını çalıştır ───────────────────────
-    const celfResult = await runCelfDirector(directorKey, message)
+    const celfResult = await runCelfDirector(directorKey, messageToUse)
     const displayText = celfResult?.text ?? 'Yanıt oluşturulamadı. API anahtarlarını (.env) kontrol edin.'
     const aiProvider = celfResult?.provider ?? '—'
     const aiProviders = celfResult ? [celfResult.provider] : []
@@ -283,7 +196,7 @@ export async function POST(req: NextRequest) {
       taskId: ceoTaskId,
       directorKey,
       aiProviders,
-      inputCommand: message,
+      inputCommand: messageToUse,
       outputResult: displayText,
       status: 'completed',
     })
@@ -302,7 +215,7 @@ export async function POST(req: NextRequest) {
         ceo_task_id: ceoTaskId,
         director_key: directorKey,
         action: 'celf_execute',
-        input_summary: message.substring(0, 200),
+        input_summary: messageToUse.substring(0, 200),
         output_summary: displayText.substring(0, 300),
         payload: { providers: aiProviders },
       })
@@ -311,7 +224,7 @@ export async function POST(req: NextRequest) {
     // ─── e) Patrona sun: Her zaman onay kuyruğuna al ───────────────────────
     const cmd = await createPatronCommand({
       user_id: userId,
-      command: message,
+      command: messageToUse,
       ceo_task_id: ceoTaskId,
       output_payload: {
         displayText,
@@ -331,14 +244,14 @@ export async function POST(req: NextRequest) {
     if (userId) {
       await saveChatMessage({
         user_id: userId,
-        message,
+        message: messageToUse,
         response: 'Patron onayı bekleniyor. Onay kuyruğunu kontrol edin.',
         ai_providers: aiProviders.length ? aiProviders : [],
       })
     }
 
-    const routineRequest = isRoutineRequest(message)
-    const routineSchedule = getRoutineScheduleFromMessage(message)
+    const routineRequest = isRoutineRequest(messageToUse)
+    const routineSchedule = getRoutineScheduleFromMessage(messageToUse)
 
     // ─── f) Yanıt: Her zaman awaiting_patron_approval; sonuç onaydan sonra gösterilir ─
     return NextResponse.json({

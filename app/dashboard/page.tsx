@@ -41,6 +41,25 @@ export default function DashboardPage() {
     message: string
     command_id?: string
     displayText?: string
+    director_key?: string
+  } | null>(null)
+  /** Onaylandı, rutin/bir seferlik seçimi bekleniyor */
+  const [approvedWaitingRoutineChoice, setApprovedWaitingRoutineChoice] = useState<{
+    command_id: string
+    message: string
+    director_key?: string
+  } | null>(null)
+  /** Rutin adımı: 'choice' = Rutin/Bir seferlik, 'schedule' = Günlük/Haftalık/Aylık */
+  const [routineStep, setRoutineStep] = useState<'choice' | 'schedule' | null>(null)
+  /** İmla düzeltme sonrası: "Bu mu demek istediniz?" paneli */
+  const [pendingSpellingConfirmation, setPendingSpellingConfirmation] = useState<{
+    correctedMessage: string
+    originalMessage: string
+  } | null>(null)
+  /** Özel iş bitince: "Kaydetmek ister misiniz?" paneli */
+  const [pendingPrivateSave, setPendingPrivateSave] = useState<{
+    command: string
+    result: string
   } | null>(null)
   /** Onay/Reddet/Değiştir işlemi sürerken */
   const [approvalBusy, setApprovalBusy] = useState(false)
@@ -91,6 +110,8 @@ export default function DashboardPage() {
 
     setLockError(null)
     setPendingApproval(null)
+    setPendingSpellingConfirmation(null)
+    setPendingPrivateSave(null)
 
     const lockCheck = checkPatronLock(msg)
     if (!lockCheck.allowed) {
@@ -121,6 +142,28 @@ export default function DashboardPage() {
             ...prev,
             { role: 'assistant', text: `Hata: ${data.error}`, aiProviders: [] },
           ])
+        } else if (data.status === 'spelling_confirmation') {
+          const corrected = data.correctedMessage ?? msg
+          setChatMessages((prev) => [
+            ...prev,
+            { role: 'assistant', text: `📝 Bu mu demek istediniz?\n\n"${corrected}"`, aiProviders: ['GPT'] },
+          ])
+          setPendingSpellingConfirmation({ correctedMessage: corrected, originalMessage: msg })
+        } else if (data.status === 'private_done') {
+          const text = data.text ?? 'Yanıt oluşturulamadı.'
+          setChatMessages((prev) => [
+            ...prev,
+            { role: 'assistant', text, aiProviders: ['CLAUDE'] },
+          ])
+          if (data.ask_save && data.command_used) {
+            setPendingPrivateSave({ command: data.command_used, result: text })
+          }
+        } else if (data.status === 'private_saved') {
+          setChatMessages((prev) => [
+            ...prev,
+            { role: 'assistant', text: '✅ Kendi alanınıza kaydedildi.', aiProviders: [] },
+          ])
+          setPendingPrivateSave(null)
         } else {
           const responses = data.aiResponses ?? []
           const aiProviders = responses
@@ -138,6 +181,7 @@ export default function DashboardPage() {
               message: msg,
               command_id: data.command_id,
               displayText: typeof data.text === 'string' ? data.text : undefined,
+              director_key: data.director_key,
             })
           }
           setChatMessages((prev) => [
@@ -187,6 +231,122 @@ export default function DashboardPage() {
       ])
     } finally {
       setChatSending(false)
+    }
+  }
+
+  /** İmla onayı: Evet Şirket İşi / Evet Özel İş → flow'a confirm_type ile tekrar istek */
+  const handleConfirmationChoice = async (confirmType: 'company' | 'private', correctedMessage: string) => {
+    if (chatSending || !correctedMessage.trim()) return
+    setPendingSpellingConfirmation(null)
+    setChatSending(true)
+    setCurrentStepLabel(confirmType === 'company' ? 'Şirket işi işleniyor...' : 'Özel iş işleniyor...')
+    try {
+      const res = await fetch('/api/chat/flow', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({
+          message: correctedMessage,
+          confirm_type: confirmType,
+          corrected_message: correctedMessage,
+          user: user ?? undefined,
+          user_id: user?.id ?? undefined,
+        }),
+      })
+      const data = await res.json()
+      setCurrentStepLabel(null)
+      if (data.error) {
+        setChatMessages((prev) => [
+          ...prev,
+          { role: 'assistant', text: `Hata: ${data.error}`, aiProviders: [] },
+        ])
+      } else if (data.status === 'spelling_confirmation') {
+        const corrected = data.correctedMessage ?? correctedMessage
+        setChatMessages((prev) => [
+          ...prev,
+          { role: 'assistant', text: `📝 Bu mu demek istediniz?\n\n"${corrected}"`, aiProviders: ['GPT'] },
+        ])
+        setPendingSpellingConfirmation({ correctedMessage: corrected, originalMessage: correctedMessage })
+      } else if (data.status === 'private_done') {
+        const text = data.text ?? 'Yanıt oluşturulamadı.'
+        setChatMessages((prev) => [
+          ...prev,
+          { role: 'assistant', text, aiProviders: ['CLAUDE'] },
+        ])
+        if (data.ask_save && data.command_used) {
+          setPendingPrivateSave({ command: data.command_used, result: text })
+        }
+      } else if (data.status === 'private_saved') {
+        setChatMessages((prev) => [
+          ...prev,
+          { role: 'assistant', text: '✅ Kendi alanınıza kaydedildi.', aiProviders: [] },
+        ])
+        setPendingPrivateSave(null)
+      } else if (data.status === 'awaiting_patron_approval') {
+        setPendingApproval({
+          output: data.output ?? {},
+          aiResponses: data.aiResponses ?? [],
+          flow: data.flow ?? QUALITY_FLOW.name,
+          message: correctedMessage,
+          command_id: data.command_id,
+          displayText: typeof data.text === 'string' ? data.text : undefined,
+        })
+        setChatMessages((prev) => [
+          ...prev,
+          { role: 'assistant', text: data.text ?? 'Patron onayı bekleniyor.', aiProviders: data.ai_providers ?? [], taskType: data.output?.taskType },
+        ])
+      } else {
+        setChatMessages((prev) => [
+          ...prev,
+          { role: 'assistant', text: data.text ?? 'Yanıt oluşturuldu.', aiProviders: [] },
+        ])
+      }
+    } catch {
+      setCurrentStepLabel(null)
+      setChatMessages((prev) => [
+        ...prev,
+        { role: 'assistant', text: 'Bağlantı hatası. Tekrar dene.', aiProviders: [] },
+      ])
+    } finally {
+      setChatSending(false)
+    }
+  }
+
+  /** Özel iş: Evet Kaydet → patron_private_tasks'a kaydet */
+  const handlePrivateSave = async (save: boolean) => {
+    if (!pendingPrivateSave || approvalBusy) return
+    setPendingPrivateSave(null)
+    if (!save) return
+    setApprovalBusy(true)
+    try {
+      const res = await fetch('/api/chat/flow', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({
+          save_private: true,
+          private_command: pendingPrivateSave.command,
+          private_result: pendingPrivateSave.result,
+          user_id: user?.id ?? undefined,
+        }),
+      })
+      const data = await res.json()
+      if (data.error) {
+        setChatMessages((prev) => [
+          ...prev,
+          { role: 'assistant', text: `Kaydetme hatası: ${data.error}`, aiProviders: [] },
+        ])
+      } else {
+        setChatMessages((prev) => [
+          ...prev,
+          { role: 'assistant', text: '✅ Kendi alanınıza kaydedildi.', aiProviders: [] },
+        ])
+      }
+    } catch {
+      setChatMessages((prev) => [
+        ...prev,
+        { role: 'assistant', text: 'Kaydetme sırasında bağlantı hatası.', aiProviders: [] },
+      ])
+    } finally {
+      setApprovalBusy(false)
     }
   }
 
@@ -436,6 +596,152 @@ export default function DashboardPage() {
               </div>
             </div>
           )}
+          {pendingSpellingConfirmation && (
+            <div className="rounded-2xl border border-amber-500/40 bg-amber-500/10 p-4 space-y-3">
+              <h3 className="font-semibold text-amber-400">📝 Bu mu demek istediniz?</h3>
+              <p className="text-sm text-slate-300">&quot;{pendingSpellingConfirmation.correctedMessage}&quot;</p>
+              <div className="flex flex-wrap gap-2">
+                <button
+                  type="button"
+                  onClick={() => handleConfirmationChoice('company', pendingSpellingConfirmation!.correctedMessage)}
+                  disabled={chatSending}
+                  className="flex items-center gap-1 px-3 py-2 rounded-lg bg-emerald-500/20 text-emerald-400 hover:bg-emerald-500/30 text-sm font-medium transition-colors disabled:opacity-50"
+                >
+                  <Check size={14} />
+                  Evet, Şirket İşi
+                </button>
+                <button
+                  type="button"
+                  onClick={() => handleConfirmationChoice('private', pendingSpellingConfirmation!.correctedMessage)}
+                  disabled={chatSending}
+                  className="flex items-center gap-1 px-3 py-2 rounded-lg bg-blue-500/20 text-blue-400 hover:bg-blue-500/30 text-sm font-medium transition-colors disabled:opacity-50"
+                >
+                  <Check size={14} />
+                  Evet, Özel İş
+                </button>
+                <button
+                  type="button"
+                  onClick={() => {
+                    setChatInput(pendingSpellingConfirmation!.correctedMessage)
+                    setPendingSpellingConfirmation(null)
+                  }}
+                  className="flex items-center gap-1 px-3 py-2 rounded-lg bg-slate-600 text-slate-300 hover:bg-slate-500 text-sm font-medium transition-colors"
+                >
+                  <X size={14} />
+                  Hayır, Düzelt
+                </button>
+              </div>
+            </div>
+          )}
+          {approvedWaitingRoutineChoice && (
+            <div className="rounded-2xl border border-emerald-500/40 bg-emerald-500/10 p-4 space-y-3">
+              <h3 className="font-semibold text-emerald-400">📁 Bu görevi nasıl kaydetmek istersiniz?</h3>
+              {routineStep === null || routineStep === 'choice' ? (
+                <div className="flex flex-wrap gap-2">
+                  <button
+                    type="button"
+                    onClick={() => setRoutineStep('schedule')}
+                    className="flex items-center gap-1 px-3 py-2 rounded-lg bg-amber-500/20 text-amber-400 hover:bg-amber-500/30 text-sm font-medium transition-colors"
+                  >
+                    📅 Rutin Görev
+                  </button>
+                  <button
+                    type="button"
+                    onClick={() => {
+                      setApprovedWaitingRoutineChoice(null)
+                      setRoutineStep(null)
+                      setChatMessages((prev) => [
+                        ...prev,
+                        { role: 'assistant', text: 'Bir seferlik olarak kaydedildi.', aiProviders: [] },
+                      ])
+                    }}
+                    className="flex items-center gap-1 px-3 py-2 rounded-lg bg-slate-600 text-slate-300 hover:bg-slate-500 text-sm font-medium transition-colors"
+                  >
+                    1️⃣ Bir Seferlik
+                  </button>
+                </div>
+              ) : (
+                <div className="space-y-2">
+                  <p className="text-sm text-slate-400">Sıklık seçin:</p>
+                  <div className="flex flex-wrap gap-2">
+                    {(['daily', 'weekly', 'monthly'] as const).map((schedule) => (
+                      <button
+                        key={schedule}
+                        type="button"
+                        onClick={async () => {
+                          setApprovalBusy(true)
+                          try {
+                            const res = await fetch('/api/approvals', {
+                              method: 'POST',
+                              headers: { 'Content-Type': 'application/json' },
+                              body: JSON.stringify({
+                                command_id: approvedWaitingRoutineChoice.command_id,
+                                save_routine: true,
+                                schedule,
+                                user_id: user?.id,
+                              }),
+                            })
+                            const data = await res.json()
+                            setApprovedWaitingRoutineChoice(null)
+                            setRoutineStep(null)
+                            setChatMessages((prev) => [
+                              ...prev,
+                              {
+                                role: 'assistant',
+                                text: data.message ?? `Rutin kaydedildi (${schedule === 'daily' ? 'Günlük' : schedule === 'weekly' ? 'Haftalık' : 'Aylık'}). COO zamanı gelince çalıştıracak.`,
+                                aiProviders: [],
+                              },
+                            ])
+                          } catch {
+                            setChatMessages((prev) => [
+                              ...prev,
+                              { role: 'assistant', text: 'Rutin kaydedilirken hata.', aiProviders: [] },
+                            ])
+                          } finally {
+                            setApprovalBusy(false)
+                          }
+                        }}
+                        disabled={approvalBusy}
+                        className="px-3 py-2 rounded-lg bg-slate-600 text-slate-300 hover:bg-slate-500 text-sm font-medium disabled:opacity-50"
+                      >
+                        {schedule === 'daily' ? 'Günlük' : schedule === 'weekly' ? 'Haftalık' : 'Aylık'}
+                      </button>
+                    ))}
+                  </div>
+                </div>
+              )}
+            </div>
+          )}
+          {pendingPrivateSave && (
+            <div className="rounded-2xl border border-blue-500/40 bg-blue-500/10 p-4 space-y-3">
+              <h3 className="font-semibold text-blue-400">İş tamamlandı. Kendi alanınıza kaydetmek ister misiniz?</h3>
+              <div className="flex flex-wrap gap-2">
+                <button
+                  type="button"
+                  onClick={() => handlePrivateSave(true)}
+                  disabled={approvalBusy}
+                  className="flex items-center gap-1 px-3 py-2 rounded-lg bg-emerald-500/20 text-emerald-400 hover:bg-emerald-500/30 text-sm font-medium transition-colors disabled:opacity-50"
+                >
+                  <Check size={14} />
+                  Evet, Kaydet
+                </button>
+                <button
+                  type="button"
+                  onClick={() => {
+                    setPendingPrivateSave(null)
+                    setChatMessages((prev) => [
+                      ...prev,
+                      { role: 'assistant', text: 'Kaydetmediniz. İsterseniz başka bir iş yapabilirsiniz.', aiProviders: [] },
+                    ])
+                  }}
+                  className="flex items-center gap-1 px-3 py-2 rounded-lg bg-slate-600 text-slate-300 hover:bg-slate-500 text-sm font-medium transition-colors"
+                >
+                  <X size={14} />
+                  Hayır, Kaydetme
+                </button>
+              </div>
+            </div>
+          )}
           {pendingApproval && (
             <>
               {approvalBusy ? (
@@ -449,12 +755,13 @@ export default function DashboardPage() {
                   onApprove={async () => {
                     setApprovalBusy(true)
                     const msg = pendingApproval.message
+                    const cmdId = pendingApproval.command_id
                     try {
                       const res = await fetch('/api/approvals', {
                         method: 'POST',
                         headers: { 'Content-Type': 'application/json' },
                         body: JSON.stringify({
-                          command_id: pendingApproval.command_id,
+                          command_id: cmdId,
                           decision: 'approve',
                           user_id: user?.id,
                         }),
@@ -481,6 +788,14 @@ export default function DashboardPage() {
                           taskType: pendingApproval.output?.taskType as string,
                         },
                       ])
+                      setPendingApproval(null)
+                      if (cmdId) {
+                        setApprovedWaitingRoutineChoice({
+                          command_id: cmdId,
+                          message: msg,
+                          director_key: pendingApproval.director_key,
+                        })
+                      }
                     } catch {
                       setChatMessages((prev) => [
                         ...prev,
@@ -491,7 +806,38 @@ export default function DashboardPage() {
                         },
                       ])
                     } finally {
-                      setPendingApproval(null)
+                      setApprovalBusy(false)
+                    }
+                  }}
+                  onSuggest={async () => {
+                    if (!pendingApproval?.command_id) return
+                    setApprovalBusy(true)
+                    try {
+                      const res = await fetch('/api/approvals', {
+                        method: 'POST',
+                        headers: { 'Content-Type': 'application/json' },
+                        body: JSON.stringify({
+                          command_id: pendingApproval.command_id,
+                          decision: 'suggest',
+                          user_id: user?.id,
+                        }),
+                      })
+                      const data = await res.json()
+                      const suggestions = data.suggestions ?? 'Öneri alınamadı.'
+                      setChatMessages((prev) => [
+                        ...prev,
+                        {
+                          role: 'assistant',
+                          text: `💡 Geliştirme önerileri:\n\n${suggestions}`,
+                          aiProviders: ['GPT'],
+                        },
+                      ])
+                    } catch {
+                      setChatMessages((prev) => [
+                        ...prev,
+                        { role: 'assistant', text: 'Öneri alınırken bağlantı hatası.', aiProviders: [] },
+                      ])
+                    } finally {
                       setApprovalBusy(false)
                     }
                   }}

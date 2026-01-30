@@ -1,18 +1,21 @@
 'use client'
 
 /**
- * Patron Onay Paneli — Seçenek 2 Kalite Optimize
- * Onayla / Reddet / Değiştir
+ * Patron Onay Paneli — TAM SİSTEM
+ * Onayla / Reddet / Öneri İste / Değiştir
+ * Onayla sonrası: Rutin Görev / Bir Seferlik (dashboard'da ayrı panel)
  */
 
 import { useState } from 'react'
-import { Check, X, Edit3 } from 'lucide-react'
+import { Check, X, Edit3, Lightbulb } from 'lucide-react'
 
 export interface PendingTask {
   output: Record<string, unknown>
   aiResponses: { provider: string; response: unknown }[]
   flow: string
   message: string
+  command_id?: string
+  displayText?: string
 }
 
 interface PatronApprovalUIProps {
@@ -21,6 +24,7 @@ interface PatronApprovalUIProps {
   userId?: string
   onApprove: () => void | Promise<void>
   onReject: () => void | Promise<void>
+  onSuggest?: () => void | Promise<void>
   onModify?: (modifyText: string) => void | Promise<void>
 }
 
@@ -28,6 +32,7 @@ export function PatronApprovalUI({
   pendingTask,
   onApprove,
   onReject,
+  onSuggest,
   onModify,
 }: PatronApprovalUIProps) {
   const [showModifyInput, setShowModifyInput] = useState(false)
@@ -84,6 +89,16 @@ export function PatronApprovalUI({
           <X size={14} />
           Reddet
         </button>
+        {onSuggest && (
+          <button
+            type="button"
+            onClick={onSuggest}
+            className="flex items-center gap-1 px-3 py-2 rounded-lg bg-amber-500/20 text-amber-400 hover:bg-amber-500/30 text-sm font-medium transition-colors"
+          >
+            <Lightbulb size={14} />
+            Öneri İste
+          </button>
+        )}
         <button
           type="button"
           onClick={() => setShowModifyInput((s) => !s)}
