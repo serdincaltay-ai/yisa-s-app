@@ -5,7 +5,8 @@
  * Tarih: 30 Ocak 2026
  */
 
-import { getDirectorAIProviders, CELF_DIRECTORATES, type DirectorKey } from '@/lib/robots/celf-center'
+import { type DirectorKey } from '@/lib/robots/celf-center'
+import { getDirectorateConfigMerged } from '@/lib/robots/celf-config-merged'
 
 const ANTHROPIC_URL = 'https://api.anthropic.com/v1/messages'
 const OPENAI_URL = 'https://api.openai.com/v1/chat/completions'
@@ -91,17 +92,18 @@ async function callTogether(message: string): Promise<string | null> {
 
 /**
  * CELF: Direktörlüğün AI sağlayıcılarından ilk erişilebileni çağırır.
+ * Konfigürasyon önce director_rules (DB) ile birleştirilir; dinamik güncelleme Patron onayı ile.
  * V0 ve CURSOR atlanır (API yok / local).
  */
 export async function runCelfDirector(
   directorKey: DirectorKey,
   message: string
 ): Promise<{ text: string; provider: string } | null> {
-  const director = CELF_DIRECTORATES[directorKey]
+  const director = await getDirectorateConfigMerged(directorKey)
   const systemHint = director
     ? `${director.name} (${director.work}). Kısa, net, Türkçe yanıt ver.`
     : 'YİSA-S asistan. Kısa, net, Türkçe yanıt ver.'
-  const providers = getDirectorAIProviders(directorKey)
+  const providers = director.aiProviders
 
   for (const provider of providers) {
     if (provider === 'V0' || provider === 'CURSOR') continue

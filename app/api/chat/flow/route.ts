@@ -4,6 +4,9 @@
  * 2) Özel İş → Asistan (Claude/Gemini) halleder, CELF'e gitmez → "Kaydet?" → Evet ise patron_private_tasks
  * 3) Şirket İşi → CEO → CELF → Sonuç Patron onayına → Onayla/Reddet/Öneri/Değiştir → Rutin/Bir seferlik
  * Patron Kararı: 30 Ocak 2026
+ *
+ * KURAL: API'ler sadece 2 bölümde — Asistan (imla GPT, özel iş Claude) + CELF (runCelfDirector).
+ * CEO/COO/güvenlik API çağırmaz; sadece kurallar ve CELF tetiklemesi. Bkz. API_SADECE_ASISTAN_CELF_KURULUM.md
  */
 
 import { NextRequest, NextResponse } from 'next/server'
