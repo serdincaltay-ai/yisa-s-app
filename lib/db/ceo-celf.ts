@@ -5,28 +5,81 @@
 
 import { getSupabaseServer } from '@/lib/supabase'
 
+/** Aynı kullanıcı için bekleyen (henüz tamamlanmamış) CEO görevi sayısı. Tek bekleyen iş kuralı için. */
+const PENDING_STATUSES = ['pending', 'assigned', 'celf_running', 'awaiting_approval']
+
+export async function getPendingCeoTaskCount(userId: string | undefined): Promise<{ count: number; error?: string }> {
+  if (!userId) return { count: 0 }
+  const db = getSupabaseServer()
+  if (!db) return { count: 0, error: 'Supabase bağlantısı yok' }
+  const { count, error } = await db
+    .from('ceo_tasks')
+    .select('*', { count: 'exact', head: true })
+    .eq('user_id', userId)
+    .in('status', PENDING_STATUSES)
+  if (error) return { count: 0, error: error.message }
+  return { count: count ?? 0 }
+}
+
+/** Aynı user_id + idempotency_key ile mevcut task var mı (retry/idempotency için). */
+export async function getCeoTaskByUserAndIdempotency(
+  userId: string | undefined,
+  idempotencyKey: string
+): Promise<{ id?: string; error?: string }> {
+  if (!userId || !idempotencyKey) return {}
+  const db = getSupabaseServer()
+  if (!db) return { error: 'Supabase bağlantısı yok' }
+  const { data, error } = await db
+    .from('ceo_tasks')
+    .select('id')
+    .eq('user_id', userId)
+    .eq('idempotency_key', idempotencyKey)
+    .limit(1)
+    .maybeSingle()
+  if (error) return { error: error.message }
+  return { id: data?.id }
+}
+
 export async function createCeoTask(params: {
   user_id?: string
   task_description: string
   task_type: string
   director_key: string | null
+  idempotency_key?: string
 }): Promise<{ id?: string; error?: string }> {
   const db = getSupabaseServer()
   if (!db) return { error: 'Supabase bağlantısı yok' }
 
+  const idempotencyKey = params.idempotency_key?.trim() || undefined
+
+  if (idempotencyKey && params.user_id) {
+    const existing = await getCeoTaskByUserAndIdempotency(params.user_id, idempotencyKey)
+    if (existing.error) return { error: existing.error }
+    if (existing.id) return { id: existing.id }
+  }
+
+  const insertPayload = {
+    user_id: params.user_id ?? null,
+    task_description: params.task_description,
+    task_type: params.task_type,
+    director_key: params.director_key,
+    status: 'assigned' as const,
+    ...(idempotencyKey && { idempotency_key: idempotencyKey }),
+  }
+
   const { error, data } = await db
     .from('ceo_tasks')
-    .insert({
-      user_id: params.user_id ?? null,
-      task_description: params.task_description,
-      task_type: params.task_type,
-      director_key: params.director_key,
-      status: 'assigned',
-    })
+    .insert(insertPayload)
     .select('id')
     .single()
 
-  if (error) return { error: error.message }
+  if (error) {
+    if (error.code === '23505' && idempotencyKey && params.user_id) {
+      const existing = await getCeoTaskByUserAndIdempotency(params.user_id, idempotencyKey)
+      if (existing.id) return { id: existing.id }
+    }
+    return { error: error.message }
+  }
   return { id: data?.id }
 }
 
@@ -97,6 +150,7 @@ export async function createPatronCommand(params: {
 export async function getPatronCommand(id: string): Promise<{
   command?: string
   output_payload?: Record<string, unknown>
+  ceo_task_id?: string | null
   error?: string
 }> {
   const db = getSupabaseServer()
@@ -104,7 +158,7 @@ export async function getPatronCommand(id: string): Promise<{
 
   const { data, error } = await db
     .from('patron_commands')
-    .select('command, output_payload')
+    .select('command, output_payload, ceo_task_id')
     .eq('id', id)
     .single()
 
@@ -112,6 +166,7 @@ export async function getPatronCommand(id: string): Promise<{
   return {
     command: data?.command as string | undefined,
     output_payload: (data?.output_payload as Record<string, unknown>) ?? {},
+    ceo_task_id: data?.ceo_task_id as string | null | undefined,
   }
 }
 

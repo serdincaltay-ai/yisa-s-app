@@ -22,7 +22,11 @@ type PatronDecision = 'approve' | 'reject' | 'modify'
 const STEP_LABELS = ['GPT algılıyor...', 'Claude kontrol ediyor...', 'Patrona sunuluyor...']
 
 export default function DashboardPage() {
-  const [user, setUser] = useState<{ id?: string; email?: string } | null>(null)
+  const [user, setUser] = useState<{
+    id?: string
+    email?: string
+    user_metadata?: { role?: string }
+  } | null>(null)
   const [chatMessages, setChatMessages] = useState<ChatMessage[]>([])
   const [chatInput, setChatInput] = useState('')
   const [chatSending, setChatSending] = useState(false)
@@ -74,7 +78,15 @@ export default function DashboardPage() {
 
   useEffect(() => {
     supabase.auth.getUser().then(({ data: { user: u } }) =>
-      setUser(u ? { id: u.id, email: u.email ?? undefined } : null)
+      setUser(
+        u
+          ? {
+              id: u.id,
+              email: u.email ?? undefined,
+              user_metadata: u.user_metadata as { role?: string } | undefined,
+            }
+          : null
+      )
     )
   }, [])
 
@@ -251,6 +263,10 @@ export default function DashboardPage() {
           corrected_message: correctedMessage,
           user: user ?? undefined,
           user_id: user?.id ?? undefined,
+          ...(confirmType === 'company' && {
+            confirmed_first_step: true,
+            idempotency_key: crypto.randomUUID(),
+          }),
         }),
       })
       const data = await res.json()
@@ -259,6 +275,11 @@ export default function DashboardPage() {
         setChatMessages((prev) => [
           ...prev,
           { role: 'assistant', text: `Hata: ${data.error}`, aiProviders: [] },
+        ])
+      } else if (data.status === 'first_step_required') {
+        setChatMessages((prev) => [
+          ...prev,
+          { role: 'assistant', text: data.message ?? 'Önce imla adımı tamamlanmalı.', aiProviders: [] },
         ])
       } else if (data.status === 'spelling_confirmation') {
         const corrected = data.correctedMessage ?? correctedMessage

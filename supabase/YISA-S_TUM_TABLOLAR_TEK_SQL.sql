@@ -60,13 +60,15 @@ CREATE TABLE IF NOT EXISTS ceo_tasks (
     task_description TEXT NOT NULL,
     task_type VARCHAR(50) NOT NULL,
     director_key VARCHAR(50),
-    status VARCHAR(20) DEFAULT 'pending' CHECK (status IN ('pending', 'assigned', 'celf_running', 'completed', 'failed', 'cancelled')),
+    status VARCHAR(20) DEFAULT 'pending' CHECK (status IN ('pending', 'assigned', 'celf_running', 'awaiting_approval', 'completed', 'failed', 'cancelled')),
     result_payload JSONB DEFAULT '{}',
     patron_command_id UUID,
+    idempotency_key TEXT,
     created_at TIMESTAMP WITH TIME ZONE DEFAULT NOW(),
     updated_at TIMESTAMP WITH TIME ZONE DEFAULT NOW()
 );
 CREATE INDEX IF NOT EXISTS idx_ceo_tasks_user_id ON ceo_tasks(user_id);
+CREATE UNIQUE INDEX IF NOT EXISTS ceo_tasks_user_idempotency_unique ON ceo_tasks (user_id, idempotency_key) WHERE idempotency_key IS NOT NULL;
 CREATE INDEX IF NOT EXISTS idx_ceo_tasks_status ON ceo_tasks(status);
 CREATE INDEX IF NOT EXISTS idx_ceo_tasks_task_type ON ceo_tasks(task_type);
 CREATE INDEX IF NOT EXISTS idx_ceo_tasks_created_at ON ceo_tasks(created_at DESC);

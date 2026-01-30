@@ -2,10 +2,12 @@ import { NextRequest, NextResponse } from 'next/server'
 import { createClient } from '@supabase/supabase-js'
 import {
   updatePatronCommand,
+  updateCeoTask,
   insertAuditLog,
   getPatronCommand,
 } from '@/lib/db/ceo-celf'
 import { createCeoRoutine, type ScheduleType } from '@/lib/db/ceo-routines'
+import { githubPush } from '@/lib/api/github-client'
 
 export const dynamic = 'force-dynamic'
 
@@ -166,6 +168,32 @@ export async function POST(req: NextRequest) {
       return NextResponse.json({ error: updateErr.error }, { status: 500 })
     }
 
+    // Tek doğruluk kaynağı: ceo_tasks.status — onay/red ile senkron
+    const cmdForCeo = await getPatronCommand(commandId)
+    if (cmdForCeo.ceo_task_id && !cmdForCeo.error) {
+      const ceoStatus = decision === 'approve' ? 'completed' : decision === 'reject' ? 'cancelled' : undefined
+      if (ceoStatus) {
+        await updateCeoTask(cmdForCeo.ceo_task_id, { status: ceoStatus })
+      }
+    }
+
+    // Patron onayı sonrası: hazırlanan commit varsa GitHub'a push
+    let githubPushResult: { ok: true } | { ok: false; error: string } | undefined
+    if (decision === 'approve') {
+      const cmdForGh = await getPatronCommand(commandId)
+      const gh = cmdForGh.output_payload?.github_prepared_commit as
+        | { commitSha: string; owner: string; repo: string; branch?: string }
+        | undefined
+      if (gh?.commitSha && gh?.owner && gh?.repo) {
+        githubPushResult = await githubPush({
+          owner: gh.owner,
+          repo: gh.repo,
+          branch: gh.branch ?? 'main',
+          commitSha: gh.commitSha,
+        })
+      }
+    }
+
     await insertAuditLog({
       action: decision,
       entity_type: 'patron_command',
@@ -174,18 +202,23 @@ export async function POST(req: NextRequest) {
       payload: { modify_text: modifyText },
     })
 
+    const message =
+      decision === 'approve'
+        ? githubPushResult && !githubPushResult.ok
+          ? `İşlem onaylandı; GitHub push başarısız: ${githubPushResult.error}`
+          : 'İşlem onaylandı ve uygulandı.'
+        : decision === 'reject'
+          ? 'İşlem reddedildi.'
+          : 'Değişiklik kaydedildi. Yeniden işlem için mesajı güncelleyip gönderin.'
+
     return NextResponse.json({
       ok: true,
       command_id: commandId,
       decision,
       status,
       result: resultText,
-      message:
-        decision === 'approve'
-          ? 'İşlem onaylandı ve uygulandı.'
-          : decision === 'reject'
-            ? 'İşlem reddedildi.'
-            : 'Değişiklik kaydedildi. Yeniden işlem için mesajı güncelleyip gönderin.',
+      message,
+      ...(githubPushResult && { github_push: githubPushResult.ok ? 'pushed' : githubPushResult.error }),
     })
   } catch (e) {
     const err = e instanceof Error ? e.message : String(e)

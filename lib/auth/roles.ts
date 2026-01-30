@@ -45,6 +45,30 @@ export const DASHBOARD_ALLOWED_ROLES: RoleName[] = [
   'Sistem Admini',
 ]
 
+/**
+ * Flow (CEO/CELF/onay kuyruğu) tetikleyebilen roller.
+ * Doküman: "Patron (ve üst roller) dışında flow tetikleyemez."
+ */
+export const FLOW_ALLOWED_ROLES: RoleName[] = [
+  'Patron',
+  'Süper Admin',
+  'Sistem Admini',
+]
+
+/**
+ * Kullanıcı flow tetikleyebilir mi? (Şirket işi / CEO / CELF / onay kuyruğu)
+ */
+export function canTriggerFlow(user: {
+  email?: string | null
+  user_metadata?: { role?: string }
+} | null): boolean {
+  if (!user) return false
+  if (user.email === PATRON_EMAIL) return true
+  const role = user.user_metadata?.role as RoleName | undefined
+  if (!role) return false
+  return FLOW_ALLOWED_ROLES.includes(role)
+}
+
 export const PATRON_EMAIL = 'serdincaltay@gmail.com'
 
 /**

@@ -1,12 +1,16 @@
 /**
  * YİSA-S CELF Çalıştırıcı
- * CELF önce Gemini'yi çağırır; Gemini görevlendirmeyi yapar (kendisi yanıtlar veya API'ye devreder).
- * En son işi yapan sonucu CELF'e teslim eder; CELF CEO/Patron'a iletir.
+ * CELF önce Gemini görevlendirici; CPO → V0 + Cursor, CTO → Claude + Cursor + GitHub hazırlık.
+ * Sonuçları birleştirip CEO → Patron onayına sunar.
  * Tarih: 30 Ocak 2026
  */
 
 import { type DirectorKey } from '@/lib/robots/celf-center'
 import { getDirectorateConfigMerged } from '@/lib/robots/celf-config-merged'
+import { getCelfOrchestratorKey, isCpoDirector, isCtoDirector } from '@/lib/ai/celf-pool'
+import { v0Generate } from '@/lib/api/v0-client'
+import { cursorSubmitTask, cursorReview } from '@/lib/api/cursor-client'
+import { githubPrepareCommit } from '@/lib/api/github-client'
 
 const ANTHROPIC_URL = 'https://api.anthropic.com/v1/messages'
 const OPENAI_URL = 'https://api.openai.com/v1/chat/completions'
@@ -195,7 +199,9 @@ async function callTogether(message: string): Promise<string | null> {
   return data.choices?.[0]?.message?.content ?? null
 }
 
-export type CelfResult = { text: string; provider: string } | { text: null; errorReason: string }
+export type CelfResult =
+  | { text: string; provider: string; githubPreparedCommit?: { commitSha: string; owner: string; repo: string; branch: string } }
+  | { text: null; errorReason: string }
 
 /**
  * CELF: Önce Gemini'yi çağırır; Gemini görevlendirmeyi yapar.
@@ -212,7 +218,57 @@ export async function runCelfDirector(
     : 'YİSA-S asistan. Kısa, net, Türkçe yanıt ver.'
   const providers = director?.aiProviders ?? []
 
-  const geminiKey = getCelfKey('CELF_GOOGLE_API_KEY', ['CELF_GOOGLE_GEMINI_API_KEY', 'GOOGLE_API_KEY', 'GOOGLE_GEMINI_API_KEY'])
+  // ─── CPO: V0 (tasarım) + Cursor (inceleme) ─────────────────────────────────
+  if (isCpoDirector(directorKey)) {
+    const v0Prompt = `Tasarım/UI görevi (Türkçe bağlam): ${message}\n\nNet, uygulanabilir tasarım veya bileşen açıklaması ver.`
+    const v0Result = await v0Generate(v0Prompt)
+    const v0Text = 'error' in v0Result ? v0Result.error : v0Result.text
+    const cursorResult = await cursorSubmitTask(
+      'error' in v0Result ? message : v0Text,
+      { context: 'CPO tasarım incelemesi' }
+    )
+    const cursorNote = cursorResult.ok ? cursorResult.message : cursorResult.error
+    const merged = [
+      v0Text,
+      cursorNote,
+    ].filter(Boolean).join('\n\n---\n\n')
+    if (merged) return { text: merged, provider: 'V0+CURSOR' }
+    return { text: null, errorReason: v0Text || cursorNote || 'CPO: V0 ve Cursor yanıt vermedi.' }
+  }
+
+  // ─── CTO: Claude (kod) + Cursor (inceleme) + GitHub hazırlık (push yok) ─────
+  if (isCtoDirector(directorKey)) {
+    const claudeCode = await callClaude(
+      message,
+      'Sen YİSA-S CTO asistanısın. Kod veya teknik çözüm üret; kısa, net, Türkçe açıklama ekle.',
+      'celf'
+    )
+    const codeBlock = claudeCode ?? message
+    const cursorRes = await cursorReview(codeBlock, 'Bu kodu incele; güvenlik ve kalite notu ver.')
+    const cursorNote = cursorRes.ok ? (cursorRes.output ?? cursorRes.message) : cursorRes.error
+    const parts: string[] = [claudeCode ? `Claude çıktısı:\n${claudeCode}` : '', cursorNote].filter(Boolean)
+    const repoOwner = process.env.GITHUB_REPO_OWNER
+    const repoName = process.env.GITHUB_REPO_NAME
+    let githubPreparedCommit: { commitSha: string; owner: string; repo: string; branch: string } | undefined
+    if (repoOwner && repoName && claudeCode) {
+      const gh = await githubPrepareCommit({
+        owner: repoOwner,
+        repo: repoName,
+        branch: process.env.GITHUB_REPO_BRANCH ?? 'main',
+        message: `CELF CTO: ${message.slice(0, 72)}`,
+        files: [{ path: 'celf-cto-output.txt', content: codeBlock.slice(0, 100000) }],
+      })
+      if (gh.ok) {
+        parts.push(`GitHub: Commit hazır (Patron onayından sonra push edilecek). SHA: ${gh.commitSha}`)
+        githubPreparedCommit = { commitSha: gh.commitSha, owner: repoOwner, repo: repoName, branch: process.env.GITHUB_REPO_BRANCH ?? 'main' }
+      } else parts.push(`GitHub: ${gh.error}`)
+    }
+    const merged = parts.join('\n\n---\n\n')
+    if (merged) return { text: merged, provider: 'CLAUDE+CURSOR', githubPreparedCommit }
+    return { text: null, errorReason: 'CTO: Claude veya Cursor yanıt vermedi.' }
+  }
+
+  const geminiKey = getCelfOrchestratorKey() ?? getCelfKey('CELF_GOOGLE_API_KEY', ['CELF_GOOGLE_GEMINI_API_KEY', 'GOOGLE_API_KEY', 'GOOGLE_GEMINI_API_KEY'])
   if (!geminiKey) {
     return { text: null, errorReason: 'CELF: GOOGLE_API_KEY .env içinde tanımlı değil. Gemini (görevlendirici) çalışamıyor.' }
   }
@@ -223,7 +279,7 @@ Mevcut API'ler: GPT, CLAUDE, GEMINI, TOGETHER.
 Kurallar:
 1) Doğrudan yanıt: Supabase/alan kontrolü isterse → "Supabase tabloları için Dashboard → SQL Editor veya /api/health ile sistem durumu kontrol edilebilir; chat ve patron komutları flow üzerinden loglanıyor." gibi kısa, net Türkçe yanıt ver. V0/Cursor/dashboard tasarımı isterse → "Dashboard tasarımı ve V0/Cursor entegrasyonu roadmap'te; şu an CELF bu görevi DELEGATE ile GPT veya CLAUDE'a devredebilir." deyip gerekirse ilk satırda DELEGATE:GPT veya DELEGATE:CLAUDE yaz.
 2) Devretmek istersen: İlk satırda sadece "DELEGATE:API_ADI" yaz (örn. DELEGATE:GPT, DELEGATE:CLAUDE). O API görevi alacak, sonucu CELF'e teslim edecek.
-Cevabın doğrudan yanıtsa sadece yanıtı yaz. Devretmek istiyorsan ilk satır: DELEGATE: ve ardından API adı.`
+Cevabın doğrudan yanıtsa sadece yanıtı yaz; aynı cevaba DELEGATE satırı ekleme. Devretmek istiyorsan cevabın tek satırı olsun: DELEGATE: ve ardından API adı (örn. DELEGATE:GPT).`
 
   const MAX_ORCHESTRATOR_INPUT = 12000
   const messageForOrchestrator = message.length > MAX_ORCHESTRATOR_INPUT
@@ -273,7 +329,12 @@ Cevabın doğrudan yanıtsa sadece yanıtı yaz. Devretmek istiyorsan ilk satır
       }
       return { text: null, errorReason: `Gemini ${apiName}'ye devretti; ${apiName} yanıt dönmedi. İlgili API anahtarını (.env) kontrol edin.` }
     }
-    return { text: trimmed || orchestratorResponse, provider: 'GEMINI' }
+    const directText = trimmed
+      .split('\n')
+      .filter((line) => !/^DELEGATE:\s*\w+$/i.test(line.trim()))
+      .join('\n')
+      .trim()
+    return { text: directText || trimmed || (orchestratorResponse as string), provider: 'GEMINI' }
   }
 
   for (const provider of providers) {

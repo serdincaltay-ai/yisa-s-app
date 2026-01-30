@@ -1,7 +1,7 @@
 'use client'
 
 import { useEffect, useState } from 'react'
-import { Check, X, Clock, AlertCircle, RefreshCw } from 'lucide-react'
+import { Check, X, Clock, AlertCircle, RefreshCw, Loader2 } from 'lucide-react'
 
 type ApprovalItem = {
   id: string
@@ -16,8 +16,10 @@ type ApprovalItem = {
 
 export default function OnayKuyruguPage() {
   const [items, setItems] = useState<ApprovalItem[]>([])
+  const [table, setTable] = useState<string | null>(null)
   const [loading, setLoading] = useState(true)
   const [error, setError] = useState<string | null>(null)
+  const [actingId, setActingId] = useState<string | null>(null)
 
   const fetchData = async () => {
     setLoading(true)
@@ -26,11 +28,35 @@ export default function OnayKuyruguPage() {
       const res = await fetch('/api/approvals')
       const data = await res.json()
       setItems(Array.isArray(data?.items) ? data.items : [])
+      setTable(data?.table ?? null)
     } catch {
       setError('Veri yüklenemedi.')
       setItems([])
+      setTable(null)
     } finally {
       setLoading(false)
+    }
+  }
+
+  const handleDecision = async (commandId: string, decision: 'approve' | 'reject') => {
+    setActingId(commandId)
+    try {
+      const res = await fetch('/api/approvals', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ command_id: commandId, decision }),
+      })
+      const data = await res.json()
+      if (!res.ok) {
+        setError(data?.error ?? 'İşlem başarısız.')
+        return
+      }
+      setError(null)
+      await fetchData()
+    } catch {
+      setError('İstek gönderilemedi.')
+    } finally {
+      setActingId(null)
     }
   }
 
@@ -105,6 +131,9 @@ export default function OnayKuyruguPage() {
                     <th className="px-6 py-4 text-slate-400 font-medium text-sm">Öncelik</th>
                     <th className="px-6 py-4 text-slate-400 font-medium text-sm">Durum</th>
                     <th className="px-6 py-4 text-slate-400 font-medium text-sm">Tarih</th>
+                    {table === 'patron_commands' && (
+                      <th className="px-6 py-4 text-slate-400 font-medium text-sm">İşlem</th>
+                    )}
                   </tr>
                 </thead>
                 <tbody>
@@ -153,6 +182,34 @@ export default function OnayKuyruguPage() {
                       <td className="px-6 py-4 text-slate-500 text-sm">
                         {item.created_at ? new Date(item.created_at).toLocaleDateString('tr-TR') : '—'}
                       </td>
+                      {table === 'patron_commands' && (
+                        <td className="px-6 py-4">
+                          {item.status === 'pending' ? (
+                            <div className="flex items-center gap-2">
+                              <button
+                                type="button"
+                                onClick={() => handleDecision(item.id, 'approve')}
+                                disabled={actingId !== null}
+                                className="flex items-center gap-1 px-3 py-1.5 rounded-lg bg-emerald-500/20 text-emerald-400 hover:bg-emerald-500/30 text-sm font-medium transition-colors disabled:opacity-50"
+                              >
+                                {actingId === item.id ? <Loader2 size={14} className="animate-spin" /> : <Check size={14} />}
+                                Onayla
+                              </button>
+                              <button
+                                type="button"
+                                onClick={() => handleDecision(item.id, 'reject')}
+                                disabled={actingId !== null}
+                                className="flex items-center gap-1 px-3 py-1.5 rounded-lg bg-red-500/20 text-red-400 hover:bg-red-500/30 text-sm font-medium transition-colors disabled:opacity-50"
+                              >
+                                {actingId === item.id ? <Loader2 size={14} className="animate-spin" /> : <X size={14} />}
+                                Reddet
+                              </button>
+                            </div>
+                          ) : (
+                            <span className="text-slate-500 text-sm">—</span>
+                          )}
+                        </td>
+                      )}
                     </tr>
                   ))}
                 </tbody>

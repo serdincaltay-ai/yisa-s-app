@@ -27,7 +27,9 @@ import {
   updateCeoTask,
   createPatronCommand,
   insertCelfLog,
+  getPendingCeoTaskCount,
 } from '@/lib/db/ceo-celf'
+import { canTriggerFlow } from '@/lib/auth/roles'
 import { correctSpelling, askConfirmation } from '@/lib/ai/gpt-service'
 import { runCelfDirector, callClaude } from '@/lib/ai/celf-execute'
 
@@ -50,12 +52,25 @@ export async function POST(req: NextRequest) {
     const userId = typeof body.user_id === 'string' ? body.user_id : (user?.id as string | undefined)
     const ipAddress = req.headers.get('x-forwarded-for') ?? req.headers.get('x-real-ip') ?? undefined
     const confirmType = body.confirm_type as 'company' | 'private' | undefined
+    const confirmedFirstStep = body.confirmed_first_step === true
+    const idempotencyKey = typeof body.idempotency_key === 'string' ? body.idempotency_key.trim() || undefined : undefined
     const correctedMessage = typeof body.corrected_message === 'string' ? body.corrected_message : undefined
     const savePrivate = body.save_private === true
     const privateCommand = typeof body.private_command === 'string' ? body.private_command : undefined
     const privateResult = typeof body.private_result === 'string' ? body.private_result : undefined
 
     const messageToUse = correctedMessage ?? message
+
+    // ─── Rol guard: Flow (CEO/CELF/onay) sadece Patron ve üst roller tetikleyebilir ─
+    const flowUser = user ?? (userId ? { user_metadata: { role: undefined } } : null)
+    if (savePrivate || confirmType === 'private' || confirmType === 'company') {
+      if (!flowUser || !canTriggerFlow(flowUser)) {
+        return NextResponse.json(
+          { error: 'Yetkisiz erişim. Flow sadece Patron ve yetkili roller tarafından tetiklenebilir.', blocked: true },
+          { status: 403 }
+        )
+      }
+    }
 
     // ─── Özel iş "Kaydet?" → Evet: patron_private_tasks'a kaydet ─────────────
     if (savePrivate && userId && privateCommand && privateResult != null) {
@@ -134,6 +149,44 @@ export async function POST(req: NextRequest) {
     }
 
     // ─── 3) ŞİRKET İŞİ: CEO → CELF (direktörlük + denetim) → Patron Onay ───────
+    // İlk adım kilidi: Şirket işi için imla/onay adımı zorunlu (API bypass engeli)
+    if (confirmType === 'company' && !confirmedFirstStep) {
+      return NextResponse.json(
+        {
+          status: 'first_step_required',
+          message: 'Şirket işi için önce "Bu mu demek istediniz?" adımı tamamlanmalı. İmla düzeltmesi sonrası Şirket İşi seçin.',
+          blocked: true,
+        },
+        { status: 400 }
+      )
+    }
+    // Güvenlik robotu: Patron onayı gerektiren işlemde CELF'e göndermiyoruz
+    if (security.requiresApproval) {
+      return NextResponse.json(
+        {
+          status: 'requires_patron_approval',
+          message: 'Bu işlem Patron onayı gerektirir. Önce onay alın.',
+          blocked: true,
+        },
+        { status: 403 }
+      )
+    }
+    // Tek bekleyen iş kuralı: aynı kullanıcı için zaten bekleyen iş varsa yeni açma
+    const pending = await getPendingCeoTaskCount(userId)
+    if (pending.error) {
+      return NextResponse.json({ error: pending.error }, { status: 500 })
+    }
+    if (pending.count >= 1) {
+      return NextResponse.json(
+        {
+          status: 'pending_task_exists',
+          message: 'Zaten bekleyen bir şirket işiniz var. Önce onu onaylayın veya reddedin.',
+          blocked: true,
+        },
+        { status: 409 }
+      )
+    }
+
     const taskType = detectTaskType(messageToUse)
     let directorKey = routeToDirector(messageToUse)
     if (!directorKey) directorKey = 'CCO' as DirectorKey
@@ -144,6 +197,7 @@ export async function POST(req: NextRequest) {
       task_description: messageToUse,
       task_type: taskTypeLabel,
       director_key: directorKey,
+      idempotency_key: idempotencyKey,
     })
     const ceoTaskId = ceoTaskResult.id ?? undefined
     if (ceoTaskId) {
@@ -208,9 +262,10 @@ export async function POST(req: NextRequest) {
       status: 'completed',
     })
 
+    // Onay tek kaynak: ceo_tasks.status. CELF bitti, Patron onayı bekleniyor → awaiting_approval
     if (ceoTaskId) {
       await updateCeoTask(ceoTaskId, {
-        status: 'completed',
+        status: 'awaiting_approval',
         result_payload: {
           taskType: taskTypeLabel,
           director_key: directorKey,
@@ -229,6 +284,7 @@ export async function POST(req: NextRequest) {
     }
 
     // ─── e) Patrona sun: Her zaman onay kuyruğuna al ───────────────────────
+    const githubPrepared = celfResult.text && 'githubPreparedCommit' in celfResult ? celfResult.githubPreparedCommit : undefined
     const cmd = await createPatronCommand({
       user_id: userId,
       command: messageToUse,
@@ -240,6 +296,7 @@ export async function POST(req: NextRequest) {
         director_name: CELF_DIRECTORATES[directorKey]?.name ?? directorKey,
         ai_providers: aiProviders,
         flow: 'CEO → CELF → Patron Onay',
+        ...(githubPrepared && { github_prepared_commit: githubPrepared }),
       },
     })
     const commandId = cmd.id
