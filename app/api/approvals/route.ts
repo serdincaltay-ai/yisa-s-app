@@ -8,6 +8,7 @@ import {
 } from '@/lib/db/ceo-celf'
 import { createCeoRoutine, type ScheduleType } from '@/lib/db/ceo-routines'
 import { githubPush } from '@/lib/api/github-client'
+import { fetchWithRetry } from '@/lib/api/fetch-with-retry'
 
 export const dynamic = 'force-dynamic'
 
@@ -65,19 +66,59 @@ export async function GET() {
 }
 
 /**
- * POST /api/approvals — Patron kararı: Onayla / Reddet / Öneri İste / Değiştir
- * Body: { command_id, decision: 'approve'|'reject'|'modify'|'suggest', user_id?, modify_text? }
+ * POST /api/approvals — Patron kararı: Onayla / Reddet / İptal / Öneri İste / Değiştir
+ * Body: { command_id, decision: 'approve'|'reject'|'cancel'|'modify'|'suggest', user_id?, modify_text? }
+ * cancel_all: true → Kuyrukta bekleyen tüm işleri iptal eder (sadece Patron).
  * Onay sonrası rutin kaydı: { command_id, save_routine: true, schedule: 'daily'|'weekly'|'monthly' }
  */
 export async function POST(req: NextRequest) {
   try {
     const body = await req.json()
     const commandId = typeof body.command_id === 'string' ? body.command_id : undefined
-    const decision = body.decision as 'approve' | 'reject' | 'modify' | 'suggest'
+    const decision = body.decision as 'approve' | 'reject' | 'cancel' | 'modify' | 'suggest'
+    const cancelAll = body.cancel_all === true
     const userId = typeof body.user_id === 'string' ? body.user_id : undefined
     const modifyText = typeof body.modify_text === 'string' ? body.modify_text : undefined
     const saveRoutine = body.save_routine === true
     const schedule = (body.schedule as ScheduleType) ?? undefined
+
+    // Tümünü İptal Et — sadece Patron; kuyrukta bekleyen tüm patron_commands iptal
+    if (cancelAll) {
+      const supabase = getSupabase()
+      if (!supabase) return NextResponse.json({ error: 'Veritabanı bağlantısı yok' }, { status: 503 })
+      const { data: pendingRows, error: fetchErr } = await supabase
+        .from('patron_commands')
+        .select('id, ceo_task_id')
+        .eq('status', 'pending')
+        .limit(200)
+      if (fetchErr) return NextResponse.json({ error: fetchErr.message }, { status: 500 })
+      const list = (pendingRows ?? []) as { id: string; ceo_task_id: string | null }[]
+      const now = new Date().toISOString()
+      let cancelledCount = 0
+      for (const row of list) {
+        const upd = await updatePatronCommand(row.id, {
+          status: 'rejected',
+          decision: 'reject',
+          decision_at: now,
+        })
+        if (!upd.error) {
+          cancelledCount++
+          if (row.ceo_task_id) await updateCeoTask(row.ceo_task_id, { status: 'cancelled' })
+          await insertAuditLog({
+            action: 'cancel_all',
+            entity_type: 'patron_command',
+            entity_id: row.id,
+            user_id: userId,
+            payload: { cancel_all: true },
+          })
+        }
+      }
+      return NextResponse.json({
+        ok: true,
+        cancelled_count: cancelledCount,
+        message: cancelledCount === 0 ? 'İptal edilecek bekleyen iş yok.' : `${cancelledCount} iş iptal edildi.`,
+      })
+    }
 
     if (!commandId) {
       return NextResponse.json({ error: 'command_id gerekli' }, { status: 400 })
@@ -105,14 +146,15 @@ export async function POST(req: NextRequest) {
     }
 
     if (!decision) {
-      return NextResponse.json({ error: 'decision gerekli (approve, reject, modify, suggest)' }, { status: 400 })
+      return NextResponse.json({ error: 'decision gerekli (approve, reject, cancel, modify, suggest)' }, { status: 400 })
     }
-    if (!['approve', 'reject', 'modify', 'suggest'].includes(decision)) {
+    const effectiveDecision = decision === 'cancel' ? 'reject' : decision
+    if (!['approve', 'reject', 'modify', 'suggest'].includes(effectiveDecision)) {
       return NextResponse.json({ error: 'Geçersiz decision' }, { status: 400 })
     }
 
     // Öneri İste: mevcut çıktı için geliştirme önerileri (GPT/Claude ile)
-    if (decision === 'suggest') {
+    if (effectiveDecision === 'suggest') {
       const cmd = await getPatronCommand(commandId)
       if (cmd.error || !cmd.output_payload) {
         return NextResponse.json({ error: 'Komut bulunamadı' }, { status: 404 })
@@ -122,7 +164,7 @@ export async function POST(req: NextRequest) {
       if (!apiKey) {
         return NextResponse.json({ suggestions: 'Öneri servisi şu an kullanılamıyor.', ok: true })
       }
-      const res = await fetch('https://api.openai.com/v1/chat/completions', {
+      const res = await fetchWithRetry('https://api.openai.com/v1/chat/completions', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json', Authorization: `Bearer ${apiKey}` },
         body: JSON.stringify({
@@ -146,7 +188,7 @@ export async function POST(req: NextRequest) {
 
     // Onay öncesi komutu al (onay sonrası aksiyon için payload gerekli)
     let resultText: string | undefined
-    if (decision === 'approve') {
+    if (effectiveDecision === 'approve') {
       const cmd = await getPatronCommand(commandId)
       const payload = cmd.output_payload ?? {}
       resultText =
@@ -156,11 +198,11 @@ export async function POST(req: NextRequest) {
     }
 
     const status =
-      decision === 'approve' ? 'approved' : decision === 'reject' ? 'rejected' : 'modified'
+      effectiveDecision === 'approve' ? 'approved' : effectiveDecision === 'reject' ? 'rejected' : 'modified'
 
     const updateErr = await updatePatronCommand(commandId, {
       status,
-      decision,
+      decision: effectiveDecision,
       decision_at: now,
       modify_text: modifyText,
     })
@@ -171,7 +213,7 @@ export async function POST(req: NextRequest) {
     // Tek doğruluk kaynağı: ceo_tasks.status — onay/red ile senkron
     const cmdForCeo = await getPatronCommand(commandId)
     if (cmdForCeo.ceo_task_id && !cmdForCeo.error) {
-      const ceoStatus = decision === 'approve' ? 'completed' : decision === 'reject' ? 'cancelled' : undefined
+      const ceoStatus = effectiveDecision === 'approve' ? 'completed' : effectiveDecision === 'reject' ? 'cancelled' : undefined
       if (ceoStatus) {
         await updateCeoTask(cmdForCeo.ceo_task_id, { status: ceoStatus })
       }

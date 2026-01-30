@@ -1,5 +1,6 @@
 import { NextRequest, NextResponse } from 'next/server'
 import { saveChatMessage } from '@/lib/db/chat-messages'
+import { fetchWithRetry } from '@/lib/api/fetch-with-retry'
 
 const ANTHROPIC_URL = 'https://api.anthropic.com/v1/messages'
 
@@ -19,7 +20,7 @@ export async function POST(req: NextRequest) {
     const assignedAI = typeof body.assignedAI === 'string' ? body.assignedAI : 'CLAUDE'
     const userId = typeof body.user_id === 'string' ? body.user_id : (body.user?.id as string | undefined)
 
-    const res = await fetch(ANTHROPIC_URL, {
+    const res = await fetchWithRetry(ANTHROPIC_URL, {
       method: 'POST',
       headers: {
         'Content-Type': 'application/json',

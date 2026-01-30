@@ -11,6 +11,7 @@ import { getCelfOrchestratorKey, isCpoDirector, isCtoDirector } from '@/lib/ai/c
 import { v0Generate } from '@/lib/api/v0-client'
 import { cursorSubmitTask, cursorReview } from '@/lib/api/cursor-client'
 import { githubPrepareCommit } from '@/lib/api/github-client'
+import { fetchWithRetry } from '@/lib/api/fetch-with-retry'
 
 const ANTHROPIC_URL = 'https://api.anthropic.com/v1/messages'
 const OPENAI_URL = 'https://api.openai.com/v1/chat/completions'
@@ -48,7 +49,7 @@ export async function callClaude(
       ? getEnv('ASISTAN_ANTHROPIC_API_KEY') ?? getEnv('ANTHROPIC_API_KEY')
       : getCelfKey('CELF_ANTHROPIC_API_KEY', ['ANTHROPIC_API_KEY'])
   if (!apiKey) return null
-  const res = await fetch(ANTHROPIC_URL, {
+  const res = await fetchWithRetry(ANTHROPIC_URL, {
     method: 'POST',
     headers: {
       'Content-Type': 'application/json',
@@ -70,7 +71,7 @@ export async function callClaude(
 async function callOpenAI(message: string): Promise<string | null> {
   const apiKey = getCelfKey('CELF_OPENAI_API_KEY', ['OPENAI_API_KEY'])
   if (!apiKey) return null
-  const res = await fetch(OPENAI_URL, {
+  const res = await fetchWithRetry(OPENAI_URL, {
     method: 'POST',
     headers: { 'Content-Type': 'application/json', Authorization: `Bearer ${apiKey}` },
     body: JSON.stringify({
@@ -98,7 +99,7 @@ async function callGemini(message: string, systemHint?: string): Promise<string 
   if (systemHint) {
     body.contents = [{ role: 'user', parts: [{ text: `[Sistem: ${systemHint}]\n\nKullanıcı görevi:\n${message}` }] }]
   }
-  const res = await fetch(url, {
+  const res = await fetchWithRetry(url, {
     method: 'POST',
     headers: { 'Content-Type': 'application/json' },
     body: JSON.stringify(body),
@@ -137,7 +138,7 @@ async function callGeminiOrchestrator(system: string, message: string): Promise<
 
   try {
     const url15 = `${GOOGLE_GEMINI_FLASH_URL}?key=${apiKey}`
-    const res = await fetch(url15, {
+    const res = await fetchWithRetry(url15, {
       method: 'POST',
       headers: { 'Content-Type': 'application/json' },
       body: JSON.stringify({
@@ -161,7 +162,7 @@ async function callGeminiOrchestrator(system: string, message: string): Promise<
   // gemini-pro yedek
   try {
     const urlPro = `${GOOGLE_GEMINI_PRO_URL}?key=${apiKey}`
-    const resPro = await fetch(urlPro, {
+    const resPro = await fetchWithRetry(urlPro, {
       method: 'POST',
       headers: { 'Content-Type': 'application/json' },
       body: JSON.stringify({
@@ -185,7 +186,7 @@ async function callGeminiOrchestrator(system: string, message: string): Promise<
 async function callTogether(message: string): Promise<string | null> {
   const apiKey = getCelfKey('CELF_TOGETHER_API_KEY', ['TOGETHER_API_KEY'])
   if (!apiKey) return null
-  const res = await fetch(TOGETHER_URL, {
+  const res = await fetchWithRetry(TOGETHER_URL, {
     method: 'POST',
     headers: { 'Content-Type': 'application/json', Authorization: `Bearer ${apiKey}` },
     body: JSON.stringify({

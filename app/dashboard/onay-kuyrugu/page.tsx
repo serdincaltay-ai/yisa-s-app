@@ -1,7 +1,7 @@
 'use client'
 
 import { useEffect, useState } from 'react'
-import { Check, X, Clock, AlertCircle, RefreshCw, Loader2 } from 'lucide-react'
+import { Check, X, Clock, AlertCircle, RefreshCw, Loader2, Trash2, Ban } from 'lucide-react'
 
 type ApprovalItem = {
   id: string
@@ -38,7 +38,7 @@ export default function OnayKuyruguPage() {
     }
   }
 
-  const handleDecision = async (commandId: string, decision: 'approve' | 'reject') => {
+  const handleDecision = async (commandId: string, decision: 'approve' | 'reject' | 'cancel') => {
     setActingId(commandId)
     try {
       const res = await fetch('/api/approvals', {
@@ -49,6 +49,30 @@ export default function OnayKuyruguPage() {
       const data = await res.json()
       if (!res.ok) {
         setError(data?.error ?? 'İşlem başarısız.')
+        return
+      }
+      setError(null)
+      await fetchData()
+    } catch {
+      setError('İstek gönderilemedi.')
+    } finally {
+      setActingId(null)
+    }
+  }
+
+  const handleCancelAll = async () => {
+    if (pending.length === 0) return
+    if (!confirm(`Kuyrukta bekleyen ${pending.length} işin tamamını iptal etmek istediğinize emin misiniz? (Sadece Patron yapabilir.)`)) return
+    setActingId('cancel_all')
+    try {
+      const res = await fetch('/api/approvals', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ cancel_all: true, user_id: undefined }),
+      })
+      const data = await res.json()
+      if (!res.ok) {
+        setError(data?.error ?? 'Tümünü iptal başarısız.')
         return
       }
       setError(null)
@@ -75,15 +99,29 @@ export default function OnayKuyruguPage() {
           <h1 className="text-2xl font-bold text-white">Onay Kuyruğu</h1>
           <p className="text-slate-400">Sistemden gelen onay bekleyen işler — Onayla / Reddet / Değiştir.</p>
         </div>
-        <button
-          type="button"
-          onClick={fetchData}
-          disabled={loading}
-          className="flex items-center gap-2 px-4 py-2 rounded-xl bg-slate-700 hover:bg-slate-600 text-slate-200 text-sm transition-colors disabled:opacity-50"
-        >
-          <RefreshCw size={16} className={loading ? 'animate-spin' : ''} />
-          Yenile
-        </button>
+        <div className="flex items-center gap-2">
+          {pending.length > 0 && (
+            <button
+              type="button"
+              onClick={handleCancelAll}
+              disabled={loading || actingId !== null}
+              className="flex items-center gap-2 px-4 py-2 rounded-xl bg-rose-500/20 text-rose-400 hover:bg-rose-500/30 border border-rose-500/40 text-sm font-medium transition-colors disabled:opacity-50"
+              title="Kuyrukta bekleyen tüm işleri iptal et (sadece Patron)"
+            >
+              {actingId === 'cancel_all' ? <Loader2 size={16} className="animate-spin" /> : <Trash2 size={16} />}
+              Tümünü İptal Et
+            </button>
+          )}
+          <button
+            type="button"
+            onClick={fetchData}
+            disabled={loading}
+            className="flex items-center gap-2 px-4 py-2 rounded-xl bg-slate-700 hover:bg-slate-600 text-slate-200 text-sm transition-colors disabled:opacity-50"
+          >
+            <RefreshCw size={16} className={loading ? 'animate-spin' : ''} />
+            Yenile
+          </button>
+        </div>
       </div>
 
       {error && (
@@ -131,7 +169,7 @@ export default function OnayKuyruguPage() {
                     <th className="px-6 py-4 text-slate-400 font-medium text-sm">Öncelik</th>
                     <th className="px-6 py-4 text-slate-400 font-medium text-sm">Durum</th>
                     <th className="px-6 py-4 text-slate-400 font-medium text-sm">Tarih</th>
-                    {table === 'patron_commands' && (
+                    {(table === 'patron_commands' || pending.length > 0) && (
                       <th className="px-6 py-4 text-slate-400 font-medium text-sm">İşlem</th>
                     )}
                   </tr>
@@ -182,10 +220,10 @@ export default function OnayKuyruguPage() {
                       <td className="px-6 py-4 text-slate-500 text-sm">
                         {item.created_at ? new Date(item.created_at).toLocaleDateString('tr-TR') : '—'}
                       </td>
-                      {table === 'patron_commands' && (
+                      {((table === 'patron_commands' || pending.length > 0) && (
                         <td className="px-6 py-4">
                           {item.status === 'pending' ? (
-                            <div className="flex items-center gap-2">
+                            <div className="flex flex-wrap items-center gap-2">
                               <button
                                 type="button"
                                 onClick={() => handleDecision(item.id, 'approve')}
@@ -194,6 +232,16 @@ export default function OnayKuyruguPage() {
                               >
                                 {actingId === item.id ? <Loader2 size={14} className="animate-spin" /> : <Check size={14} />}
                                 Onayla
+                              </button>
+                              <button
+                                type="button"
+                                onClick={() => handleDecision(item.id, 'cancel')}
+                                disabled={actingId !== null}
+                                className="flex items-center gap-1 px-3 py-1.5 rounded-lg bg-amber-500/20 text-amber-400 hover:bg-amber-500/30 text-sm font-medium transition-colors disabled:opacity-50"
+                                title="Vazgeç — işi iptal et (sadece Patron)"
+                              >
+                                {actingId === item.id ? <Loader2 size={14} className="animate-spin" /> : <Ban size={14} />}
+                                İptal
                               </button>
                               <button
                                 type="button"
