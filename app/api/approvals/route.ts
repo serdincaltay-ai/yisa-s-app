@@ -7,7 +7,7 @@ import {
   getPatronCommand,
 } from '@/lib/db/ceo-celf'
 import { createCeoRoutine, type ScheduleType } from '@/lib/db/ceo-routines'
-import { githubPush } from '@/lib/api/github-client'
+import { githubPush, githubCreateFiles } from '@/lib/api/github-client'
 import { fetchWithRetry } from '@/lib/api/fetch-with-retry'
 
 export const dynamic = 'force-dynamic'
@@ -31,13 +31,14 @@ export interface ApprovalItem {
   created_at: string
   source?: string
   has_github_commit?: boolean
+  has_code_files?: boolean
 }
 
 export async function GET() {
   try {
     const supabase = getSupabase()
     if (!supabase) {
-      return NextResponse.json({ error: 'Veritabanı bağlantısı yok (SUPABASE_SERVICE_ROLE_KEY gerekli)', items: [], table: null }, { status: 503 })
+      return NextResponse.json({ error: 'Veritabani baglantisi yok', items: [], table: null }, { status: 503 })
     }
 
     const { data, error } = await supabase
@@ -59,17 +60,19 @@ export async function GET() {
       const status = (ALLOWED_STATUSES.has(rawStatus) ? rawStatus : 'pending') as ApprovalItem['status']
       const outputPayload = row.output_payload as Record<string, unknown> | null
       const hasGithubCommit = !!(outputPayload?.github_prepared_commit)
+      const hasCodeFiles = !!(outputPayload?.code_files && Array.isArray(outputPayload.code_files) && outputPayload.code_files.length > 0)
 
       return {
         id: String(row.id ?? ''),
         type: String(row.type ?? 'onay'),
-        title: String(row.title ?? row.command ?? '—'),
+        title: String(row.title ?? row.command ?? '-'),
         description: row.description != null ? String(row.description) : undefined,
         status,
         priority: (row.priority as 'low' | 'normal' | 'high') ?? 'normal',
         created_at: String(row.created_at ?? ''),
         source: row.source != null ? String(row.source) : undefined,
         has_github_commit: hasGithubCommit,
+        has_code_files: hasCodeFiles,
       }
     })
 
@@ -80,19 +83,6 @@ export async function GET() {
   }
 }
 
-/**
- * POST /api/approvals — Patron kararı
- * decision: 'approve' | 'reject' | 'cancel' | 'modify' | 'suggest' | 'push'
- * 
- * approve: İşi onayla (approved) — otomatik deploy/push YOK
- * reject: İşi reddet (rejected) — "Bu işi yapmak istemiyorum"
- * cancel: İşi iptal et (cancelled) — "Bu iş geçersiz/yanlış açıldı"
- * modify: İşi değiştir (modified) — Yeniden düzenleme için
- * suggest: Öneri iste — GPT ile iyileştirme önerileri
- * push: GitHub'a push et — SADECE onaylanmış ve commit hazır işlerde
- * 
- * cancel_all: true → Bekleyen + onaylanmış tüm işleri iptal eder
- */
 export async function POST(req: NextRequest) {
   try {
     const body = await req.json()
@@ -106,12 +96,10 @@ export async function POST(req: NextRequest) {
 
     const supabase = getSupabase()
     if (!supabase) {
-      return NextResponse.json({ error: 'Veritabanı bağlantısı yok' }, { status: 503 })
+      return NextResponse.json({ error: 'Veritabani baglantisi yok' }, { status: 503 })
     }
 
-    // ═══════════════════════════════════════════════════════════════════════
-    // Tümünü İptal Et — sadece Patron
-    // ═══════════════════════════════════════════════════════════════════════
+    // Tumunu Iptal Et
     if (cancelAll) {
       const { data: rows, error: fetchErr } = await supabase
         .from('patron_commands')
@@ -145,7 +133,7 @@ export async function POST(req: NextRequest) {
       return NextResponse.json({
         ok: true,
         cancelled_count: cancelledCount,
-        message: cancelledCount === 0 ? 'İptal edilecek iş yok.' : `${cancelledCount} iş iptal edildi.`,
+        message: cancelledCount === 0 ? 'Iptal edilecek is yok.' : cancelledCount + ' is iptal edildi.',
       })
     }
 
@@ -153,18 +141,16 @@ export async function POST(req: NextRequest) {
       return NextResponse.json({ error: 'command_id gerekli' }, { status: 400 })
     }
 
-    // ═══════════════════════════════════════════════════════════════════════
-    // Rutin kaydı
-    // ═══════════════════════════════════════════════════════════════════════
+    // Rutin kaydi
     if (saveRoutine && schedule && ['daily', 'weekly', 'monthly'].includes(schedule)) {
       const cmd = await getPatronCommand(commandId)
       if (cmd.error || !cmd.command) {
-        return NextResponse.json({ error: 'Komut bulunamadı' }, { status: 404 })
+        return NextResponse.json({ error: 'Komut bulunamadi' }, { status: 404 })
       }
       const payload = cmd.output_payload ?? {}
       const directorKey = (typeof payload.director_key === 'string' ? payload.director_key : 'CCO') as string
       const { id, error } = await createCeoRoutine({
-        routine_name: `Rutin: ${(cmd.command as string).substring(0, 50)}`,
+        routine_name: 'Rutin: ' + (cmd.command as string).substring(0, 50),
         routine_type: 'rapor',
         director_key: directorKey,
         command_template: cmd.command as string,
@@ -173,52 +159,48 @@ export async function POST(req: NextRequest) {
         created_by: userId ?? undefined,
       })
       if (error) return NextResponse.json({ error }, { status: 500 })
-      return NextResponse.json({ ok: true, routine_id: id, message: 'Rutin görev kaydedildi.' })
+      return NextResponse.json({ ok: true, routine_id: id, message: 'Rutin gorev kaydedildi.' })
     }
 
     if (!decision) {
       return NextResponse.json({ error: 'decision gerekli (approve, reject, cancel, modify, suggest, push)' }, { status: 400 })
     }
     if (!['approve', 'reject', 'cancel', 'modify', 'suggest', 'push'].includes(decision)) {
-      return NextResponse.json({ error: 'Geçersiz decision' }, { status: 400 })
+      return NextResponse.json({ error: 'Gecersiz decision' }, { status: 400 })
     }
 
-    // ═══════════════════════════════════════════════════════════════════════
-    // Öneri İste (suggest)
-    // ═══════════════════════════════════════════════════════════════════════
+    // Oneri Iste (suggest)
     if (decision === 'suggest') {
       const cmd = await getPatronCommand(commandId)
       if (cmd.error || !cmd.output_payload) {
-        return NextResponse.json({ error: 'Komut bulunamadı' }, { status: 404 })
+        return NextResponse.json({ error: 'Komut bulunamadi' }, { status: 404 })
       }
       const displayText = typeof cmd.output_payload.displayText === 'string' ? cmd.output_payload.displayText : ''
       const apiKey = process.env.OPENAI_API_KEY
       if (!apiKey) {
-        return NextResponse.json({ suggestions: 'Öneri servisi şu an kullanılamıyor.', ok: true })
+        return NextResponse.json({ suggestions: 'Oneri servisi su an kullanilamiyor.', ok: true })
       }
       const res = await fetchWithRetry('https://api.openai.com/v1/chat/completions', {
         method: 'POST',
-        headers: { 'Content-Type': 'application/json', Authorization: `Bearer ${apiKey}` },
+        headers: { 'Content-Type': 'application/json', Authorization: 'Bearer ' + apiKey },
         body: JSON.stringify({
           model: 'gpt-4-turbo-preview',
           max_tokens: 512,
           messages: [
-            { role: 'system', content: 'Sen YİSA-S kalite asistanısın. Verilen çıktıyı inceleyip geliştirilebilecek 3-5 kısa öneri ver. Türkçe, madde madde.' },
-            { role: 'user', content: `Görev: ${cmd.command}\n\nMevcut çıktı:\n${displayText}\n\nGeliştirme önerileri (kısa, net):` },
+            { role: 'system', content: 'Sen YiSA-S kalite asistanisin. Verilen ciktiyi inceleyip gelistirilebilecek 3-5 kisa oneri ver. Turkce, madde madde.' },
+            { role: 'user', content: 'Gorev: ' + cmd.command + '\n\nMevcut cikti:\n' + displayText + '\n\nGelistirme onerileri (kisa, net):' },
           ],
         }),
       })
       if (!res.ok) {
-        return NextResponse.json({ suggestions: 'Öneri alınamadı.', ok: true })
+        return NextResponse.json({ suggestions: 'Oneri alinamadi.', ok: true })
       }
       const data = await res.json()
-      const suggestions = data.choices?.[0]?.message?.content ?? 'Öneri oluşturulamadı.'
+      const suggestions = data.choices?.[0]?.message?.content ?? 'Oneri olusturulamadi.'
       return NextResponse.json({ ok: true, suggestions })
     }
 
-    // ═══════════════════════════════════════════════════════════════════════
-    // GitHub Push (AYRI ADIM - sadece onaylanmış + commit hazır işlerde)
-    // ═══════════════════════════════════════════════════════════════════════
+    // GitHub Push (ayri adim)
     if (decision === 'push') {
       const { data: cmdRow, error: cmdErr } = await supabase
         .from('patron_commands')
@@ -226,39 +208,84 @@ export async function POST(req: NextRequest) {
         .eq('id', commandId)
         .single()
       if (cmdErr || !cmdRow) {
-        return NextResponse.json({ error: 'Komut bulunamadı' }, { status: 404 })
+        return NextResponse.json({ error: 'Komut bulunamadi' }, { status: 404 })
       }
       if (cmdRow.status !== 'approved') {
-        return NextResponse.json({ error: 'Push için önce işi onaylamanız gerekir.' }, { status: 400 })
+        return NextResponse.json({ error: 'Push icin once isi onaylamaniz gerekir.' }, { status: 400 })
       }
-      const gh = (cmdRow.output_payload as Record<string, unknown> | null)?.github_prepared_commit as
-        | { commitSha: string; owner: string; repo: string; branch?: string }
-        | undefined
-      if (!gh?.commitSha || !gh?.owner || !gh?.repo) {
-        return NextResponse.json({ error: 'Bu işte hazırlanmış GitHub commit yok.' }, { status: 400 })
+      const outputPayload = cmdRow.output_payload as Record<string, unknown> | null
+      
+      // code_files varsa GitHub'a dosya olustur
+      const codeFiles = outputPayload?.code_files as Array<{ file: string; content: string; language: string }> | undefined
+      if (codeFiles && codeFiles.length > 0) {
+        const owner = process.env.GITHUB_OWNER ?? 'serdincaltay-ai'
+        const repo = process.env.GITHUB_REPO ?? 'yisa-s-app'
+        const branch = process.env.GITHUB_BRANCH ?? 'main'
+        
+        try {
+          const result = await githubCreateFiles({
+            owner,
+            repo,
+            branch,
+            files: codeFiles.map(f => ({ path: f.file, content: f.content })),
+            message: 'feat: CEO auto-deploy - ' + (cmdRow.output_payload as Record<string, unknown>)?.director_key,
+          })
+          
+          // output_payload guncelle
+          await supabase.from('patron_commands').update({
+            output_payload: {
+              ...outputPayload,
+              github_pushed_at: new Date().toISOString(),
+              github_push_result: result,
+            }
+          }).eq('id', commandId)
+          
+          await insertAuditLog({
+            action: 'push',
+            entity_type: 'patron_command',
+            entity_id: commandId,
+            user_id: userId,
+            payload: { files: codeFiles.map(f => f.file), result },
+          })
+          
+          return NextResponse.json({ 
+            ok: true, 
+            message: 'GitHub push basarili. ' + codeFiles.length + ' dosya olusturuldu.', 
+            github_push: 'pushed',
+            files_created: codeFiles.map(f => f.file),
+          })
+        } catch (pushErr) {
+          const errMsg = pushErr instanceof Error ? pushErr.message : String(pushErr)
+          return NextResponse.json({ ok: false, error: 'GitHub push basarisiz: ' + errMsg }, { status: 500 })
+        }
       }
-      const pushResult = await githubPush({
-        owner: gh.owner,
-        repo: gh.repo,
-        branch: gh.branch ?? 'main',
-        commitSha: gh.commitSha,
-      })
-      await insertAuditLog({
-        action: 'push',
-        entity_type: 'patron_command',
-        entity_id: commandId,
-        user_id: userId,
-        payload: { github: gh, result: pushResult },
-      })
-      if (!pushResult.ok) {
-        return NextResponse.json({ ok: false, error: `GitHub push başarısız: ${pushResult.error}` }, { status: 500 })
+      
+      // Hazir commit varsa push et
+      const gh = outputPayload?.github_prepared_commit as { commitSha: string; owner: string; repo: string; branch?: string } | undefined
+      if (gh?.commitSha && gh?.owner && gh?.repo) {
+        const pushResult = await githubPush({
+          owner: gh.owner,
+          repo: gh.repo,
+          branch: gh.branch ?? 'main',
+          commitSha: gh.commitSha,
+        })
+        await insertAuditLog({
+          action: 'push',
+          entity_type: 'patron_command',
+          entity_id: commandId,
+          user_id: userId,
+          payload: { github: gh, result: pushResult },
+        })
+        if (!pushResult.ok) {
+          return NextResponse.json({ ok: false, error: 'GitHub push basarisiz: ' + pushResult.error }, { status: 500 })
+        }
+        return NextResponse.json({ ok: true, message: 'GitHub push basarili.', github_push: 'pushed' })
       }
-      return NextResponse.json({ ok: true, message: 'GitHub push başarılı.', github_push: 'pushed' })
+      
+      return NextResponse.json({ error: 'Bu iste hazirlanmis kod veya GitHub commit yok.' }, { status: 400 })
     }
 
-    // ═══════════════════════════════════════════════════════════════════════
     // Normal kararlar: approve / reject / cancel / modify
-    // ═══════════════════════════════════════════════════════════════════════
     const now = new Date().toISOString()
 
     let resultText: string | undefined
@@ -305,10 +332,10 @@ export async function POST(req: NextRequest) {
     })
 
     const message =
-      decision === 'approve' ? 'İşlem onaylandı. GitHub push için ayrıca "Push Et" butonunu kullanın.'
-      : decision === 'reject' ? 'İşlem reddedildi.'
-      : decision === 'cancel' ? 'İşlem iptal edildi.'
-      : 'Değişiklik kaydedildi.'
+      decision === 'approve' ? 'Islem onaylandi. GitHub push icin ayrica "Push Et" butonunu kullanin.'
+      : decision === 'reject' ? 'Islem reddedildi.'
+      : decision === 'cancel' ? 'Islem iptal edildi.'
+      : 'Degisiklik kaydedildi.'
 
     return NextResponse.json({
       ok: true,
@@ -320,6 +347,6 @@ export async function POST(req: NextRequest) {
     })
   } catch (e) {
     const err = e instanceof Error ? e.message : String(e)
-    return NextResponse.json({ error: 'Onay kararı hatası', detail: err }, { status: 500 })
+    return NextResponse.json({ error: 'Onay karari hatasi', detail: err }, { status: 500 })
   }
 }
