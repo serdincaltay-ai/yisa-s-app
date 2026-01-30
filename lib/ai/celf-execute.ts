@@ -12,7 +12,8 @@ const OPENAI_URL = 'https://api.openai.com/v1/chat/completions'
 const GOOGLE_GEMINI_URL = 'https://generativelanguage.googleapis.com/v1beta/models/gemini-pro:generateContent'
 const TOGETHER_URL = 'https://api.together.xyz/v1/chat/completions'
 
-async function callClaude(message: string, system?: string): Promise<string | null> {
+/** Özel iş ve CELF içinde kullanılır; flow route'tan import edilebilir. */
+export async function callClaude(message: string, system?: string): Promise<string | null> {
   const apiKey = process.env.ANTHROPIC_API_KEY
   if (!apiKey) return null
   const res = await fetch(ANTHROPIC_URL, {

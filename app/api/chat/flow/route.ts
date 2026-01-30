@@ -26,7 +26,7 @@ import {
   insertCelfLog,
 } from '@/lib/db/ceo-celf'
 import { correctSpelling, askConfirmation } from '@/lib/ai/gpt-service'
-import { runCelfDirector } from '@/lib/ai/celf-execute'
+import { runCelfDirector, callClaude } from '@/lib/ai/celf-execute'
 
 function taskTypeToLabel(taskType: string): string {
   const map: Record<string, string> = {
