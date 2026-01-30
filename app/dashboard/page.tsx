@@ -284,17 +284,20 @@ export default function DashboardPage() {
         ])
         setPendingPrivateSave(null)
       } else if (data.status === 'awaiting_patron_approval') {
+        const displayTextRaw = typeof data.text === 'string' ? data.text : undefined
+        const errorReason = typeof (data as { error_reason?: string }).error_reason === 'string' ? (data as { error_reason: string }).error_reason : undefined
         setPendingApproval({
           output: data.output ?? {},
           aiResponses: data.aiResponses ?? [],
           flow: data.flow ?? QUALITY_FLOW.name,
           message: correctedMessage,
           command_id: data.command_id,
-          displayText: typeof data.text === 'string' ? data.text : undefined,
+          displayText: displayTextRaw,
         })
+        const messageToShow = errorReason ?? displayTextRaw ?? 'Patron onayı bekleniyor.'
         setChatMessages((prev) => [
           ...prev,
-          { role: 'assistant', text: data.text ?? 'Patron onayı bekleniyor.', aiProviders: data.ai_providers ?? [], taskType: data.output?.taskType },
+          { role: 'assistant', text: messageToShow, aiProviders: data.ai_providers ?? [], taskType: data.output?.taskType },
         ])
       } else {
         setChatMessages((prev) => [

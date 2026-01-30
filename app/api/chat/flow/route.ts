@@ -193,9 +193,10 @@ export async function POST(req: NextRequest) {
 
     // ─── c) CELF: İlgili direktörlük AI'ını çalıştır ───────────────────────
     const celfResult = await runCelfDirector(directorKey, messageToUse)
-    const displayText = celfResult?.text ?? 'Yanıt oluşturulamadı. API anahtarlarını (.env) kontrol edin.'
-    const aiProvider = celfResult?.provider ?? '—'
-    const aiProviders = celfResult ? [celfResult.provider] : []
+    const errorReason = (celfResult as { text: string | null; errorReason?: string }).errorReason
+    const displayText = celfResult.text ?? (errorReason && errorReason.trim()) ?? 'Yanıt oluşturulamadı. API anahtarlarını (.env) kontrol edin.'
+    const aiProvider = celfResult.text ? (celfResult as { provider: string }).provider : '—'
+    const aiProviders = celfResult.text ? [(celfResult as { provider: string }).provider] : []
 
     // ─── d) CEO sonucu toplar: task_results'a kaydet ───────────────────────
     await archiveTaskResult({
@@ -264,6 +265,7 @@ export async function POST(req: NextRequest) {
       status: 'awaiting_patron_approval',
       flow: 'CEO → CELF → Patron Onay',
       text: displayText,
+      error_reason: errorReason ?? undefined,
       command_id: commandId,
       ceo_task_id: ceoTaskId,
       director_key: directorKey,

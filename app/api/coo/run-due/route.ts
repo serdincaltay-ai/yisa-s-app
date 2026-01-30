@@ -37,12 +37,13 @@ async function runDueRoutines(_req: NextRequest) {
       const directorKey = (routine.director_key ?? 'CCO') as DirectorKey
       const command = routine.command_template || 'Durum özeti ver.'
       const celfResult = await runCelfDirector(directorKey, command)
-      const resultText = celfResult?.text ?? 'Yanıt oluşturulamadı.'
+      const resultText = celfResult.text ?? celfResult.errorReason ?? 'Yanıt oluşturulamadı.'
+      const provider = celfResult.text ? celfResult.provider : '—'
       const nextRun = computeNextRun(routine.schedule, routine.schedule_time ?? undefined)
       const nextRunIso = nextRun?.toISOString() ?? new Date(Date.now() + 86400000).toISOString()
       const updateErr = await updateCeoRoutineResult(
         routine.id,
-        { text: resultText, provider: celfResult?.provider ?? '—', director_key: directorKey },
+        { text: resultText, provider, director_key: directorKey },
         nextRunIso
       )
       if (updateErr.error) {
