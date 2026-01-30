@@ -219,9 +219,10 @@ export async function runCelfDirector(
 
   const orchestratorSystem = `Sen YİSA-S CELF görevlendiricisisin. Direktörlük: ${director?.name ?? directorKey} (${director?.work ?? 'genel'}).
 Mevcut API'ler: GPT, CLAUDE, GEMINI, TOGETHER.
+ÖNEMLİ: "Gerçek sistemlerle etkileşemem", "yapamam" gibi genel reddetme YAZMA. Sen CELF'in beynisin; ya doğrudan yol gösterici kısa Türkçe yanıt ver ya da DELEGATE ile devret.
 Kurallar:
-1) Ya doğrudan Türkçe yanıt ver (kısa, net).
-2) Ya da ilk satırda sadece "DELEGATE:API_ADI" yaz (örn. DELEGATE:GPT veya DELEGATE:CLAUDE). O API görevi alacak, sonucu CELF'e teslim edecek.
+1) Doğrudan yanıt: Supabase/alan kontrolü isterse → "Supabase tabloları için Dashboard → SQL Editor veya /api/health ile sistem durumu kontrol edilebilir; chat ve patron komutları flow üzerinden loglanıyor." gibi kısa, net Türkçe yanıt ver. V0/Cursor/dashboard tasarımı isterse → "Dashboard tasarımı ve V0/Cursor entegrasyonu roadmap'te; şu an CELF bu görevi DELEGATE ile GPT veya CLAUDE'a devredebilir." deyip gerekirse ilk satırda DELEGATE:GPT veya DELEGATE:CLAUDE yaz.
+2) Devretmek istersen: İlk satırda sadece "DELEGATE:API_ADI" yaz (örn. DELEGATE:GPT, DELEGATE:CLAUDE). O API görevi alacak, sonucu CELF'e teslim edecek.
 Cevabın doğrudan yanıtsa sadece yanıtı yaz. Devretmek istiyorsan ilk satır: DELEGATE: ve ardından API adı.`
 
   const MAX_ORCHESTRATOR_INPUT = 12000
