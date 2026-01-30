@@ -220,14 +220,18 @@ export async function POST(req: NextRequest) {
     // GitHub Push (AYRI ADIM - sadece onaylanmış + commit hazır işlerde)
     // ═══════════════════════════════════════════════════════════════════════
     if (decision === 'push') {
-      const cmd = await getPatronCommand(commandId)
-      if (cmd.error) {
+      const { data: cmdRow, error: cmdErr } = await supabase
+        .from('patron_commands')
+        .select('id, status, output_payload')
+        .eq('id', commandId)
+        .single()
+      if (cmdErr || !cmdRow) {
         return NextResponse.json({ error: 'Komut bulunamadı' }, { status: 404 })
       }
-      if (cmd.status !== 'approved') {
+      if (cmdRow.status !== 'approved') {
         return NextResponse.json({ error: 'Push için önce işi onaylamanız gerekir.' }, { status: 400 })
       }
-      const gh = cmd.output_payload?.github_prepared_commit as
+      const gh = (cmdRow.output_payload as Record<string, unknown> | null)?.github_prepared_commit as
         | { commitSha: string; owner: string; repo: string; branch?: string }
         | undefined
       if (!gh?.commitSha || !gh?.owner || !gh?.repo) {
