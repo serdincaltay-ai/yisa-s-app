@@ -255,9 +255,15 @@ function LoginPageContent() {
           </button>
         </form>
 
-        <p className="text-center text-slate-500 text-sm mt-8">
-          © 2026 YİSA-S - Tüm hakları saklıdır
-        </p>
+        {/* Alt Bilgi */}
+        <div className="text-center mt-8 space-y-2">
+          <p className="text-slate-400 text-sm">
+            Jimnastik Okulları İçin AI Destekli Yönetim Sistemi
+          </p>
+          <p className="text-slate-500 text-xs">
+            © 2026 YİSA-S - Tüm hakları saklıdır
+          </p>
+        </div>
       </div>
     </div>
   )
