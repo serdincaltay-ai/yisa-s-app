@@ -5,6 +5,22 @@ import { useRouter, useSearchParams } from 'next/navigation'
 import { supabase } from '@/lib/supabase'
 import { canAccessDashboard } from '@/lib/auth/roles'
 
+// Pre-calculated positions to avoid hydration mismatch
+const SQUARES = [
+  { w: 60, h: 80, l: 5, t: 10 }, { w: 100, h: 60, l: 85, t: 5 }, { w: 70, h: 70, l: 15, t: 75 },
+  { w: 90, h: 50, l: 70, t: 80 }, { w: 55, h: 90, l: 40, t: 20 }, { w: 80, h: 65, l: 25, t: 55 },
+  { w: 65, h: 85, l: 90, t: 45 }, { w: 75, h: 75, l: 60, t: 65 }, { w: 50, h: 100, l: 10, t: 35 },
+  { w: 95, h: 55, l: 50, t: 90 }, { w: 85, h: 70, l: 30, t: 8 }, { w: 60, h: 95, l: 75, t: 25 },
+  { w: 70, h: 60, l: 45, t: 50 }, { w: 110, h: 45, l: 20, t: 85 }, { w: 55, h: 80, l: 95, t: 70 },
+]
+
+const PARTICLES = [
+  { l: 8, t: 15 }, { l: 92, t: 8 }, { l: 23, t: 78 }, { l: 67, t: 42 }, { l: 45, t: 88 },
+  { l: 12, t: 55 }, { l: 78, t: 22 }, { l: 35, t: 35 }, { l: 88, t: 65 }, { l: 55, t: 12 },
+  { l: 18, t: 92 }, { l: 72, t: 75 }, { l: 42, t: 5 }, { l: 95, t: 38 }, { l: 28, t: 48 },
+  { l: 62, t: 95 }, { l: 5, t: 28 }, { l: 82, t: 52 }, { l: 48, t: 68 }, { l: 15, t: 5 },
+]
+
 // Animated Grid Background
 function AnimatedGrid() {
   return (
@@ -14,17 +30,17 @@ function AnimatedGrid() {
       
       {/* Animated Squares */}
       <div className="absolute inset-0">
-        {[...Array(20)].map((_, i) => (
+        {SQUARES.map((sq, i) => (
           <div
             key={i}
             className="absolute border border-amber-500/10 rounded-lg animate-pulse"
             style={{
-              width: `${40 + Math.random() * 80}px`,
-              height: `${40 + Math.random() * 80}px`,
-              left: `${Math.random() * 100}%`,
-              top: `${Math.random() * 100}%`,
+              width: `${sq.w}px`,
+              height: `${sq.h}px`,
+              left: `${sq.l}%`,
+              top: `${sq.t}%`,
               animationDelay: `${i * 0.2}s`,
-              animationDuration: `${3 + Math.random() * 4}s`,
+              animationDuration: `${3 + (i % 4)}s`,
             }}
           />
         ))}
@@ -32,15 +48,15 @@ function AnimatedGrid() {
 
       {/* Floating Particles */}
       <div className="absolute inset-0">
-        {[...Array(30)].map((_, i) => (
+        {PARTICLES.map((p, i) => (
           <div
             key={`p-${i}`}
             className="absolute w-1 h-1 bg-amber-500/20 rounded-full animate-float"
             style={{
-              left: `${Math.random() * 100}%`,
-              top: `${Math.random() * 100}%`,
+              left: `${p.l}%`,
+              top: `${p.t}%`,
               animationDelay: `${i * 0.3}s`,
-              animationDuration: `${5 + Math.random() * 5}s`,
+              animationDuration: `${5 + (i % 5)}s`,
             }}
           />
         ))}
