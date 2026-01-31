@@ -5,6 +5,54 @@ import { useRouter, useSearchParams } from 'next/navigation'
 import { supabase } from '@/lib/supabase'
 import { canAccessDashboard } from '@/lib/auth/roles'
 
+// Animated Grid Background
+function AnimatedGrid() {
+  return (
+    <div className="fixed inset-0 overflow-hidden pointer-events-none">
+      {/* Grid Pattern */}
+      <div className="absolute inset-0 bg-[linear-gradient(rgba(245,158,11,0.03)_1px,transparent_1px),linear-gradient(90deg,rgba(245,158,11,0.03)_1px,transparent_1px)] bg-[size:60px_60px]" />
+      
+      {/* Animated Squares */}
+      <div className="absolute inset-0">
+        {[...Array(20)].map((_, i) => (
+          <div
+            key={i}
+            className="absolute border border-amber-500/10 rounded-lg animate-pulse"
+            style={{
+              width: `${40 + Math.random() * 80}px`,
+              height: `${40 + Math.random() * 80}px`,
+              left: `${Math.random() * 100}%`,
+              top: `${Math.random() * 100}%`,
+              animationDelay: `${i * 0.2}s`,
+              animationDuration: `${3 + Math.random() * 4}s`,
+            }}
+          />
+        ))}
+      </div>
+
+      {/* Floating Particles */}
+      <div className="absolute inset-0">
+        {[...Array(30)].map((_, i) => (
+          <div
+            key={`p-${i}`}
+            className="absolute w-1 h-1 bg-amber-500/20 rounded-full animate-float"
+            style={{
+              left: `${Math.random() * 100}%`,
+              top: `${Math.random() * 100}%`,
+              animationDelay: `${i * 0.3}s`,
+              animationDuration: `${5 + Math.random() * 5}s`,
+            }}
+          />
+        ))}
+      </div>
+
+      {/* Gradient Overlays */}
+      <div className="absolute inset-0 bg-gradient-to-b from-slate-950 via-transparent to-slate-950" />
+      <div className="absolute inset-0 bg-gradient-to-r from-slate-950 via-transparent to-slate-950" />
+    </div>
+  )
+}
+
 function LoginPageContent() {
   const [email, setEmail] = useState('')
   const [password, setPassword] = useState('')
@@ -46,15 +94,22 @@ function LoginPageContent() {
   }
 
   return (
-    <div className="min-h-screen flex items-center justify-center bg-slate-950 px-4">
-      <div className="w-full max-w-md">
-        {/* Logo */}
+    <div className="min-h-screen flex items-center justify-center bg-slate-950 px-4 relative">
+      {/* Animated Background */}
+      <AnimatedGrid />
+      
+      <div className="w-full max-w-md relative z-10">
+        {/* Logo - YiSA-S */}
         <div className="text-center mb-8">
-          <div className="w-16 h-16 rounded-2xl bg-gradient-to-br from-amber-500 to-orange-600 flex items-center justify-center mx-auto mb-4">
-            <span className="text-slate-900 font-bold text-2xl">Y</span>
+          <div className="w-20 h-20 rounded-2xl bg-gradient-to-br from-amber-500 to-orange-600 flex items-center justify-center mx-auto mb-4 shadow-lg shadow-amber-500/30">
+            <svg viewBox="0 0 40 40" className="w-12 h-12">
+              <text x="50%" y="55%" dominantBaseline="middle" textAnchor="middle" fill="#0F172A" fontSize="28" fontWeight="bold" fontFamily="Arial">Y</text>
+            </svg>
           </div>
-          <h1 className="text-2xl font-bold text-white">YİSA-S</h1>
-          <p className="text-slate-400">Patron Paneli</p>
+          <h1 className="text-3xl font-bold text-white tracking-wide">
+            <span className="text-amber-500">Yi</span>SA-S
+          </h1>
+          <p className="text-slate-400 mt-1">Patron Paneli</p>
         </div>
 
         {/* Form */}
