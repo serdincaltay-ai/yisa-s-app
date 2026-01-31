@@ -234,19 +234,20 @@ export class WorkflowEngine {
     
     // AI ile uret
     const result = await routeToAI({
-      directorate: task.assigned_to,
-      taskType: task.type,
-      prompt: task.description,
+      directorate: task.assigned_to || 'CPO',
+      taskType: task.type || 'ozel',
+      prompt: task.description || '',
       tenantId: task.tenant_id || 'system'
     })
     
     // Sonucu kaydet
+    const metadata = (task.metadata || {}) as Record<string, unknown>
     await supabase
       .from('tasks')
       .update({
         result: result.response,
         metadata: {
-          ...task.metadata,
+          ...metadata,
           workflow_status: 'uretim',
           ai_used: result.aiUsed,
           tokens: { input: result.inputTokens, output: result.outputTokens },
@@ -283,11 +284,12 @@ export class WorkflowEngine {
     
     const passed = issues.length === 0
     
+    const qcMetadata = (task.metadata || {}) as Record<string, unknown>
     await supabase
       .from('tasks')
       .update({
         metadata: {
-          ...task.metadata,
+          ...qcMetadata,
           workflow_status: 'kalite',
           quality_check: { passed, issues },
           checked_at: new Date().toISOString()
@@ -319,11 +321,12 @@ export class WorkflowEngine {
       userId: task.created_by
     })
     
+    const secMetadata = (task.metadata || {}) as Record<string, unknown>
     await supabase
       .from('tasks')
       .update({
         metadata: {
-          ...task.metadata,
+          ...secMetadata,
           workflow_status: 'guvenlik',
           current_robot: ROBOTS.SIBER,
           security_scan: scanResult,
@@ -363,11 +366,12 @@ export class WorkflowEngine {
       .select('id')
       .single()
     
+    const storeMetadata = (task.metadata || {}) as Record<string, unknown>
     await supabase
       .from('tasks')
       .update({
         metadata: {
-          ...task.metadata,
+          ...storeMetadata,
           workflow_status: 'depolama',
           current_robot: ROBOTS.ARSIV,
           archived_id: archived?.id,
@@ -403,12 +407,13 @@ export class WorkflowEngine {
       .select('id')
       .single()
     
+    const approvalMetadata = (task?.metadata || {}) as Record<string, unknown>
     await supabase
       .from('tasks')
       .update({
         status: 'pending_approval',
         metadata: {
-          ...task?.metadata,
+          ...approvalMetadata,
           workflow_status: 'onay',
           approval_id: approval?.id,
           approval_requested_at: new Date().toISOString()
@@ -476,13 +481,14 @@ export class WorkflowEngine {
     }
     
     // Gorevi tamamla
+    const pubMetadata = (task.metadata || {}) as Record<string, unknown>
     await supabase
       .from('tasks')
       .update({
         status: 'success',
         completed_at: new Date().toISOString(),
         metadata: {
-          ...task.metadata,
+          ...pubMetadata,
           workflow_status: 'yayinlama',
           current_robot: ROBOTS.COO,
           published_at: new Date().toISOString()

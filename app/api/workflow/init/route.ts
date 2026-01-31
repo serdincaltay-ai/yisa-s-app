@@ -6,7 +6,6 @@
 
 import { NextRequest, NextResponse } from 'next/server'
 import { WorkflowEngine, TaskType } from '@/lib/workflow/engine'
-import { getSupabase } from '@/lib/supabase'
 
 // Baslangic Gorevleri - Her direktorluk icin
 const INITIAL_TASKS: { type: TaskType; title: string; description: string; directorate: string }[] = [
@@ -56,7 +55,6 @@ const INITIAL_TASKS: { type: TaskType; title: string; description: string; direc
 ]
 
 export async function POST(req: NextRequest) {
-  const supabase = getSupabase()
   const results: { title: string; taskId?: string; error?: string }[] = []
   
   try {

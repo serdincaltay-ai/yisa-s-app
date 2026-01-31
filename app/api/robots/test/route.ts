@@ -5,11 +5,15 @@
  */
 
 import { NextResponse } from 'next/server'
-import { protocolHandler, PRODUCTION_STAGES } from '@/lib/robots/protocol'
-import { robotHealthMonitor } from '@/lib/robots/health'
-import { taskCreator, INITIAL_TASKS } from '@/lib/robots/task-creator'
-import { aiRouter } from '@/lib/ai/router'
+import { ProtocolHandler, PRODUCTION_STAGES } from '@/lib/robots/protocol'
+import { RobotHealthMonitor } from '@/lib/robots/health'
+import { TaskCreator, INITIAL_TASKS } from '@/lib/robots/task-creator'
+import AIRouter from '@/lib/ai/router'
 import { ROBOT_HIERARCHY, DIRECTORATES, CORE_RULES } from '@/lib/robots/hierarchy'
+
+const protocolHandler = new ProtocolHandler()
+const robotHealthMonitor = new RobotHealthMonitor()
+const taskCreator = new TaskCreator()
 
 export async function GET() {
   try {
@@ -24,7 +28,7 @@ export async function GET() {
     
     // 4. AI Router durumu
     const aiStatus = {
-      availableProviders: Object.keys(aiRouter['AI_PROVIDERS']),
+      availableProviders: ['claude', 'gpt', 'gemini', 'together', 'v0', 'cursor'],
       directorateCount: Object.keys(DIRECTORATES).length
     }
 
@@ -123,7 +127,7 @@ export async function POST(request: Request) {
       // AI yönlendirme testi
       case 'test_ai_routing': {
         const taskType = body.taskType || 'analysis'
-        const selectedAI = aiRouter.selectAI(taskType, directorate)
+        const selectedAI = AIRouter.smartSelect({ taskType, directorate })
         return NextResponse.json({ success: true, taskType, directorate, selectedAI })
       }
 

@@ -425,9 +425,37 @@ export async function createAllStartupTasks(
   }
 }
 
+// INITIAL_TASKS alias
+export const INITIAL_TASKS = STARTUP_TASKS
+
+// TaskCreator class for compatibility
+export class TaskCreator {
+  async createAllInitialTasks(tenantId?: string) {
+    const result = await createAllStartupTasks(tenantId)
+    return Object.entries(result.byDirectorate).map(([dir, count]) => ({
+      directorate: dir,
+      created: count
+    }))
+  }
+  
+  async createDirectorateTasks(directorate: string, tenantId?: string) {
+    const result = await createStartupTasksForDirectorate(directorate, tenantId)
+    return {
+      directorate,
+      created: result.createdCount,
+      errors: result.errors
+    }
+  }
+}
+
+export const taskCreator = new TaskCreator()
+
 export default {
   STARTUP_TASKS,
+  INITIAL_TASKS,
   createTask,
   createStartupTasksForDirectorate,
-  createAllStartupTasks
+  createAllStartupTasks,
+  TaskCreator,
+  taskCreator
 }
