@@ -17,9 +17,12 @@ npm run dev
 Tarayıcıda: **http://localhost:3000**  
 Giriş: Supabase Auth (e-posta/şifre). `.env.local` içinde `NEXT_PUBLIC_SUPABASE_URL` ve `SUPABASE_SERVICE_ROLE_KEY` (veya anon key) gerekli.
 
-**Telefondan / PVA / Web üzerinden devam:**  
-- Repo bu klasörde veya GitHub’a push edilmişse, aynı repo’yu telefondan veya başka bilgisayardan clone edip aynı komutlarla çalıştırabilirsiniz.  
-- PVA (Power Virtual Agents) veya web tabanlı asistan kullanacaksanız: Bu belgeyi ve `KURULUM_ADIMLARI.md` / `SUAN_DURUM_VE_DEVAM.md` dosyalarını referans vererek “projeyi çalıştır, sorunları şu listeden kontrol et” talimatı verebilirsiniz.
+**Telefondan kullanım:**  
+- Adım adım anlatım için **`TELEFONDAN_KULLANIM.md`** dosyasına bakın. Özet: Bilgisayarda `npm run dev:phone` çalıştırın, `ipconfig` ile IP’yi alın, telefondaki tarayıcıda `http://IP:3000` yazın (aynı WiFi gerekir).  
+- İnternete (Vercel vb.) yüklerseniz linki telefondan her yerden açabilirsiniz.
+
+**PVA / Web üzerinden devam:**  
+- Bu belgeyi ve `KURULUM_ADIMLARI.md` / `TELEFONDAN_KULLANIM.md` dosyalarını referans vererek “projeyi çalıştır, sorunları şu listeden kontrol et” talimatı verebilirsiniz.
 
 ---
 

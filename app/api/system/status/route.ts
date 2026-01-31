@@ -65,7 +65,7 @@ export async function GET() {
     const supabase = getSupabase()
     if (supabase) {
       try {
-        let dbCheck = await supabase.from('robots').select('kod').limit(1)
+        let dbCheck: { error: unknown; data: unknown } = await supabase.from('robots').select('kod').limit(1)
         if (dbCheck.error) {
           dbCheck = await supabase.from('ceo_tasks').select('id').limit(1)
         }

@@ -1,0 +1,14 @@
+{
+  "name": "YİSA-S Patron Paneli",
+  "short_name": "YİSA-S",
+  "description": "YİSA-S Yönetim Paneli",
+  "start_url": "/",
+  "display": "standalone",
+  "background_color": "#030508",
+  "theme_color": "#0891b2",
+  "orientation": "portrait",
+  "lang": "tr",
+  "icons": [
+    { "src": "/icon.svg", "sizes": "any", "type": "image/svg+xml", "purpose": "any maskable" }
+  ]
+}
