@@ -5,14 +5,39 @@
 
 import { createClient, type SupabaseClient } from '@supabase/supabase-js'
 
-const url = process.env.NEXT_PUBLIC_SUPABASE_URL
-const anon = process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY
+const url = process.env.NEXT_PUBLIC_SUPABASE_URL ?? ''
+const anon = process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY ?? ''
 
-if (!url || !anon) {
-  throw new Error('NEXT_PUBLIC_SUPABASE_URL ve NEXT_PUBLIC_SUPABASE_ANON_KEY tanımlı olmalı (.env.local)')
+// Supabase client - environment variable'lar yoksa mock client döner
+export const supabase = url && anon 
+  ? createClient(url, anon)
+  : createMockClient()
+
+// Supabase bağlantısının aktif olup olmadığını kontrol et
+export const isSupabaseConfigured = Boolean(url && anon)
+
+// Mock client - Supabase yapılandırılmadığında hata vermeden çalışır
+function createMockClient(): SupabaseClient {
+  const mockResponse = { data: null, error: { message: 'Supabase yapılandırılmamış. NEXT_PUBLIC_SUPABASE_URL ve NEXT_PUBLIC_SUPABASE_ANON_KEY tanımlayın.' } }
+  const mockAuthResponse = { data: { user: null, session: null }, error: null }
+  
+  return {
+    auth: {
+      getUser: async () => mockAuthResponse,
+      getSession: async () => mockAuthResponse,
+      signInWithPassword: async () => mockResponse,
+      signOut: async () => ({ error: null }),
+      onAuthStateChange: () => ({ data: { subscription: { unsubscribe: () => {} } } }),
+    },
+    from: () => ({
+      select: () => ({ data: [], error: null, then: (fn: (v: { data: never[], error: null }) => void) => fn({ data: [], error: null }) }),
+      insert: () => mockResponse,
+      update: () => mockResponse,
+      delete: () => mockResponse,
+      upsert: () => mockResponse,
+    }),
+  } as unknown as SupabaseClient
 }
-
-export const supabase = createClient(url, anon)
 
 /**
  * Sunucu tarafı (API route) için Supabase client.
