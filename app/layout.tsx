@@ -1,8 +1,8 @@
-import './globals.css'
+import "./globals.css"
 
 export const metadata = {
-  title: 'YİSA-S App - Patron Paneli',
-  description: 'YİSA-S Yönetim Paneli',
+  title: "YiSA-S | Patron Paneli",
+  description: "YiSA-S Spor Tesisleri Yonetim Sistemi - Patron Paneli",
 }
 
 export default function RootLayout({
@@ -12,7 +12,7 @@ export default function RootLayout({
 }) {
   return (
     <html lang="tr">
-      <body className="bg-slate-950 text-white min-h-screen">
+      <body className="min-h-screen antialiased">
         {children}
       </body>
     </html>
