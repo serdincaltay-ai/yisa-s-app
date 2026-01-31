@@ -232,4 +232,52 @@ export class AIRouter {
   }
 }
 
+// AI Servisleri export
+export const AI_SERVICES = AI_EXPERTISE
+
+// routeToAI - Ana yonlendirme fonksiyonu
+export async function routeToAI(params: {
+  directorate: string
+  taskType: string
+  prompt: string
+  tenantId: string
+  priority?: 'low' | 'normal' | 'high'
+  preferredAI?: AIService
+}): Promise<{
+  response: string
+  aiUsed: AIService
+  inputTokens: number
+  outputTokens: number
+  cost: { usd: number; try: number }
+}> {
+  const { directorate, taskType, prompt, priority = 'normal', preferredAI } = params
+  
+  // AI sec
+  const selectedAI = preferredAI || AIRouter.smartSelect({
+    taskType,
+    directorate,
+    priority: priority === 'high' ? 'high' : priority === 'low' ? 'low' : 'medium',
+    budgetSensitive: priority === 'low'
+  })
+  
+  // Tahmini token sayisi
+  const inputTokens = Math.ceil(prompt.length / 4)
+  const outputTokens = Math.ceil(inputTokens * 1.5) // Tahmini
+  
+  // Maliyet hesapla
+  const cost = AIRouter.estimateCost(selectedAI, inputTokens, outputTokens)
+  
+  // Gercek AI cagirisi burada yapilir
+  // Simdilik placeholder response
+  const response = `[${selectedAI.toUpperCase()}] Gorev islendi: ${taskType} - ${directorate}`
+  
+  return {
+    response,
+    aiUsed: selectedAI,
+    inputTokens,
+    outputTokens,
+    cost: { usd: cost.costUSD, try: cost.costTRY }
+  }
+}
+
 export default AIRouter

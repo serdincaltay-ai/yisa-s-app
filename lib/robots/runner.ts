@@ -5,8 +5,7 @@
 import { getSupabase } from '@/lib/supabase'
 import { protocolHandler, PRODUCTION_STAGES, TaskStatus } from './protocol'
 import { robotHealthMonitor } from './health'
-import { aiRouter } from '@/lib/ai/router'
-import { DIRECTORATES } from './hierarchy'
+import AIRouter from '@/lib/ai/router'
 
 export class RobotRunner {
   private supabase = getSupabase()
@@ -90,8 +89,8 @@ export class RobotRunner {
       
       case 4: // URETIM
         // AI ile içerik üret
-        const ai = aiRouter.selectAI('content', task.assigned_to)
-        return { message: `${ai.provider} ile üretim tamamlandı` }
+        const selectedAI = AIRouter.smartSelect({ taskType: 'content', directorate: task.assigned_to })
+        return { message: `${selectedAI} ile üretim tamamlandı` }
       
       case 5: // KALITE
         // CELF denetimi
