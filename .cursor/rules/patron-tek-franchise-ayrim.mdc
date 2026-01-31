@@ -1,0 +1,26 @@
+---
+description: Patron sadece Serdinç ALTAY; franchise firma sahipleri "patron" değil, firma sahibi/firma yetkilisi.
+alwaysApply: true
+---
+
+# YİSA-S — Patron Tek, Franchise Ayrımı
+
+## Kural (Patron talebi)
+
+**"Patron" sistemde yalnızca Serdinç ALTAY (YİSA-S sahibi) için kullanılır.** Franchise içindeki firma sahipleri patron konumunda değildir; **"Patron"** unvanı onlara verilmez.
+
+- Franchise firma sahipleri: **firma sahibi**, **firma yetkilisi** (veya teknik rol kodu ROL-1 Alt Admin vb.) olarak adlandırılır.
+- Şablon/demo açılması, paket onayı **Patron (Serdinç ALTAY) onayı** ile yapılır.
+
+## Ne yapılır
+
+- Doküman ve kodda "Patron" = sadece YİSA-S sahibi (Serdinç ALTAY).
+- Franchise üst yetkili için: firma sahibi, firma yetkilisi, ROL-1, Alt Admin vb. kullanılır; "franchise patronu" veya "şube patronu" yazılmaz.
+
+## Ne yapılmaz
+
+- Franchise firma sahiplerine veya şube yetkililerine "patron" demek veya "Patron" unvanı vermek.
+
+## Referans
+
+- `PATRON_VE_FRANCHISE_AYRIMI.md` — Demo, fiyatlandırma (öğrenci kademesi, 2. şube, robot kotası), veli %20/%80.

@@ -1,0 +1,30 @@
+---
+description: YİSA-S API çağrıları sadece Asistan ve CELF katmanında; CEO/COO/güvenlik vb. API çağırmaz.
+alwaysApply: true
+---
+
+# YİSA-S — API Sadece Asistan + CELF
+
+## Kural (Patron talebi)
+
+**Claude, GPT, Gemini, Together, V0, Cursor, GitHub, Vercel, Supabase, Railway gibi API çağrıları yalnızca 2 bölümde yapılır:**
+
+1. **Asistan** — Patron asistanı (flow: imla, özel iş, konuşma). Görevlendirmeyi Gemini yapar; tüm API'ler asistan içinde.
+2. **CELF** — Beyin merkezi (direktörlükler, şirket işi). CELF içinde tüm API'ler; görevlendirme CELF yapar.
+
+**Diğer tüm yerlerde (CEO, COO, güvenlik robotu, veri robotu, direktörlük modülleri vb.) doğrudan AI/API çağrısı yapılmaz.** Oralarda sadece kurallar, sınırlı komutlar, tayin edilmiş/tarif edilmiş botlar çalışır.
+
+## Ne yapılır
+
+- Yeni AI/API çağrısı eklerken: sadece Asistan akışı (`app/api/chat/flow`, `lib/ai/gpt-service`, özel iş için kullanılan servisler) veya CELF (`lib/ai/celf-execute.ts`, `lib/robots/celf-center`) içine eklenir.
+- CEO, COO, security, data-robot: sadece kural, sınıflandırma, DB, log; gerekirse CELF veya Asistan **çağrılır** (onlar API kullanır).
+
+## Ne yapılmaz
+
+- CEO, COO, güvenlik robotu, veri robotu veya direktörlük kodlarına doğrudan Claude/GPT/Gemini/Together/V0/Cursor/API çağrısı eklemek.
+- Konuşma zincirini, API'yi CEO/COO içine taşımak.
+
+## Referans
+
+- `PATRON_ASISTAN_VIZYON_SEMA.md` Bölüm 8
+- `API_SADECE_ASISTAN_CELF_KURULUM.md`

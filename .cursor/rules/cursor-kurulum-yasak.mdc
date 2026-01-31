@@ -1,0 +1,32 @@
+---
+description: Cursor (IDE) otomatik kurulum görevi yapmaz; sistem sadece Patron talimatıyla değiştirilir. Asistan robot ile çakışma engellenir.
+alwaysApply: true
+---
+
+# YİSA-S — Cursor Kurulum Görevi Yasak
+
+## Kural (Patron talebi)
+
+**Cursor (bu IDE içindeki asistan) sistemde otomatik “kurulum görevi” yapmaz. Kurulum, başlatma veya sistemi değiştiren işlemler yalnızca Patron’un açık talimatı ile yapılır.**
+
+- Bu kural, Cursor’un kendi kendine `npm install`, `npm run dev`, dosya yapısı değiştirme, .env düzenleme vb. “kurulum” işleri yapmasını engeller.
+- Paneldeki **Asistan robot** (chat flow, özel iş, şirket işi) ile Cursor’un davranışı çakışmasın diye: Cursor, uygulama akışını veya asistan tanımlarını Patron açıkça istemedikçe değiştirmez.
+- “Şimdi sistemi çalıştır”, “kurulum yap”, “başlat” gibi tek başına genel ifadeler **otomatik komut çalıştırma** anlamına gelmez; Patron “şu komutu çalıştır” derse o komut çalıştırılır.
+
+## Ne yapılır
+
+- Patron “npm run go çalıştır” derse: o komut söylenir veya (ortam uygunsa) çalıştırılır.
+- Patron “şu dosyayı şöyle değiştir” derse: sadece o değişiklik yapılır.
+- Belirsizlikte: önce “Şu adımı yapmamı ister misiniz?” diye tek adım sunulur; onay alındıktan sonra o adım uygulanır (adım adım onay kuralına uygun).
+
+## Ne yapılmaz
+
+- Otomatik kurulum: “Sistemi çalıştırayım” deyip Patron onayı olmadan `npm install` veya `npm run dev` çalıştırmak.
+- Otomatik sistem değişikliği: Asistan akışını, .cursor kurallarını veya API yerleşimini Patron talimatı olmadan “kurulum tamamlayayım” diye değiştirmek.
+- Asistan robot ile çakışan iş: Panel asistanının (flow, özel iş, CELF) sorumluluk alanına, Cursor’un kendi kurulum mantığı ile müdahale etmek.
+
+## Özet
+
+- **Kurulum görevi:** Sadece Patron açıkça “şu komutu çalıştır” / “şunu kur” dediğinde.
+- **Asistan robot:** Paneldeki chat/flow; Cursor onunla çakışan otomatik kurulum yapmaz.
+- **Referans:** `HANGI_KOMUT_NEREDE_CALISIR.md`, `API_SADECE_ASISTAN_CELF_KURULUM.md`

@@ -1,0 +1,37 @@
+---
+description: YİSA-S asistan adım adım ilerler; her adımda onay alınır, onaydan sonra tek komut uygulanır.
+alwaysApply: true
+---
+
+# YİSA-S — Adım Adım Onay, Son Komut Tek
+
+## Kural (Patron talebi)
+
+**Asistan, tek seferde uzun komut zinciri veya karışık bağlam vermez. Her adım net sunulur, Patron onayı alınır, onaydan sonra yalnızca o adım için tek bir net komut uygulanır.**
+
+- Bu sayede bağlam karışmaz, Claude doğru odakta kalır.
+
+## Nasıl çalışır
+
+1. **Tek adım sun:** Şu anki iş için yalnızca bir adım (veya tek bir net iş paketi) sun.
+2. **Onay bekle:** Patron "onayla", "evet", "tamam" vb. demeden bir sonraki adımı uygulama veya uzun komut verme.
+3. **Onaydan sonra tek komut:** Patron onayladıktan sonra, **sadece o adımı** uygulayan tek bir net komut/talimat ver veya uygula. Uzun liste veya "şimdi şunu da yap, sonra bunu da" zinciri kurma.
+4. **Sonraki adım ayrı tur:** Bir sonraki adım için yeni bir mesajda yine tek adım sun, onay al, sonra tek komut.
+
+## Ne yapılır
+
+- İşi şema / adım listesi olarak böl; her turda tek adım göster.
+- Patron onayından sonra yalnızca o adıma ait işi yap veya tek cümlelik komut ver.
+- Cevap kısa ve net olsun; gereksiz uzun açıklama veya çoklu komut verme.
+
+## Ne yapılmaz
+
+- Aynı mesajda "önce şunu yap, sonra bunu yap, ardından şuraya git" gibi zincir komut vermek.
+- Onay almadan bir sonraki adımı uygulamak veya uzun komut yazmak.
+- Çok uzun, karışık bağlamlı tek blok halinde talimat vermek (Claude karışmasın diye).
+
+## Referans
+
+- **Asistan çalışma prensibi (mevcut hali çıkart):** `ASISTAN_CALISMA_PRENSIBI_CIKART.md` — sistemde yüklü olan + kılavuzun kilitlediği, olduğu gibi.
+- Onay özeti: `YISA-S_ONAY_OZETI.md`
+- Kapsamlı dokümantasyon Bölüm 5 (Tam İş Akışı) ve Bölüm 11 (Yapılacaklar) adım listesi için referans alınabilir.

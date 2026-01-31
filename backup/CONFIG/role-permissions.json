@@ -1,0 +1,20 @@
+{
+  "version": "1.0",
+  "description": "YİSA-S 13 rol ve yetkileri",
+  "roles": [
+    { "level": 0, "name": "Ziyaretçi", "description": "Giriş yapmamış, sınırlı görüntüleme" },
+    { "level": 1, "name": "Ücretsiz Üye", "description": "Temel üyelik, sınırlı özellikler" },
+    { "level": 2, "name": "Ücretli Üye", "description": "Tam üyelik, tüm üye özellikleri" },
+    { "level": 3, "name": "Deneme Üyesi", "description": "Deneme süresi, ücretli özellikler geçici" },
+    { "level": 4, "name": "Eğitmen", "description": "Antrenman verme, kendi sporcuları" },
+    { "level": 5, "name": "Tesis Yöneticisi", "description": "Tek tesis yönetimi" },
+    { "level": 6, "name": "Tesis Sahibi", "description": "Kendi tesis(ler) yönetimi" },
+    { "level": 7, "name": "Bölge Müdürü", "description": "Bölge genelinde tesisler" },
+    { "level": 8, "name": "Franchise Sahibi", "description": "Franchise sahipliği" },
+    { "level": 9, "name": "Franchise Yöneticisi", "description": "Franchise operasyon yönetimi" },
+    { "level": 10, "name": "Sistem Admini", "description": "Sistem ayarları, kullanıcı/rol yönetimi" },
+    { "level": 11, "name": "Süper Admin", "description": "Tam yetki, tüm panel erişimi" },
+    { "level": 12, "name": "Patron", "description": "En üst yetki, tüm kararlar" }
+  ],
+  "dashboard_allowed_roles": ["Patron", "Süper Admin", "Sistem Admini"]
+}
