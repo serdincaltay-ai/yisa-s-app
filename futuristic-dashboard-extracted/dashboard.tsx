@@ -360,7 +360,7 @@ export default function Dashboard() {
                     <TabsContent value="firmalar" className="mt-0">
                       <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
                         <CompanyCard
-                          name="BJK Tuzla Jimnastik"
+                          name="BJK Tuzla Cimnastik"
                           emoji="🤸"
                           status="aktif"
                           members={127}
@@ -436,7 +436,7 @@ export default function Dashboard() {
                   </CardTitle>
                 </CardHeader>
                 <CardContent className="space-y-3">
-                  <ActivityItem title="Yeni üye kaydı" subtitle="BJK Tuzla Jimnastik" time="5 dk önce" />
+                  <ActivityItem title="Yeni üye kaydı" subtitle="BJK Tuzla Cimnastik" time="5 dk önce" />
                   <ActivityItem title="İçerik yayınlandı" subtitle="Instagram - Antrenman programı" time="23 dk önce" />
                   <ActivityItem title="Ödeme alındı" subtitle="SP Pilates Studio - ₺350" time="1 saat önce" />
                   <ActivityItem

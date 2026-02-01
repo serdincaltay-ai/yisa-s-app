@@ -175,7 +175,7 @@ export const CELF_DIRECTORATES: Record<DirectorKey, Directorate> = {
   CSPO: {
     name: 'Spor',
     tasks: ['antrenman', 'hareket', 'sporcu', 'program', 'seviye', 'branş', 'ölçüm'],
-    triggers: ['antrenman', 'hareket', 'sporcu', 'program', 'seviye', 'branş', 'ölçüm', 'spor', 'jimnastik', 'kamp'],
+    triggers: ['antrenman', 'hareket', 'sporcu', 'program', 'seviye', 'branş', 'ölçüm', 'spor', 'cimnastik', 'kamp'],
     work: 'Hareket havuzu, antrenman programı, sporcu değerlendirme, seviye sistemi',
     aiProviders: ['CLAUDE', 'GPT'],
     dataAccess: ['athletes', 'movements', 'training_programs', 'evaluations'],

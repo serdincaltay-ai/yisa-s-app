@@ -97,6 +97,7 @@ export default function DashboardPage() {
     total_pending?: number
     next_tasks?: { id: string; name: string; directorKey: string }[]
   } | null>(null)
+  const [startupTasksLoading, setStartupTasksLoading] = useState(false)
 
   const [stats, setStats] = useState({
     franchiseRevenueMonth: 0,
@@ -248,31 +249,46 @@ export default function DashboardPage() {
             { role: 'assistant', text: '✅ Kendi alanınıza kaydedildi.', aiProviders: [] },
           ])
           setPendingPrivateSave(null)
-        } else {
-          const responses = data.aiResponses ?? []
-          const aiProviders = responses
-            .filter((r: { provider: string; response?: { status?: string; text?: string } }) => {
-              const res = r.response
-              return res && ((res as { status?: string }).status === 'ok' || typeof (res as { text?: string }).text === 'string')
-            })
-            .map((r: { provider: string }) => r.provider)
-          const text = data.text ?? 'Yanıt oluşturuldu.'
-          if (data.status === 'awaiting_patron_approval') {
-            setPendingApproval({
-              output: data.output ?? {},
-              aiResponses: data.aiResponses ?? [],
-              flow: data.flow ?? QUALITY_FLOW.name,
-              message: msg,
-              command_id: data.command_id,
-              displayText: typeof data.text === 'string' ? data.text : undefined,
-              director_key: data.director_key,
-            })
-          }
+        } else if (data.status === 'awaiting_patron_approval') {
+          const displayTextRaw = typeof data.text === 'string' ? data.text : undefined
+          const errorReason = typeof (data as { error_reason?: string }).error_reason === 'string' ? (data as { error_reason: string }).error_reason : undefined
+          setPendingApproval({
+            output: data.output ?? {},
+            aiResponses: data.aiResponses ?? [],
+            flow: data.flow ?? QUALITY_FLOW.name,
+            message: msg,
+            command_id: data.command_id,
+            displayText: displayTextRaw,
+            director_key: data.director_key,
+          })
+          const messageToShow = displayTextRaw || errorReason || 'Patron onayı bekleniyor. (Onay kuyruğuna bakın.)'
           setChatMessages((prev) => [
             ...prev,
-            { role: 'assistant', text, aiProviders, taskType: data.output?.taskType },
+            { role: 'assistant', text: messageToShow, aiProviders: data.ai_providers ?? [], taskType: data.output?.taskType },
           ])
           fetchApprovalQueue()
+        } else if (data.status === 'pending_task_exists') {
+          setChatMessages((prev) => [
+            ...prev,
+            { role: 'assistant', text: data.message ?? 'Zaten bekleyen bir iş var. Önce onay kuyruğundan onu onaylayın veya reddedin.', aiProviders: [] },
+          ])
+        } else if (data.status === 'celf_check_failed') {
+          const errs = Array.isArray((data as { errors?: string[] }).errors) ? (data as { errors: string[] }).errors : []
+          setChatMessages((prev) => [
+            ...prev,
+            { role: 'assistant', text: errs.length ? `⚠️ ${errs.join(' ')}` : (data.message ?? 'CELF denetimi geçilemedi.'), aiProviders: [] },
+          ])
+        } else if (data.status === 'strategy_change_requires_approval' || data.status === 'requires_patron_approval') {
+          setChatMessages((prev) => [
+            ...prev,
+            { role: 'assistant', text: data.message ?? 'Bu işlem Patron onayı gerektirir.', aiProviders: [] },
+          ])
+        } else {
+          const fallback = data.message ?? data.text ?? ((data as { detail?: string }).detail ? `Hata: ${(data as { detail: string }).detail}` : null)
+          setChatMessages((prev) => [
+            ...prev,
+            { role: 'assistant', text: fallback ?? 'Yanıt alınamadı. API anahtarlarını (.env) kontrol edin.', aiProviders: data.ai_providers ?? [] },
+          ])
         }
       } catch {
         setCurrentStepLabel(null)
@@ -384,18 +400,36 @@ export default function DashboardPage() {
           flow: data.flow ?? QUALITY_FLOW.name,
           message: correctedMessage,
           command_id: data.command_id,
-          displayText: displayTextRaw,
+          displayText: displayTextRaw ?? (errorReason ? undefined : 'Rapor/işlem sonucu bekleniyor'),
           director_key: data.director_key,
         })
-        const messageToShow = errorReason ?? displayTextRaw ?? 'Patron onayı bekleniyor.'
+        const messageToShow = displayTextRaw || errorReason || 'Patron onayı bekleniyor. (Rapor içeriği için Onay kuyruğuna bakın.)'
         setChatMessages((prev) => [
           ...prev,
           { role: 'assistant', text: messageToShow, aiProviders: data.ai_providers ?? [], taskType: data.output?.taskType },
         ])
-      } else {
+      } else if (data.status === 'pending_task_exists') {
         setChatMessages((prev) => [
           ...prev,
-          { role: 'assistant', text: data.text ?? 'Yanıt oluşturuldu.', aiProviders: [] },
+          { role: 'assistant', text: data.message ?? 'Zaten bekleyen bir iş var. Önce onay kuyruğundan onu onaylayın veya reddedin.', aiProviders: [] },
+        ])
+      } else if (data.status === 'celf_check_failed') {
+        const errs = Array.isArray((data as { errors?: string[] }).errors) ? (data as { errors: string[] }).errors : []
+        const msg = errs.length ? errs.join(' ') : (data.message ?? 'CELF denetimi geçilemedi.')
+        setChatMessages((prev) => [
+          ...prev,
+          { role: 'assistant', text: `⚠️ ${msg}`, aiProviders: [] },
+        ])
+      } else if (data.status === 'strategy_change_requires_approval' || data.status === 'requires_patron_approval') {
+        setChatMessages((prev) => [
+          ...prev,
+          { role: 'assistant', text: data.message ?? 'Bu işlem Patron onayı gerektirir.', aiProviders: [] },
+        ])
+      } else {
+        const fallback = data.message ?? data.text ?? ((data as { detail?: string }).detail ? `Hata: ${(data as { detail: string }).detail}` : null)
+        setChatMessages((prev) => [
+          ...prev,
+          { role: 'assistant', text: fallback ?? 'Yanıt alınamadı. API anahtarlarını (.env) kontrol edin.', aiProviders: data.ai_providers ?? [] },
         ])
       }
     } catch {
@@ -525,6 +559,8 @@ export default function DashboardPage() {
   }
 
   const runStartupTasks = async (action: 'run_all' | 'run_director') => {
+    if (startupTasksLoading) return
+    setStartupTasksLoading(true)
     try {
       const res = await fetch('/api/startup', {
         method: 'POST',
@@ -558,6 +594,8 @@ export default function DashboardPage() {
         ...prev,
         { role: 'assistant', text: 'Başlangıç tetiklenirken hata.', aiProviders: [] },
       ])
+    } finally {
+      setStartupTasksLoading(false)
     }
   }
 
@@ -748,10 +786,20 @@ export default function DashboardPage() {
             <CardContent className="pt-0">
               <Button
                 onClick={() => runStartupTasks('run_all')}
-                className="w-full bg-gradient-to-r from-cyan-600 to-blue-600 hover:from-cyan-500 hover:to-blue-500 text-white border border-cyan-500/30"
+                disabled={startupTasksLoading}
+                className="w-full bg-gradient-to-r from-cyan-600 to-blue-600 hover:from-cyan-500 hover:to-blue-500 text-white border border-cyan-500/30 disabled:opacity-60 disabled:cursor-not-allowed"
               >
-                <Play size={18} className="mr-2" />
-                Tüm Robotları Başlat
+                {startupTasksLoading ? (
+                  <span className="flex items-center justify-center gap-2">
+                    <span className="h-4 w-4 border-2 border-white/30 border-t-white rounded-full animate-spin" />
+                    Tetikleniyor...
+                  </span>
+                ) : (
+                  <>
+                    <Play size={18} className="mr-2" />
+                    Tüm Robotları Başlat
+                  </>
+                )}
               </Button>
               <p className="text-xs text-slate-500 mt-2">
                 Direktörlükler ilk görevlerini yapacak.

@@ -1,31 +1,56 @@
 "use client"
 
-import { useState } from "react"
-import { useRouter } from "next/navigation"
+import { useState, useEffect, Suspense } from "react"
+import { useRouter, useSearchParams } from "next/navigation"
 import { AnimatedOrbs } from "@/components/animated-orbs"
 import { Button } from "@/components/ui/button"
 import { Input } from "@/components/ui/input"
 import { Label } from "@/components/ui/label"
 import { Eye, EyeOff, Lock, User } from "lucide-react"
+import { supabase } from "@/lib/supabase"
+import { canAccessDashboard } from "@/lib/auth/roles"
 
-export default function PatronLoginPage() {
+function PatronLoginContent() {
   const router = useRouter()
+  const searchParams = useSearchParams()
+  const unauthorized = searchParams.get("unauthorized") === "1"
   const [showPassword, setShowPassword] = useState(false)
   const [isLoading, setIsLoading] = useState(false)
+  const [error, setError] = useState("")
   const [formData, setFormData] = useState({
     username: "",
     password: "",
   })
 
+  useEffect(() => {
+    supabase.auth.getUser().then(({ data: { user } }) => {
+      if (user && canAccessDashboard(user)) router.replace("/dashboard")
+    })
+  }, [router])
+
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault()
     setIsLoading(true)
-    
-    // Simulate login - replace with actual auth
-    await new Promise((resolve) => setTimeout(resolve, 1500))
-    
+    setError("")
+    const email = formData.username.trim().includes("@") ? formData.username.trim() : `${formData.username.trim()}@yisa-s.com`
+    const { data, error: signInError } = await supabase.auth.signInWithPassword({
+      email,
+      password: formData.password,
+    })
+    if (signInError) {
+      setError("E-posta veya şifre hatalı.")
+      setIsLoading(false)
+      return
+    }
+    const user = data?.user
+    if (user && !canAccessDashboard(user)) {
+      await supabase.auth.signOut()
+      setError("Bu hesap panel erişimine yetkili değil.")
+      setIsLoading(false)
+      return
+    }
+    router.push("/dashboard")
     setIsLoading(false)
-    router.push("/patron/dashboard")
   }
 
   return (
@@ -49,17 +74,27 @@ export default function PatronLoginPage() {
             </p>
           </div>
 
+          {unauthorized && (
+            <div className="mb-4 p-3 rounded-lg text-sm border border-amber-500/30 bg-amber-500/10 text-amber-400">
+              Yetkisiz erişim. Sadece yetkili kullanıcılar girebilir.
+            </div>
+          )}
+          {error && (
+            <div className="mb-4 p-3 rounded-lg text-sm border border-red-500/30 bg-red-500/10 text-red-400">
+              {error}
+            </div>
+          )}
           {/* Login Form */}
           <form onSubmit={handleSubmit} className="space-y-5">
             <div className="space-y-2">
               <Label htmlFor="username" className="text-sm text-muted-foreground">
-                Kullanici Adi
+                E-posta
               </Label>
               <div className="relative">
                 <User className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-muted-foreground" />
                 <Input
                   id="username"
-                  type="text"
+                  type="email"
                   placeholder="patron@yisa-s.com"
                   value={formData.username}
                   onChange={(e) => setFormData({ ...formData, username: e.target.value })}
@@ -117,5 +152,17 @@ export default function PatronLoginPage() {
         </div>
       </div>
     </div>
+  )
+}
+
+export default function PatronLoginPage() {
+  return (
+    <Suspense fallback={
+      <div className="min-h-screen flex items-center justify-center bg-background">
+        <div className="w-8 h-8 border-2 border-primary/30 border-t-primary rounded-full animate-spin" />
+      </div>
+    }>
+      <PatronLoginContent />
+    </Suspense>
   )
 }

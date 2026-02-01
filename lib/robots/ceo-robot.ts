@@ -82,7 +82,7 @@ export const CEO_RULES = {
     branş: 'CSPO',
     ölçüm: 'CSPO',
     spor: 'CSPO',
-    jimnastik: 'CSPO',
+    cimnastik: 'CSPO',
     kamp: 'CSPO',
   } as Record<string, DirectorKey>,
 
