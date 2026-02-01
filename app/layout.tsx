@@ -1,4 +1,5 @@
-import './globals.css'
+﻿import './globals.css'
+import { SpeedInsights } from '@vercel/speed-insights/next'
 
 export const metadata = {
   title: 'YİSA-S App - Patron Paneli',
@@ -31,6 +32,7 @@ export default function RootLayout({
       </head>
       <body className="bg-[#030508] text-white min-h-screen">
         {children}
+        <SpeedInsights />
       </body>
     </html>
   )
