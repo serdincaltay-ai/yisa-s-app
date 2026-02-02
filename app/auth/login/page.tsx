@@ -6,15 +6,17 @@ import { createClient } from '@/lib/supabase/client'
 import { Button } from '@/components/ui/button'
 import { Input } from '@/components/ui/input'
 import Link from 'next/link'
-import { useRouter } from 'next/navigation'
-import { useState, useEffect } from 'react'
+import { useRouter, useSearchParams } from 'next/navigation'
+import { useState, useEffect, Suspense } from 'react'
 
-export default function LoginPage() {
+function LoginForm() {
   const [email, setEmail] = useState('')
   const [password, setPassword] = useState('')
   const [error, setError] = useState<string | null>(null)
   const [isLoading, setIsLoading] = useState(false)
   const router = useRouter()
+  const searchParams = useSearchParams()
+  const unauthorized = searchParams.get('unauthorized') === '1'
 
   const handleLogin = async (e: React.FormEvent) => {
     e.preventDefault()
@@ -44,7 +46,7 @@ export default function LoginPage() {
 
       const panel = meta.panel as string | undefined
       const redirectMap: Record<string, string> = {
-        patron: '/patron',
+        patron: '/dashboard',
         franchise: '/franchise',
         firma_sahibi: '/franchise',
         isletme_muduru: '/tesis',
@@ -80,6 +82,12 @@ export default function LoginPage() {
         <div className="bg-white/5 border border-white/10 rounded-3xl p-8">
           <h1 className="text-2xl font-bold mb-2">Giris Yap</h1>
           <p className="text-white/40 mb-8">Hesabiniza giris yapin</p>
+
+          {unauthorized && (
+            <div className="mb-4 p-3 rounded-lg text-sm border border-amber-500/30 bg-amber-500/10 text-amber-400">
+              Yetkisiz erişim. Sadece Patron ve yetkili roller Komuta Merkezi&apos;ne girebilir.
+            </div>
+          )}
 
           <form onSubmit={handleLogin} className="space-y-4">
             <div>
@@ -128,6 +136,18 @@ export default function LoginPage() {
         </div>
       </div>
     </div>
+  )
+}
+
+export default function LoginPage() {
+  return (
+    <Suspense fallback={
+      <div className="min-h-screen flex items-center justify-center bg-[#0a0a0a]">
+        <div className="w-8 h-8 border-2 border-white/30 border-t-white rounded-full animate-spin" />
+      </div>
+    }>
+      <LoginForm />
+    </Suspense>
   )
 }
 

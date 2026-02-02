@@ -6,7 +6,23 @@
 import { getSupabaseServer } from '@/lib/supabase'
 
 /** Aynı kullanıcı için bekleyen (henüz tamamlanmamış) CEO görevi sayısı. Tek bekleyen iş kuralı için. */
-const PENDING_STATUSES = ['pending', 'assigned', 'celf_running', 'awaiting_approval']
+const PENDING_CEO_STATUSES = ['pending', 'assigned', 'celf_running', 'awaiting_approval']
+
+/** Onay Kuyruğu ile aynı kaynak: patron_commands. UI'da "bekleyen iş" bu tablodan gelir. */
+export async function getPendingPatronCommandCount(
+  userId: string | undefined
+): Promise<{ count: number; error?: string }> {
+  if (!userId) return { count: 0 }
+  const db = getSupabaseServer()
+  if (!db) return { count: 0, error: 'Supabase bağlantısı yok' }
+  const { count, error } = await db
+    .from('patron_commands')
+    .select('*', { count: 'exact', head: true })
+    .eq('user_id', userId)
+    .eq('status', 'pending')
+  if (error) return { count: 0, error: error.message }
+  return { count: count ?? 0 }
+}
 
 export async function getPendingCeoTaskCount(userId: string | undefined): Promise<{ count: number; error?: string }> {
   if (!userId) return { count: 0 }
@@ -16,7 +32,7 @@ export async function getPendingCeoTaskCount(userId: string | undefined): Promis
     .from('ceo_tasks')
     .select('*', { count: 'exact', head: true })
     .eq('user_id', userId)
-    .in('status', PENDING_STATUSES)
+    .in('status', PENDING_CEO_STATUSES)
   if (error) return { count: 0, error: error.message }
   return { count: count ?? 0 }
 }

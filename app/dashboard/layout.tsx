@@ -19,12 +19,12 @@ export default function DashboardLayout({
     const check = async () => {
       const { data: { user: u } } = await supabase.auth.getUser()
       if (!u) {
-        router.push('/patron/login')
+        router.push('/auth/login?redirect=/dashboard')
         return
       }
       if (!canAccessDashboard(u)) {
         await supabase.auth.signOut()
-        router.push('/patron/login?unauthorized=1')
+        router.push('/auth/login?unauthorized=1')
         return
       }
       setUser(u)

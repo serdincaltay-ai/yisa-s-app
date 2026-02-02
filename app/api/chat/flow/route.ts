@@ -29,7 +29,7 @@ import {
   updateCeoTask,
   createPatronCommand,
   insertCelfLog,
-  getPendingCeoTaskCount,
+  getPendingPatronCommandCount,
 } from '@/lib/db/ceo-celf'
 import { canTriggerFlow } from '@/lib/auth/roles'
 import { correctSpelling, askConfirmation } from '@/lib/ai/gpt-service'
@@ -195,8 +195,8 @@ export async function POST(req: NextRequest) {
         { status: 403 }
       )
     }
-    // Tek bekleyen iş kuralı: aynı kullanıcı için zaten bekleyen iş varsa yeni açma
-    const pending = await getPendingCeoTaskCount(userId)
+    // Tek bekleyen iş kuralı: Onay Kuyruğu ile aynı kaynak (patron_commands) kullanılır
+    const pending = await getPendingPatronCommandCount(userId)
     if (pending.error) {
       return NextResponse.json({ error: pending.error }, { status: 500 })
     }
