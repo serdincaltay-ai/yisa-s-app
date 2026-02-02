@@ -1,45 +1,25 @@
 import './globals.css'
 import { SpeedInsights } from '@vercel/speed-insights/next'
 import Script from 'next/script'
-import { headers } from 'next/headers'
-import { getPanelFromHost } from '@/lib/subdomain'
 
-export async function generateMetadata() {
-  const headersList = await headers()
-  const host = headersList.get('host') ?? ''
-  const panel = getPanelFromHost(host)
-  const title =
-    panel === 'patron'
-      ? 'YİSA-S Patron Paneli'
-      : panel === 'franchise'
-        ? 'YİSA-S Franchise Paneli'
-        : panel === 'veli'
-          ? 'YİSA-S Veli Paneli'
-          : 'YİSA-S'
-  return {
-    title: `${title} — Yönetici İşletmeci Sporcu Antrenör Sistemi`,
-    description:
-      panel === 'patron'
-        ? 'Patron Komuta Merkezi — Robotlar, onay, franchise'
-        : panel === 'franchise'
-          ? 'Franchise Paneli — Tesisinizi yönetin'
-          : panel === 'veli'
-            ? 'Veli Paneli — Çocuk takibi, ödeme'
-            : 'YİSA-S Spor Tesisi Yönetim Sistemi',
-    manifest: '/manifest.json',
-    appleWebApp: {
-      capable: true,
-      statusBarStyle: 'black-translucent',
-      title: title,
-    },
-    icons: {
-      icon: [
-        { url: '/icon-192.png', sizes: '192x192', type: 'image/png' },
-        { url: '/icon-512.png', sizes: '512x512', type: 'image/png' },
-      ],
-      apple: [{ url: '/icon-192.png', sizes: '192x192', type: 'image/png' }],
-    },
-  }
+export const metadata = {
+  title: 'YİSA-S App - Patron Paneli',
+  description: 'YİSA-S Spor Tesisi Yönetim Paneli',
+  manifest: '/manifest.json',
+  appleWebApp: {
+    capable: true,
+    statusBarStyle: 'black-translucent',
+    title: 'YİSA-S',
+  },
+  icons: {
+    icon: [
+      { url: '/icon-192.png', sizes: '192x192', type: 'image/png' },
+      { url: '/icon-512.png', sizes: '512x512', type: 'image/png' },
+    ],
+    apple: [
+      { url: '/icon-192.png', sizes: '192x192', type: 'image/png' },
+    ],
+  },
 }
 
 export const viewport = {

@@ -15,6 +15,9 @@ import {
   FileCheck,
   User,
   LogIn,
+  Crown,
+  Store,
+  Users,
 } from "lucide-react"
 import Link from "next/link"
 import { YisaLogoInline } from "@/components/YisaLogo"
@@ -76,14 +79,28 @@ export default function Home() {
         <div className="max-w-6xl mx-auto flex items-center justify-between">
           <div className="flex items-center gap-2">
             <YisaLogoInline href="/" />
-            <span className="hidden md:inline text-sm text-white/50">Cimnastik ve spor tesisi yönetimi · Robotlar yürütür</span>
+            <span className="hidden md:inline text-sm text-white/50">Yönetici İşletmeci Sporcu Antrenör Sistemi</span>
           </div>
-          <Link href="/auth/login">
-            <Button variant="ghost" className="text-white/70 hover:text-white hover:bg-white/10 rounded-full gap-2">
-              <LogIn className="h-4 w-4" />
-              Giriş — İşletmeci Paneli
-            </Button>
-          </Link>
+          <div className="flex items-center gap-2">
+            <Link href="/auth/login">
+              <Button variant="ghost" className="text-white/70 hover:text-white hover:bg-white/10 rounded-full gap-2" title="Patron / İşletmeci girişi">
+                <Crown className="h-4 w-4" />
+                <span className="hidden sm:inline">Patron Paneli</span>
+              </Button>
+            </Link>
+            <Link href="/demo">
+              <Button variant="ghost" className="text-white/70 hover:text-white hover:bg-white/10 rounded-full gap-2" title="Franchise tanıtımı — fuarlar için">
+                <Store className="h-4 w-4" />
+                <span className="hidden sm:inline">Sistemi Tanıyın</span>
+              </Button>
+            </Link>
+            <Link href="/auth/login?panel=veli">
+              <Button variant="ghost" className="text-white/70 hover:text-white hover:bg-white/10 rounded-full gap-2" title="Veli girişi">
+                <Users className="h-4 w-4" />
+                <span className="hidden sm:inline">Veli Girişi</span>
+              </Button>
+            </Link>
+          </div>
         </div>
       </nav>
 
@@ -112,24 +129,29 @@ export default function Home() {
               <span key={i}>{s}</span>
             ))}
           </div>
-          <div className="flex flex-col sm:flex-row gap-4">
+          <div className="flex flex-col sm:flex-row gap-4 justify-center flex-wrap">
             <Link href="/auth/login">
-              <Button size="lg" className="rounded-full bg-white text-black hover:bg-white/90 px-8 h-12 text-base font-medium w-full sm:w-auto">
-                Giriş Yap — Panelimi Aç
-                <ArrowRight className="ml-2 h-5 w-5" />
+              <Button size="lg" className="rounded-full bg-white text-black hover:bg-white/90 px-8 h-12 text-base font-medium w-full sm:w-auto gap-2">
+                <Crown className="h-5 w-5" />
+                Patron Paneli — Giriş Yap
+                <ArrowRight className="ml-1 h-5 w-5" />
               </Button>
             </Link>
-            <Button
-              onClick={() => setShowForm(true)}
-              size="lg"
-              variant="outline"
-              className="rounded-full border-white/20 bg-white/5 hover:bg-white/10 px-8 h-12 text-base w-full sm:w-auto"
-            >
-              Franchise Başvurusu
-            </Button>
+            <Link href="/demo">
+              <Button size="lg" variant="outline" className="rounded-full border-white/20 bg-white/5 hover:bg-white/10 px-8 h-12 text-base w-full sm:w-auto gap-2">
+                <Store className="h-5 w-5" />
+                Sistemi Tanıyın — Franchise
+              </Button>
+            </Link>
+            <Link href="/auth/login?panel=veli">
+              <Button size="lg" variant="outline" className="rounded-full border-white/20 bg-white/5 hover:bg-white/10 px-8 h-12 text-base w-full sm:w-auto gap-2">
+                <Users className="h-5 w-5" />
+                Veli Girişi — Forum
+              </Button>
+            </Link>
           </div>
-          <p className="mt-8 text-xs text-white/40 max-w-md">
-            Bu sayfa <strong className="text-white/60">demo işletmeci</strong> içindir. Giriş yapın, üyelerinizi görün, kampanyalarınızı çalıştırın.
+          <p className="mt-8 text-xs text-white/40 max-w-xl text-center">
+            <strong className="text-white/60">Patron</strong> kendi panelinize, <strong className="text-white/60">franchise adayları</strong> tanıtım sayfasına, <strong className="text-white/60">veliler</strong> forum alanına gider.
           </p>
         </section>
 

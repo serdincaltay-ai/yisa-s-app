@@ -93,7 +93,10 @@ export default function FranchiseDashboard() {
           <SidebarItem icon={Settings} label="Ayarlar" active={activeTab === "settings"} onClick={() => setActiveTab("settings")} />
         </nav>
 
-        <div className="border-t border-sidebar-border p-4">
+        <div className="border-t border-sidebar-border p-4 space-y-2">
+          <p className="text-[10px] text-sidebar-foreground/50 px-1">
+            💡 Bu uygulamayı <strong>ana ekrana ekleyin</strong> — menüden &quot;Uygulamayı yükle&quot; / &quot;Ana ekrana ekle&quot;
+          </p>
           <div className="flex items-center gap-3">
             <div className="flex h-10 w-10 items-center justify-center rounded-full bg-accent">
               <Building2 className="h-5 w-5 text-accent-foreground" />

@@ -1,13 +1,10 @@
 import { createServerClient } from '@supabase/ssr'
 import { NextResponse, type NextRequest } from 'next/server'
-import { getPanelFromHost, PANEL_DEFAULT_PATH } from '@/lib/subdomain'
 
 export async function updateSession(request: NextRequest) {
-  const host = request.headers.get('host') ?? ''
-  const panel = getPanelFromHost(host)
-  const pathname = request.nextUrl.pathname
-
-  let supabaseResponse = NextResponse.next({ request })
+  let supabaseResponse = NextResponse.next({
+    request,
+  })
 
   const supabase = createServerClient(
     process.env.NEXT_PUBLIC_SUPABASE_URL!,
@@ -36,29 +33,11 @@ export async function updateSession(request: NextRequest) {
     data: { user },
   } = await supabase.auth.getUser()
 
-  // Kök path (/) — subdomain'e göre yönlendir
-  if ((pathname === '/' || pathname === '') && panel !== 'www') {
-    const target = user ? PANEL_DEFAULT_PATH[panel] : '/auth/login'
-    const url = request.nextUrl.clone()
-    url.pathname = target
-    if (!user) url.searchParams.set('from', panel)
-    const redirect = NextResponse.redirect(url)
-    supabaseResponse.cookies.getAll().forEach((c) => {
-      const { name, value, ...opts } = c
-      redirect.cookies.set(name, value, opts)
-    })
-    redirect.headers.set('x-yisa-panel', panel)
-    return redirect
-  }
-
-  supabaseResponse.headers.set('x-yisa-panel', panel)
-
-  const protectedPaths = ['/patron', '/franchise', '/tesis', '/antrenor', '/veli', '/dashboard']
+  const protectedPaths = ['/patron', '/franchise', '/tesis', '/antrenor', '/veli']
   const isProtected = protectedPaths.some((p) => request.nextUrl.pathname.startsWith(p))
   if (isProtected && !user) {
     const url = request.nextUrl.clone()
     url.pathname = '/auth/login'
-    url.searchParams.set('from', panel)
     const redirectRes = NextResponse.redirect(url)
     supabaseResponse.cookies.getAll().forEach((c) => {
       const { name, value, ...opts } = c

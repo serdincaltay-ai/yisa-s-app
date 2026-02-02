@@ -7,6 +7,7 @@ import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/com
 import { Badge } from "@/components/ui/badge"
 import { Progress } from "@/components/ui/progress"
 import { Tabs, TabsList, TabsTrigger } from "@/components/ui/tabs"
+import Link from "next/link"
 import {
   Activity,
   Users,
@@ -89,10 +90,12 @@ export default function VeliDashboard() {
             <div className="flex h-10 w-10 items-center justify-center rounded-xl bg-primary">
               <Activity className="h-6 w-6 text-primary-foreground" />
             </div>
-            <div>
-              <h1 className="font-bold text-foreground">YISA-S</h1>
-              <p className="text-xs text-muted-foreground">Veli Paneli</p>
-            </div>
+            <Link href="/" className="hover:opacity-90 transition">
+              <div>
+                <h1 className="font-bold text-foreground">YİSA-S</h1>
+                <p className="text-xs text-muted-foreground">Veli Alanı — Proje & Forum</p>
+              </div>
+            </Link>
           </div>
           <div className="flex items-center gap-2">
             <Button variant="ghost" size="icon" className="relative">
