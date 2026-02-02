@@ -17,6 +17,7 @@ import {
   LogIn,
 } from "lucide-react"
 import Link from "next/link"
+import { YisaLogoInline } from "@/components/YisaLogo"
 
 const SLIDER_SLOGANS = [
   "Teknolojiyi spora başlattık.",
@@ -73,9 +74,9 @@ export default function Home() {
 
       <nav className="fixed top-0 left-0 right-0 z-50 px-6 py-5">
         <div className="max-w-6xl mx-auto flex items-center justify-between">
-          <div>
-            <span className="text-xl font-bold tracking-tight">YISA-S</span>
-            <span className="ml-2 text-sm text-white/50 hidden sm:inline">Cimnastik ve spor tesisi yönetimi · Robotlar yürütür</span>
+          <div className="flex items-center gap-2">
+            <YisaLogoInline href="/" />
+            <span className="hidden md:inline text-sm text-white/50">Cimnastik ve spor tesisi yönetimi · Robotlar yürütür</span>
           </div>
           <Link href="/auth/login">
             <Button variant="ghost" className="text-white/70 hover:text-white hover:bg-white/10 rounded-full gap-2">

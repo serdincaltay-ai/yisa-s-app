@@ -22,13 +22,13 @@ import {
   Store,
   Maximize2,
   Minimize2,
-  Hexagon,
   Search,
   ClipboardCheck,
   RefreshCw,
   Ban,
   Loader2,
 } from 'lucide-react'
+import Image from 'next/image'
 import { Button } from '@/components/ui/button'
 import { Card, CardContent, CardFooter, CardHeader, CardTitle } from '@/components/ui/card'
 import { Badge } from '@/components/ui/badge'
@@ -670,12 +670,14 @@ export default function DashboardPage() {
         {/* Futuristik Header */}
         <header className="flex items-center justify-between py-4 border-b border-slate-700/50 mb-6">
           <div className="flex items-center space-x-3">
-            <Hexagon className="h-9 w-9 text-cyan-500" />
+            <div className="relative w-9 h-9 flex-shrink-0">
+              <Image src="/logo.png" alt="YİSA-S" fill className="object-contain" />
+            </div>
             <div>
-              <span className="text-xl font-bold bg-gradient-to-r from-cyan-400 to-blue-500 bg-clip-text text-transparent">
+              <span className="text-xl font-bold bg-gradient-to-r from-amber-400 to-amber-600 bg-clip-text text-transparent">
                 YİSA-S
               </span>
-              <p className="text-xs text-slate-500">Patron Komuta Merkezi</p>
+              <p className="text-xs text-slate-500">Yönetici İşletmeci Sporcu Antrenör Sistemi · Patron Komuta Merkezi</p>
             </div>
           </div>
           <div className="flex items-center space-x-4">

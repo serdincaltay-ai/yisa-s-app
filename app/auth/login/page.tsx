@@ -5,6 +5,7 @@ import React from "react"
 import { createClient } from '@/lib/supabase/client'
 import { Button } from '@/components/ui/button'
 import { Input } from '@/components/ui/input'
+import { YisaLogo } from '@/components/YisaLogo'
 import Link from 'next/link'
 import { useRouter, useSearchParams } from 'next/navigation'
 import { useState, useEffect, Suspense } from 'react'
@@ -75,8 +76,8 @@ function LoginForm() {
 
       <div className="relative z-10 w-full max-w-md p-8">
 
-        <Link href="/" className="flex items-center justify-center gap-2 mb-12">
-          <span className="text-3xl font-bold tracking-tight">YISA-S</span>
+        <Link href="/" className="flex justify-center mb-10">
+          <YisaLogo variant="full" href="/" showAcronym />
         </Link>
 
         <div className="bg-white/5 border border-white/10 rounded-3xl p-8">

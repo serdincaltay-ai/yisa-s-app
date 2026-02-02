@@ -3,6 +3,7 @@
 import { useEffect, useState } from 'react'
 import { useRouter, usePathname } from 'next/navigation'
 import Link from 'next/link'
+import Image from 'next/image'
 import { supabase } from '@/lib/supabase'
 import {
   LogOut,
@@ -57,15 +58,15 @@ export default function DashboardSidebar() {
 
   return (
     <aside className="w-64 min-h-screen bg-slate-900 border-r border-slate-800 p-4 flex flex-col">
-      <div className="flex items-center gap-3 mb-6">
-        <div className="w-10 h-10 rounded-xl bg-gradient-to-br from-cyan-500 to-blue-600 flex items-center justify-center border border-cyan-400/30">
-          <span className="text-slate-900 font-bold">Y</span>
+      <Link href="/dashboard" className="flex items-center gap-3 mb-6 hover:opacity-90 transition-opacity">
+        <div className="relative w-10 h-10 flex-shrink-0">
+          <Image src="/logo.png" alt="YİSA-S" fill className="object-contain" />
         </div>
         <div>
           <h1 className="font-bold text-white">YİSA-S</h1>
-          <p className="text-xs text-slate-500">Patron Paneli</p>
+          <p className="text-xs text-slate-500">Yönetici İşletmeci Sporcu Antrenör Sistemi</p>
         </div>
-      </div>
+      </Link>
 
       {/* Sistem Özeti */}
       {summary && (

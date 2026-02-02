@@ -2,6 +2,7 @@
 
 import { useState } from "react"
 import Link from "next/link"
+import Image from "next/image"
 import { motion } from "framer-motion"
 import {
   Brain, Target, Users, Building2, TrendingUp,
@@ -16,12 +17,15 @@ export default function PatronPanel() {
   return (
     <div className="min-h-screen bg-zinc-950 text-white p-4 md:p-8">
       <header className="flex items-center justify-between mb-8">
-        <div className="flex items-center gap-3">
-          <div className="w-10 h-10 rounded-xl bg-gradient-to-br from-emerald-400 to-cyan-400 flex items-center justify-center">
-            <Shield className="w-5 h-5 text-zinc-950" />
+        <Link href="/" className="flex items-center gap-3 hover:opacity-90 transition-opacity">
+          <div className="relative w-10 h-10 flex-shrink-0">
+            <Image src="/logo.png" alt="YİSA-S" fill className="object-contain" />
           </div>
-          <span className="text-xl font-bold">YISA-S</span>
-        </div>
+          <div>
+            <span className="text-xl font-bold text-white">YİSA-S</span>
+            <p className="text-[10px] text-zinc-500">Yönetici İşletmeci Sporcu Antrenör Sistemi</p>
+          </div>
+        </Link>
         <div className="flex items-center gap-3">
           <Link
             href="/dashboard"
