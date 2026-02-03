@@ -1,16 +1,19 @@
 'use client'
 
 import { useEffect, useState } from 'react'
-import { Play, RefreshCw, Loader2, Bot, CheckCircle2, XCircle, Clock } from 'lucide-react'
+import Link from 'next/link'
+import { Play, RefreshCw, Loader2, Bot, CheckCircle2, XCircle, Clock, FileCheck } from 'lucide-react'
 import { CELF_DIRECTORATES, CELF_DIRECTORATE_KEYS, type DirectorKey } from '@/lib/robots/celf-center'
 import { supabase } from '@/lib/supabase'
 
 type StartupTask = { id: string; directorKey: string; name: string; command: string; requiresApproval?: boolean; status?: string }
 type StartupSummary = Record<string, { pending: number; completed: number; total: number }>
+type PendingApproval = { id: string; title: string; director_key?: string; status: string }
 
 export default function DirectorsPage() {
   const [summary, setSummary] = useState<StartupSummary | null>(null)
   const [tasks, setTasks] = useState<StartupTask[]>([])
+  const [pendingApprovals, setPendingApprovals] = useState<PendingApproval[]>([])
   const [loading, setLoading] = useState(true)
   const [acting, setActing] = useState<string | null>(null)
   const [error, setError] = useState<string | null>(null)
@@ -43,8 +46,27 @@ export default function DirectorsPage() {
     }
   }
 
+  const fetchPendingApprovals = async () => {
+    try {
+      const res = await fetch('/api/approvals')
+      const data = await res.json().catch(() => ({}))
+      if (res.ok && Array.isArray(data?.items)) {
+        const pending = data.items.filter(
+          (i: { status: string; director_key?: string }) => i.status === 'pending' && i.director_key
+        ) as PendingApproval[]
+        setPendingApprovals(pending)
+      }
+    } catch {
+      setPendingApprovals([])
+    }
+  }
+
   useEffect(() => {
     fetchData()
+  }, [])
+
+  useEffect(() => {
+    fetchPendingApprovals()
   }, [])
 
   const handleRunDirector = async (director: DirectorKey) => {
@@ -112,15 +134,26 @@ export default function DirectorsPage() {
           <h1 className="text-2xl font-bold text-white">CELF Direktörlükleri</h1>
           <p className="text-slate-400">Başlangıç görevleri — Her direktörlük için tetikleme (Patron onayı gerekir)</p>
         </div>
-        <button
-          type="button"
-          onClick={fetchData}
-          disabled={loading}
-          className="flex items-center gap-2 px-4 py-2 rounded-xl bg-slate-700 hover:bg-slate-600 text-slate-200 text-sm transition-colors disabled:opacity-50"
-        >
-          <RefreshCw size={16} className={loading ? 'animate-spin' : ''} />
-          Yenile
-        </button>
+        <div className="flex items-center gap-3">
+          {pendingApprovals.length > 0 && (
+            <Link
+              href="/dashboard/onay-kuyrugu"
+              className="flex items-center gap-2 px-4 py-2 rounded-xl bg-amber-500/20 text-amber-400 border border-amber-500/30 hover:bg-amber-500/30 text-sm font-medium"
+            >
+              <FileCheck size={16} />
+              {pendingApprovals.length} iş onay bekliyor
+            </Link>
+          )}
+          <button
+            type="button"
+            onClick={() => { fetchData(); fetchPendingApprovals(); }}
+            disabled={loading}
+            className="flex items-center gap-2 px-4 py-2 rounded-xl bg-slate-700 hover:bg-slate-600 text-slate-200 text-sm transition-colors disabled:opacity-50"
+          >
+            <RefreshCw size={16} className={loading ? 'animate-spin' : ''} />
+            Yenile
+          </button>
+        </div>
       </div>
 
       {error && (
@@ -176,11 +209,26 @@ export default function DirectorsPage() {
                     <p className="text-slate-500 text-xs font-medium">Görevler: {dir?.tasks?.slice(0, 3).join(', ')}</p>
                     <p className="text-slate-500 text-xs">AI: {dir?.aiProviders?.join(', ')}</p>
                   </div>
-                  {pendingCount > 0 && (
-                    <p className="text-amber-400 text-sm flex items-center gap-1">
-                      <Clock size={14} /> {pendingCount} beklemede
-                    </p>
-                  )}
+                  {(() => {
+                    const dirPending = pendingApprovals.filter((a) => a.director_key === key)
+                    const totalPending = dirPending.length || pendingCount
+                    if (totalPending === 0) return null
+                    return (
+                      <div className="space-y-1">
+                        <p className="text-amber-400 text-sm flex items-center gap-1">
+                          <Clock size={14} /> {totalPending} beklemede
+                        </p>
+                        {dirPending.length > 0 && (
+                          <Link
+                            href="/dashboard/onay-kuyrugu"
+                            className="text-xs text-cyan-400 hover:text-cyan-300 flex items-center gap-1"
+                          >
+                            <FileCheck size={12} /> Onay Kuyruğunda görüntüle
+                          </Link>
+                        )}
+                      </div>
+                    )
+                  })()}
                   {dirTasks.length > 0 && (
                     <div className="mt-4 pt-4 border-t border-slate-700 space-y-2">
                       {dirTasks.slice(0, 3).map((t) => (

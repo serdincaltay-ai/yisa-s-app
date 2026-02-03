@@ -188,12 +188,25 @@ export async function getPatronCommand(id: string): Promise<{
 
 export async function updatePatronCommand(
   id: string,
-  updates: { status: string; decision?: string; decision_at?: string; modify_text?: string }
+  updates: {
+    status?: string
+    decision?: string
+    decision_at?: string
+    modify_text?: string
+    completed_at?: string
+    sonuc?: Record<string, unknown>
+    durum?: string
+  }
 ): Promise<{ error?: string }> {
   const db = getSupabaseServer()
   if (!db) return { error: 'Supabase bağlantısı yok' }
 
-  const { error } = await db.from('patron_commands').update(updates).eq('id', id)
+  const row: Record<string, unknown> = { ...updates }
+  if (updates.status === 'approved' && !updates.completed_at) {
+    row.completed_at = new Date().toISOString()
+    row.durum = 'tamamlandi'
+  }
+  const { error } = await db.from('patron_commands').update(row).eq('id', id)
   return error ? { error: error.message } : {}
 }
 

@@ -13,6 +13,12 @@ type ApprovalItem = {
   created_at: string
   source?: string
   has_github_commit?: boolean
+  /** Komutu gönderen (Patron e-posta) */
+  sent_by_email?: string
+  /** Asistan özeti: ne yapıldı, onaylarsanız ne olur */
+  assistant_summary?: string
+  director_key?: string
+  director_name?: string
 }
 
 type DemoRequest = {
@@ -341,7 +347,8 @@ export default function OnayKuyruguPage() {
               <table className="w-full text-left">
                 <thead>
                   <tr className="border-b border-slate-700">
-                    <th className="px-6 py-4 text-slate-400 font-medium text-sm">Tip</th>
+                    <th className="px-6 py-4 text-slate-400 font-medium text-sm">Gönderen</th>
+                    <th className="px-6 py-4 text-slate-400 font-medium text-sm">Tip / Direktör</th>
                     <th className="px-6 py-4 text-slate-400 font-medium text-sm">Başlık</th>
                     <th className="px-6 py-4 text-slate-400 font-medium text-sm">Öncelik</th>
                     <th className="px-6 py-4 text-slate-400 font-medium text-sm">Durum</th>
@@ -352,9 +359,22 @@ export default function OnayKuyruguPage() {
                 <tbody>
                   {items.map((item) => (
                     <tr key={item.id} className="border-b border-slate-700/50 hover:bg-slate-700/30">
-                      <td className="px-6 py-4 text-white">{item.type}</td>
+                      <td className="px-6 py-4 text-slate-300 text-sm" title={item.sent_by_email ?? 'Patron'}>
+                        {item.sent_by_email ? (item.sent_by_email.length > 18 ? item.sent_by_email.slice(0, 18) + '…' : item.sent_by_email) : 'Patron'}
+                      </td>
+                      <td className="px-6 py-4">
+                        <span className="text-white">{item.type}</span>
+                        {item.director_name && (
+                          <span className="block text-xs text-slate-500">{item.director_name}</span>
+                        )}
+                      </td>
                       <td className="px-6 py-4">
                         <span className="text-white">{item.title.length > 80 ? item.title.slice(0, 80) + '…' : item.title}</span>
+                        {item.assistant_summary && (
+                          <p className="mt-1 text-xs text-slate-500 max-w-md" title={item.assistant_summary}>
+                            {item.assistant_summary.length > 60 ? item.assistant_summary.slice(0, 60) + '…' : item.assistant_summary}
+                          </p>
+                        )}
                         {item.has_github_commit && (
                           <span className="ml-2 text-xs text-purple-400" title="GitHub commit hazır">
                             <GitBranch size={12} className="inline" />

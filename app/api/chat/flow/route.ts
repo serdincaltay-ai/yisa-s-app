@@ -28,10 +28,11 @@ import {
   createCeoTask,
   updateCeoTask,
   createPatronCommand,
+  updatePatronCommand,
   insertCelfLog,
   getPendingPatronCommandCount,
 } from '@/lib/db/ceo-celf'
-import { canTriggerFlow } from '@/lib/auth/roles'
+import { canTriggerFlow, isPatron } from '@/lib/auth/roles'
 import { correctSpelling, askConfirmation } from '@/lib/ai/gpt-service'
 import { runCelfDirector, callClaude } from '@/lib/ai/celf-execute'
 
@@ -107,20 +108,26 @@ export async function POST(req: NextRequest) {
       )
     }
 
-    // ─── 1) İLK ADIM: confirm_type yoksa Gemini (önce) veya GPT imla düzelt + "Bu mu demek istediniz?" ─
+    const isPatronUser = !!(flowUser && isPatron(flowUser))
+
+    // ─── 1) İLK ADIM: confirm_type yoksa imla + "Bu mu demek istediniz?" — PATRON ATLANIR ─
     if (!confirmType) {
-      const spell = await correctSpelling(message)
-      const confirmation = askConfirmation(spell.correctedMessage)
-      const spellingProvider = spell.provider ?? 'GPT'
-      return NextResponse.json({
-        status: 'spelling_confirmation',
-        flow: spellingProvider === 'GEMINI' ? 'Gemini imla düzeltme' : 'GPT imla düzeltme',
-        spellingProvider,
-        correctedMessage: confirmation.correctedMessage,
-        promptText: confirmation.promptText,
-        choices: confirmation.choices,
-        message: 'Bu mu demek istediniz? Şirket işi / Özel iş / Hayır düzelt seçin.',
-      })
+      if (isPatronUser) {
+        // Patron: onay sorulmaz, komut direkt şirket işi gibi işlenir (aşağıya düşer)
+      } else {
+        const spell = await correctSpelling(message)
+        const confirmation = askConfirmation(spell.correctedMessage)
+        const spellingProvider = spell.provider ?? 'GPT'
+        return NextResponse.json({
+          status: 'spelling_confirmation',
+          flow: spellingProvider === 'GEMINI' ? 'Gemini imla düzeltme' : 'GPT imla düzeltme',
+          spellingProvider,
+          correctedMessage: confirmation.correctedMessage,
+          promptText: confirmation.promptText,
+          choices: confirmation.choices,
+          message: 'Bu mu demek istediniz? Şirket işi / Özel iş / Hayır düzelt seçin.',
+        })
+      }
     }
 
     // ─── 2) ÖZEL İŞ: CELF'e gitmez, asistan halleder, kaydetme sonra sorulur ─
@@ -150,9 +157,8 @@ export async function POST(req: NextRequest) {
       })
     }
 
-    // ─── 3) ŞİRKET İŞİ: CIO → CEO → CELF (direktörlük + denetim) → Patron Onay ───────
-    // İlk adım kilidi: Şirket işi için imla/onay adımı zorunlu (API bypass engeli)
-    if (confirmType === 'company' && !confirmedFirstStep) {
+    // ─── 3) ŞİRKET İŞİ: CIO → CEO → CELF → Patron Onay (Patron için ilk adım kilidi yok) ─
+    if (confirmType === 'company' && !confirmedFirstStep && !isPatronUser) {
       return NextResponse.json(
         {
           status: 'first_step_required',
@@ -166,8 +172,8 @@ export async function POST(req: NextRequest) {
     // ─── CIO KATMANI: Strateji analizi ve önceliklendirme ───────────────────────
     const cioAnalysis: CIOAnalysisResult = analyzeCommand(messageToUse)
     
-    // Strateji değişikliği Patron onayı gerektirir
-    if (isStrategyChange(messageToUse)) {
+    // Strateji değişikliği: Patron dışındakiler için onay gerekir; Patron direkt geçer
+    if (!isPatronUser && isStrategyChange(messageToUse)) {
       return NextResponse.json(
         {
           status: 'strategy_change_requires_approval',
@@ -184,8 +190,8 @@ export async function POST(req: NextRequest) {
       console.log('[CIO] Çakışma uyarıları:', cioAnalysis.conflictWarnings)
     }
 
-    // Güvenlik robotu: Patron onayı gerektiren işlemde CELF'e göndermiyoruz
-    if (security.requiresApproval) {
+    // Güvenlik robotu: Patron onayı gerektiren işlem — sadece Patron dışı için engel
+    if (!isPatronUser && security.requiresApproval) {
       return NextResponse.json(
         {
           status: 'requires_patron_approval',
@@ -195,20 +201,22 @@ export async function POST(req: NextRequest) {
         { status: 403 }
       )
     }
-    // Tek bekleyen iş kuralı: Onay Kuyruğu ile aynı kaynak (patron_commands) kullanılır
-    const pending = await getPendingPatronCommandCount(userId)
-    if (pending.error) {
-      return NextResponse.json({ error: pending.error }, { status: 500 })
-    }
-    if (pending.count >= 1) {
-      return NextResponse.json(
-        {
-          status: 'pending_task_exists',
-          message: 'Zaten bekleyen bir şirket işiniz var. Önce onu onaylayın veya reddedin.',
-          blocked: true,
-        },
-        { status: 409 }
-      )
+    // Tek bekleyen iş kuralı: Sadece Patron dışı için — Patron komutu hiç engellenmez
+    if (!isPatronUser) {
+      const pending = await getPendingPatronCommandCount(userId)
+      if (pending.error) {
+        return NextResponse.json({ error: pending.error }, { status: 500 })
+      }
+      if (pending.count >= 1) {
+        return NextResponse.json(
+          {
+            status: 'pending_task_exists',
+            message: 'Zaten bekleyen bir şirket işiniz var. Önce onu onaylayın veya reddedin.',
+            blocked: true,
+          },
+          { status: 409 }
+        )
+      }
     }
 
     // CIO'dan gelen analizi kullan (CEO'ya iş emri)
@@ -320,6 +328,12 @@ export async function POST(req: NextRequest) {
 
     // ─── e) Patrona sun: Her zaman onay kuyruğuna al ───────────────────────
     const githubPrepared = celfResult.text && 'githubPreparedCommit' in celfResult ? celfResult.githubPreparedCommit : undefined
+    const directorName = CELF_DIRECTORATES[directorKey]?.name ?? directorKey
+    const sentByEmail = flowUser && 'email' in flowUser ? (flowUser.email as string) : (process.env.NEXT_PUBLIC_PATRON_EMAIL ?? 'Patron')
+    const assistantSummary =
+      `${directorName} (${directorKey}) tarafından hazırlandı. ` +
+      (displayText.length > 120 ? displayText.slice(0, 120) + '…' : displayText) +
+      (githubPrepared ? ' Onaylarsanız GitHub\'a push edilebilir.' : ' Onaylarsanız uygulamaya geçer.')
     const cmd = await createPatronCommand({
       user_id: userId,
       command: messageToUse,
@@ -328,9 +342,11 @@ export async function POST(req: NextRequest) {
         displayText,
         task_type: taskTypeLabel,
         director_key: directorKey,
-        director_name: CELF_DIRECTORATES[directorKey]?.name ?? directorKey,
+        director_name: directorName,
         ai_providers: aiProviders,
         flow: 'CEO → CELF → Patron Onay',
+        sent_by_email: sentByEmail,
+        assistant_summary: assistantSummary,
         ...(githubPrepared && { github_prepared_commit: githubPrepared }),
       },
     })
@@ -344,7 +360,7 @@ export async function POST(req: NextRequest) {
       await saveChatMessage({
         user_id: userId,
         message: messageToUse,
-        response: 'Patron onayı bekleniyor. Onay kuyruğunu kontrol edin.',
+        response: isPatronUser ? displayText : 'Patron onayı bekleniyor. Onay kuyruğunu kontrol edin.',
         ai_providers: aiProviders.length ? aiProviders : [],
       })
     }
@@ -352,7 +368,45 @@ export async function POST(req: NextRequest) {
     const routineRequest = isRoutineRequest(messageToUse)
     const routineSchedule = getRoutineScheduleFromMessage(messageToUse)
 
-    // ─── f) Yanıt: Her zaman awaiting_patron_approval; sonuç onaydan sonra gösterilir ─
+    // ─── f) Patron: direkt tamamlandı, kayıt güncelle, gerçek içerikle dön; diğerleri: onay bekler ─
+    if (isPatronUser && commandId) {
+      const payloadForDb = {
+        displayText,
+        task_type: taskTypeLabel,
+        director_key: directorKey,
+        director_name: CELF_DIRECTORATES[directorKey]?.name ?? directorKey,
+        ai_providers: aiProviders,
+        flow: 'CIO → CEO → CELF → Patron direkt',
+      }
+      await updatePatronCommand(commandId, {
+        status: 'approved',
+        decision_at: new Date().toISOString(),
+        sonuc: payloadForDb,
+        durum: 'tamamlandi',
+      })
+      return NextResponse.json({
+        status: 'patron_direct_done',
+        flow: 'CIO → CEO → CELF → Patron direkt (onay yok)',
+        text: displayText,
+        error_reason: errorReason ?? undefined,
+        command_id: commandId,
+        ceo_task_id: ceoTaskId,
+        director_key: directorKey,
+        director_name: CELF_DIRECTORATES[directorKey]?.name ?? directorKey,
+        task_type: taskTypeLabel,
+        ai_provider: aiProvider,
+        ai_providers: aiProviders,
+        output: payloadForDb,
+        routine_request: routineRequest,
+        routine_schedule: routineSchedule ?? undefined,
+        cio_priority: cioAnalysis.priority,
+        cio_estimated_tokens: cioAnalysis.estimatedTokenCost,
+        cio_strategy_notes: cioAnalysis.strategyNotes,
+        cio_conflict_warnings: cioAnalysis.conflictWarnings,
+        message: 'Komut doğrudan tamamlandı.',
+      })
+    }
+
     return NextResponse.json({
       status: 'awaiting_patron_approval',
       flow: 'CIO → CEO → CELF → Patron Onay',
@@ -366,7 +420,6 @@ export async function POST(req: NextRequest) {
       ai_provider: aiProvider,
       routine_request: routineRequest,
       routine_schedule: routineSchedule ?? undefined,
-      // CIO analiz bilgileri
       cio_priority: cioAnalysis.priority,
       cio_estimated_tokens: cioAnalysis.estimatedTokenCost,
       cio_strategy_notes: cioAnalysis.strategyNotes,

@@ -1,7 +1,8 @@
 -- =====================================================
 -- YİSA-S TÜM GEREKLİ TABLOLAR — TEK DOSYADA
 -- Supabase Dashboard → SQL Editor → Yapıştır → Run
--- tenants yoksa oluşturulur, sonra user_tenants, athletes, payments, attendance...
+-- tenants, user_tenants, athletes, payments, attendance, demo_requests, ...
+-- VİTRİN: demo_requests.source'a 'vitrin' dahil (satır ~234-237)
 -- =====================================================
 
 -- 0. TENANTS (yoksa oluştur)
@@ -230,3 +231,8 @@ CREATE POLICY "Service can manage attendance" ON attendance FOR ALL USING (true)
 -- athletes parent_email (AŞAMA 9)
 ALTER TABLE athletes ADD COLUMN IF NOT EXISTS parent_email TEXT;
 CREATE INDEX IF NOT EXISTS idx_athletes_parent_email ON athletes(parent_email) WHERE parent_email IS NOT NULL;
+
+-- demo_requests: source'a 'vitrin' ekle (Vitrin sayfasından gelen talepler)
+ALTER TABLE demo_requests DROP CONSTRAINT IF EXISTS demo_requests_source_check;
+ALTER TABLE demo_requests ADD CONSTRAINT demo_requests_source_check
+  CHECK (source IN ('www', 'demo', 'fiyatlar', 'vitrin'));

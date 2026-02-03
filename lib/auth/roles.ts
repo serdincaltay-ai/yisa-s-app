@@ -73,6 +73,11 @@ export function canTriggerFlow(user: {
 export const PATRON_EMAIL =
   (typeof process !== 'undefined' && process.env?.NEXT_PUBLIC_PATRON_EMAIL) || 'serdincaltay@gmail.com'
 
+/** Kullanıcı Patron mu? (En üst yetki — onay/bekleyen iş kontrolleri uygulanmaz) */
+export function isPatron(user: { email?: string | null } | null): boolean {
+  return !!user?.email && user.email.toLowerCase() === PATRON_EMAIL.toLowerCase()
+}
+
 /**
  * Kullanıcının dashboard'a erişimi var mı?
  * Patron email veya izinli rol gerekir.

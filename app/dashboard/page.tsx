@@ -249,6 +249,12 @@ export default function DashboardPage() {
             { role: 'assistant', text: '✅ Kendi alanınıza kaydedildi.', aiProviders: [] },
           ])
           setPendingPrivateSave(null)
+        } else if (data.status === 'patron_direct_done') {
+          const text = typeof data.text === 'string' ? data.text : 'İşlem tamamlandı.'
+          setChatMessages((prev) => [
+            ...prev,
+            { role: 'assistant', text, aiProviders: data.ai_providers ?? [], taskType: data.output?.taskType },
+          ])
         } else if (data.status === 'awaiting_patron_approval') {
           const displayTextRaw = typeof data.text === 'string' ? data.text : undefined
           const errorReason = typeof (data as { error_reason?: string }).error_reason === 'string' ? (data as { error_reason: string }).error_reason : undefined
@@ -391,6 +397,12 @@ export default function DashboardPage() {
           { role: 'assistant', text: '✅ Kendi alanınıza kaydedildi.', aiProviders: [] },
         ])
         setPendingPrivateSave(null)
+      } else if (data.status === 'patron_direct_done') {
+        const text = typeof data.text === 'string' ? data.text : 'İşlem tamamlandı.'
+        setChatMessages((prev) => [
+          ...prev,
+          { role: 'assistant', text, aiProviders: data.ai_providers ?? [], taskType: data.output?.taskType },
+        ])
       } else if (data.status === 'awaiting_patron_approval') {
         const displayTextRaw = typeof data.text === 'string' ? data.text : undefined
         const errorReason = typeof (data as { error_reason?: string }).error_reason === 'string' ? (data as { error_reason: string }).error_reason : undefined

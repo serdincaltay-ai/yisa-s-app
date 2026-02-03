@@ -1,7 +1,9 @@
-import { NextResponse } from 'next/server'
+import { NextRequest, NextResponse } from 'next/server'
 import { createClient } from '@supabase/supabase-js'
 
 export const dynamic = 'force-dynamic'
+
+const KATEGORILER = ['CFO', 'CLO', 'CHRO', 'CMO', 'CTO', 'CSO', 'CSPO', 'COO', 'CMDO', 'CCO', 'CDO', 'CISO'] as const
 
 function getSupabase() {
   const url = process.env.NEXT_PUBLIC_SUPABASE_URL ?? process.env.SUPABASE_URL
@@ -24,6 +26,16 @@ export interface TemplateItem {
   is_approved?: boolean
 }
 
+export interface SablonItem {
+  id: string
+  ad: string
+  kategori: string
+  icerik: Record<string, unknown>
+  durum: string
+  olusturan: string
+  created_at?: string
+}
+
 export interface RDSuggestion {
   id: string
   title: string
@@ -33,14 +45,67 @@ export interface RDSuggestion {
   created_at: string
 }
 
-export async function GET() {
+function mapCeoRowToSablon(row: Record<string, unknown>): SablonItem {
+  const ad = (row.ad ?? row.template_name ?? '—') as string
+  const kategori = (row.kategori ?? row.template_type ?? row.director_key ?? '—') as string
+  const rawIcerik = row.icerik ?? row.content
+  const icerik =
+    rawIcerik != null && typeof rawIcerik === 'object' && !Array.isArray(rawIcerik)
+      ? (rawIcerik as Record<string, unknown>)
+      : typeof rawIcerik === 'string'
+        ? (() => {
+            try {
+              return JSON.parse(rawIcerik) as Record<string, unknown>
+            } catch {
+              return { aciklama: rawIcerik }
+            }
+          })()
+        : {}
+  return {
+    id: String(row.id ?? ''),
+    ad,
+    kategori,
+    icerik,
+    durum: (row.durum as string) ?? 'aktif',
+    olusturan: (row.olusturan ?? row.director_key ?? '') as string,
+    created_at: row.created_at != null ? String(row.created_at) : undefined,
+  }
+}
+
+export async function GET(req: NextRequest) {
   try {
     const supabase = getSupabase()
-    const templateTables = ['templates', 'sablonlar', 'template_pool', 'design_templates']
+    const kategoriParam = req.nextUrl?.searchParams?.get('kategori') ?? undefined
+
+    let sablonlar: SablonItem[] = []
     let templates: TemplateItem[] = []
     let suggestions: RDSuggestion[] = []
 
     if (supabase) {
+      // ceo_templates: 66 şablon (ad, kategori, icerik) — öncelikli
+      try {
+        const { data: ceoData } = await supabase
+          .from('ceo_templates')
+          .select('*')
+          .order('created_at', { ascending: false })
+          .limit(200)
+        if (Array.isArray(ceoData) && ceoData.length > 0) {
+          let rows = ceoData as Record<string, unknown>[]
+          if (kategoriParam && KATEGORILER.includes(kategoriParam as (typeof KATEGORILER)[number])) {
+            rows = rows.filter(
+              (r) =>
+                (r.kategori as string) === kategoriParam ||
+                (r.olusturan as string) === kategoriParam ||
+                (r.director_key as string) === kategoriParam
+            )
+          }
+          sablonlar = rows.map((row) => mapCeoRowToSablon(row))
+        }
+      } catch (_) {
+        // ceo_templates yoksa devam
+      }
+
+      const templateTables = ['templates', 'sablonlar', 'template_pool', 'design_templates']
       for (const table of templateTables) {
         const { data, error } = await supabase
           .from(table)
@@ -63,30 +128,16 @@ export async function GET() {
         }
       }
 
-      // ceo_templates'i de ekle (robot üretimi)
-      try {
-        const { data: ceoData } = await supabase
-          .from('ceo_templates')
-          .select('id, template_name, template_type, director_key, is_approved, created_at')
-          .order('created_at', { ascending: false })
-          .limit(100)
-        if (Array.isArray(ceoData) && ceoData.length > 0) {
-          const ceoTemplates: TemplateItem[] = ceoData.map((row: Record<string, unknown>) => ({
-            id: 'ceo-' + String(row.id ?? ''),
-            template_id: String(row.id ?? ''),
-            name: String(row.template_name ?? '—'),
-            type: String(row.template_type ?? 'rapor'),
-            director_key: row.director_key != null ? String(row.director_key) : undefined,
-            used_count: undefined,
-            where_used: row.director_key != null ? `CEO · ${row.director_key}` : 'CEO',
-            created_at: String(row.created_at ?? ''),
-            source: 'ceo' as const,
-            is_approved: row.is_approved === true,
-          }))
-          templates = [...ceoTemplates, ...templates]
-        }
-      } catch (_) {
-        // ceo_templates tablosu yoksa devam et
+      if (sablonlar.length === 0 && templates.length > 0) {
+        sablonlar = templates.map((t) => ({
+          id: t.id,
+          ad: t.name,
+          kategori: t.type,
+          icerik: {},
+          durum: 'aktif',
+          olusturan: t.director_key ?? t.type,
+          created_at: t.created_at,
+        }))
       }
 
       const suggestionTables = ['rd_suggestions', 'ceo_updates', 'ar_ge', 'suggestions']
@@ -111,8 +162,67 @@ export async function GET() {
       }
     }
 
-    return NextResponse.json({ templates, suggestions })
+    return NextResponse.json({
+      sablonlar,
+      toplam: sablonlar.length,
+      templates,
+      suggestions,
+    })
   } catch {
-    return NextResponse.json({ templates: [], suggestions: [] })
+    return NextResponse.json({
+      sablonlar: [],
+      toplam: 0,
+      templates: [],
+      suggestions: [],
+    })
+  }
+}
+
+export async function POST(req: NextRequest) {
+  try {
+    const supabase = getSupabase()
+    if (!supabase) {
+      return NextResponse.json({ error: 'Supabase bağlantısı yok' }, { status: 503 })
+    }
+    const body = await req.json()
+    const ad = typeof body.ad === 'string' ? body.ad.trim() : ''
+    const kategori = typeof body.kategori === 'string' ? body.kategori.trim() : ''
+    const olusturan = typeof body.olusturan === 'string' ? body.olusturan.trim() : 'PATRON'
+    if (!ad || !kategori) {
+      return NextResponse.json({ error: 'ad ve kategori zorunludur' }, { status: 400 })
+    }
+    const icerik =
+      body.icerik != null && typeof body.icerik === 'object'
+        ? body.icerik
+        : typeof body.icerik === 'string'
+          ? (() => {
+              try {
+                return JSON.parse(body.icerik) as Record<string, unknown>
+              } catch {
+                return { aciklama: body.icerik }
+              }
+            })()
+          : {}
+    const durum = typeof body.durum === 'string' ? body.durum : 'aktif'
+
+    const { data, error } = await supabase
+      .from('ceo_templates')
+      .insert({
+        ad,
+        kategori,
+        icerik,
+        durum,
+        olusturan,
+      })
+      .select('id')
+      .single()
+
+    if (error) {
+      return NextResponse.json({ error: error.message }, { status: 500 })
+    }
+    return NextResponse.json({ id: data?.id, message: 'Şablon eklendi' })
+  } catch (e) {
+    const err = e instanceof Error ? e.message : String(e)
+    return NextResponse.json({ error: err }, { status: 500 })
   }
 }

@@ -37,6 +37,13 @@ export interface ApprovalItem {
   /** Tam çıktı - önizleme için */
   displayText?: string
   output_payload?: Record<string, unknown>
+  /** Komutu gönderen (Patron e-posta veya "Patron") */
+  sent_by_email?: string
+  /** Asistan özeti: ne yapıldı, hangi direktör, onaylarsanız ne olur */
+  assistant_summary?: string
+  /** Hangi direktörlük üretti (CELF) */
+  director_key?: string
+  director_name?: string
 }
 
 export async function GET() {
@@ -68,6 +75,10 @@ export async function GET() {
       const hasCodeFiles = !!(outputPayload?.code_files && Array.isArray(outputPayload.code_files) && outputPayload.code_files.length > 0)
 
       const displayText = typeof outputPayload?.displayText === 'string' ? outputPayload.displayText : undefined
+      const sentByEmail = typeof outputPayload?.sent_by_email === 'string' ? outputPayload.sent_by_email : undefined
+      const assistantSummary = typeof outputPayload?.assistant_summary === 'string' ? outputPayload.assistant_summary : undefined
+      const directorKey = typeof outputPayload?.director_key === 'string' ? outputPayload.director_key : undefined
+      const directorName = typeof outputPayload?.director_name === 'string' ? outputPayload.director_name : undefined
       return {
         id: String(row.id ?? ''),
         type: String(row.type ?? outputPayload?.task_type ?? 'onay'),
@@ -81,6 +92,10 @@ export async function GET() {
         has_code_files: hasCodeFiles,
         displayText,
         output_payload: outputPayload ?? undefined,
+        sent_by_email: sentByEmail ?? (row.user_id ? 'Dashboard kullanıcısı' : 'Patron'),
+        assistant_summary: assistantSummary,
+        director_key: directorKey,
+        director_name: directorName,
       }
     })
 
