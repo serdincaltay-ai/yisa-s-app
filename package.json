@@ -7,7 +7,8 @@
     "dev:phone": "next dev --hostname 0.0.0.0",
     "build": "next build",
     "start": "next start",
-    "lint": "next lint",
+    "lint": "eslint .",
+    "lint:fix": "eslint . --fix",
     "go": "npm install && npm run dev",
     "db:migrate": "node scripts/run-migrations.js"
   },
@@ -35,6 +36,7 @@
     "tailwind-merge": "^3.4.0"
   },
   "devDependencies": {
+    "@eslint/eslintrc": "^3.2.0",
     "@types/node": "^20.0.0",
     "@types/pg": "^8.11.0",
     "@types/react": "^18.2.0",
