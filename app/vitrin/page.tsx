@@ -13,8 +13,8 @@ import {
   Check,
   ArrowRight,
   Store,
-  YisaLogo,
 } from "lucide-react"
+import { YisaLogo } from "@/components/YisaLogo"
 
 const SABLONLAR = [
   { id: "klasik", name: "Klasik", desc: "Sade ve profesyonel", ekFiyat: 0 },
