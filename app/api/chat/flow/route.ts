@@ -19,6 +19,7 @@ import {
 import { analyzeCommand, isStrategyChange, type CIOAnalysisResult } from '@/lib/robots/cio-robot'
 import { logCIOAnalysis } from '@/lib/db/cio-logs'
 import { CELF_DIRECTORATES, runCelfChecks, type DirectorKey } from '@/lib/robots/celf-center'
+import { parsePatronDirective, getDirectorFromDirective } from '@/lib/robots/patron-directives'
 import { securityCheck } from '@/lib/robots/security-robot'
 import { archiveTaskResult } from '@/lib/robots/data-robot'
 import { saveChatMessage } from '@/lib/db/chat-messages'
@@ -219,10 +220,15 @@ export async function POST(req: NextRequest) {
       }
     }
 
-    // CIO'dan gelen analizi kullan (CEO'ya iş emri)
+    // Patron doğrudan talimatı: "CFO'ya şunu yaptır", "CTO'yu hatırlat" → direktörü zorla seç
+    const directive = parsePatronDirective(messageToUse)
+    const forcedDirector = getDirectorFromDirective(directive)
+    const messageForCelf = directive.task && (directive.type === 'director' || directive.type === 'remind') ? directive.task : messageToUse
+
+    // CIO'dan gelen analizi kullan (CEO'ya iş emri); Patron direktifi varsa öncelikli
     const taskType = cioAnalysis.taskType
-    let directorKey = cioAnalysis.primaryDirector
-    if (!directorKey) directorKey = routeToDirector(messageToUse) ?? ('CCO' as DirectorKey)
+    let directorKey = forcedDirector ?? cioAnalysis.primaryDirector
+    if (!directorKey) directorKey = routeToDirector(messageForCelf) ?? routeToDirector(messageToUse) ?? ('CCO' as DirectorKey)
     const taskTypeLabel = taskTypeToLabel(taskType)
 
     const ceoTaskResult = await createCeoTask({
@@ -288,8 +294,8 @@ export async function POST(req: NextRequest) {
       })
     }
 
-    // ─── c) CELF: İlgili direktörlük AI'ını çalıştır ───────────────────────
-    const celfResult = await runCelfDirector(directorKey, messageToUse)
+    // ─── c) CELF: İlgili direktörlük AI'ını çalıştır (Patron "X'e yaptır" dediyse mesaj = task) ───────────────────────
+    const celfResult = await runCelfDirector(directorKey, messageForCelf)
     const errorReason = (celfResult as { text: string | null; errorReason?: string }).errorReason
     const displayText = celfResult.text ?? (errorReason && errorReason.trim()) ?? 'Yanıt oluşturulamadı. API anahtarlarını (.env) kontrol edin.'
     const aiProvider = celfResult.text ? (celfResult as { provider: string }).provider : '—'

@@ -2,22 +2,31 @@
 chcp 65001 >nul
 cd /d "%~dp0"
 echo.
-echo === YISA-S: GitHub'a push icin hazirlaniyor ===
+echo === YISA-S: Tum degisiklikler - GitHub push + Vercel deploy ===
 echo.
 git add -A
 git status
 echo.
-git commit -m "Vercel icin hazir: build, PWA, deploy rehberi"
+git commit -m "feat: Odeme takibi (demo_requests), asistan direktifleri (V0/Cursor/CELF/direktor), deploy rehberi"
+if errorlevel 1 (
+  echo Commit atlandi (degisiklik yok veya hata).
+) else (
+  echo Commit tamamlandi.
+)
 echo.
-echo === Bitti. Simdi GitHub'a push edin ===
-echo.
-echo Proje klasorunde cmd acikken su komutu calistirin:
-echo   git remote add origin https://github.com/KULLANICI_ADINIZ/yisa-s-app.git
-echo   git branch -M main
-echo   git push -u origin main
-echo.
-echo (KULLANICI_ADINIZ yerine kendi GitHub kullanici adinizi yazin.)
-echo.
-echo Sonra vercel.com - Import - yisa-s-app - Deploy. Linki alin.
+echo GitHub'a push ediliyor (origin main)...
+git push origin main
+if errorlevel 1 (
+  echo.
+  echo Push basarisiz. Ilk kez kullaniyorsaniz:
+  echo   git remote add origin https://github.com/KULLANICI_ADINIZ/yisa-s-app.git
+  echo   git branch -M main
+  echo   git push -u origin main
+  echo.
+  echo Vercel: vercel.com - Import - yisa-s-app - Deploy. Linki alin.
+) else (
+  echo.
+  echo === Bitti. Vercel bagliysa otomatik deploy alacak. ===
+)
 echo.
 pause

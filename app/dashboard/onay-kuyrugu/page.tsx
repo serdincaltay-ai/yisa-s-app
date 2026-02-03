@@ -32,6 +32,10 @@ type DemoRequest = {
   status: string
   source?: string | null
   created_at: string
+  payment_status?: string | null
+  payment_amount?: number | null
+  payment_at?: string | null
+  payment_notes?: string | null
 }
 
 export default function OnayKuyruguPage() {
@@ -155,6 +159,28 @@ export default function OnayKuyruguPage() {
     }
   }
 
+  const handleRecordPayment = async (id: string, amount?: number) => {
+    setActingId('demo_pay_' + id)
+    try {
+      const res = await fetch('/api/demo-requests', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ action: 'record_payment', id, amount: amount ?? undefined }),
+      })
+      const data = await res.json().catch(() => ({}))
+      if (!res.ok) {
+        setError(data?.error ?? 'Ödeme kaydedilemedi.')
+        return
+      }
+      setError(null)
+      await fetchDemoRequests()
+    } catch {
+      setError('İstek gönderilemedi.')
+    } finally {
+      setActingId(null)
+    }
+  }
+
   useEffect(() => {
     fetchData()
   }, [])
@@ -255,6 +281,7 @@ export default function OnayKuyruguPage() {
                       <th className="px-6 py-4 text-slate-400 font-medium text-sm">Kaynak</th>
                       <th className="px-6 py-4 text-slate-400 font-medium text-sm">Tarih</th>
                       <th className="px-6 py-4 text-slate-400 font-medium text-sm">Durum</th>
+                      <th className="px-6 py-4 text-slate-400 font-medium text-sm">Ödeme</th>
                       <th className="px-6 py-4 text-slate-400 font-medium text-sm">İşlem</th>
                     </tr>
                   </thead>
@@ -281,6 +308,27 @@ export default function OnayKuyruguPage() {
                           }`}>
                             {dr.status === 'new' ? 'Yeni' : dr.status === 'converted' ? 'Onaylandı' : dr.status === 'rejected' ? 'Reddedildi' : dr.status}
                           </span>
+                        </td>
+                        <td className="px-6 py-4">
+                          {dr.payment_status === 'odendi' ? (
+                            <span className="text-emerald-400 text-sm">
+                              Ödendi
+                              {dr.payment_amount != null && ` · ${Number(dr.payment_amount).toLocaleString('tr-TR')}`}
+                              {dr.payment_at && ` · ${new Date(dr.payment_at).toLocaleDateString('tr-TR')}`}
+                            </span>
+                          ) : dr.status === 'converted' ? (
+                            <button
+                              type="button"
+                              onClick={() => handleRecordPayment(dr.id)}
+                              disabled={!!actingId}
+                              className="flex items-center gap-1 px-3 py-1.5 rounded-lg bg-cyan-500/20 text-cyan-400 hover:bg-cyan-500/30 text-sm font-medium disabled:opacity-50"
+                            >
+                              {actingId === 'demo_pay_' + dr.id ? <Loader2 size={14} className="animate-spin" /> : <Check size={14} />}
+                              Ödeme alındı
+                            </button>
+                          ) : (
+                            <span className="text-slate-500 text-sm">—</span>
+                          )}
                         </td>
                         <td className="px-6 py-4">
                           {dr.status === 'new' ? (

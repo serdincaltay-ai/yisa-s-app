@@ -25,7 +25,7 @@ export async function GET() {
 
     const { data, error } = await supabase
       .from('demo_requests')
-      .select('id, name, email, phone, facility_type, city, notes, status, source, created_at')
+      .select('id, name, email, phone, facility_type, city, notes, status, source, created_at, payment_status, payment_amount, payment_at, payment_notes')
       .order('created_at', { ascending: false })
       .limit(100)
 
@@ -115,6 +115,30 @@ export async function POST(req: NextRequest) {
         tenant_id: tenantId,
         slug,
       })
+    }
+
+    // Ödeme kaydı — Patron: "Merve ödedi" → bu talep için ödeme alındı işaretle
+    if (action === 'record_payment') {
+      const id = typeof body.id === 'string' ? body.id.trim() : ''
+      const amount = typeof body.amount === 'number' ? body.amount : (typeof body.amount === 'string' ? parseFloat(body.amount) : undefined)
+      const paidAt = typeof body.paid_at === 'string' ? body.paid_at : (body.paid_at ? new Date().toISOString() : undefined)
+      const notes = typeof body.payment_notes === 'string' ? body.payment_notes.trim() : null
+      if (!id) {
+        return NextResponse.json({ error: 'id gerekli.' }, { status: 400 })
+      }
+      const supabase = getSupabase()
+      if (!supabase) return NextResponse.json({ error: 'Sunucu yapılandırma hatası.' }, { status: 500 })
+      const { data: row } = await supabase.from('demo_requests').select('id, status').eq('id', id).single()
+      if (!row) return NextResponse.json({ error: 'Talep bulunamadı.' }, { status: 404 })
+      const update: Record<string, unknown> = {
+        payment_status: 'odendi',
+        payment_at: paidAt ?? new Date().toISOString(),
+      }
+      if (amount != null && !Number.isNaN(amount)) update.payment_amount = amount
+      if (notes != null) update.payment_notes = notes
+      const { error: updErr } = await supabase.from('demo_requests').update(update).eq('id', id)
+      if (updErr) return NextResponse.json({ error: updErr.message }, { status: 500 })
+      return NextResponse.json({ ok: true, message: 'Ödeme kaydedildi.' })
     }
 
     // Yeni demo talebi (form gönderimi)

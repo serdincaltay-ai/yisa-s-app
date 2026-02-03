@@ -14,7 +14,8 @@ Aşağıdaki dosyaları **sırayla** Supabase Dashboard → **SQL Editor** → Y
 | 2 | `supabase/migrations/20260203_ceo_templates_ve_sablonlar.sql` | ceo_templates tablosu (ad, kategori, icerik, durum, olusturan) |
 | 3 | `supabase/SABLONLAR_TEK_SQL.sql` | 66 şablon INSERT |
 | 4 | `supabase/migrations/20260203_patron_commands_komut_sonuc_durum.sql` | patron_commands: komut, sonuc, durum, completed_at |
-| 5 | `supabase/VITRIN_TEK_SQL.sql` | Sadece vitrin kuralı (1’i çalıştırdıysanız **atlayın**; 1’de zaten var) |
+| 5 | `supabase/migrations/20260203_demo_requests_payment.sql` | demo_requests: ödeme alanları |
+| 6 | `supabase/VITRIN_TEK_SQL.sql` | Sadece vitrin kuralı (1’i çalıştırdıysanız **atlayın**; 1’de zaten var) |
 
 **Vitrin kuralı nedir?**  
 `demo_requests` tablosunda `source` sütunu sadece `'www'`, `'demo'`, `'fiyatlar'` ile sınırlıysa, `/vitrin` sayfasından gelen talepler (`source: 'vitrin'`) hata verir. Bu SQL’ler `source IN ('www','demo','fiyatlar','vitrin')` olacak şekilde kısıtı günceller; böylece vitrin talepleri de kaydedilir.
