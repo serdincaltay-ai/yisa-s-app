@@ -1,7 +1,7 @@
 'use client'
 
 import { useEffect, useState } from 'react'
-import { Check, X, Clock, AlertCircle, RefreshCw, Loader2, Trash2, Ban, GitBranch } from 'lucide-react'
+import { Check, X, Clock, AlertCircle, RefreshCw, Loader2, Trash2, Ban, GitBranch, FileText } from 'lucide-react'
 
 type ApprovalItem = {
   id: string
@@ -15,10 +15,26 @@ type ApprovalItem = {
   has_github_commit?: boolean
 }
 
+type DemoRequest = {
+  id: string
+  name: string
+  email: string
+  phone?: string | null
+  facility_type?: string | null
+  city?: string | null
+  notes?: string | null
+  status: string
+  source?: string | null
+  created_at: string
+}
+
 export default function OnayKuyruguPage() {
   const [items, setItems] = useState<ApprovalItem[]>([])
   const [table, setTable] = useState<string | null>(null)
+  const [demoRequests, setDemoRequests] = useState<DemoRequest[]>([])
   const [loading, setLoading] = useState(true)
+  const [demoLoading, setDemoLoading] = useState(true)
+  const [activeTab, setActiveTab] = useState<'commands' | 'demo'>('commands')
   const [error, setError] = useState<string | null>(null)
   const [actingId, setActingId] = useState<string | null>(null)
 
@@ -98,9 +114,50 @@ export default function OnayKuyruguPage() {
     }
   }
 
+  const fetchDemoRequests = async () => {
+    setDemoLoading(true)
+    try {
+      const res = await fetch('/api/demo-requests')
+      const data = await res.json().catch(() => ({}))
+      setDemoRequests(Array.isArray(data?.items) ? data.items : [])
+    } catch {
+      setDemoRequests([])
+    } finally {
+      setDemoLoading(false)
+    }
+  }
+
+  const handleDemoDecision = async (id: string, decision: 'approve' | 'reject') => {
+    setActingId('demo_' + id + '_' + decision)
+    try {
+      const res = await fetch('/api/demo-requests', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ action: 'decide', id, decision }),
+      })
+      const data = await res.json().catch(() => ({}))
+      if (!res.ok) {
+        setError(data?.error ?? 'İşlem başarısız.')
+        return
+      }
+      if (data.message) setError(null)
+      await fetchDemoRequests()
+    } catch {
+      setError('İstek gönderilemedi.')
+    } finally {
+      setActingId(null)
+    }
+  }
+
   useEffect(() => {
     fetchData()
   }, [])
+
+  useEffect(() => {
+    fetchDemoRequests()
+  }, [])
+
+  const newDemoRequests = demoRequests.filter((d) => d.status === 'new')
 
   const pending = items.filter((i) => i.status === 'pending')
   const approved = items.filter((i) => i.status === 'approved')
@@ -115,7 +172,7 @@ export default function OnayKuyruguPage() {
         <div>
           <h1 className="text-2xl font-bold text-white">Onay Kuyruğu</h1>
           <p className="text-slate-400">
-            Sistemden gelen işler — Onayla / Reddet / İptal / Push
+            Sistemden gelen işler — Onayla / Reddet / İptal / Push · Demo talepleri
             {table && <span className="ml-2 text-xs text-slate-500">(Kaynak: {table})</span>}
           </p>
         </div>
@@ -134,14 +191,35 @@ export default function OnayKuyruguPage() {
           )}
           <button
             type="button"
-            onClick={fetchData}
-            disabled={loading}
+            onClick={() => { fetchData(); fetchDemoRequests(); }}
+            disabled={loading || demoLoading}
             className="flex items-center gap-2 px-4 py-2 rounded-xl bg-slate-700 hover:bg-slate-600 text-slate-200 text-sm transition-colors disabled:opacity-50"
           >
-            <RefreshCw size={16} className={loading ? 'animate-spin' : ''} />
+            <RefreshCw size={16} className={loading || demoLoading ? 'animate-spin' : ''} />
             Yenile
           </button>
         </div>
+      </div>
+
+      <div className="flex gap-2 mb-6">
+        <button
+          type="button"
+          onClick={() => setActiveTab('commands')}
+          className={`px-4 py-2 rounded-xl text-sm font-medium transition-colors ${
+            activeTab === 'commands' ? 'bg-cyan-500/20 text-cyan-400' : 'bg-slate-800 text-slate-400 hover:text-white'
+          }`}
+        >
+          Patron Komutları ({items.length})
+        </button>
+        <button
+          type="button"
+          onClick={() => setActiveTab('demo')}
+          className={`px-4 py-2 rounded-xl text-sm font-medium transition-colors ${
+            activeTab === 'demo' ? 'bg-cyan-500/20 text-cyan-400' : 'bg-slate-800 text-slate-400 hover:text-white'
+          }`}
+        >
+          Demo Talepleri ({newDemoRequests.length} yeni)
+        </button>
       </div>
 
       {error && (
@@ -150,7 +228,89 @@ export default function OnayKuyruguPage() {
         </div>
       )}
 
-      {loading ? (
+      {activeTab === 'demo' ? (
+        <>
+          {demoLoading ? (
+            <div className="flex items-center justify-center py-16 text-slate-500">Yükleniyor…</div>
+          ) : demoRequests.length === 0 ? (
+            <div className="bg-slate-800/50 border border-slate-700 rounded-2xl p-12 text-center">
+              <FileText className="mx-auto mb-4 text-slate-500" size={48} />
+              <p className="text-slate-400 mb-2">Henüz demo talebi yok.</p>
+            </div>
+          ) : (
+            <div className="bg-slate-800/50 border border-slate-700 rounded-2xl overflow-hidden">
+              <div className="overflow-x-auto">
+                <table className="w-full text-left">
+                  <thead>
+                    <tr className="border-b border-slate-700">
+                      <th className="px-6 py-4 text-slate-400 font-medium text-sm">Ad</th>
+                      <th className="px-6 py-4 text-slate-400 font-medium text-sm">E-posta</th>
+                      <th className="px-6 py-4 text-slate-400 font-medium text-sm">Tesis / Şehir</th>
+                      <th className="px-6 py-4 text-slate-400 font-medium text-sm">Kaynak</th>
+                      <th className="px-6 py-4 text-slate-400 font-medium text-sm">Tarih</th>
+                      <th className="px-6 py-4 text-slate-400 font-medium text-sm">Durum</th>
+                      <th className="px-6 py-4 text-slate-400 font-medium text-sm">İşlem</th>
+                    </tr>
+                  </thead>
+                  <tbody>
+                    {demoRequests.map((dr) => (
+                      <tr key={dr.id} className="border-b border-slate-700/50 hover:bg-slate-700/30">
+                        <td className="px-6 py-4 text-white">{dr.name}</td>
+                        <td className="px-6 py-4">
+                          <a href={`mailto:${dr.email}`} className="text-cyan-400 hover:underline">{dr.email}</a>
+                        </td>
+                        <td className="px-6 py-4 text-slate-300">
+                          {[dr.facility_type, dr.city].filter(Boolean).join(' · ') || '—'}
+                        </td>
+                        <td className="px-6 py-4 text-slate-500 text-sm">{dr.source ?? '—'}</td>
+                        <td className="px-6 py-4 text-slate-500 text-sm">
+                          {dr.created_at ? new Date(dr.created_at).toLocaleDateString('tr-TR') : '—'}
+                        </td>
+                        <td className="px-6 py-4">
+                          <span className={`text-xs px-2 py-1 rounded-lg ${
+                            dr.status === 'new' ? 'bg-amber-500/20 text-amber-400'
+                            : dr.status === 'converted' ? 'bg-emerald-500/20 text-emerald-400'
+                            : dr.status === 'rejected' ? 'bg-red-500/20 text-red-400'
+                            : 'bg-slate-500/20 text-slate-400'
+                          }`}>
+                            {dr.status === 'new' ? 'Yeni' : dr.status === 'converted' ? 'Onaylandı' : dr.status === 'rejected' ? 'Reddedildi' : dr.status}
+                          </span>
+                        </td>
+                        <td className="px-6 py-4">
+                          {dr.status === 'new' ? (
+                            <div className="flex flex-wrap gap-2">
+                              <button
+                                type="button"
+                                onClick={() => handleDemoDecision(dr.id, 'approve')}
+                                disabled={!!actingId}
+                                className="flex items-center gap-1 px-3 py-1.5 rounded-lg bg-emerald-500/20 text-emerald-400 hover:bg-emerald-500/30 text-sm font-medium disabled:opacity-50"
+                              >
+                                {actingId === 'demo_' + dr.id + '_approve' ? <Loader2 size={14} className="animate-spin" /> : <Check size={14} />}
+                                Onayla
+                              </button>
+                              <button
+                                type="button"
+                                onClick={() => handleDemoDecision(dr.id, 'reject')}
+                                disabled={!!actingId}
+                                className="flex items-center gap-1 px-3 py-1.5 rounded-lg bg-red-500/20 text-red-400 hover:bg-red-500/30 text-sm font-medium disabled:opacity-50"
+                              >
+                                {actingId === 'demo_' + dr.id + '_reject' ? <Loader2 size={14} className="animate-spin" /> : <X size={14} />}
+                                Reddet
+                              </button>
+                            </div>
+                          ) : (
+                            <span className="text-slate-500 text-sm">—</span>
+                          )}
+                        </td>
+                      </tr>
+                    ))}
+                  </tbody>
+                </table>
+              </div>
+            </div>
+          )}
+        </>
+      ) : loading ? (
         <div className="flex items-center justify-center py-16 text-slate-500">
           Yükleniyor…
         </div>

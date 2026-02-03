@@ -13,11 +13,15 @@ function getSupabase() {
 
 export interface TemplateItem {
   id: string
+  template_id?: string
   name: string
   type: string
   used_count?: number
   where_used?: string
   created_at: string
+  source?: 'ceo' | 'db'
+  director_key?: string
+  is_approved?: boolean
 }
 
 export interface RDSuggestion {
@@ -47,14 +51,42 @@ export async function GET() {
         if (Array.isArray(data) && data.length > 0) {
           templates = data.map((row: Record<string, unknown>) => ({
             id: String(row.id ?? row.uuid ?? ''),
-            name: String(row.name ?? row.title ?? row.slug ?? '—'),
-            type: String(row.type ?? row.category ?? 'şablon'),
-            used_count: typeof row.used_count === 'number' ? row.used_count : undefined,
+            template_id: String(row.id ?? row.uuid ?? ''),
+            name: String(row.name ?? row.title ?? row.ad ?? row.slug ?? '—'),
+            type: String(row.type ?? row.category ?? row.kategori ?? 'şablon'),
+            used_count: typeof row.used_count === 'number' ? row.used_count : typeof row.kullanim_sayisi === 'number' ? row.kullanim_sayisi : undefined,
             where_used: row.where_used != null ? String(row.where_used) : undefined,
-            created_at: String(row.created_at ?? ''),
+            created_at: String(row.created_at ?? row.olusturma_tarihi ?? ''),
+            source: 'db' as const,
           }))
           break
         }
+      }
+
+      // ceo_templates'i de ekle (robot üretimi)
+      try {
+        const { data: ceoData } = await supabase
+          .from('ceo_templates')
+          .select('id, template_name, template_type, director_key, is_approved, created_at')
+          .order('created_at', { ascending: false })
+          .limit(100)
+        if (Array.isArray(ceoData) && ceoData.length > 0) {
+          const ceoTemplates: TemplateItem[] = ceoData.map((row: Record<string, unknown>) => ({
+            id: 'ceo-' + String(row.id ?? ''),
+            template_id: String(row.id ?? ''),
+            name: String(row.template_name ?? '—'),
+            type: String(row.template_type ?? 'rapor'),
+            director_key: row.director_key != null ? String(row.director_key) : undefined,
+            used_count: undefined,
+            where_used: row.director_key != null ? `CEO · ${row.director_key}` : 'CEO',
+            created_at: String(row.created_at ?? ''),
+            source: 'ceo' as const,
+            is_approved: row.is_approved === true,
+          }))
+          templates = [...ceoTemplates, ...templates]
+        }
+      } catch (_) {
+        // ceo_templates tablosu yoksa devam et
       }
 
       const suggestionTables = ['rd_suggestions', 'ceo_updates', 'ar_ge', 'suggestions']

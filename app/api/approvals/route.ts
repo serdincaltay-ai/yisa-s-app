@@ -6,6 +6,8 @@ import {
   insertAuditLog,
   getPatronCommand,
 } from '@/lib/db/ceo-celf'
+import { saveCeoTemplate } from '@/lib/db/ceo-templates'
+import type { TemplateType } from '@/lib/db/ceo-templates'
 import { createCeoRoutine, type ScheduleType } from '@/lib/db/ceo-routines'
 import { githubPush, githubCreateFiles } from '@/lib/api/github-client'
 import { fetchWithRetry } from '@/lib/api/fetch-with-retry'
@@ -359,6 +361,40 @@ export async function POST(req: NextRequest) {
       user_id: userId,
       payload: { modify_text: modifyText },
     })
+
+    // Onaylanan şablon çıktısını ceo_templates'e kaydet
+    if (decision === 'approve') {
+      const cmdForTemplate = await getPatronCommand(commandId)
+      const payload = cmdForTemplate.output_payload ?? {}
+      const displayText = typeof payload.displayText === 'string' ? payload.displayText : ''
+      const directorKey = (payload.director_key as string) ?? ''
+      const taskName = (payload.task_name as string) ?? ''
+      const command = (cmdForTemplate.command as string) ?? ''
+      const isTemplateLike =
+        (displayText.length > 50 &&
+          (/şablon|sablon|template/i.test(taskName) ||
+            /şablon|sablon|template/i.test(command) ||
+            ['CPO', 'CFO', 'CMO', 'CDO', 'CHRO', 'CLO'].includes(directorKey)))
+      if (isTemplateLike && displayText) {
+        const typeMap: Record<string, TemplateType> = {
+          CFO: 'rapor',
+          CPO: 'ui',
+          CMO: 'email',
+          CDO: 'rapor',
+          CHRO: 'bildirim',
+          CLO: 'rapor',
+        }
+        const templateType = (typeMap[directorKey] ?? 'rapor') as TemplateType
+        await saveCeoTemplate({
+          template_name: taskName || command?.slice(0, 80) || 'Onaylanan Şablon',
+          template_type: templateType,
+          director_key: directorKey || undefined,
+          content: { body: displayText, source: 'patron_approval', patron_command_id: commandId },
+          is_approved: true,
+          approved_by: userId ?? undefined,
+        })
+      }
+    }
 
     const message =
       decision === 'approve'

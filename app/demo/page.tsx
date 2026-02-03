@@ -11,18 +11,60 @@ import {
   Zap,
   Store,
   Users,
-  BarChart2,
   Shield,
   ArrowRight,
   CheckCircle2,
   Sparkles,
   ChevronRight,
+  LayoutTemplate,
 } from "lucide-react"
 import { YisaLogo } from "@/components/YisaLogo"
 
+const TEMPLATES = [
+  { id: "1", name: "Klasik", desc: "Sade ve profesyonel tasarım", color: "from-slate-600 to-slate-800" },
+  { id: "2", name: "Modern", desc: "Gradient ve animasyonlu", color: "from-emerald-600 to-cyan-700" },
+  { id: "3", name: "Minimal", desc: "Beyaz ağırlıklı, temiz çizgiler", color: "from-white to-slate-100" },
+  { id: "4", name: "Vitrin", desc: "Büyük görseller, dikkat çekici", color: "from-amber-600 to-orange-600" },
+  { id: "5", name: "Akademi", desc: "Eğitim odaklı, bilgilendirici", color: "from-indigo-600 to-purple-700" },
+]
+
 /** Franchise fuarlarında gösterilecek tanıtım sayfası — giriş gerektirmez */
 export default function FranchiseDemoPage() {
-  const [formData, setFormData] = useState({ ad: "", telefon: "", sehir: "", firma: "" })
+  const [formData, setFormData] = useState({ ad: "", email: "", telefon: "", sehir: "", firma: "", tesis_turu: "" })
+  const [formSending, setFormSending] = useState(false)
+  const [formDone, setFormDone] = useState(false)
+
+  const handleSubmit = async (e: React.FormEvent) => {
+    e.preventDefault()
+    if (formSending) return
+    setFormSending(true)
+    try {
+      const res = await fetch("/api/demo-requests", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({
+          name: formData.ad,
+          email: formData.email,
+          phone: formData.telefon || null,
+          city: formData.sehir || null,
+          facility_type: formData.tesis_turu || formData.firma || null,
+          notes: formData.firma ? `Firma: ${formData.firma}` : null,
+          source: "demo",
+        }),
+      })
+      const data = await res.json()
+      if (data?.ok) {
+        setFormDone(true)
+        setFormData({ ad: "", email: "", telefon: "", sehir: "", firma: "", tesis_turu: "" })
+      } else {
+        alert(data?.error || "Kayıt sırasında hata oluştu.")
+      }
+    } catch {
+      alert("Bağlantı hatası. Lütfen tekrar deneyin.")
+    } finally {
+      setFormSending(false)
+    }
+  }
 
   return (
     <div className="min-h-screen bg-[#0a0a0a] text-white">
@@ -56,16 +98,14 @@ export default function FranchiseDemoPage() {
             </a>
           </div>
           <p className="mt-6 text-sm text-white/50 max-w-md mx-auto">
-            Firma sahibi olarak <strong className="text-emerald-400">franchise.yisa-s.com</strong> adresine girip giriş yapın. Uygulamayı <strong>ana ekrana ekleyin</strong> — oradan tesisinizi yönetin.
+            Firma sahibi olarak <strong className="text-emerald-400">franchise.yisa-s.com</strong> adresine girip giriş yapın.
           </p>
         </div>
       </header>
 
       {/* Özellikler */}
       <section className="max-w-5xl mx-auto px-6 py-20">
-        <h2 className="text-2xl font-bold text-center mb-12 text-white/90">
-          Neler Sunuyoruz?
-        </h2>
+        <h2 className="text-2xl font-bold text-center mb-12 text-white/90">Neler Sunuyoruz?</h2>
         <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
           <FeatureCard icon={Bot} title="Robot Yönetimi" desc="Mailler, demolar, aidat takibi. AI destekli operasyon." />
           <FeatureCard icon={BarChart3} title="Veri ile Eğitim" desc="Çocuk gelişimi ölçümlerle takip. Grafikler, raporlar." />
@@ -76,11 +116,31 @@ export default function FranchiseDemoPage() {
         </div>
       </section>
 
+      {/* Şablon Galerisi */}
+      <section className="max-w-5xl mx-auto px-6 py-16 border-t border-white/5">
+        <div className="flex items-center gap-2 justify-center mb-8">
+          <LayoutTemplate className="h-6 w-6 text-emerald-400" />
+          <h2 className="text-2xl font-bold text-white/90">Site Şablonları</h2>
+        </div>
+        <p className="text-center text-white/50 mb-12 max-w-xl mx-auto text-sm">
+          Franchise aldığınızda tesisinize uygun site şablonu seçebilirsiniz.
+        </p>
+        <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-5 gap-6">
+          {TEMPLATES.map((t) => (
+            <div
+              key={t.id}
+              className={`rounded-2xl border border-white/10 overflow-hidden bg-gradient-to-br ${t.color} h-48 flex flex-col items-center justify-center p-4 hover:border-emerald-500/50 transition-colors cursor-default`}
+            >
+              <span className="font-semibold text-white drop-shadow-lg">{t.name}</span>
+              <span className="text-xs text-white/80 mt-1 text-center">{t.desc}</span>
+            </div>
+          ))}
+        </div>
+      </section>
+
       {/* Akış */}
       <section className="max-w-4xl mx-auto px-6 py-16 border-t border-white/5">
-        <h2 className="text-2xl font-bold text-center mb-12 text-white/90">
-          Nasıl Çalışır?
-        </h2>
+        <h2 className="text-2xl font-bold text-center mb-12 text-white/90">Nasıl Çalışır?</h2>
         <div className="space-y-6">
           {[
             { step: 1, title: "Franchise Anlaşması", desc: "Sözleşme imzalanır, eğitim planlanır." },
@@ -101,7 +161,7 @@ export default function FranchiseDemoPage() {
         </div>
       </section>
 
-      {/* Başvuru Formu */}
+      {/* Başvuru Formu — Supabase'e kaydeder */}
       <section id="basvuru" className="max-w-md mx-auto px-6 py-20">
         <div className="rounded-2xl border border-white/10 bg-white/5 p-8">
           <div className="flex items-center gap-2 mb-6">
@@ -109,47 +169,60 @@ export default function FranchiseDemoPage() {
             <h2 className="text-xl font-bold text-white/90">Franchise Bilgi Formu</h2>
           </div>
           <p className="text-sm text-white/50 mb-6">
-            Fuardan ayrıldıktan sonra 10 iş günü içinde sizinle iletişime geçeceğiz.
+            10 iş günü içinde sizinle iletişime geçeceğiz. Veriler Supabase&apos;e güvenle kaydedilir.
           </p>
-          <form
-            onSubmit={(e) => {
-              e.preventDefault()
-              alert("Bilgileriniz alındı. En kısa sürede dönüş yapacağız.")
-            }}
-            className="space-y-4"
-          >
-            <Input
-              placeholder="Ad Soyad"
-              value={formData.ad}
-              onChange={(e) => setFormData({ ...formData, ad: e.target.value })}
-              className="bg-white/5 border-white/10 h-12 rounded-xl"
-              required
-            />
-            <Input
-              placeholder="Telefon"
-              type="tel"
-              value={formData.telefon}
-              onChange={(e) => setFormData({ ...formData, telefon: e.target.value })}
-              className="bg-white/5 border-white/10 h-12 rounded-xl"
-              required
-            />
-            <Input
-              placeholder="Şehir"
-              value={formData.sehir}
-              onChange={(e) => setFormData({ ...formData, sehir: e.target.value })}
-              className="bg-white/5 border-white/10 h-12 rounded-xl"
-              required
-            />
-            <Input
-              placeholder="Firma / Tesis Adı (varsa)"
-              value={formData.firma}
-              onChange={(e) => setFormData({ ...formData, firma: e.target.value })}
-              className="bg-white/5 border-white/10 h-12 rounded-xl"
-            />
-            <Button type="submit" className="w-full rounded-xl bg-emerald-500 hover:bg-emerald-600 text-white h-12 font-medium">
-              Gönder
-            </Button>
-          </form>
+          {formDone ? (
+            <div className="py-8 text-center">
+              <CheckCircle2 className="h-12 w-12 text-emerald-400 mx-auto mb-4" />
+              <p className="text-emerald-400 font-medium">Başvurunuz alındı. Teşekkürler!</p>
+            </div>
+          ) : (
+            <form onSubmit={handleSubmit} className="space-y-4">
+              <Input
+                placeholder="Ad Soyad"
+                value={formData.ad}
+                onChange={(e) => setFormData({ ...formData, ad: e.target.value })}
+                className="bg-white/5 border-white/10 h-12 rounded-xl"
+                required
+              />
+              <Input
+                type="email"
+                placeholder="E-posta"
+                value={formData.email}
+                onChange={(e) => setFormData({ ...formData, email: e.target.value })}
+                className="bg-white/5 border-white/10 h-12 rounded-xl"
+                required
+              />
+              <Input
+                placeholder="Telefon"
+                type="tel"
+                value={formData.telefon}
+                onChange={(e) => setFormData({ ...formData, telefon: e.target.value })}
+                className="bg-white/5 border-white/10 h-12 rounded-xl"
+              />
+              <Input
+                placeholder="Tesis türü (örn. Cimnastik)"
+                value={formData.tesis_turu}
+                onChange={(e) => setFormData({ ...formData, tesis_turu: e.target.value })}
+                className="bg-white/5 border-white/10 h-12 rounded-xl"
+              />
+              <Input
+                placeholder="Şehir"
+                value={formData.sehir}
+                onChange={(e) => setFormData({ ...formData, sehir: e.target.value })}
+                className="bg-white/5 border-white/10 h-12 rounded-xl"
+              />
+              <Input
+                placeholder="Firma / Tesis Adı (varsa)"
+                value={formData.firma}
+                onChange={(e) => setFormData({ ...formData, firma: e.target.value })}
+                className="bg-white/5 border-white/10 h-12 rounded-xl"
+              />
+              <Button type="submit" disabled={formSending} className="w-full rounded-xl bg-emerald-500 hover:bg-emerald-600 text-white h-12 font-medium">
+                {formSending ? "Gönderiliyor…" : "Gönder"}
+              </Button>
+            </form>
+          )}
         </div>
       </section>
 
@@ -169,9 +242,10 @@ export default function FranchiseDemoPage() {
       </section>
 
       <footer className="py-8 text-center border-t border-white/5">
-        <Link href="/" className="text-white/50 hover:text-white/70 text-sm">
-          ← Ana sayfaya dön
-        </Link>
+        <div className="flex justify-center gap-6 text-sm">
+          <Link href="/" className="text-white/50 hover:text-white/70">Ana Sayfa</Link>
+          <Link href="/fiyatlar" className="text-white/50 hover:text-white/70">Fiyatlar</Link>
+        </div>
         <p className="text-white/40 text-xs mt-2">YİSA-S · Yönetici İşletmeci Sporcu Antrenör Sistemi</p>
       </footer>
     </div>

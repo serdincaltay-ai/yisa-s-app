@@ -14,6 +14,8 @@ import {
 } from '@/lib/robots/directorate-initial-tasks'
 import { runCelfDirector } from '@/lib/ai/celf-execute'
 import { createCeoTask, insertCelfLog, createPatronCommand } from '@/lib/db/ceo-celf'
+import { saveCeoTemplate } from '@/lib/db/ceo-templates'
+import type { TemplateType } from '@/lib/db/ceo-templates'
 import { canTriggerFlow } from '@/lib/auth/roles'
 import type { DirectorKey } from '@/lib/robots/celf-center'
 
@@ -185,6 +187,28 @@ async function runInitialTask(
     }
 
     updateTaskStatus(task.id, celfResult.text ? 'completed' : 'failed')
+
+    // Şablon görevi ise ceo_templates'e kaydet
+    if (celfResult.text && /şablon|sablon|template/i.test(task.name)) {
+      const typeMap: Record<string, TemplateType> = {
+        CFO: 'rapor',
+        CTO: 'dashboard',
+        CPO: 'ui',
+        CMO: 'email',
+        CDO: 'rapor',
+        CHRO: 'bildirim',
+        CLO: 'rapor',
+        CSPO: 'rapor',
+      }
+      const templateType = (typeMap[task.directorKey] ?? 'rapor') as TemplateType
+      await saveCeoTemplate({
+        template_name: task.name,
+        template_type: templateType,
+        director_key: task.directorKey,
+        content: { body: celfResult.text, source: 'startup_task', task_id: task.id },
+        is_approved: false,
+      })
+    }
 
     return {
       success: !!celfResult.text,

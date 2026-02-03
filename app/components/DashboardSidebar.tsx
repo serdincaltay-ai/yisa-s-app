@@ -22,8 +22,10 @@ import {
 /** Patron paneli menüsü — sadece gerekli sayfalar */
 const NAV = [
   { href: '/dashboard', label: 'Ana Sayfa', icon: Home },
+  { href: '/dashboard/directors', label: 'CELF Direktörlükleri', icon: Bot },
   { href: '/dashboard/robots', label: 'Direktörler (Canlı)', icon: Bot },
-  { href: '/dashboard/franchises', label: "Franchise / Vitrin", icon: Store },
+  { href: '/dashboard/onay-kuyrugu', label: 'Onay Kuyruğu', icon: ClipboardCheck },
+  { href: '/dashboard/franchises', label: 'Franchise / Vitrin', icon: Store },
   { href: '/dashboard/kasa-defteri', label: 'Kasa Defteri', icon: Wallet },
   { href: '/dashboard/sablonlar', label: 'Şablonlar', icon: LayoutTemplate },
   { href: '/dashboard/reports', label: 'Raporlar', icon: BarChart3 },

@@ -98,8 +98,8 @@ export async function GET() {
       })
     }
 
-    const athletesTables = ['athletes', 'athlete', 'sporcular', 'profiles']
-    const coachesTables = ['coaches', 'coach', 'antrenorler', 'trainers']
+    const athletesTables = ['athletes', 'athlete', 'sporcular', 'profiles'] // athletes = AŞAMA 2
+    const coachesTables = ['staff', 'coaches', 'coach', 'antrenorler', 'trainers'] // staff = AŞAMA 2
     const demoTables = ['demo_requests', 'demo_talepleri', 'leads']
 
     let athletes = 0

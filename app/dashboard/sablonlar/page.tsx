@@ -1,7 +1,7 @@
 'use client'
 
 import { useEffect, useState } from 'react'
-import { LayoutTemplate, Lightbulb, RefreshCw, AlertCircle } from 'lucide-react'
+import { LayoutTemplate, Lightbulb, RefreshCw, AlertCircle, Store } from 'lucide-react'
 
 type TemplateItem = {
   id: string
@@ -10,6 +10,9 @@ type TemplateItem = {
   used_count?: number
   where_used?: string
   created_at: string
+  source?: 'ceo' | 'db'
+  director_key?: string
+  is_approved?: boolean
 }
 
 type RDSuggestion = {
@@ -21,9 +24,20 @@ type RDSuggestion = {
   created_at: string
 }
 
+type TemplateUsage = {
+  id: string
+  tenant_id: string
+  tenant_name: string
+  template_id: string
+  template_source: string
+  used_at: string
+  notes?: string
+}
+
 export default function SablonlarPage() {
   const [templates, setTemplates] = useState<TemplateItem[]>([])
   const [suggestions, setSuggestions] = useState<RDSuggestion[]>([])
+  const [usages, setUsages] = useState<TemplateUsage[]>([])
   const [loading, setLoading] = useState(true)
   const [error, setError] = useState<string | null>(null)
 
@@ -31,14 +45,20 @@ export default function SablonlarPage() {
     setLoading(true)
     setError(null)
     try {
-      const res = await fetch('/api/templates')
-      const data = await res.json()
-      setTemplates(Array.isArray(data?.templates) ? data.templates : [])
-      setSuggestions(Array.isArray(data?.suggestions) ? data.suggestions : [])
+      const [tRes, uRes] = await Promise.all([
+        fetch('/api/templates'),
+        fetch('/api/templates/usage'),
+      ])
+      const tData = await tRes.json()
+      const uData = await uRes.json()
+      setTemplates(Array.isArray(tData?.templates) ? tData.templates : [])
+      setSuggestions(Array.isArray(tData?.suggestions) ? tData.suggestions : [])
+      setUsages(Array.isArray(uData?.items) ? uData.items : [])
     } catch {
       setError('Veri yüklenemedi.')
       setTemplates([])
       setSuggestions([])
+      setUsages([])
     } finally {
       setLoading(false)
     }
@@ -97,8 +117,9 @@ export default function SablonlarPage() {
                       <tr className="border-b border-slate-700">
                         <th className="px-6 py-4 text-slate-400 font-medium text-sm">Ad</th>
                         <th className="px-6 py-4 text-slate-400 font-medium text-sm">Tür</th>
+                        <th className="px-6 py-4 text-slate-400 font-medium text-sm">Kaynak</th>
                         <th className="px-6 py-4 text-slate-400 font-medium text-sm">Kullanım</th>
-                        <th className="px-6 py-4 text-slate-400 font-medium text-sm">Nerede kullanılıyor</th>
+                        <th className="px-6 py-4 text-slate-400 font-medium text-sm">Nerede</th>
                         <th className="px-6 py-4 text-slate-400 font-medium text-sm">Tarih</th>
                       </tr>
                     </thead>
@@ -107,10 +128,57 @@ export default function SablonlarPage() {
                         <tr key={t.id} className="border-b border-slate-700/50 hover:bg-slate-700/30">
                           <td className="px-6 py-4 text-white font-medium">{t.name}</td>
                           <td className="px-6 py-4 text-slate-400">{t.type}</td>
+                          <td className="px-6 py-4">
+                            {t.source === 'ceo' ? (
+                              <span className="text-cyan-400 text-sm">Robot (CEO/CELF)</span>
+                            ) : (
+                              <span className="text-slate-500 text-sm">Veritabanı</span>
+                            )}
+                          </td>
                           <td className="px-6 py-4 text-amber-400">{t.used_count ?? '—'}</td>
                           <td className="px-6 py-4 text-slate-500 text-sm">{t.where_used ?? '—'}</td>
                           <td className="px-6 py-4 text-slate-500 text-sm">
                             {t.created_at ? new Date(t.created_at).toLocaleDateString('tr-TR') : '—'}
+                          </td>
+                        </tr>
+                      ))}
+                    </tbody>
+                  </table>
+                </div>
+              </div>
+            )}
+          </div>
+
+          <div className="mb-8">
+            <h2 className="text-lg font-semibold text-white mb-4 flex items-center gap-2">
+              <Store size={20} /> Şablon Kullanımı — Hangi Tenant Ne Kullanıyor?
+            </h2>
+            {usages.length === 0 ? (
+              <div className="bg-slate-800/50 border border-slate-700 rounded-2xl p-6 text-center">
+                <p className="text-slate-500 text-sm">
+                  Henüz kayıtlı şablon kullanımı yok. Franchise panellerinden şablon kullanıldığında burada görünecek.
+                </p>
+              </div>
+            ) : (
+              <div className="bg-slate-800/50 border border-slate-700 rounded-2xl overflow-hidden">
+                <div className="overflow-x-auto">
+                  <table className="w-full text-left">
+                    <thead>
+                      <tr className="border-b border-slate-700">
+                        <th className="px-6 py-4 text-slate-400 font-medium text-sm">Tenant</th>
+                        <th className="px-6 py-4 text-slate-400 font-medium text-sm">Şablon ID</th>
+                        <th className="px-6 py-4 text-slate-400 font-medium text-sm">Kaynak</th>
+                        <th className="px-6 py-4 text-slate-400 font-medium text-sm">Kullanım Tarihi</th>
+                      </tr>
+                    </thead>
+                    <tbody>
+                      {usages.map((u) => (
+                        <tr key={u.id} className="border-b border-slate-700/50 hover:bg-slate-700/30">
+                          <td className="px-6 py-4 text-white font-medium">{u.tenant_name}</td>
+                          <td className="px-6 py-4 text-slate-400 font-mono text-xs">{String(u.template_id).slice(0, 8)}…</td>
+                          <td className="px-6 py-4 text-slate-400">{u.template_source}</td>
+                          <td className="px-6 py-4 text-slate-500 text-sm">
+                            {u.used_at ? new Date(u.used_at).toLocaleString('tr-TR') : '—'}
                           </td>
                         </tr>
                       ))}
