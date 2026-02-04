@@ -36,6 +36,10 @@ export const CELF_POOL_KEYS = {
   gemini: () => getCelfOrchestratorKey(),
   /** Together — CDO, veri analiz */
   together: () => env('CELF_TOGETHER_API_KEY') ?? env('TOGETHER_API_KEY'),
+  /** ManyChat — CMO, pazarlama, lead gönderimi */
+  manychat: () => env('MANYCHAT_API_KEY'),
+  /** FAL — CPO, görsel üretim */
+  fal: () => env('FAL_API_KEY'),
 } as const
 
 /** Hangi direktörlük hangi dış API'leri kullanır (CELF motor akışı için) */
@@ -43,7 +47,7 @@ export const CELF_DIRECTOR_EXTERNAL_APIS: Record<DirectorKey, string[]> = {
   CFO: ['gpt', 'gemini'],
   CTO: ['claude', 'cursor', 'github'],
   CIO: ['gpt'],
-  CMO: ['gpt', 'claude'],
+  CMO: ['gpt', 'claude', 'manychat'],
   CHRO: ['claude'],
   CLO: ['claude'],
   CSO_SATIS: ['gpt'],

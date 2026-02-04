@@ -126,3 +126,16 @@ Tüm CELF direktörlükleri **şablon/rapor/belge** üretebilir. Patron komutu i
 | Hangi direktör şablon üretir? | ✅ Tüm CELF direktörleri; CEO routeToDirector ile yönlendiriyor |
 
 **Tüm robotlar anayasa doğrultusunda birbirine bağlı; boşta kalan/entegrasyonsuz robot yok.**
+
+---
+
+## 8. Veri Kaynakları ve Robot Görevlendirmesi
+
+Hangi verinin nereden çekildiği ve hangi robotun hangi veriyi kullandığı **tek referans:** `docs/VERI_KAYNAKLARI_ROBOT_GOREVLENDIRME.md`.
+
+**Özet:**
+- **İşletme profili** (tenants / franchises): Vitrin, COO Mağazası, CELF (CMO/CPO), Patron Asistanı.
+- **Kalite puanı** (coo_depo_approved / coo_depo_published): COO (mağaza listeleme, öne çıkan), Vitrin, Patron Onay Kuyruğu.
+- **V0 şablon kütüphanesi** (v0_template_library): CELF (CPO, CMO, CSPO), COO Mağazası; referans: `archive/REFERANS_V0_SABLONLARI.md`.
+- **YISA-S-TAM-SISTEM-V3:** Mimari, kalite ağırlıkları, fiyatlandırma referansı; `archive/REFERANS_YISA_S_TAM_SISTEM_V3_OZET.md`.
+- Eski çalışmalardan eklenebilir veri/alanlar için referans: `archive/OKUTULDU_ESKİ_KODLAR_INCELEME_RAPORU.md`; anayasa ve mevcut şema bozulmadan migration ile eklenir, robot görevlendirmesi yukarıdaki dokümana göre yapılır.

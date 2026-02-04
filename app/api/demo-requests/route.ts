@@ -191,7 +191,7 @@ export async function POST(req: NextRequest) {
         facility_type: facilityType || null,
         city: city || null,
         notes: notes || null,
-        source: ['www', 'demo', 'fiyatlar', 'vitrin'].includes(source) ? source : 'www',
+        source: ['www', 'demo', 'fiyatlar', 'vitrin', 'manychat'].includes(source) ? source : 'www',
       })
       .select('id')
       .single()

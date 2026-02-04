@@ -133,6 +133,8 @@ Teslim tamamlandı. İleride asistan (Cursor/Claude) ile devam ederken tek refer
 |--------------|------------------|
 | Roller, sayfalar, kim ne yazar | `ANAYASA_SAYFA_MOTORU.md` |
 | Robot zinciri, hangi robot kimi çalıştırır, şablon hangi direktörden | `ROBOT_ENTEGRASYON_ANAYASA.md` |
+| Veri kaynakları, hangi robot hangi veriyi çeker (işletme profili, kalite puanı) | `docs/VERI_KAYNAKLARI_ROBOT_GOREVLENDIRME.md` |
+| Eski çalışmalar (OKUTULDU, V3, V0 şablonları) | `archive/REFERANS_*.md`, `archive/OKUTULDU_ESKİ_KODLAR_INCELEME_RAPORU.md` |
 | Güvenlik eksikleri, RLS, yapılacaklar | `KAPSAMLI_GELISTIRME_VE_EKSIKLER_RAPORU.md` |
 | Migration, test, kurulum | Bu dosya (TESLIM_DOKUMANI.md), `UCTAN_UCA_TEST_SENARYOSU.md` |
 | Anayasa metni | `YISA-S-MASTER-DOKUMAN-v2.1-TASLAK.md` |

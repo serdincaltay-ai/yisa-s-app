@@ -21,8 +21,16 @@ export async function POST(req: NextRequest) {
   return runDueRoutines(req)
 }
 
-async function runDueRoutines(_req: NextRequest) {
+async function runDueRoutines(req: NextRequest) {
   try {
+    const cronSecret = process.env.CRON_SECRET?.trim()
+    if (cronSecret) {
+      const auth = req.headers.get('authorization')
+      if (auth !== `Bearer ${cronSecret}`) {
+        return NextResponse.json({ error: 'Unauthorized' }, { status: 401 })
+      }
+    }
+
     const { data: routines, error } = await getDueCeoRoutines()
     if (error) {
       return NextResponse.json({ error }, { status: 500 })

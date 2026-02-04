@@ -180,3 +180,32 @@ DROP POLICY IF EXISTS "coo_depo_approved_service_only" ON coo_depo_approved;
 CREATE POLICY "coo_depo_approved_service_only" ON coo_depo_approved FOR ALL USING (false) WITH CHECK (false);
 DROP POLICY IF EXISTS "coo_depo_published_read" ON coo_depo_published;
 CREATE POLICY "coo_depo_published_read" ON coo_depo_published FOR SELECT USING (true);
+
+-- 8. demo_requests: source'a 'manychat' ekle (ManyChat webhook lead'leri)
+ALTER TABLE demo_requests DROP CONSTRAINT IF EXISTS demo_requests_source_check;
+ALTER TABLE demo_requests ADD CONSTRAINT demo_requests_source_check
+  CHECK (source IN ('www', 'demo', 'fiyatlar', 'vitrin', 'manychat'));
+
+-- 9. ceo_routines (COO run-due — rutin görevler için)
+CREATE TABLE IF NOT EXISTS ceo_routines (
+  id UUID PRIMARY KEY DEFAULT gen_random_uuid(),
+  routine_name TEXT NOT NULL,
+  routine_type TEXT NOT NULL CHECK (routine_type IN ('rapor', 'kontrol', 'bildirim', 'sync')),
+  director_key TEXT NOT NULL,
+  command_template TEXT NOT NULL,
+  data_sources TEXT[] DEFAULT '{}',
+  schedule TEXT NOT NULL CHECK (schedule IN ('daily', 'weekly', 'monthly')),
+  schedule_time TEXT,
+  is_active BOOLEAN DEFAULT true,
+  last_result JSONB,
+  last_run TIMESTAMPTZ,
+  next_run TIMESTAMPTZ,
+  created_by UUID,
+  approved_at TIMESTAMPTZ,
+  created_at TIMESTAMPTZ DEFAULT NOW()
+);
+CREATE INDEX IF NOT EXISTS idx_ceo_routines_next_run ON ceo_routines(next_run) WHERE is_active = true;
+CREATE INDEX IF NOT EXISTS idx_ceo_routines_director_key ON ceo_routines(director_key);
+ALTER TABLE ceo_routines ENABLE ROW LEVEL SECURITY;
+DROP POLICY IF EXISTS "Service can manage ceo_routines" ON ceo_routines;
+CREATE POLICY "Service can manage ceo_routines" ON ceo_routines FOR ALL USING (true) WITH CHECK (true);

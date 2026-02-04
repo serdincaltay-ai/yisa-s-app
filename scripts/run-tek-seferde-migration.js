@@ -25,7 +25,7 @@ function loadEnvLocal() {
 }
 loadEnvLocal()
 
-const dbUrl = process.env.DATABASE_URL || process.env.SUPABASE_DB_URL
+const dbUrl = process.env.DATABASE_URL || process.env.SUPABASE_DB_URL || process.env.POSTGRES_URL
 if (!dbUrl) {
   console.error(`
 DATABASE_URL gerekli. .env.local dosyasına ekleyin:

@@ -31,8 +31,12 @@
 - Bu projede Railway kullanılmıyor; backend Next.js API (Vercel'de).
 
 ### Supabase
-1. **TEK_SEFERDE_YENI_MIGRASYONLAR.sql** çalıştırıldı mı?
+1. **TEK_SEFERDE_YENI_MIGRASYONLAR.sql** çalıştırıldı mı? (ceo_routines, demo_requests manychat, vb.)
 2. Auth → Users: Patron e-postası ile kullanıcı var mı?
+
+### Vercel Cron
+- `/api/coo/run-due` günlük 02:00 UTC tetiklenir.
+- `CRON_SECRET` tanımlıysa Authorization header zorunludur.
 
 ---
 

@@ -40,3 +40,18 @@ Veya Windows Gezgini ile kökteki tüm .md ve .bat dosyalarını sürükleyip `a
 - TEK_SEFERDE_BITIR.bat
 
 Bu README dosyası archive içinde kalsın (taşınmasın).
+
+---
+
+## Referans dokümanlar (eski çalışmalardan eklenen bilgiler)
+
+Eksik faydalı bilgiler için eklenen referans dosyaları (4 Şubat 2026):
+
+| Dosya | İçerik |
+|-------|--------|
+| `REFERANS_DERS_PROGRAMI_SABLONU.md` | Haftalık program matrisi, yaş grupları, antrenör dağılımı, özel günler |
+| `REFERANS_FIYAT_LISTESI.md` | VIP/Plus/Standart, branş paketleri, kampanyalar, iade politikası |
+| `REFERANS_HAREKET_HAVUZU.md` | Temel hareketler (Latince+Türkçe), seviyeler, yaş hedefleri, güvenlik kuralları |
+| `REFERANS_KATALOG_ICERIK.md` | Program açıklamaları, "neden biz?", iletişim bloğu |
+| `REFERANS_SOSYAL_MEDYA_PLANI.md` | Instagram şablonları, haftalık plan, görsel standartlar, hashtag'ler |
+| `REFERANS_CALISMA_STANDARDI_VELI_RAPORU.md` | 7 adımlı akış, veli bilgilendirme, 10 perspektif, haftalık veli raporu şablonu |
