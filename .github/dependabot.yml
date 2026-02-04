@@ -10,8 +10,6 @@ updates:
       day: "monday"
     open-pull-requests-limit: 5
     versioning-strategy: increase
-    labels:
-      - "dependencies"
     commit-message:
       prefix: "chore(deps)"
 
@@ -19,5 +17,3 @@ updates:
     directory: "/"
     schedule:
       interval: "weekly"
-    labels:
-      - "dependencies"
