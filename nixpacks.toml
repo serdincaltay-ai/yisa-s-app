@@ -1,9 +1,13 @@
 # Railway/Nixpacks: npm kullan, pnpm kullanma
 [phases.setup]
-nixPkgs = ["nodejs_20", "npm"]
+nixPkgs = ["nodejs_20"]
+# pnpm yükleme - sadece npm kullan
 
 [phases.install]
-cmds = ["npm ci"]
+cmds = ["npm ci --prefer-offline --no-audit"]
 
 [variables]
 NIXPACKS_NODE_VERSION = "20"
+NIXPACKS_PKGS = "nodejs_20"
+# npm zorla - pnpm kullanma
+NIXPACKS_INSTALL_CMD = "npm ci --prefer-offline --no-audit"

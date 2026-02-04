@@ -113,7 +113,7 @@ export default function VeliDashboard() {
 
   return (
     <div className="flex min-h-screen flex-col bg-background">
-      <header className="sticky top-0 z-50 border-b border-border bg-card">
+      <header className="sticky top-0 z-50 border-b border-[hsl(var(--border))] bg-card">
         <div className="flex h-16 items-center justify-between px-4">
           <div className="flex items-center gap-3">
             <div className="flex h-10 w-10 items-center justify-center rounded-xl bg-primary">

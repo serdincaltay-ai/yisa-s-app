@@ -61,7 +61,7 @@ function PatronLoginContent() {
       
       {/* Glass Login Card */}
       <div className="relative z-10 w-full max-w-md mx-4">
-        <div className="backdrop-blur-xl bg-card/40 border border-border/50 rounded-2xl p-8 shadow-2xl">
+        <div className="backdrop-blur-xl bg-card/40 border border-[hsl(var(--border))] rounded-2xl p-8 shadow-2xl">
           {/* Logo / Brand */}
           <div className="text-center mb-8">
             <YisaLogo variant="full" showAcronym />
@@ -94,7 +94,7 @@ function PatronLoginContent() {
                   placeholder="patron@yisa-s.com"
                   value={formData.username}
                   onChange={(e) => setFormData({ ...formData, username: e.target.value })}
-                  className="pl-10 h-12 bg-secondary/50 border-border/50 focus:border-primary/50 focus:ring-primary/20"
+                  className="pl-10 h-12 bg-secondary/50 border-[hsl(var(--border))] focus:border-primary/50 focus:ring-primary/20"
                   required
                 />
               </div>
@@ -112,7 +112,7 @@ function PatronLoginContent() {
                   placeholder="••••••••"
                   value={formData.password}
                   onChange={(e) => setFormData({ ...formData, password: e.target.value })}
-                  className="pl-10 pr-10 h-12 bg-secondary/50 border-border/50 focus:border-primary/50 focus:ring-primary/20"
+                  className="pl-10 pr-10 h-12 bg-secondary/50 border-[hsl(var(--border))] focus:border-primary/50 focus:ring-primary/20"
                   required
                 />
                 <button

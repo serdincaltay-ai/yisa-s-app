@@ -156,7 +156,7 @@ export default function FranchiseDashboard() {
       </aside>
 
       <main className="ml-64 flex-1">
-        <header className="sticky top-0 z-30 flex h-16 items-center justify-between border-b border-border bg-card px-6">
+        <header className="sticky top-0 z-30 flex h-16 items-center justify-between border-b border-[hsl(var(--border))] bg-card px-6">
           <div className="flex items-center gap-4">
             <div className="relative">
               <Search className="absolute left-3 top-1/2 h-4 w-4 -translate-y-1/2 text-muted-foreground" />
@@ -562,7 +562,7 @@ function ScheduleTab() {
                 <React.Fragment key={hour}>
                   <div className="flex items-center justify-center p-2 text-sm text-muted-foreground">{hour}</div>
                   {days.map((day) => (
-                    <div key={`${hour}-${day}`} className="rounded-lg border border-border p-2 text-center text-xs">
+                    <div key={`${hour}-${day}`} className="rounded-lg border border-[hsl(var(--border))] p-2 text-center text-xs">
                       Ders
                     </div>
                   ))}
@@ -1053,7 +1053,7 @@ function MarketingTab() {
           <CardTitle>Aktif Kampanyalar</CardTitle>
         </CardHeader>
         <CardContent>
-          <div className="rounded-lg border border-border p-4">
+          <div className="rounded-lg border border-[hsl(var(--border))] p-4">
             <p className="font-medium text-foreground">Kis Indirimi</p>
             <p className="text-sm text-muted-foreground">%20 indirim - 15 Subat&apos;a kadar</p>
             <Progress value={65} className="mt-3" />
