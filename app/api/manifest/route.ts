@@ -5,10 +5,17 @@ import {
   PANEL_PWA_NAME,
 } from '@/lib/subdomain'
 
-/** Subdomain'e göre PWA manifest — her panel kendi uygulaması */
+const APP_BASE = 'https://app.yisa-s.com'
+
+/** Subdomain'e göre PWA manifest — her panel kendi uygulaması.
+ * yisa-s.com (www) üzerinden yüklenirse PWA app.yisa-s.com/dashboard açılır. */
 export async function GET(request: NextRequest) {
   const host = request.headers.get('host') ?? ''
   const panel = getPanelFromHost(host)
+
+  const startUrl = PANEL_START_URL[panel]
+  const useAbsoluteScope = panel === 'www' && startUrl.startsWith('http')
+  const scope = useAbsoluteScope ? `${APP_BASE}/` : '/'
 
   const manifest = {
     name: PANEL_PWA_NAME[panel],
@@ -21,8 +28,8 @@ export async function GET(request: NextRequest) {
           : panel === 'veli'
             ? 'YİSA-S Veli Paneli — Çocuk takibi'
             : 'YİSA-S Spor Tesisi Yönetim Sistemi',
-    start_url: PANEL_START_URL[panel],
-    scope: '/',
+    start_url: startUrl,
+    scope,
     display: 'standalone',
     background_color: '#030508',
     theme_color: '#0891b2',

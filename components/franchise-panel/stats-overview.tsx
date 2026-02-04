@@ -1,8 +1,7 @@
 'use client'
 
 import { useEffect, useState } from 'react'
-import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card'
-import { Users, Briefcase, CheckCircle, Clock } from 'lucide-react'
+import { Users, Briefcase, Clock, CheckCircle } from 'lucide-react'
 
 export function StatsOverview() {
   const [stats, setStats] = useState<{
@@ -52,33 +51,27 @@ export function StatsOverview() {
   // İkinci ve dördüncü aynı olmasın — sadece 3 kart
   const displayItems = [items[0], items[1], items[2]]
 
+  const accentColors = [
+    'bg-pink-500/20',
+    'bg-blue-500/20',
+    'bg-amber-500/20',
+  ]
   return (
-    <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
-      {displayItems.map((stat) => {
+    <div className="grid grid-cols-1 md:grid-cols-3 gap-4 md:gap-6">
+      {displayItems.map((stat, i) => {
         const Icon = stat.icon
+        const accent = accentColors[i % accentColors.length]
         return (
-          <Card key={stat.title} className="bg-card border-border">
-            <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
-              <CardTitle className="text-sm font-medium text-muted-foreground">
-                {stat.title}
-              </CardTitle>
-              <Icon className="h-4 w-4 text-muted-foreground" />
-            </CardHeader>
-            <CardContent>
-              <div className="text-2xl font-bold text-foreground">{stat.value}</div>
-              {stat.change && (
-                <p
-                  className={`text-xs ${
-                    stat.changeType === 'positive'
-                      ? 'text-green-600 dark:text-green-400'
-                      : 'text-red-600 dark:text-red-400'
-                  }`}
-                >
-                  {stat.change} geçen aydan
-                </p>
-              )}
-            </CardContent>
-          </Card>
+          <div
+            key={stat.title}
+            className={`${accent} rounded-xl sm:rounded-2xl p-4 sm:p-6 text-white`}
+          >
+            <div className={`${accent} w-8 h-8 rounded-full flex items-center justify-center mb-2`}>
+              <Icon className="text-white w-4 h-4" />
+            </div>
+            <div className="text-2xl font-bold">{stat.value}</div>
+            <div className="text-xs text-gray-400">{stat.title.toUpperCase()}</div>
+          </div>
         )
       })}
     </div>

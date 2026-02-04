@@ -9,6 +9,7 @@
 | **Veli paneli** | https://veli.yisa-s.com | Veli / çocuk takibi |
 | **Tanıtım** | https://yisa-s.com | Bu proje (YISA_S_APP) — landing sayfası |
 | **Vercel varsayılan** | https://yisa-s-app.vercel.app | → app.yisa-s.com'a yönlendirilir |
+| **Railway (opsiyonel)** | https://xxx.up.railway.app | Yedek/API deploy — Vercel ile aynı kod |
 
 ## Yönlendirme
 

@@ -1,0 +1,117 @@
+{
+  "meta": {
+    "description": "v0 tasarım komutları — her rol için panel UI. Sırayla v0'a verilir, Cursor düzenler.",
+    "created": "2026-02-05",
+    "workflow": "v0 çalıştır → Cursor düzenle → Şablonlarda görüntü"
+  },
+  "prompts": [
+    {
+      "id": "rol-01-patron",
+      "rol": "Patron",
+      "sira": 1,
+      "prompt": "YİSA-S Patron paneli dashboard: app.yisa-s.com. Giriş sonrası üstte istatistik kartları (Gelir, Gider, Onay, Başvuru) — pembe, mavi, amber, yeşil vurgular. Ortada Geniş Ekran ve Şablonlar link kartları. Sol altta Robot Asistan Chat (mesaj kutusu, Gönder butonu). Sağda Onay Kuyruğu listesi, Oyna Deploy butonu. Modern, koyu tema (gray-950), responsive. Türkçe."
+    },
+    {
+      "id": "rol-02-franchise",
+      "rol": "Franchise Firma Sahibi",
+      "sira": 2,
+      "prompt": "YİSA-S Franchise paneli: firma sahibi giriş sonrası. Üstte sekme navigasyon (Genel Bakış, Öğrenciler, Antrenörler, Ders Programı, Aidat, Yoklama, COO Mağazası, Ayarlar). Genel Bakış'ta özet kartlar (öğrenci sayısı, personel, bu hafta yoklama). Öğrenciler: tablo + Ekle butonu. Ders Programı: haftalık tablo Pzt-Paz. COO Mağazası: şablon kartları, Satin Al. Renkli, modern, Türkçe."
+    },
+    {
+      "id": "rol-03-cok-subeli",
+      "rol": "İkinci Şubesi Olan Firma Sahibi",
+      "sira": 3,
+      "prompt": "YİSA-S çok şubeli firma sahibi giriş ekranı: Şube seçim. Her şube bir kart (ad, adres, öğrenci sayısı, durum). Kart tıklanınca o şubenin franchise paneli açılır. Header'da 'Şube Değiştir' butonu. Grid layout, 2-3 kart yan yana. Türkçe."
+    },
+    {
+      "id": "rol-04-tesis-muduru",
+      "rol": "Tesis İşletme Müdürü",
+      "sira": 4,
+      "prompt": "YİSA-S Tesis Müdürü paneli: Tek tesis operasyon. Üstte bugünün özeti (yoklama sayısı, ders sayısı). Yoklama girişi formu (mevcut/yarımcı checkbox). Personel listesi tablo. Ders programı görüntüleme. Kompakt dashboard. Türkçe."
+    },
+    {
+      "id": "rol-05-sportif-direktor",
+      "rol": "Sportif Direktör",
+      "sira": 5,
+      "prompt": "YİSA-S Sportif Direktör paneli: Sporcu listesi tablo (ad, seviye, branş, son değerlendirme). CSPO antrenman önerileri kartı (readOnly). Kazanım/bel görünümü. Tablo + kart layout. Türkçe, sporcu verisi gizli."
+    },
+    {
+      "id": "rol-06-uzman-antrenor",
+      "rol": "Uzman Antrenör",
+      "sira": 6,
+      "prompt": "YİSA-S Uzman Antrenör paneli: Bugünkü derslerim listesi (saat, grup, sporcu sayısı). Yoklama formu (mevcut/yarımcı). Sporcu notları (ölçüm, gelişim). CSPO antrenman önerisi kartı. Mobil uyumlu. Türkçe."
+    },
+    {
+      "id": "rol-07-antrenor",
+      "rol": "Antrenör",
+      "sira": 7,
+      "prompt": "YİSA-S Antrenör paneli (kısıtlı): Sadece atandığı dersler ve sporcular. Derslerim listesi. Yoklama (mevcut/yarımcı). Kısa sporcu notu alanı. Minimal layout. Türkçe."
+    },
+    {
+      "id": "rol-08-yardimci-antrenor",
+      "rol": "Yardımcı Antrenör",
+      "sira": 8,
+      "prompt": "YİSA-S Yardımcı Antrenör paneli: Sadece yoklama formu (mevcut/yarımcı checkbox) ve tek satır not alanı. Çok minimal, mobil. Türkçe."
+    },
+    {
+      "id": "rol-09-temizlik",
+      "rol": "Temizlik Personeli",
+      "sira": 9,
+      "prompt": "YİSA-S Temizlik personeli paneli: Günlük checklist. Salon, Vestiyer, WC, Oyun alanı — her biri checkbox. Tamamla butonu. Sorun bildir linki. Basit, mobil, Türkçe."
+    },
+    {
+      "id": "rol-10-halkla-iliskiler",
+      "rol": "Halkla İlişkiler",
+      "sira": 10,
+      "prompt": "YİSA-S Halkla İlişkiler paneli: Sosyal medya içerik takvimi (haftalık). CMO kampanya önerileri kartları. İletişim listesi (veli/ziyaretçi). Pazarlama odaklı. Türkçe."
+    },
+    {
+      "id": "rol-11-kayit",
+      "rol": "Kayıt Personeli",
+      "sira": 11,
+      "prompt": "YİSA-S Kayıt personeli paneli: Yeni kayıt formu (ad, email, tesis türü). Aidat listesi tablo (ödenen/bekleyen). Ödeme girişi butonu. Tablo + form. Türkçe."
+    },
+    {
+      "id": "rol-12-veli",
+      "rol": "Veli",
+      "sira": 12,
+      "prompt": "YİSA-S Veli paneli: Çocuklarım kartları (ad, yaş, seviye). Çocuk seç → Gelişim grafikleri (çizgi/bar). Ödeme bölümü. Sağlık özeti (genel, ham veri yok). Renkli, sıcak, çocuk dostu. Türkçe."
+    },
+    {
+      "id": "rol-13-cok-cocuklu-veli",
+      "rol": "İkinci Çocuğu Olan Veli",
+      "sira": 13,
+      "prompt": "YİSA-S çok çocuklu veli paneli: Üstte çocuk seçici (tabs veya kartlar — Ahmet, Ayşe). Seçilen çocuğun gelişim grafiği, ödeme, sağlık. Hızlı geçiş butonu. Türkçe."
+    },
+    {
+      "id": "rol-14-sporcu",
+      "rol": "Sporcu",
+      "sira": 14,
+      "prompt": "YİSA-S Sporcu paneli: Kendi gelişim grafiği (çizgi). Seviye rozeti. Son antrenmanlar özeti. Çocuk dostu, motive edici, renkli. Türkçe."
+    },
+    {
+      "id": "rol-15-demo",
+      "rol": "Demo Kullanıcılar",
+      "sira": 15,
+      "prompt": "YİSA-S Demo/Vitrin sayfası: Paket kartları (Starter, Pro, Enterprise). Form alanları (Ad, E-posta, Tesis türü, Şehir). Demo Talep Et butonu. Ziyaretçi karşılama. Türkçe."
+    },
+    {
+      "id": "rol-16-sosyal-medya",
+      "rol": "Sosyal Medya Franchise",
+      "sira": 16,
+      "prompt": "YİSA-S Franchise sosyal medya modülü: COO Mağazası'ndan sosyal medya paketi kartı. İçerik takvimi (aylık/haftalık). CMO post önerileri (hashtag, metin). Pazarlama odaklı. Türkçe."
+    },
+    {
+      "id": "rol-17-web-sitesi",
+      "rol": "Web Sitesi Franchise",
+      "sira": 17,
+      "prompt": "YİSA-S Franchise web sitesi talebi: COO Mağazası'nda web şablonu kartları. Satin Al butonu. Kişiselleştirme (logo yükle, renk seç). Türkçe."
+    },
+    {
+      "id": "rol-18-ders-programi",
+      "rol": "Ders Programı Düzenleyici",
+      "sira": 18,
+      "prompt": "YİSA-S Ders Programı düzenleyici: Haftalık tablo. Yatay: Pzt, Sal, Çar, Per, Cum, Cmt, Paz. Dikey: 09:00-20:00 saat dilimleri. Hücreye tıkla → Ders ekle modal (grup, antrenör). Sil butonu. Kaydet butonu. Net tablo görünümü. Türkçe."
+    }
+  ]
+}

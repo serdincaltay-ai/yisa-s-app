@@ -28,7 +28,9 @@
 3. Ortam değişkenleri: `NEXT_PUBLIC_SUPABASE_URL`, `NEXT_PUBLIC_SUPABASE_ANON_KEY`, `SUPABASE_SERVICE_ROLE_KEY`, `NEXT_PUBLIC_PATRON_EMAIL` tanımlı mı?
 
 ### Railway (opsiyonel)
-- Bu projede Railway kullanılmıyor; backend Next.js API (Vercel'de).
+- Vercel ile aynı kod deploy edilebilir. GitHub bağlıysa push sonrası otomatik deploy.
+- Railway → Proje → Variables: `DATABASE_URL`, `NEXT_PUBLIC_SUPABASE_*`, AI API anahtarları (Vercel ile aynı).
+- Detay: `TESLIM_VE_DEPLOY_TAM.md` Bölüm 3.
 
 ### Supabase
 1. **TEK_SEFERDE_YENI_MIGRASYONLAR.sql** çalıştırıldı mı? (ceo_routines, demo_requests manychat, vb.)
@@ -92,6 +94,7 @@ git push origin main
 | `ROBOT_ENTEGRASYON_ANAYASA.md` | Robot zinciri, şablonlar |
 | `DEPLOY_TAM_KOMUTLAR.md` | Supabase, GitHub, Vercel adımları |
 | `CANLI_SITE_ADRESLERI.md` | Canlı linkler, panel URL'leri |
+| `docs/CANLI_SITELER.md` | Özet tablo (Vercel, Railway dahil) |
 
 ---
 

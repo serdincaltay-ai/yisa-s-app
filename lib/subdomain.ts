@@ -35,12 +35,14 @@ export const PANEL_LOGIN_PATH: Record<PanelType, string> = {
   www: '/',
 }
 
-/** Panel için PWA başlangıç URL */
+const APP_BASE = 'https://app.yisa-s.com'
+
+/** Panel için PWA başlangıç URL — www (yisa-s.com) PWA app.yisa-s.com'a açılsın */
 export const PANEL_START_URL: Record<PanelType, string> = {
   patron: '/dashboard',
   franchise: '/franchise',
   veli: '/veli',
-  www: '/',
+  www: `${APP_BASE}/dashboard`, // yisa-s.com'dan yüklenirse app.yisa-s.com açılsın
 }
 
 /** Panel için PWA uygulama adı */

@@ -15,6 +15,8 @@ import {
   ImageIcon,
   ExternalLink,
   RefreshCw,
+  Play,
+  FileText,
 } from 'lucide-react'
 
 const SITELER = [
@@ -38,6 +40,7 @@ export default function GenisEkranPage() {
   const [stats, setStats] = useState<Stats | null>(null)
   const [franchises, setFranchises] = useState<Franchise[]>([])
   const [templateCount, setTemplateCount] = useState<number>(0)
+  const [pendingItems, setPendingItems] = useState<{ id: string; title: string; displayText?: string }[]>([])
   const [loading, setLoading] = useState(true)
 
   const fetchData = () => {
@@ -46,12 +49,24 @@ export default function GenisEkranPage() {
       fetch('/api/stats').then((r) => r.json()),
       fetch('/api/franchises').then((r) => r.json()),
       fetch('/api/templates').then((r) => r.json()),
+      fetch('/api/approvals').then((r) => r.json()),
     ])
-      .then(([s, f, t]) => {
+      .then(([s, f, t, a]) => {
         setStats(s)
         setFranchises(Array.isArray(f?.items) ? f.items : Array.isArray(f) ? f : [])
         const sablonlar = t?.sablonlar ?? t?.coo_templates ?? t?.templates ?? []
         setTemplateCount(Array.isArray(sablonlar) ? sablonlar.length : 0)
+        const items = Array.isArray(a?.items) ? a.items : []
+        setPendingItems(
+          items
+            .filter((i: { status?: string }) => i.status === 'pending')
+            .slice(0, 5)
+            .map((i: { id: string; title?: string; displayText?: string }) => ({
+              id: i.id,
+              title: i.title ?? '-',
+              displayText: i.displayText,
+            }))
+        )
       })
       .catch(() => {})
       .finally(() => setLoading(false))
@@ -85,6 +100,46 @@ export default function GenisEkranPage() {
           <RefreshCw size={20} className={loading ? 'animate-spin' : ''} />
         </button>
       </header>
+
+      {/* Çalıştırılacaklar — Neyi çalıştıracağınızı burada görün */}
+      {pendingItems.length > 0 && (
+        <section className="mb-8 bg-pink-500/10 border border-pink-500/30 rounded-xl p-6">
+          <h2 className="flex items-center gap-2 text-lg font-semibold mb-4 text-pink-300">
+            <Play size={20} />
+            Çalıştırılacaklar ({pendingItems.length})
+          </h2>
+          <p className="text-sm text-white/70 mb-4">
+            Oyna&apos;ya basmadan önce burada görün — neyin deploy edileceğini kontrol edin.
+          </p>
+          <div className="space-y-3">
+            {pendingItems.map((item) => (
+              <Link
+                key={item.id}
+                href={`/dashboard/onay-kuyrugu?preview=${item.id}`}
+                className="block p-4 bg-white/5 rounded-lg border border-white/10 hover:border-pink-500/50 transition-colors"
+              >
+                <div className="flex items-start gap-3">
+                  <FileText size={18} className="text-pink-400 mt-0.5 flex-shrink-0" />
+                  <div className="min-w-0 flex-1">
+                    <p className="font-medium truncate">{item.title}</p>
+                    {item.displayText && (
+                      <p className="text-xs text-white/60 mt-1 line-clamp-2">{item.displayText.slice(0, 150)}…</p>
+                    )}
+                  </div>
+                  <ExternalLink size={14} className="text-white/40 flex-shrink-0" />
+                </div>
+              </Link>
+            ))}
+          </div>
+          <Link
+            href="/dashboard/ozel-araclar"
+            className="inline-flex items-center gap-2 mt-4 text-sm text-pink-400 hover:text-pink-300"
+          >
+            <Play size={14} />
+            Oyna — Deploy
+          </Link>
+        </section>
+      )}
 
       {/* Patron Panel Verileri */}
       <section className="grid grid-cols-2 md:grid-cols-5 gap-4 mb-8">

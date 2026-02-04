@@ -1,0 +1,30 @@
+---
+description: UI/tasarım → v0, kod → GPT, Claude kontrol — görev kilidi
+alwaysApply: true
+---
+
+# Görev Kilidi — UI / Kod / Kontrol Akışı
+
+Bu kural kilitlidir. Tüm geliştirme görevlerinde aşağıdaki akış uygulanır:
+
+## 1. UI veya Tasarım Görevleri
+- **Kaynak:** v0
+- Ne zaman: Sayfa düzeni, bileşen tasarımı, renkler, görsel düzenleme
+- Nasıl: v0’a sor, v0 çıktısını referans al
+
+## 2. Kod Görevleri
+- **Kaynak:** GPT
+- Ne zaman: API, mantık, TypeScript/JavaScript, veritabanı, backend
+- Nasıl: GPT’ye danış, GPT önerisini kullan
+
+## 3. Kontrol
+- **Kaynak:** Claude
+- Ne zaman: Her görev sonrası
+- Nasıl: Claude ile kontrol ettir; tutarlılık, hata, güvenlik
+
+## Özet
+| Görev Türü | Danışılacak |
+|------------|-------------|
+| UI / tasarım | v0 |
+| Kod | GPT |
+| Kontrol | Claude |

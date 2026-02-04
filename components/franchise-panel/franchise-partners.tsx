@@ -2,7 +2,6 @@
 
 import Link from 'next/link'
 import { useState } from 'react'
-import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card'
 import { Button } from '@/components/ui/button'
 import { Badge } from '@/components/ui/badge'
 import { Plus, MoreHorizontal, Phone, Mail } from 'lucide-react'
@@ -47,11 +46,11 @@ export function FranchisePartners() {
   const getStatusColor = (status: string) => {
     switch (status) {
       case 'active':
-        return 'bg-green-500/10 text-green-600 dark:text-green-400 border-green-500/20'
+        return 'bg-green-500/20 text-green-400 border-green-500/30'
       case 'pending':
-        return 'bg-amber-500/10 text-amber-600 dark:text-amber-400 border-amber-500/20'
+        return 'bg-amber-500/20 text-amber-400 border-amber-500/30'
       default:
-        return 'bg-muted text-muted-foreground border-border'
+        return 'bg-gray-700 text-gray-400 border-gray-600'
     }
   }
 
@@ -67,30 +66,30 @@ export function FranchisePartners() {
   }
 
   return (
-    <Card className="bg-card border-border">
-      <CardHeader>
-        <div className="flex items-center justify-between">
-          <CardTitle className="text-foreground">Franchise Ortakları</CardTitle>
-          <Button size="sm" asChild>
+    <div className="bg-gray-900 rounded-xl sm:rounded-2xl p-4 sm:p-6 text-white">
+      <div className="mb-4">
+        <h2 className="text-base sm:text-lg md:text-xl font-semibold">Franchise Ortakları</h2>
+        <p className="text-xs sm:text-sm text-gray-400 mt-1">Ortaklarınızı ve projelerini yönetin</p>
+        <div className="flex justify-end mt-2">
+          <Button size="sm" asChild className="bg-pink-500/20 hover:bg-pink-500/30 text-white border-0">
             <Link href="/dashboard/franchises">
               <Plus className="h-4 w-4 mr-2" />
               Yeni Ortak
             </Link>
           </Button>
         </div>
-      </CardHeader>
-      <CardContent>
-        <div className="space-y-4">
+      </div>
+      <div className="space-y-4">
           {partners.map((partner) => (
             <div
               key={partner.id}
-              className="flex items-center justify-between p-4 border border-border rounded-lg hover:bg-accent/50 transition-colors"
+              className="flex items-center justify-between p-4 bg-gray-800/50 rounded-xl hover:bg-gray-800 transition-colors"
             >
               <div className="flex-1">
                 <div className="flex items-center space-x-3">
                   <div>
-                    <h3 className="font-medium text-foreground">{partner.name}</h3>
-                    <p className="text-sm text-muted-foreground">
+                    <h3 className="font-medium text-white">{partner.name}</h3>
+                    <p className="text-sm text-gray-400">
                       {partner.company}
                     </p>
                   </div>
@@ -98,7 +97,7 @@ export function FranchisePartners() {
                     {getStatusText(partner.status)}
                   </Badge>
                 </div>
-                <div className="mt-2 flex items-center space-x-4 text-sm text-muted-foreground">
+                <div className="mt-2 flex items-center space-x-4 text-sm text-gray-400">
                   <span>{partner.projects} proje</span>
                   <span className="flex items-center">
                     <Phone className="h-3 w-3 mr-1" />
@@ -133,7 +132,6 @@ export function FranchisePartners() {
             </div>
           ))}
         </div>
-      </CardContent>
-    </Card>
+    </div>
   )
 }

@@ -13,6 +13,7 @@ Lokal (localhost) kullanmadan **doğrudan canlı sitelere** girmek için adresle
 | **Veli paneli** | https://veli.yisa-s.com | Veli / çocuk takibi |
 | **Tanıtım** | https://yisa-s.com | Bu proje — landing / tanıtım sayfası |
 | **Vercel varsayılan** | https://yisa-s-app.vercel.app | → app.yisa-s.com'a yönlendirilir |
+| **Railway (opsiyonel)** | https://xxx.up.railway.app | Yedek/API deploy — Vercel ile aynı kod |
 
 **Not:** `yisa-s.com` ve `www.yisa-s.com` bu sitede kalır, tanıtım sayfası gösterilir. `yisa-s-app.vercel.app` → app.yisa-s.com'a yönlendirilir.
 

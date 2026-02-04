@@ -1,5 +1,5 @@
 // YİSA-S Service Worker v2.0
-const CACHE_NAME = 'yisa-s-v2'
+const CACHE_NAME = 'yisa-s-v3'
 const OFFLINE_URL = '/offline.html'
 
 // Önbelleğe alınacak statik dosyalar

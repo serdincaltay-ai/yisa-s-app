@@ -19,6 +19,7 @@ import {
   Play,
   Rocket,
   Store,
+  LayoutTemplate,
   Maximize2,
   Minimize2,
   ClipboardCheck,
@@ -744,25 +745,25 @@ export default function DashboardPage() {
   }, [chatMessages])
 
   return (
-    <div className="min-h-screen bg-background text-foreground">
+    <div className="min-h-screen text-white bg-gray-950">
       <div className="p-4 sm:p-6 space-y-6">
-        {/* v0/shadcn tarzı header */}
-        <header className="flex items-center justify-between py-4 border-b border-border">
+        {/* Header */}
+        <header className="flex items-center justify-between py-4 border-b border-gray-800">
           <div className="flex items-center gap-3">
-            <div className="relative w-9 h-9 flex-shrink-0 rounded-lg overflow-hidden bg-card border border-border">
+            <div className="relative w-9 h-9 flex-shrink-0 rounded-lg overflow-hidden bg-gray-900 border border-gray-700">
               <Image src="/logo.png" alt="YİSA-S" fill className="object-contain" />
             </div>
             <div>
-              <span className="text-lg font-semibold text-foreground">YİSA-S</span>
-              <p className="text-xs text-muted-foreground">Patron Komuta Merkezi</p>
+              <span className="text-lg font-semibold text-white">YİSA-S</span>
+              <p className="text-xs text-gray-400">Patron Komuta Merkezi</p>
             </div>
           </div>
           <div className="flex items-center gap-3">
-            <span className="text-xs text-muted-foreground font-mono tabular-nums">
+            <span className="text-xs text-gray-400 font-mono tabular-nums">
               {new Date().toLocaleTimeString('tr-TR', { hour12: false, hour: '2-digit', minute: '2-digit' })}
             </span>
-            <Avatar className="h-8 w-8 border border-border">
-              <AvatarFallback className="bg-muted text-muted-foreground text-xs font-medium">
+            <Avatar className="h-8 w-8 border border-gray-700">
+              <AvatarFallback className="bg-gray-800 text-gray-300 text-xs font-medium">
                 {(user?.email ?? 'P').charAt(0).toUpperCase()}
               </AvatarFallback>
             </Avatar>
@@ -771,32 +772,62 @@ export default function DashboardPage() {
 
         {/* Hoş geldin */}
         {user && isPatron(user) && (
-          <p className="text-sm text-muted-foreground">Sistem hazır. Komut gönderin veya onay kuyruğunu yönetin.</p>
+          <p className="text-sm text-gray-400">Sistem hazır. Komut gönderin veya onay kuyruğunu yönetin.</p>
         )}
 
-        {/* İstatistik kartları — v0 tarzı minimal */}
+        {/* İstatistik kartları — renkli vurgular */}
         <div className="grid grid-cols-2 lg:grid-cols-4 gap-4">
           {[
-            { label: 'Gelir', value: `₺${stats.franchiseRevenueMonth.toLocaleString('tr-TR')}` },
-            { label: 'Gider', value: `₺${stats.expensesMonth.toLocaleString('tr-TR')}` },
-            { label: 'Onay', value: stats.pendingApprovals },
-            { label: 'Başvuru', value: stats.newFranchiseApplications },
+            { label: 'Gelir', value: `₺${stats.franchiseRevenueMonth.toLocaleString('tr-TR')}`, accent: 'bg-pink-500/20 border-pink-500/30', text: 'text-pink-300' },
+            { label: 'Gider', value: `₺${stats.expensesMonth.toLocaleString('tr-TR')}`, accent: 'bg-blue-500/20 border-blue-500/30', text: 'text-blue-300' },
+            { label: 'Onay', value: stats.pendingApprovals, accent: 'bg-amber-500/20 border-amber-500/30', text: 'text-amber-300' },
+            { label: 'Başvuru', value: stats.newFranchiseApplications, accent: 'bg-emerald-500/20 border-emerald-500/30', text: 'text-emerald-300' },
           ].map((s, i) => (
-            <div key={i} className="rounded-lg border border-border bg-card p-4 transition-colors hover:border-border/80">
-              <p className="text-xs text-muted-foreground mb-1">{s.label}</p>
-              <p className="text-lg font-semibold font-mono text-foreground tabular-nums">{s.value}</p>
+            <div key={i} className={`${s.accent} border rounded-xl sm:rounded-2xl p-4 text-white transition-colors`}>
+              <p className={`text-xs ${s.text} mb-1`}>{s.label.toUpperCase()}</p>
+              <p className="text-lg font-semibold font-mono tabular-nums">{s.value}</p>
             </div>
           ))}
+        </div>
+
+        {/* Geniş Ekran / Şablonlar — ortada */}
+        <div className="flex flex-wrap gap-4">
+          <a href="/dashboard/genis-ekran" className="flex-1 min-w-[200px]">
+            <div className="rounded-2xl border-2 border-pink-500/40 bg-gradient-to-r from-pink-500/10 to-amber-500/10 p-5 hover:border-pink-500/60 transition-colors">
+              <div className="flex items-center gap-3">
+                <div className="w-12 h-12 rounded-xl bg-pink-500/20 flex items-center justify-center">
+                  <Maximize2 className="text-pink-400" size={24} />
+                </div>
+                <div>
+                  <h3 className="font-semibold text-white">Geniş Ekran</h3>
+                  <p className="text-sm text-gray-400">Özet, siteler, çalıştırılacaklar</p>
+                </div>
+              </div>
+            </div>
+          </a>
+          <a href="/dashboard/sablonlar" className="flex-1 min-w-[200px]">
+            <div className="rounded-2xl border-2 border-amber-500/40 bg-gradient-to-r from-amber-500/10 to-emerald-500/10 p-5 hover:border-amber-500/60 transition-colors">
+              <div className="flex items-center gap-3">
+                <div className="w-12 h-12 rounded-xl bg-amber-500/20 flex items-center justify-center">
+                  <LayoutTemplate className="text-amber-400" size={24} />
+                </div>
+                <div>
+                  <h3 className="font-semibold text-white">Şablonlar</h3>
+                  <p className="text-sm text-gray-400">Büyük ekranda önizleme, v0 Çıkart</p>
+                </div>
+              </div>
+            </div>
+          </a>
         </div>
 
         <div className="grid grid-cols-1 lg:grid-cols-2 gap-4 lg:gap-6">
         {/* Başlangıç Görevleri & Vitrin */}
         <div className="space-y-4">
-          <Card className="bg-card border-border">
+          <Card className="bg-gray-900 border-gray-800">
             <CardHeader className="py-4">
-              <CardTitle className="text-base !mb-0">Başlangıç Görevleri</CardTitle>
-              <p className="text-xs text-muted-foreground mt-1">
-                <Badge variant="secondary" className="text-xs">
+              <CardTitle className="text-base !mb-0 text-white">Başlangıç Görevleri</CardTitle>
+              <p className="text-xs text-gray-400 mt-1">
+                <Badge variant="secondary" className="text-xs bg-gray-800 text-gray-300">
                   {startupStatus?.total_pending ?? 0} görev bekliyor
                 </Badge>
               </p>
@@ -819,7 +850,7 @@ export default function DashboardPage() {
                   </>
                 )}
               </Button>
-              <p className="text-xs text-muted-foreground mt-2">
+              <p className="text-xs text-gray-400 mt-2">
                 Direktörlükler ilk görevlerini yapacak.
               </p>
               {stats.pendingApprovals > 0 && (
@@ -833,16 +864,16 @@ export default function DashboardPage() {
             </CardContent>
           </Card>
 
-          <Card className="bg-card border-border">
+          <Card className="bg-gray-900 border-gray-800">
             <CardHeader className="py-4">
-              <CardTitle className="text-base flex items-center gap-2 !mb-0">
-                <Store size={18} className="text-muted-foreground" />
+              <CardTitle className="text-base flex items-center gap-2 !mb-0 text-white">
+                <Store size={18} className="text-gray-400" />
                 Vitrin
               </CardTitle>
             </CardHeader>
             <CardContent className="pt-0">
               <a href="/dashboard/franchises">
-                <Button variant="outline" className="w-full">
+                <Button variant="outline" className="w-full border-gray-700 text-gray-300 hover:bg-gray-800">
                   Franchise Vitrinleri
                 </Button>
               </a>
@@ -851,12 +882,12 @@ export default function DashboardPage() {
         </div>
 
         {/* Sistem Durumu */}
-        <Card className="bg-card border-border">
+        <Card className="bg-gray-900 border-gray-800">
           <CardHeader className="py-4">
-            <CardTitle className="text-base !mb-0">Sistem Durumu</CardTitle>
+            <CardTitle className="text-base !mb-0 text-white">Sistem Durumu</CardTitle>
           </CardHeader>
           <CardContent className="pt-0">
-            <a href="/api/system/status" target="_blank" rel="noopener noreferrer" className="text-sm text-primary hover:underline font-mono">
+            <a href="/api/system/status" target="_blank" rel="noopener noreferrer" className="text-sm text-pink-300 hover:underline font-mono">
               /api/system/status
             </a>
           </CardContent>
@@ -867,18 +898,18 @@ export default function DashboardPage() {
       <div className="grid grid-cols-1 lg:grid-cols-12 gap-6">
         {/* Sol: Robot Asistan Chat */}
         <div className="lg:col-span-8">
-      <Card className="bg-card border-border overflow-hidden flex flex-col">
+      <Card className="bg-gray-900 border-gray-800 overflow-hidden flex flex-col">
         <button
           type="button"
           onClick={() => setChatExpanded(!chatExpanded)}
-          className="flex items-center gap-3 px-6 py-4 border-b border-border hover:bg-accent/50 transition-colors w-full text-left"
+          className="flex items-center gap-3 px-6 py-4 border-b border-gray-800 hover:bg-gray-800/50 transition-colors w-full text-left"
         >
-          <div className="w-10 h-10 rounded-lg bg-muted flex items-center justify-center border border-border">
-            <Bot className="text-muted-foreground" size={22} />
+          <div className="w-10 h-10 rounded-xl bg-pink-500/20 flex items-center justify-center">
+            <Bot className="text-white" size={22} />
           </div>
           <div className="flex-1 min-w-0">
-            <h2 className="font-semibold text-foreground">YİSA-S Robot Asistan</h2>
-            <p className="text-xs text-muted-foreground font-mono">
+            <h2 className="font-semibold text-white">YİSA-S Robot Asistan</h2>
+            <p className="text-xs text-gray-400 font-mono">
               {useQualityFlow ? 'CIO → CEO → CELF → Patron Onay' : 'Router + Task Flow'}
             </p>
           </div>
@@ -1352,15 +1383,15 @@ export default function DashboardPage() {
 
         {/* Sağ: Onay Kuyruğu */}
         <div className="lg:col-span-4">
-          <Card className="bg-card border-border overflow-hidden h-full">
+          <Card className="bg-gray-900 border-gray-800 overflow-hidden h-full">
             <button
               type="button"
               onClick={() => setQueueExpanded(!queueExpanded)}
-              className="w-full flex items-center justify-between px-6 py-4 border-b border-border hover:bg-accent/50 transition-colors text-left"
+              className="w-full flex items-center justify-between px-6 py-4 border-b border-gray-800 hover:bg-gray-800/50 transition-colors text-left"
             >
               <div className="flex items-center gap-2">
-                <ClipboardCheck size={20} className="text-muted-foreground" />
-                <span className="font-semibold text-foreground">Havuz (Onay Kuyruğu)</span>
+                <ClipboardCheck size={20} className="text-gray-400" />
+                <span className="font-semibold text-white">Havuz (Onay Kuyruğu)</span>
                 <Badge variant="secondary" className="text-xs">
                   {approvalItems.filter((i) => i.status === 'pending').length} bekliyor
                 </Badge>

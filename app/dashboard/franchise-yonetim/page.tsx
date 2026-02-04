@@ -7,11 +7,11 @@ import { PanelDesigns } from '@/components/franchise-panel/panel-designs'
 
 export default function FranchiseYonetimPage() {
   return (
-    <div className="min-h-screen bg-background">
+    <div className="min-h-screen bg-gray-950 text-white">
       <DashboardHeader />
 
-      <main className="container mx-auto px-4 py-8 space-y-8">
-        <Suspense fallback={<div className="text-muted-foreground">Yükleniyor...</div>}>
+      <main className="container mx-auto px-4 sm:px-6 md:px-8 py-6 md:py-8 space-y-6 md:space-y-8">
+        <Suspense fallback={<div className="text-gray-400">Yükleniyor...</div>}>
           <StatsOverview />
         </Suspense>
 

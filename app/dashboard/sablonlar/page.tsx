@@ -1,7 +1,17 @@
 'use client'
 
 import { useEffect, useState, useCallback } from 'react'
-import { LayoutTemplate, RefreshCw, AlertCircle, Store, Lightbulb, X } from 'lucide-react'
+import {
+  LayoutTemplate,
+  RefreshCw,
+  AlertCircle,
+  Store,
+  Lightbulb,
+  Maximize2,
+  Minimize2,
+  Sparkles,
+  Monitor,
+} from 'lucide-react'
 
 const KATEGORILER = [
   'Tümü',
@@ -55,6 +65,19 @@ function isEmptyIcerik(icerik: Record<string, unknown>): boolean {
   return keys.length === 0 || (keys.length === 1 && keys[0] === 'aciklama' && !icerik.aciklama)
 }
 
+function extractHtml(icerik: Record<string, unknown>): string | null {
+  if (icerik?.html && typeof icerik.html === 'string') return icerik.html
+  if (icerik?.ui && typeof icerik.ui === 'string') return icerik.ui
+  if (icerik?.content && typeof icerik.content === 'string' && icerik.content.trim().startsWith('<')) return icerik.content as string
+  return null
+}
+
+function buildV0Prompt(s: SablonItem): string {
+  const acik = typeof s.icerik?.aciklama === 'string' ? s.icerik.aciklama : ''
+  const alanlar = Array.isArray(s.icerik?.alanlar) ? (s.icerik.alanlar as string[]).join(', ') : ''
+  return `YİSA-S spor tesisi için "${s.ad}" şablonu. ${acik} ${alanlar ? `Alanlar: ${alanlar}.` : ''} Modern, renkli, responsive React/Next.js UI bileşeni. Türkçe.`
+}
+
 export default function SablonlarPage() {
   const [sablonlar, setSablonlar] = useState<SablonItem[]>([])
   const [toplam, setToplam] = useState(0)
@@ -63,7 +86,11 @@ export default function SablonlarPage() {
   const [suggestions, setSuggestions] = useState<RDSuggestion[]>([])
   const [loading, setLoading] = useState(true)
   const [error, setError] = useState<string | null>(null)
-  const [modalSablon, setModalSablon] = useState<SablonItem | null>(null)
+  const [selectedSablon, setSelectedSablon] = useState<SablonItem | null>(null)
+  const [previewExpanded, setPreviewExpanded] = useState(true)
+  const [v0Output, setV0Output] = useState<string | null>(null)
+  const [v0Loading, setV0Loading] = useState(false)
+  const [previewMode, setPreviewMode] = useState<'raw' | 'html' | 'v0'>('raw')
 
   const fetchData = useCallback(async (kategori?: string) => {
     setLoading(true)
@@ -97,25 +124,58 @@ export default function SablonlarPage() {
     fetchData(kategoriFilter === 'Tümü' ? undefined : kategoriFilter)
   }, [kategoriFilter, fetchData])
 
+  const handleSelectSablon = (s: SablonItem | null) => {
+    setSelectedSablon(s)
+    setV0Output(null)
+    const html = s ? extractHtml(s.icerik) : null
+    setPreviewMode(html ? 'html' : 'raw')
+  }
+
+  const handleV0Cikart = async () => {
+    if (!selectedSablon) return
+    setV0Loading(true)
+    setV0Output(null)
+    try {
+      const prompt = buildV0Prompt(selectedSablon)
+      const res = await fetch('/api/v0/design', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ prompt }),
+      })
+      const data = await res.json()
+      if (data?.ok && data?.text) {
+        setV0Output(data.text)
+        setPreviewMode('v0')
+      } else {
+        setV0Output(`Hata: ${data?.error || 'Bilinmeyen'}`)
+      }
+    } catch (e) {
+      setV0Output(`Hata: ${e instanceof Error ? e.message : 'Bağlantı hatası'}`)
+    } finally {
+      setV0Loading(false)
+    }
+  }
+
   const bosIcerikSayisi = sablonlar.filter((s) => isEmptyIcerik(s.icerik)).length
+  const hasHtml = selectedSablon ? !!extractHtml(selectedSablon.icerik) : false
 
   return (
-    <div className="p-8">
-      <div className="mb-8 flex items-center justify-between flex-wrap gap-4">
+    <div className="p-6 min-h-screen bg-gray-950 text-white">
+      <div className="mb-6 flex items-center justify-between flex-wrap gap-4">
         <div>
           <h1 className="text-2xl font-bold text-white">Şablonlar</h1>
-          <p className="text-slate-400">Direktörlük şablonları — kategoriye göre filtreleyin, tıklayarak içeriği kontrol edin.</p>
-          <div className="mt-3 p-3 rounded-xl bg-slate-800/50 border border-slate-700/50 text-xs text-slate-400 space-y-1">
-            <p><strong className="text-cyan-400">Kim hazırlıyor:</strong> CELF direktörleri (CFO, CMO, vb.) → CEO → Havuzda onay → ceo_templates.</p>
-            <p><strong className="text-amber-400">Format:</strong> JSON (icerik). v0/HT50 için template_type: ui kullanılabilir.</p>
-            <p><strong className="text-emerald-400">Komut zinciri:</strong> Siz komut verirsiniz → Asistanlar işler → Siz sadece onay + push/deploy.</p>
+          <p className="text-gray-400">Şablona tıklayın — sağdaki büyük ekranda içeriği görün, v0 ile görselleştirin.</p>
+          <div className="mt-3 p-3 rounded-xl bg-pink-500/10 border border-pink-500/30 text-xs text-gray-300 space-y-1">
+            <p><strong className="text-pink-400">Geniş Ekran:</strong> Şablon seçince burada görünür. v0 Çıkart ile tasarım üretilir.</p>
+            <p><strong className="text-amber-400">Format:</strong> JSON (icerik). html/ui alanı varsa doğrudan render edilir.</p>
+            <p><strong className="text-emerald-400">Komut:</strong> Siz komut verirsiniz → Asistanlar işler → Onay + deploy.</p>
           </div>
         </div>
         <button
           type="button"
           onClick={() => fetchData(kategoriFilter === 'Tümü' ? undefined : kategoriFilter)}
           disabled={loading}
-          className="flex items-center gap-2 px-4 py-2 rounded-xl bg-slate-700 hover:bg-slate-600 text-slate-200 text-sm transition-colors disabled:opacity-50"
+          className="flex items-center gap-2 px-4 py-2 rounded-xl bg-blue-500/20 border border-blue-500/40 text-blue-300 hover:bg-blue-500/30 text-sm transition-colors disabled:opacity-50"
         >
           <RefreshCw size={16} className={loading ? 'animate-spin' : ''} />
           Yenile
@@ -129,14 +189,14 @@ export default function SablonlarPage() {
       )}
 
       {bosIcerikSayisi > 0 && (
-        <div className="mb-6 p-4 bg-red-500/10 border border-red-500/30 rounded-xl text-red-400 text-sm flex items-center gap-2">
+        <div className="mb-6 p-4 bg-amber-500/10 border border-amber-500/30 rounded-xl text-amber-400 text-sm flex items-center gap-2">
           <AlertCircle size={20} />
-          <span>{bosIcerikSayisi} şablonun içeriği boş. Supabase&apos;de SABLONLAR_TEK_SQL.sql çalıştırıldığından emin olun.</span>
+          <span>{bosIcerikSayisi} şablonun içeriği boş.</span>
         </div>
       )}
 
-      <div className="mb-6 flex flex-wrap items-center gap-2">
-        <span className="text-slate-400 text-sm">Kategori:</span>
+      <div className="mb-4 flex flex-wrap items-center gap-2">
+        <span className="text-gray-400 text-sm">Kategori:</span>
         {KATEGORILER.map((k) => (
           <button
             key={k}
@@ -144,8 +204,8 @@ export default function SablonlarPage() {
             onClick={() => setKategoriFilter(k)}
             className={`px-3 py-1.5 rounded-lg text-sm font-medium transition-colors ${
               kategoriFilter === k
-                ? 'bg-amber-500/30 text-amber-400 border border-amber-500/50'
-                : 'bg-slate-700/50 text-slate-400 border border-slate-600 hover:bg-slate-700 hover:text-slate-300'
+                ? 'bg-pink-500/30 text-pink-300 border border-pink-500/50'
+                : 'bg-gray-800 text-gray-400 border border-gray-700 hover:bg-gray-700 hover:text-gray-300'
             }`}
           >
             {k}
@@ -153,47 +213,43 @@ export default function SablonlarPage() {
         ))}
       </div>
 
-      <div className="mb-4 text-slate-400 text-sm">
-        Toplam: <strong className="text-white">{toplam}</strong> şablon
+      <div className="mb-4 text-gray-400 text-sm">
+        Toplam: <strong className="text-pink-400">{toplam}</strong> şablon
       </div>
 
       {loading ? (
-        <div className="flex items-center justify-center py-16 text-slate-500">
+        <div className="flex items-center justify-center py-16 text-gray-500">
           Yükleniyor…
         </div>
       ) : (
-        <>
-          <div className="mb-8">
-            <h2 className="text-lg font-semibold text-white mb-4 flex items-center gap-2">
-              <LayoutTemplate size={20} /> Şablon Havuzu
+        <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
+          {/* Sol: Şablon listesi */}
+          <div className="lg:col-span-1 space-y-4">
+            <h2 className="text-lg font-semibold text-white flex items-center gap-2">
+              <LayoutTemplate size={20} className="text-pink-400" /> Şablon Havuzu
             </h2>
             {sablonlar.length === 0 ? (
-              <div className="bg-slate-800/50 border border-slate-700 rounded-2xl p-8 text-center">
-                <AlertCircle className="mx-auto mb-2 text-slate-500" size={32} />
-                <p className="text-slate-500 text-sm">
-                  Bu kategoride şablon yok veya <code>ceo_templates</code> tablosu boş. Supabase SQL Editor&apos;da <code>SABLONLAR_TEK_SQL.sql</code> dosyasını çalıştırın.
-                </p>
+              <div className="bg-gray-900 border border-gray-800 rounded-2xl p-8 text-center">
+                <AlertCircle className="mx-auto mb-2 text-gray-500" size={32} />
+                <p className="text-gray-500 text-sm">Bu kategoride şablon yok.</p>
               </div>
             ) : (
-              <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-4">
+              <div className="space-y-2 max-h-[60vh] overflow-y-auto pr-2">
                 {sablonlar.map((s) => (
                   <button
                     key={s.id}
                     type="button"
-                    onClick={() => setModalSablon(s)}
-                    className={`text-left rounded-xl border p-4 transition-colors ${
-                      isEmptyIcerik(s.icerik)
-                        ? 'border-red-500/50 bg-red-500/5 hover:bg-red-500/10'
-                        : 'border-slate-700 bg-slate-800/50 hover:border-amber-500/40 hover:bg-slate-700/50'
+                    onClick={() => handleSelectSablon(s)}
+                    className={`w-full text-left rounded-xl border p-4 transition-all ${
+                      selectedSablon?.id === s.id
+                        ? 'border-pink-500 bg-pink-500/20 ring-2 ring-pink-500/40'
+                        : isEmptyIcerik(s.icerik)
+                          ? 'border-red-500/40 bg-red-500/5 hover:bg-red-500/10 border-gray-700'
+                          : 'border-gray-700 bg-gray-900 hover:border-pink-500/40 hover:bg-gray-800'
                     }`}
                   >
                     <div className="font-medium text-white truncate">{s.ad}</div>
-                    <div className="text-slate-400 text-sm mt-1">{s.kategori}</div>
-                    <div className="text-slate-500 text-xs mt-1 flex items-center gap-2">
-                      <span>{s.durum}</span>
-                      <span>·</span>
-                      <span>{s.olusturan}</span>
-                    </div>
+                    <div className="text-gray-400 text-sm mt-1">{s.kategori}</div>
                     {isEmptyIcerik(s.icerik) && (
                       <div className="mt-2 text-red-400 text-xs flex items-center gap-1">
                         <AlertCircle size={12} /> İçerik boş
@@ -205,126 +261,197 @@ export default function SablonlarPage() {
             )}
           </div>
 
-          {modalSablon && (
+          {/* Sağ: Geniş Ekran önizleme */}
+          <div className="lg:col-span-2">
             <div
-              className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-black/60"
-              onClick={() => setModalSablon(null)}
-              role="dialog"
-              aria-modal="true"
-              aria-labelledby="modal-title"
+              className={`rounded-2xl border-2 overflow-hidden transition-all ${
+                previewExpanded
+                  ? 'border-pink-500/40 bg-gray-900 min-h-[500px]'
+                  : 'border-gray-700 bg-gray-900 min-h-[200px]'
+              }`}
             >
-              <div
-                className="bg-slate-900 border border-slate-700 rounded-2xl max-w-2xl w-full max-h-[85vh] overflow-hidden flex flex-col shadow-xl"
-                onClick={(e) => e.stopPropagation()}
-              >
-                <div className="flex items-center justify-between p-4 border-b border-slate-700">
-                  <h3 id="modal-title" className="text-lg font-semibold text-white">
-                    {modalSablon.ad}
+              <div className="flex items-center justify-between p-4 border-b border-gray-800 bg-gradient-to-r from-pink-500/10 to-amber-500/10">
+                <div className="flex items-center gap-3">
+                  <Monitor size={24} className="text-pink-400" />
+                  <h3 className="text-lg font-semibold text-white">
+                    {selectedSablon ? selectedSablon.ad : 'Geniş Ekran — Şablon seçin'}
                   </h3>
                   <button
                     type="button"
-                    onClick={() => setModalSablon(null)}
-                    className="p-2 rounded-lg text-slate-400 hover:text-white hover:bg-slate-700"
-                    aria-label="Kapat"
+                    onClick={() => setPreviewExpanded(!previewExpanded)}
+                    className="p-2 rounded-lg text-gray-400 hover:text-white hover:bg-gray-700"
+                    title={previewExpanded ? 'Küçült' : 'Genişlet'}
                   >
-                    <X size={20} />
+                    {previewExpanded ? <Minimize2 size={20} /> : <Maximize2 size={20} />}
                   </button>
                 </div>
-                <div className="p-4 text-slate-400 text-sm">
-                  <span className="text-slate-500">Kategori:</span> {modalSablon.kategori}
-                  <span className="mx-2">·</span>
-                  <span className="text-slate-500">Oluşturan:</span> {modalSablon.olusturan}
-                </div>
-                <div className="flex-1 overflow-auto p-4 pt-0 space-y-4">
-                  {typeof modalSablon.icerik?.aciklama === 'string' ? (
-                    <div className="bg-slate-800/50 rounded-xl p-4 border border-slate-700">
-                      <p className="text-xs text-slate-500 font-medium mb-1">Açıklama</p>
-                      <p className="text-slate-300 text-sm">{modalSablon.icerik.aciklama}</p>
-                    </div>
-                  ) : null}
-                  {modalSablon.icerik?.tip != null ? (
-                    <div><span className="text-slate-500">Tip:</span> <span className="text-cyan-400">{String(modalSablon.icerik.tip)}</span></div>
-                  ) : null}
-                  {Array.isArray(modalSablon.icerik?.alanlar) ? (
-                    <div>
-                      <p className="text-slate-500 text-xs mb-1">Alanlar</p>
-                      <p className="text-slate-300 text-sm">{(modalSablon.icerik.alanlar as string[]).join(', ')}</p>
-                    </div>
-                  ) : null}
-                  <pre className="bg-slate-950 border border-slate-700 rounded-xl p-4 text-xs text-slate-400 overflow-auto whitespace-pre-wrap font-mono">
-                    {JSON.stringify(modalSablon.icerik, null, 2)}
-                  </pre>
-                  {isEmptyIcerik(modalSablon.icerik) && (
-                    <p className="mt-2 text-red-400 text-sm">Bu şablonun içeriği boş. Supabase&apos;de SABLONLAR_TEK_SQL.sql çalıştırın.</p>
-                  )}
-                </div>
-              </div>
-            </div>
-          )}
-
-          <div className="mb-8">
-            <h2 className="text-lg font-semibold text-white mb-4 flex items-center gap-2">
-              <Store size={20} /> Şablon Kullanımı
-            </h2>
-            {usages.length === 0 ? (
-              <div className="bg-slate-800/50 border border-slate-700 rounded-2xl p-6 text-center">
-                <p className="text-slate-500 text-sm">
-                  Henüz kayıtlı şablon kullanımı yok.
-                </p>
-              </div>
-            ) : (
-              <div className="bg-slate-800/50 border border-slate-700 rounded-2xl overflow-hidden">
-                <div className="overflow-x-auto">
-                  <table className="w-full text-left">
-                    <thead>
-                      <tr className="border-b border-slate-700">
-                        <th className="px-6 py-4 text-slate-400 font-medium text-sm">Tenant</th>
-                        <th className="px-6 py-4 text-slate-400 font-medium text-sm">Şablon ID</th>
-                        <th className="px-6 py-4 text-slate-400 font-medium text-sm">Kaynak</th>
-                        <th className="px-6 py-4 text-slate-400 font-medium text-sm">Tarih</th>
-                      </tr>
-                    </thead>
-                    <tbody>
-                      {usages.map((u) => (
-                        <tr key={u.id} className="border-b border-slate-700/50 hover:bg-slate-700/30">
-                          <td className="px-6 py-4 text-white font-medium">{u.tenant_name}</td>
-                          <td className="px-6 py-4 text-slate-400 font-mono text-xs">{String(u.template_id).slice(0, 8)}…</td>
-                          <td className="px-6 py-4 text-slate-400">{u.template_source}</td>
-                          <td className="px-6 py-4 text-slate-500 text-sm">
-                            {u.used_at ? new Date(u.used_at).toLocaleString('tr-TR') : '—'}
-                          </td>
-                        </tr>
-                      ))}
-                    </tbody>
-                  </table>
-                </div>
-              </div>
-            )}
-          </div>
-
-          {suggestions.length > 0 && (
-            <div>
-              <h2 className="text-lg font-semibold text-white mb-4 flex items-center gap-2">
-                <Lightbulb size={20} /> Ar-Ge / CEO Güncellemeleri
-              </h2>
-              <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
-                {suggestions.map((s) => (
-                  <div
-                    key={s.id}
-                    className="bg-slate-800/50 border border-slate-700 rounded-2xl p-6 hover:border-amber-500/30 transition-colors"
-                  >
-                    <div className="flex items-start justify-between mb-2">
-                      <h3 className="text-white font-medium">{s.title}</h3>
-                      <span className="text-xs px-2 py-1 rounded-lg bg-amber-500/20 text-amber-400">{s.status}</span>
-                    </div>
-                    {s.description && <p className="text-slate-500 text-sm mb-2">{s.description}</p>}
-                    <p className="text-slate-600 text-xs">{s.source} · {s.created_at ? new Date(s.created_at).toLocaleDateString('tr-TR') : '—'}</p>
+                {selectedSablon && (
+                  <div className="flex items-center gap-2">
+                    <button
+                      type="button"
+                      onClick={() => setPreviewMode('raw')}
+                      className={`px-3 py-1.5 rounded-lg text-xs font-medium ${
+                        previewMode === 'raw' ? 'bg-gray-700 text-white' : 'bg-gray-800 text-gray-400 hover:text-white'
+                      }`}
+                    >
+                      Ham
+                    </button>
+                    {hasHtml && (
+                      <button
+                        type="button"
+                        onClick={() => setPreviewMode('html')}
+                        className={`px-3 py-1.5 rounded-lg text-xs font-medium ${
+                          previewMode === 'html' ? 'bg-blue-500/30 text-blue-300' : 'bg-gray-800 text-gray-400 hover:text-white'
+                        }`}
+                      >
+                        Görüntü
+                      </button>
+                    )}
+                    <button
+                      type="button"
+                      onClick={handleV0Cikart}
+                      disabled={v0Loading}
+                      className="flex items-center gap-2 px-4 py-2 rounded-xl bg-amber-500/20 border border-amber-500/40 text-amber-300 hover:bg-amber-500/30 text-sm font-medium disabled:opacity-50"
+                    >
+                      <Sparkles size={16} className={v0Loading ? 'animate-pulse' : ''} />
+                      {v0Loading ? 'Üretiliyor…' : 'v0 Çıkart'}
+                    </button>
+                    {v0Output && (
+                      <button
+                        type="button"
+                        onClick={() => setPreviewMode('v0')}
+                        className={`px-3 py-1.5 rounded-lg text-xs font-medium ${
+                          previewMode === 'v0' ? 'bg-amber-500/30 text-amber-300' : 'bg-gray-800 text-gray-400 hover:text-white'
+                        }`}
+                      >
+                        v0 Sonuç
+                      </button>
+                    )}
                   </div>
-                ))}
+                )}
+              </div>
+
+              <div className={`overflow-auto ${previewExpanded ? 'min-h-[400px]' : 'min-h-[120px]'} p-6`}>
+                {!selectedSablon ? (
+                  <div className="flex flex-col items-center justify-center h-64 text-gray-500">
+                    <LayoutTemplate size={48} className="mb-4 opacity-50" />
+                    <p>Soldan bir şablon seçin — burada önizleme görünecek</p>
+                    <p className="text-sm mt-2">v0 Çıkart ile tasarım üretebilirsiniz</p>
+                  </div>
+                ) : previewMode === 'v0' && v0Output ? (
+                  <div className="space-y-4">
+                    <div className="rounded-xl border border-amber-500/30 bg-amber-500/5 p-4">
+                      <p className="text-xs text-amber-400 font-medium mb-2">v0 Üretimi</p>
+                      <pre className="text-sm text-gray-300 whitespace-pre-wrap font-mono overflow-x-auto">
+                        {v0Output}
+                      </pre>
+                    </div>
+                    {v0Output.includes('export default') || v0Output.includes('function ') ? (
+                      <div className="rounded-xl border border-gray-700 bg-white/5 p-4 text-gray-400 text-xs">
+                        <p>React/JSX kodu. Kopyalayıp projeye ekleyebilirsiniz.</p>
+                      </div>
+                    ) : null}
+                  </div>
+                ) : previewMode === 'html' && hasHtml ? (
+                  <div className="rounded-xl border border-blue-500/30 bg-white overflow-auto">
+                    <iframe
+                      srcDoc={extractHtml(selectedSablon.icerik) || ''}
+                      title="Şablon önizleme"
+                      className="w-full min-h-[300px] border-0"
+                      sandbox="allow-scripts"
+                    />
+                  </div>
+                ) : (
+                  <div className="space-y-4">
+                    {typeof selectedSablon.icerik?.aciklama === 'string' && (
+                      <div className="bg-emerald-500/10 border border-emerald-500/30 rounded-xl p-4">
+                        <p className="text-xs text-emerald-400 font-medium mb-1">Açıklama</p>
+                        <p className="text-gray-300 text-sm">{selectedSablon.icerik.aciklama}</p>
+                      </div>
+                    )}
+                    {selectedSablon.icerik?.tip != null && (
+                      <p className="text-gray-400 text-sm">
+                        <span className="text-gray-500">Tip:</span>{' '}
+                        <span className="text-cyan-400">{String(selectedSablon.icerik.tip)}</span>
+                      </p>
+                    )}
+                    {Array.isArray(selectedSablon.icerik?.alanlar) && (
+                      <p className="text-gray-400 text-sm">
+                        <span className="text-gray-500">Alanlar:</span>{' '}
+                        <span className="text-pink-300">{(selectedSablon.icerik.alanlar as string[]).join(', ')}</span>
+                      </p>
+                    )}
+                    <pre className="bg-gray-950 border border-gray-700 rounded-xl p-4 text-xs text-gray-400 overflow-auto whitespace-pre-wrap font-mono">
+                      {JSON.stringify(selectedSablon.icerik, null, 2)}
+                    </pre>
+                  </div>
+                )}
               </div>
             </div>
-          )}
-        </>
+          </div>
+        </div>
+      )}
+
+      {/* Şablon Kullanımı */}
+      <div className="mt-8">
+        <h2 className="text-lg font-semibold text-white mb-4 flex items-center gap-2">
+          <Store size={20} className="text-blue-400" /> Şablon Kullanımı
+        </h2>
+        {usages.length === 0 ? (
+          <div className="bg-gray-900 border border-gray-800 rounded-2xl p-6 text-center">
+            <p className="text-gray-500 text-sm">Henüz kayıtlı şablon kullanımı yok.</p>
+          </div>
+        ) : (
+          <div className="bg-gray-900 border border-gray-800 rounded-2xl overflow-hidden">
+            <div className="overflow-x-auto">
+              <table className="w-full text-left">
+                <thead>
+                  <tr className="border-b border-gray-800">
+                    <th className="px-6 py-4 text-gray-400 font-medium text-sm">Tenant</th>
+                    <th className="px-6 py-4 text-gray-400 font-medium text-sm">Şablon ID</th>
+                    <th className="px-6 py-4 text-gray-400 font-medium text-sm">Kaynak</th>
+                    <th className="px-6 py-4 text-gray-400 font-medium text-sm">Tarih</th>
+                  </tr>
+                </thead>
+                <tbody>
+                  {usages.map((u) => (
+                    <tr key={u.id} className="border-b border-gray-800/50 hover:bg-pink-500/5">
+                      <td className="px-6 py-4 text-white font-medium">{u.tenant_name}</td>
+                      <td className="px-6 py-4 text-gray-400 font-mono text-xs">{String(u.template_id).slice(0, 8)}…</td>
+                      <td className="px-6 py-4 text-gray-400">{u.template_source}</td>
+                      <td className="px-6 py-4 text-gray-500 text-sm">
+                        {u.used_at ? new Date(u.used_at).toLocaleString('tr-TR') : '—'}
+                      </td>
+                    </tr>
+                  ))}
+                </tbody>
+              </table>
+            </div>
+          </div>
+        )}
+      </div>
+
+      {suggestions.length > 0 && (
+        <div className="mt-8">
+          <h2 className="text-lg font-semibold text-white mb-4 flex items-center gap-2">
+            <Lightbulb size={20} className="text-amber-400" /> Ar-Ge / CEO Güncellemeleri
+          </h2>
+          <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+            {suggestions.map((s) => (
+              <div
+                key={s.id}
+                className="bg-gray-900 border border-amber-500/30 rounded-2xl p-6 hover:border-amber-500/50 transition-colors"
+              >
+                <div className="flex items-start justify-between mb-2">
+                  <h3 className="text-white font-medium">{s.title}</h3>
+                  <span className="text-xs px-2 py-1 rounded-lg bg-amber-500/20 text-amber-400">{s.status}</span>
+                </div>
+                {s.description && <p className="text-gray-400 text-sm mb-2">{s.description}</p>}
+                <p className="text-gray-500 text-xs">{s.source} · {s.created_at ? new Date(s.created_at).toLocaleDateString('tr-TR') : '—'}</p>
+              </div>
+            ))}
+          </div>
+        </div>
       )}
     </div>
   )

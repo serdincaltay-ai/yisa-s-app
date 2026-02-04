@@ -4,6 +4,7 @@ import { useEffect, useState } from 'react'
 import { useRouter } from 'next/navigation'
 import { supabase } from '@/lib/supabase'
 import { canAccessDashboard } from '@/lib/auth/roles'
+import { AccentProvider } from '@/lib/context/accent-context'
 import DashboardSidebar from '@/app/components/DashboardSidebar'
 
 export default function DashboardLayout({
@@ -35,16 +36,18 @@ export default function DashboardLayout({
 
   if (loading) {
     return (
-      <div className="min-h-screen flex items-center justify-center bg-background">
-        <div className="text-muted-foreground">Yükleniyor...</div>
+      <div className="min-h-screen flex items-center justify-center bg-gray-950">
+        <div className="text-gray-400">Yükleniyor...</div>
       </div>
     )
   }
 
   return (
-    <div className="min-h-screen bg-background flex">
-      <DashboardSidebar />
-      <main className="flex-1 overflow-auto pt-14 pl-14 lg:pt-0 lg:pl-0">{children}</main>
-    </div>
+    <AccentProvider>
+      <div className="min-h-screen bg-gray-950 text-white flex">
+        <DashboardSidebar />
+        <main className="flex-1 overflow-auto pt-14 pl-14 lg:pt-0 lg:pl-0">{children}</main>
+      </div>
+    </AccentProvider>
   )
 }
