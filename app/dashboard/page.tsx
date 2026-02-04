@@ -730,47 +730,47 @@ export default function DashboardPage() {
   }, [chatMessages])
 
   return (
-    <div className="min-h-screen bg-[#0a0a0a] text-slate-100">
+    <div className="min-h-screen bg-background text-foreground">
       <div className="p-4 sm:p-6 space-y-6">
-        {/* Minimal Header — extr-up-admin-panel tarzı */}
-        <header className="flex items-center justify-between py-3 border-b border-slate-800">
+        {/* v0/shadcn tarzı header */}
+        <header className="flex items-center justify-between py-4 border-b border-border">
           <div className="flex items-center gap-3">
-            <div className="relative w-8 h-8 flex-shrink-0">
+            <div className="relative w-9 h-9 flex-shrink-0 rounded-lg overflow-hidden bg-card border border-border">
               <Image src="/logo.png" alt="YİSA-S" fill className="object-contain" />
             </div>
             <div>
-              <span className="text-lg font-semibold text-white">YİSA-S</span>
-              <p className="text-xs text-slate-500">Patron Komuta Merkezi</p>
+              <span className="text-lg font-semibold text-foreground">YİSA-S</span>
+              <p className="text-xs text-muted-foreground">Patron Komuta Merkezi</p>
             </div>
           </div>
           <div className="flex items-center gap-3">
-            <span className="text-xs text-slate-500 font-mono">
+            <span className="text-xs text-muted-foreground font-mono tabular-nums">
               {new Date().toLocaleTimeString('tr-TR', { hour12: false, hour: '2-digit', minute: '2-digit' })}
             </span>
-            <Avatar className="h-8 w-8 border border-slate-600">
-              <AvatarFallback className="bg-slate-800 text-slate-400 text-xs">
+            <Avatar className="h-8 w-8 border border-border">
+              <AvatarFallback className="bg-muted text-muted-foreground text-xs font-medium">
                 {(user?.email ?? 'P').charAt(0).toUpperCase()}
               </AvatarFallback>
             </Avatar>
           </div>
         </header>
 
-        {/* Tek satır hoş geldin */}
+        {/* Hoş geldin */}
         {user && isPatron(user) && (
-          <p className="text-sm text-emerald-400/90">Sistem hazır. Komut gönderin veya onay kuyruğunu yönetin.</p>
+          <p className="text-sm text-muted-foreground">Sistem hazır. Komut gönderin veya onay kuyruğunu yönetin.</p>
         )}
 
-        {/* Kompakt İstatistikler — minimalist 4 kart */}
-        <div className="grid grid-cols-2 lg:grid-cols-4 gap-3">
+        {/* İstatistik kartları — v0 tarzı minimal */}
+        <div className="grid grid-cols-2 lg:grid-cols-4 gap-4">
           {[
-            { label: 'Gelir', value: `₺${stats.franchiseRevenueMonth.toLocaleString('tr-TR')}`, c: 'text-cyan-400' },
-            { label: 'Gider', value: `₺${stats.expensesMonth.toLocaleString('tr-TR')}`, c: 'text-rose-400' },
-            { label: 'Onay', value: stats.pendingApprovals, c: 'text-amber-400' },
-            { label: 'Başvuru', value: stats.newFranchiseApplications, c: 'text-emerald-400' },
+            { label: 'Gelir', value: `₺${stats.franchiseRevenueMonth.toLocaleString('tr-TR')}` },
+            { label: 'Gider', value: `₺${stats.expensesMonth.toLocaleString('tr-TR')}` },
+            { label: 'Onay', value: stats.pendingApprovals },
+            { label: 'Başvuru', value: stats.newFranchiseApplications },
           ].map((s, i) => (
-            <div key={i} className="rounded-lg border border-slate-800 bg-slate-900/50 p-4">
-              <p className="text-xs text-slate-500 mb-0.5">{s.label}</p>
-              <p className={`text-lg font-semibold font-mono ${s.c}`}>{s.value}</p>
+            <div key={i} className="rounded-lg border border-border bg-card p-4 transition-colors hover:border-border/80">
+              <p className="text-xs text-muted-foreground mb-1">{s.label}</p>
+              <p className="text-lg font-semibold font-mono text-foreground tabular-nums">{s.value}</p>
             </div>
           ))}
         </div>
@@ -778,11 +778,11 @@ export default function DashboardPage() {
         <div className="grid grid-cols-1 lg:grid-cols-2 gap-4 lg:gap-6">
         {/* Başlangıç Görevleri & Vitrin */}
         <div className="space-y-4">
-          <Card className="bg-slate-900/50 border-slate-700/50 backdrop-blur-sm">
+          <Card className="bg-card border-border">
             <CardHeader className="py-4">
               <CardTitle className="text-base !mb-0">Başlangıç Görevleri</CardTitle>
-              <p className="text-xs text-slate-500 mt-1">
-                <Badge variant="outline" className="bg-cyan-500/10 text-cyan-400 border-cyan-500/30 text-xs">
+              <p className="text-xs text-muted-foreground mt-1">
+                <Badge variant="secondary" className="text-xs">
                   {startupStatus?.total_pending ?? 0} görev bekliyor
                 </Badge>
               </p>
@@ -791,11 +791,11 @@ export default function DashboardPage() {
               <Button
                 onClick={() => runStartupTasks('run_all')}
                 disabled={startupTasksLoading}
-                className="w-full bg-gradient-to-r from-cyan-600 to-blue-600 hover:from-cyan-500 hover:to-blue-500 text-white border border-cyan-500/30 disabled:opacity-60 disabled:cursor-not-allowed"
+                className="w-full"
               >
                 {startupTasksLoading ? (
                   <span className="flex items-center justify-center gap-2">
-                    <span className="h-4 w-4 border-2 border-white/30 border-t-white rounded-full animate-spin" />
+                    <span className="h-4 w-4 border-2 border-primary-foreground/30 border-t-primary-foreground rounded-full animate-spin" />
                     Tetikleniyor...
                   </span>
                 ) : (
@@ -805,22 +805,22 @@ export default function DashboardPage() {
                   </>
                 )}
               </Button>
-              <p className="text-xs text-slate-500 mt-2">
+              <p className="text-xs text-muted-foreground mt-2">
                 Direktörlükler ilk görevlerini yapacak.
               </p>
             </CardContent>
           </Card>
 
-          <Card className="bg-slate-900/50 border-slate-700/50 backdrop-blur-sm">
+          <Card className="bg-card border-border">
             <CardHeader className="py-4">
               <CardTitle className="text-base flex items-center gap-2 !mb-0">
-                <Store size={18} className="text-emerald-400" />
+                <Store size={18} className="text-muted-foreground" />
                 Vitrin
               </CardTitle>
             </CardHeader>
             <CardContent className="pt-0">
               <a href="/dashboard/franchises">
-                <Button variant="outline" className="w-full border-emerald-500/50 text-emerald-400 hover:bg-emerald-500/10">
+                <Button variant="outline" className="w-full">
                   Franchise Vitrinleri
                 </Button>
               </a>
@@ -829,58 +829,58 @@ export default function DashboardPage() {
         </div>
 
         {/* Sistem Durumu */}
-        <Card className="bg-slate-900/50 border-slate-700/50 backdrop-blur-sm">
+        <Card className="bg-card border-border">
           <CardHeader className="py-4">
             <CardTitle className="text-base !mb-0">Sistem Durumu</CardTitle>
           </CardHeader>
           <CardContent className="pt-0">
-            <a href="/api/system/status" target="_blank" rel="noopener noreferrer" className="text-sm text-cyan-400 hover:underline font-mono">
+            <a href="/api/system/status" target="_blank" rel="noopener noreferrer" className="text-sm text-primary hover:underline font-mono">
               /api/system/status
             </a>
           </CardContent>
         </Card>
       </div>
 
-      {/* Chat + Onay Kuyruğu - Aynı ekranda */}
+      {/* Chat + Onay Kuyruğu */}
       <div className="grid grid-cols-1 lg:grid-cols-12 gap-6">
         {/* Sol: Robot Asistan Chat */}
         <div className="lg:col-span-8">
-      <Card className="bg-slate-900/50 border-slate-700/50 backdrop-blur-sm overflow-hidden flex flex-col">
+      <Card className="bg-card border-border overflow-hidden flex flex-col">
         <button
           type="button"
           onClick={() => setChatExpanded(!chatExpanded)}
-          className="flex items-center gap-3 px-6 py-4 border-b border-slate-700/50 hover:bg-slate-700/30 transition-colors w-full text-left"
+          className="flex items-center gap-3 px-6 py-4 border-b border-border hover:bg-accent/50 transition-colors w-full text-left"
         >
-          <div className="w-10 h-10 rounded-xl bg-cyan-500/20 flex items-center justify-center border border-cyan-500/30">
-            <Bot className="text-cyan-400" size={22} />
+          <div className="w-10 h-10 rounded-lg bg-muted flex items-center justify-center border border-border">
+            <Bot className="text-muted-foreground" size={22} />
           </div>
           <div className="flex-1 min-w-0">
-            <h2 className="font-semibold text-white">YİSA-S Robot Asistan</h2>
-            <p className="text-xs text-slate-500 font-mono">
+            <h2 className="font-semibold text-foreground">YİSA-S Robot Asistan</h2>
+            <p className="text-xs text-muted-foreground font-mono">
               {useQualityFlow ? 'CIO → CEO → CELF → Patron Onay' : 'Router + Task Flow'}
             </p>
           </div>
-          <Badge variant="outline" className="bg-cyan-500/10 text-cyan-400 border-cyan-500/30">
-            <div className="h-1.5 w-1.5 rounded-full bg-cyan-500 mr-1.5 animate-pulse" />
+          <Badge variant="secondary" className="gap-1.5">
+            <div className="h-1.5 w-1.5 rounded-full bg-primary animate-pulse" />
             CANLI
           </Badge>
-          <label className="flex items-center gap-2 text-sm text-slate-400">
+          <label className="flex items-center gap-2 text-sm text-muted-foreground cursor-pointer">
             <input
               type="checkbox"
               checked={useQualityFlow}
               onChange={(e) => setUseQualityFlow(e.target.checked)}
-              className="rounded border-slate-600 bg-slate-800 text-cyan-500 focus:ring-cyan-500/50"
+              className="rounded border-input bg-background text-primary focus:ring-ring"
             />
             <span>Seçenek 2</span>
           </label>
-          <Button variant="ghost" size="sm" onClick={() => setShowFlow((s) => !s)} className="text-slate-400">
+          <Button variant="ghost" size="sm" onClick={() => setShowFlow((s) => !s)} className="text-muted-foreground">
             {showFlow ? <ChevronUp size={16} /> : <ChevronDown size={16} />} Akış
           </Button>
-          {chatExpanded ? <Minimize2 size={18} className="text-slate-400" /> : <Maximize2 size={18} className="text-slate-400" />}
+          {chatExpanded ? <Minimize2 size={18} className="text-muted-foreground" /> : <Maximize2 size={18} className="text-muted-foreground" />}
         </button>
         {showFlow && (
-          <div className="px-6 py-3 border-b border-slate-700 bg-slate-900/50">
-            <pre className="text-xs text-slate-300 whitespace-pre-wrap font-mono">
+          <div className="px-6 py-3 border-b border-border bg-muted/30">
+            <pre className="text-xs text-muted-foreground whitespace-pre-wrap font-mono">
               {useQualityFlow
                 ? `PATRON → İmla (Gemini/GPT) → Şirket/Özel → CIO → CEO → CELF → Patron Onay`
                 : FLOW_DESCRIPTION}
@@ -889,10 +889,10 @@ export default function DashboardPage() {
         )}
         {chatExpanded && (
           <>
-            {/* Robot seçim paneli — tüm AI ve platformlar */}
-            <div className="px-4 pt-3 pb-2 border-b border-slate-700/50 space-y-3">
+            {/* Robot seçim paneli */}
+            <div className="px-4 pt-3 pb-2 border-b border-border space-y-3">
               <div>
-                <p className="text-xs text-slate-500 mb-2 font-medium">1. Asistan seçin → Sohbet edin → Komut olarak gönder</p>
+                <p className="text-xs text-muted-foreground mb-2 font-medium">1. Asistan seçin → Sohbet edin → Komut olarak gönder</p>
               <div className="flex flex-wrap gap-2">
                 {[
                   { id: 'GPT', label: 'GPT' },
@@ -911,10 +911,10 @@ export default function DashboardPage() {
                     key={id}
                     type="button"
                     onClick={() => setAssistantProvider(id as typeof assistantProvider)}
-                    className={`px-3 py-1.5 rounded-lg text-sm font-medium transition-colors ${
+                    className={`px-3 py-1.5 rounded-md text-sm font-medium transition-colors border ${
                       assistantProvider === id
-                        ? 'bg-cyan-500/30 text-cyan-300 border border-cyan-500/50'
-                        : 'bg-slate-800/50 text-slate-400 border border-slate-700/50 hover:border-cyan-500/30 hover:text-slate-200'
+                        ? 'bg-primary text-primary-foreground border-primary'
+                        : 'bg-muted/50 text-muted-foreground border-border hover:bg-accent hover:text-accent-foreground'
                     }`}
                   >
                     {label}
@@ -923,11 +923,11 @@ export default function DashboardPage() {
               </div>
             </div>
             <div>
-              <p className="text-xs text-slate-500 mb-2 font-medium">2. Hedef direktör (komut gönderirken — boş = otomatik)</p>
+              <p className="text-xs text-muted-foreground mb-2 font-medium">2. Hedef direktör (komut gönderirken — boş = otomatik)</p>
                 <select
                   value={targetDirector}
                   onChange={(e) => setTargetDirector(e.target.value)}
-                  className="w-full max-w-xs bg-slate-800 border border-slate-700 rounded-lg px-3 py-2 text-sm text-white"
+                  className="w-full max-w-xs bg-background border border-input rounded-md px-3 py-2 text-sm text-foreground"
                 >
                   <option value="">Otomatik (CEO yönlendirir)</option>
                   <option value="CFO">CFO — Finans</option>
@@ -947,33 +947,33 @@ export default function DashboardPage() {
                   <option value="RND">RND — AR-GE</option>
                 </select>
               </div>
-              {/* LLM ve Araçlar açıklaması — robotların altında */}
-              <div className="mt-3 pt-3 border-t border-slate-700/50 space-y-3 text-xs text-slate-400">
+              {/* LLM ve Araçlar */}
+              <div className="mt-3 pt-3 border-t border-border space-y-3 text-xs text-muted-foreground">
                 <div>
-                  <p className="font-medium text-slate-300 mb-1.5">🧠 LLM (Dil Modelleri)</p>
+                  <p className="font-medium text-foreground mb-1.5">LLM (Dil Modelleri)</p>
                   <ul className="space-y-1 pl-1">
-                    <li><span className="text-cyan-400/90">Claude</span> — Akıl, analiz, karar</li>
-                    <li><span className="text-cyan-400/90">GPT</span> — Genel amaçlı, çeşitlilik</li>
-                    <li><span className="text-cyan-400/90">Gemini</span> — Hızlı, multimodal</li>
-                    <li><span className="text-cyan-400/90">Together.ai</span> — Ucuz, batch işlemler</li>
+                    <li>Claude — Akıl, analiz, karar</li>
+                    <li>GPT — Genel amaçlı, çeşitlilik</li>
+                    <li>Gemini — Hızlı, multimodal</li>
+                    <li>Together.ai — Ucuz, batch işlemler</li>
                   </ul>
                 </div>
                 <div>
-                  <p className="font-medium text-slate-300 mb-1.5">🛠️ Araçlar</p>
+                  <p className="font-medium text-foreground mb-1.5">Araçlar</p>
                   <ul className="space-y-1 pl-1">
-                    <li><span className="text-amber-400/90">Cursor</span> — Kod yazma, düzenleme</li>
-                    <li><span className="text-amber-400/90">v0</span> — UI/Frontend üretimi</li>
-                    <li><span className="text-amber-400/90">GitHub</span> — Kod depolama, versiyon</li>
-                    <li><span className="text-amber-400/90">Vercel</span> — Deploy, hosting</li>
-                    <li><span className="text-amber-400/90">Supabase</span> — Veritabanı, auth, storage</li>
-                    <li><span className="text-amber-400/90">Railway</span> — Backend worker&apos;lar</li>
+                    <li>Cursor — Kod yazma, düzenleme</li>
+                    <li>v0 — UI/Frontend üretimi</li>
+                    <li>GitHub — Kod depolama, versiyon</li>
+                    <li>Vercel — Deploy, hosting</li>
+                    <li>Supabase — Veritabanı, auth, storage</li>
+                    <li>Railway — Backend worker&apos;lar</li>
                   </ul>
                 </div>
               </div>
             </div>
             <div className="flex-1 min-h-[200px] max-h-[340px] overflow-y-auto p-4 space-y-4">
               {chatMessages.length === 0 && (
-                <div className="text-center py-8 text-slate-500">
+                <div className="text-center py-8 text-muted-foreground">
                   <p className="mb-1">Merhaba, ben YİSA-S asistanıyım.</p>
                   <p className="text-sm">Görev ver veya soru sor. Örnek: &quot;Finans raporu hazırla&quot;, &quot;Hareket havuzunu kontrol et&quot;</p>
                 </div>
@@ -981,14 +981,14 @@ export default function DashboardPage() {
               {chatMessages.map((m, i) => (
                 <div key={i} className={`flex ${m.role === 'user' ? 'justify-end' : 'justify-start'}`}>
                   <div
-                    className={`max-w-[85%] rounded-2xl px-4 py-3 ${
-                      m.role === 'user' ? 'bg-cyan-500/20 text-cyan-100 border border-cyan-500/20' : 'bg-slate-700/80 text-slate-200 border border-slate-600/50'
-                    } ${decisions[i] === 'approve' ? 'ring-2 ring-emerald-500/50' : ''} ${decisions[i] === 'reject' ? 'opacity-60' : ''}`}
+                    className={`max-w-[85%] rounded-xl px-4 py-3 ${
+                      m.role === 'user' ? 'bg-primary text-primary-foreground' : 'bg-muted text-muted-foreground border border-border'
+                    } ${decisions[i] === 'approve' ? 'ring-2 ring-ring' : ''} ${decisions[i] === 'reject' ? 'opacity-60' : ''}`}
                   >
                     {m.role === 'assistant' && (m.aiProviders?.length || m.assignedAI) && (
                       <div className="flex flex-wrap gap-2 mb-2">
                         {(m.aiProviders ?? [m.assignedAI]).filter(Boolean).map((ai) => (
-                          <span key={ai} className="text-[10px] px-2 py-0.5 rounded-md bg-slate-600 text-white">
+                          <span key={ai} className="text-[10px] px-2 py-0.5 rounded bg-secondary text-secondary-foreground">
                             {ai}
                           </span>
                         ))}
@@ -1000,40 +1000,40 @@ export default function DashboardPage() {
                           value={editText}
                           onChange={(e) => setEditText(e.target.value)}
                           rows={4}
-                          className="w-full bg-slate-800 border border-slate-600 rounded-lg px-3 py-2 text-sm text-white"
+                          className="w-full bg-background border border-input rounded-md px-3 py-2 text-sm text-foreground"
                         />
                         <div className="flex gap-2">
-                          <button type="button" onClick={handleSaveEdit} className="px-3 py-1.5 text-sm bg-amber-500 text-slate-900 rounded-lg">
+                          <Button type="button" size="sm" onClick={handleSaveEdit}>
                             Kaydet
-                          </button>
-                          <button type="button" onClick={() => setEditingIndex(null)} className="px-3 py-1.5 text-sm bg-slate-600 rounded-lg">
+                          </Button>
+                          <Button type="button" variant="outline" size="sm" onClick={() => setEditingIndex(null)}>
                             İptal
-                          </button>
+                          </Button>
                         </div>
                       </div>
                     ) : (
                       <p className="text-sm whitespace-pre-wrap">{m.text}</p>
                     )}
                     {m.role === 'assistant' && editingIndex !== i && (
-                      <div className="flex gap-2 mt-3 pt-2 border-t border-slate-600/50">
+                      <div className="flex gap-2 mt-3 pt-2 border-t border-border">
                         <button
                           type="button"
                           onClick={() => handlePatronDecision(i, 'approve')}
-                          className={`px-2 py-1 rounded-lg text-xs ${decisions[i] === 'approve' ? 'bg-emerald-500/20 text-emerald-400' : 'bg-slate-600/50 text-slate-400 hover:text-white'}`}
+                          className={`px-2 py-1 rounded-md text-xs ${decisions[i] === 'approve' ? 'bg-primary text-primary-foreground' : 'bg-muted text-muted-foreground hover:bg-accent hover:text-accent-foreground'}`}
                         >
                           <Check size={12} className="inline mr-1" /> Onayla
                         </button>
                         <button
                           type="button"
                           onClick={() => handlePatronDecision(i, 'reject')}
-                          className={`px-2 py-1 rounded-lg text-xs ${decisions[i] === 'reject' ? 'bg-red-500/20 text-red-400' : 'bg-slate-600/50 text-slate-400 hover:text-white'}`}
+                          className={`px-2 py-1 rounded-md text-xs ${decisions[i] === 'reject' ? 'bg-destructive text-destructive-foreground' : 'bg-muted text-muted-foreground hover:bg-accent hover:text-accent-foreground'}`}
                         >
                           <X size={12} className="inline mr-1" /> Reddet
                         </button>
                         <button
                           type="button"
                           onClick={() => handlePatronDecision(i, 'modify')}
-                          className={`px-2 py-1 rounded-lg text-xs ${decisions[i] === 'modify' ? 'bg-amber-500/20 text-amber-400' : 'bg-slate-600/50 text-slate-400 hover:text-white'}`}
+                          className={`px-2 py-1 rounded-md text-xs ${decisions[i] === 'modify' ? 'bg-secondary text-secondary-foreground' : 'bg-muted text-muted-foreground hover:bg-accent hover:text-accent-foreground'}`}
                         >
                           <Edit3 size={12} className="inline mr-1" /> Değiştir
                         </button>
@@ -1044,76 +1044,77 @@ export default function DashboardPage() {
               ))}
               {chatSending && (
                 <div className="flex justify-start">
-                  <div className="bg-slate-700/80 rounded-2xl px-4 py-3 text-slate-400 text-sm">
+                  <div className="bg-muted rounded-xl px-4 py-3 text-muted-foreground text-sm border border-border">
                     {currentStepLabel ?? 'Yanıt yazılıyor…'}
                   </div>
                 </div>
               )}
               {pendingSpellingConfirmation && (
-                <div className="rounded-2xl border-2 border-amber-500/50 bg-amber-500/10 p-4 space-y-3">
-                  <h3 className="font-semibold text-amber-400">📝 Bu mu demek istediniz?</h3>
-                  <p className="text-sm text-slate-300">&quot;{pendingSpellingConfirmation.correctedMessage}&quot;</p>
-                  <p className="text-xs text-amber-400/90 font-medium">→ Devam etmek için aşağıdaki butonlardan birine tıklayın</p>
+                <div className="rounded-xl border border-border bg-muted/50 p-4 space-y-3">
+                  <h3 className="font-semibold text-foreground">Bu mu demek istediniz?</h3>
+                  <p className="text-sm text-muted-foreground">&quot;{pendingSpellingConfirmation.correctedMessage}&quot;</p>
+                  <p className="text-xs text-muted-foreground">Devam etmek için aşağıdaki butonlardan birine tıklayın</p>
                   <div className="flex flex-wrap gap-2">
-                    <button
+                    <Button
                       type="button"
+                      size="sm"
                       onClick={() => handleConfirmationChoice('company', pendingSpellingConfirmation!.correctedMessage)}
                       disabled={chatSending}
-                      className="px-3 py-2 rounded-lg bg-emerald-500/20 text-emerald-400 hover:bg-emerald-500/30 text-sm font-medium disabled:opacity-50"
                     >
                       Evet, Şirket İşi
-                    </button>
-                    <button
+                    </Button>
+                    <Button
                       type="button"
+                      variant="secondary"
+                      size="sm"
                       onClick={() => handleConfirmationChoice('private', pendingSpellingConfirmation!.correctedMessage)}
                       disabled={chatSending}
-                      className="px-3 py-2 rounded-lg bg-blue-500/20 text-blue-400 hover:bg-blue-500/30 text-sm font-medium disabled:opacity-50"
                     >
                       Evet, Özel İş
-                    </button>
-                    <button
+                    </Button>
+                    <Button
                       type="button"
+                      variant="outline"
+                      size="sm"
                       onClick={() => {
                         setChatInput(pendingSpellingConfirmation!.correctedMessage)
                         setPendingSpellingConfirmation(null)
                       }}
-                      className="px-3 py-2 rounded-lg bg-slate-600 text-slate-300 hover:bg-slate-500 text-sm"
                     >
                       Hayır, Düzelt
-                    </button>
+                    </Button>
                   </div>
                 </div>
               )}
               {approvedWaitingRoutineChoice && (
-                <div className="rounded-2xl border border-emerald-500/40 bg-emerald-500/10 p-4 space-y-3">
-                  <h3 className="font-semibold text-emerald-400">Bu görevi nasıl kaydetmek istersiniz?</h3>
+                <div className="rounded-xl border border-border bg-muted/50 p-4 space-y-3">
+                  <h3 className="font-semibold text-foreground">Bu görevi nasıl kaydetmek istersiniz?</h3>
                   {routineStep === null || routineStep === 'choice' ? (
                     <div className="flex flex-wrap gap-2">
-                      <button
-                        type="button"
-                        onClick={() => setRoutineStep('schedule')}
-                        className="px-3 py-2 rounded-lg bg-amber-500/20 text-amber-400 hover:bg-amber-500/30 text-sm font-medium"
-                      >
+                      <Button type="button" size="sm" onClick={() => setRoutineStep('schedule')}>
                         Rutin Görev
-                      </button>
-                      <button
+                      </Button>
+                      <Button
                         type="button"
+                        variant="outline"
+                        size="sm"
                         onClick={() => {
                           setApprovedWaitingRoutineChoice(null)
                           setRoutineStep(null)
                           setChatMessages((prev) => [...prev, { role: 'assistant', text: 'Bir seferlik olarak kaydedildi.', aiProviders: [] }])
                         }}
-                        className="px-3 py-2 rounded-lg bg-slate-600 text-slate-300 hover:bg-slate-500 text-sm"
                       >
                         Bir Seferlik
-                      </button>
+                      </Button>
                     </div>
                   ) : (
                     <div className="flex flex-wrap gap-2">
                       {(['daily', 'weekly', 'monthly'] as const).map((schedule) => (
-                        <button
+                        <Button
                           key={schedule}
                           type="button"
+                          variant="outline"
+                          size="sm"
                           onClick={async () => {
                             setApprovalBusy(true)
                             try {
@@ -1143,33 +1144,32 @@ export default function DashboardPage() {
                             }
                           }}
                           disabled={approvalBusy}
-                          className="px-3 py-2 rounded-lg bg-slate-600 text-slate-300 hover:bg-slate-500 text-sm disabled:opacity-50"
                         >
                           {schedule === 'daily' ? 'Günlük' : schedule === 'weekly' ? 'Haftalık' : 'Aylık'}
-                        </button>
+                        </Button>
                       ))}
                     </div>
                   )}
                 </div>
               )}
               {pendingPrivateSave && (
-                <div className="rounded-2xl border border-blue-500/40 bg-blue-500/10 p-4 space-y-3">
-                  <h3 className="font-semibold text-blue-400">Kendi alanınıza kaydetmek ister misiniz?</h3>
+                <div className="rounded-xl border border-border bg-muted/50 p-4 space-y-3">
+                  <h3 className="font-semibold text-foreground">Kendi alanınıza kaydetmek ister misiniz?</h3>
                   <div className="flex gap-2">
-                    <button type="button" onClick={() => handlePrivateSave(true)} disabled={approvalBusy} className="px-3 py-2 rounded-lg bg-emerald-500/20 text-emerald-400 text-sm font-medium">
+                    <Button type="button" size="sm" onClick={() => handlePrivateSave(true)} disabled={approvalBusy}>
                       Evet, Kaydet
-                    </button>
-                    <button type="button" onClick={() => { setPendingPrivateSave(null); setChatMessages((prev) => [...prev, { role: 'assistant', text: 'Kaydetmediniz.', aiProviders: [] }]) }} className="px-3 py-2 rounded-lg bg-slate-600 text-slate-300 text-sm">
+                    </Button>
+                    <Button type="button" variant="outline" size="sm" onClick={() => { setPendingPrivateSave(null); setChatMessages((prev) => [...prev, { role: 'assistant', text: 'Kaydetmediniz.', aiProviders: [] }]) }}>
                       Hayır
-                    </button>
+                    </Button>
                   </div>
                 </div>
               )}
               {pendingApproval && (
                 approvalBusy ? (
-                  <div className="rounded-2xl border border-amber-500/40 bg-amber-500/10 p-4 text-center text-amber-400">
+                  <div className="rounded-xl border border-border bg-muted/50 p-4 text-center text-muted-foreground">
                     <p className="font-medium">Çalışıyor...</p>
-                    <p className="text-sm text-slate-400 mt-1">Patron kararı uygulanıyor</p>
+                    <p className="text-sm mt-1">Patron kararı uygulanıyor</p>
                   </div>
                 ) : (
                 <PatronApprovalUI
@@ -1249,29 +1249,23 @@ export default function DashboardPage() {
               <div ref={chatEndRef} />
             </div>
             {suggestedCommand && (
-              <div className="mx-4 mb-2 p-4 rounded-xl bg-amber-500/10 border border-amber-500/30 relative">
+              <div className="mx-4 mb-2 p-4 rounded-xl bg-muted/50 border border-border relative">
                 <button
                   type="button"
                   onClick={() => setSuggestedCommand(null)}
-                  className="absolute top-2 right-2 p-1 rounded text-slate-400 hover:text-white hover:bg-slate-700"
+                  className="absolute top-2 right-2 p-1 rounded text-muted-foreground hover:text-foreground hover:bg-accent"
                   aria-label="Kapat"
                 >
                   <X size={16} />
                 </button>
                 <div className="flex items-center gap-2 mb-2">
-                  <Terminal size={18} className="text-amber-400" />
-                  <span className="text-sm font-medium text-amber-400">Patron — PowerShell&apos;te çalıştırın</span>
+                  <Terminal size={18} className="text-muted-foreground" />
+                  <span className="text-sm font-medium text-foreground">Patron — PowerShell&apos;te çalıştırın</span>
                 </div>
-                <pre className="bg-slate-950 rounded-lg p-3 text-xs text-slate-200 font-mono overflow-x-auto whitespace-pre-wrap">{suggestedCommand}</pre>
+                <pre className="bg-background rounded-md p-3 text-xs text-foreground font-mono overflow-x-auto whitespace-pre-wrap border border-border">{suggestedCommand}</pre>
                 <div className="flex justify-between items-center mt-2">
-                  <span className="text-xs text-amber-400/80">Asistan önerisi — kopyalayıp terminalde yapıştırın</span>
-                  <Button
-                    type="button"
-                    variant="outline"
-                    size="sm"
-                    onClick={copySuggestedCommand}
-                    className="border-amber-500/50 text-amber-400 hover:bg-amber-500/20"
-                  >
+                  <span className="text-xs text-muted-foreground">Asistan önerisi — kopyalayıp terminalde yapıştırın</span>
+                  <Button type="button" variant="outline" size="sm" onClick={copySuggestedCommand}>
                     <Copy size={14} className="mr-1" />
                     {commandCopied ? 'Kopyalandı!' : 'Kopyala'}
                   </Button>
@@ -1279,19 +1273,19 @@ export default function DashboardPage() {
               </div>
             )}
             {lockError && (
-              <div className="mx-4 mb-2 px-4 py-3 bg-red-500/10 border border-red-500/30 rounded-xl text-red-400 text-sm flex justify-between">
+              <div className="mx-4 mb-2 px-4 py-3 bg-destructive/10 border border-destructive/30 rounded-xl text-destructive text-sm flex justify-between">
                 <span>{lockError}</span>
                 <button type="button" onClick={() => setLockError(null)}>×</button>
               </div>
             )}
-            <CardFooter className="border-t border-slate-700/50 p-4 flex flex-col gap-3">
+            <CardFooter className="border-t border-border p-4 flex flex-col gap-3">
               <div className="flex items-center gap-2 flex-wrap">
-                <label className="flex items-center gap-2 text-sm text-slate-400 cursor-pointer">
+                <label className="flex items-center gap-2 text-sm text-muted-foreground cursor-pointer">
                   <input
                     type="checkbox"
                     checked={asRoutine}
                     onChange={(e) => setAsRoutine(e.target.checked)}
-                    className="rounded border-slate-600 bg-slate-800 text-amber-500 focus:ring-amber-500/50"
+                    className="rounded border-input bg-background text-primary focus:ring-ring"
                   />
                   <span>Rutin olarak yapılsın</span>
                 </label>
@@ -1301,7 +1295,6 @@ export default function DashboardPage() {
                   size="sm"
                   onClick={handleSendAsCommand}
                   disabled={chatSending || (!chatInput.trim() && !chatMessages.some((m) => m.role === 'user'))}
-                  className="border-amber-500/50 text-amber-400 hover:bg-amber-500/10"
                   title="Son mesajı veya yazdığınızı CEO'ya komut olarak gönderir"
                 >
                   CEO&apos;ya Gönder
@@ -1314,14 +1307,10 @@ export default function DashboardPage() {
                   onChange={(e) => setChatInput(e.target.value)}
                   onKeyDown={(e) => e.key === 'Enter' && !e.shiftKey && handleSendChat()}
                   placeholder="Görev ver veya soru sor..."
-                  className="flex-1 bg-slate-800/50 border border-slate-700 rounded-lg px-4 py-3 text-white placeholder-slate-500 focus:outline-none focus:ring-2 focus:ring-cyan-500/50 focus:border-cyan-500/50"
+                  className="flex-1 bg-background border border-input rounded-md px-4 py-3 text-foreground placeholder-muted-foreground focus:outline-none focus:ring-2 focus:ring-ring focus:border-ring"
                   disabled={chatSending}
                 />
-                <Button
-                  onClick={handleSendChat}
-                  disabled={chatSending || !chatInput.trim()}
-                  className="bg-gradient-to-r from-cyan-600 to-blue-600 hover:from-cyan-500 hover:to-blue-500 text-white border border-cyan-500/30 px-5"
-                >
+                <Button onClick={handleSendChat} disabled={chatSending || !chatInput.trim()} className="px-5">
                   <Send size={18} className="mr-2" />
                   Gönder
                 </Button>
@@ -1332,45 +1321,47 @@ export default function DashboardPage() {
       </Card>
         </div>
 
-        {/* Sağ: Onay Kuyruğu - Chat ile aynı ekranda */}
+        {/* Sağ: Onay Kuyruğu */}
         <div className="lg:col-span-4">
-          <Card className="bg-slate-900/50 border-slate-700/50 backdrop-blur-sm overflow-hidden h-full">
+          <Card className="bg-card border-border overflow-hidden h-full">
             <button
               type="button"
               onClick={() => setQueueExpanded(!queueExpanded)}
-              className="w-full flex items-center justify-between px-6 py-4 border-b border-slate-700/50 hover:bg-slate-700/30 transition-colors text-left"
+              className="w-full flex items-center justify-between px-6 py-4 border-b border-border hover:bg-accent/50 transition-colors text-left"
             >
               <div className="flex items-center gap-2">
-                <ClipboardCheck size={20} className="text-amber-400" />
-                <span className="font-semibold text-white">Havuz (Onay Kuyruğu)</span>
-                <Badge variant="outline" className="bg-amber-500/10 text-amber-400 border-amber-500/30 text-xs">
+                <ClipboardCheck size={20} className="text-muted-foreground" />
+                <span className="font-semibold text-foreground">Havuz (Onay Kuyruğu)</span>
+                <Badge variant="secondary" className="text-xs">
                   {approvalItems.filter((i) => i.status === 'pending').length} bekliyor
                 </Badge>
               </div>
-              {queueExpanded ? <Minimize2 size={18} /> : <Maximize2 size={18} />}
+              {queueExpanded ? <Minimize2 size={18} className="text-muted-foreground" /> : <Maximize2 size={18} className="text-muted-foreground" />}
             </button>
             {queueExpanded && (
               <CardContent className="p-4">
-                <p className="text-xs text-amber-400/90 mb-3 font-medium">
-                  📌 Direktör işleri burada. <strong>Onayla</strong> basınca push, commit, deploy otomatik. İçeriği görmek için Göster veya başlığa tıkla.
+                <p className="text-xs text-muted-foreground mb-3">
+                  Direktör işleri burada. <strong>Onayla</strong> basınca push, commit, deploy otomatik.
                 </p>
                 {approvalLoading ? (
                   <div className="flex justify-center py-8">
-                    <Loader2 size={24} className="animate-spin text-cyan-500" />
+                    <Loader2 size={24} className="animate-spin text-muted-foreground" />
                   </div>
                 ) : (
                   <>
                     {approvalItems.filter((i) => i.status === 'pending').length === 0 ? (
-                      <div className="text-center py-4 text-slate-500 text-sm">
+                      <div className="text-center py-4 text-muted-foreground text-sm">
                         Bekleyen iş yok.
                       </div>
                     ) : (
                       <>
-                        <button
+                        <Button
                           type="button"
+                          variant="destructive"
+                          size="sm"
                           onClick={handleCancelAllPending}
                           disabled={!!approvalActingId}
-                          className="w-full mb-3 py-2 rounded-lg bg-rose-500/10 text-rose-400 border border-rose-500/30 text-xs font-medium hover:bg-rose-500/20 disabled:opacity-50"
+                          className="w-full mb-3"
                           title="Tekrarlayan veya gereksiz bekleyen tüm işleri iptal eder"
                         >
                           {approvalActingId === 'cancel_all' ? (
@@ -1379,7 +1370,7 @@ export default function DashboardPage() {
                             <Ban size={14} className="inline mr-2" />
                           )}
                           Bekleyen tümünü iptal et
-                        </button>
+                        </Button>
                     <div className="space-y-2 max-h-[280px] overflow-y-auto">
                       {approvalItems.filter((i) => i.status === 'pending').map((item) => {
                         const content = item.displayText ?? (item.output_payload as { displayText?: string })?.displayText ?? ''
@@ -1387,38 +1378,38 @@ export default function DashboardPage() {
                         return (
                         <div
                           key={item.id}
-                          className="p-3 rounded-lg bg-slate-800/50 border border-slate-700/50 hover:border-cyan-500/40 transition-colors"
+                          className="p-3 rounded-lg bg-muted/30 border border-border hover:border-ring/50 transition-colors"
                         >
                           <button
                             type="button"
                             onClick={() => content && setPreviewItem({ id: item.id, title: item.title, displayText: content, status: item.status })}
                             className="w-full text-left group"
                           >
-                            <p className="text-sm text-white truncate group-hover:text-cyan-300" title={item.title}>
+                            <p className="text-sm text-foreground truncate group-hover:text-primary" title={item.title}>
                               {item.title.length > 50 ? item.title.slice(0, 50) + '…' : item.title}
                             </p>
                             {snippet && (
-                              <p className="text-xs text-slate-500 mt-1 line-clamp-1">« {snippet} »</p>
+                              <p className="text-xs text-muted-foreground mt-1 line-clamp-1">« {snippet} »</p>
                             )}
-                            <p className="text-[10px] text-cyan-400 mt-1">
-                              👁 Tıkla: İçeriği aç
+                            <p className="text-[10px] text-muted-foreground mt-1">
+                              Tıkla: İçeriği aç
                             </p>
                           </button>
-                          <div className="flex flex-wrap gap-1 mt-2">
+                          <div className="flex flex-wrap gap-2 mt-2">
                             {content && (
                               <button
                                 type="button"
                                 onClick={() => setPreviewItem({ id: item.id, title: item.title, displayText: content, status: item.status })}
-                                className="px-3 py-1.5 rounded text-xs font-medium bg-cyan-500/30 text-cyan-300 hover:bg-cyan-500/40 border border-cyan-500/50"
+                                className="px-2 py-1 rounded-md text-xs border border-input bg-background hover:bg-accent hover:text-accent-foreground transition-colors"
                               >
-                                📄 İçeriği Gör
+                                İçeriği Gör
                               </button>
                             )}
                             <button
                               type="button"
                               onClick={() => handleQueueDecision(item.id, 'approve')}
                               disabled={!!approvalActingId}
-                              className="px-2 py-1 rounded text-xs bg-emerald-500/20 text-emerald-400 hover:bg-emerald-500/30 disabled:opacity-50"
+                              className="px-2 py-1 rounded-md text-xs bg-primary text-primary-foreground hover:opacity-90 disabled:opacity-50 transition-colors"
                             >
                               {approvalActingId === item.id + '_approve' ? <Loader2 size={12} className="animate-spin inline" /> : <Check size={12} className="inline" />} Onayla
                             </button>
@@ -1426,7 +1417,7 @@ export default function DashboardPage() {
                               type="button"
                               onClick={() => handleQueueDecision(item.id, 'reject')}
                               disabled={!!approvalActingId}
-                              className="px-2 py-1 rounded text-xs bg-red-500/20 text-red-400 hover:bg-red-500/30 disabled:opacity-50"
+                              className="px-2 py-1 rounded-md text-xs bg-destructive text-destructive-foreground hover:opacity-90 disabled:opacity-50 transition-colors"
                             >
                               <X size={12} className="inline" /> Reddet
                             </button>
@@ -1434,7 +1425,7 @@ export default function DashboardPage() {
                               type="button"
                               onClick={() => handleQueueDecision(item.id, 'cancel')}
                               disabled={!!approvalActingId}
-                              className="px-2 py-1 rounded text-xs bg-slate-600/50 text-slate-400 hover:bg-slate-600 disabled:opacity-50"
+                              className="px-2 py-1 rounded-md text-xs bg-muted text-muted-foreground hover:bg-accent hover:text-accent-foreground disabled:opacity-50 transition-colors"
                             >
                               <Ban size={12} className="inline" /> İptal
                             </button>
@@ -1445,20 +1436,22 @@ export default function DashboardPage() {
                     </div>
                       </>
                     )}
-                    <button
+                    <Button
                       type="button"
+                      variant="ghost"
+                      size="sm"
                       onClick={fetchApprovalQueue}
-                  disabled={approvalLoading}
-                  className="mt-3 w-full py-1.5 rounded text-xs text-slate-500 hover:text-slate-400 flex items-center justify-center gap-1"
-                >
-                  <RefreshCw size={12} className={approvalLoading ? 'animate-spin' : ''} />
-                  Yenile
-                </button>
+                      disabled={approvalLoading}
+                      className="mt-3 w-full text-muted-foreground"
+                    >
+                      <RefreshCw size={12} className={approvalLoading ? 'animate-spin' : ''} />
+                      Yenile
+                    </Button>
 
-                {/* Onaylanan İşler Havuzu — tıklayınca her zaman aç */}
+                {/* Onaylanan İşler */}
                 {approvalItems.filter((i) => i.status === 'approved').length > 0 && (
-                  <div className="mt-6 pt-4 border-t border-slate-700/50">
-                    <p className="text-xs font-medium text-emerald-400 mb-2">📁 Onaylanan İşler — Tıkla içeriği aç</p>
+                  <div className="mt-6 pt-4 border-t border-border">
+                    <p className="text-xs font-medium text-muted-foreground mb-2">Onaylanan İşler</p>
                     <div className="space-y-1 max-h-[160px] overflow-y-auto">
                       {approvalItems.filter((i) => i.status === 'approved').slice(0, 10).map((item) => {
                         const payload = item.output_payload as Record<string, unknown> | undefined
@@ -1474,10 +1467,10 @@ export default function DashboardPage() {
                             displayText: content || '(Bu işte kayıtlı içerik yok)',
                             status: item.status,
                           })}
-                          className="w-full text-left px-3 py-2.5 rounded-lg bg-emerald-500/10 border border-emerald-500/30 text-sm text-slate-200 hover:bg-emerald-500/25 hover:border-emerald-500/50 transition-colors"
+                          className="w-full text-left px-3 py-2.5 rounded-lg bg-muted/50 border border-border text-sm text-foreground hover:bg-accent/50 hover:border-ring/50 transition-colors"
                         >
                           <span className="block truncate">{item.title.length > 40 ? item.title.slice(0, 40) + '…' : item.title}</span>
-                          <span className="text-[10px] text-emerald-400/80 mt-0.5 block">👁 Tıkla içeriği gör</span>
+                          <span className="text-[10px] text-muted-foreground mt-0.5 block">Tıkla içeriği gör</span>
                         </button>
                         )
                       })}
@@ -1492,34 +1485,34 @@ export default function DashboardPage() {
         </div>
       </div>
 
-      {/* Önizleme modal — içeriği büyütülmüş göster */}
+      {/* Önizleme modal */}
       {previewItem && (
         <div
           className="fixed inset-0 z-50 flex items-center justify-center bg-black/80 p-4"
           onClick={() => setPreviewItem(null)}
         >
           <div
-            className="bg-slate-900 rounded-2xl border border-slate-700 shadow-2xl max-w-4xl w-full max-h-[90vh] overflow-hidden flex flex-col"
+            className="bg-card rounded-xl border border-border shadow-2xl max-w-4xl w-full max-h-[90vh] overflow-hidden flex flex-col"
             onClick={(e) => e.stopPropagation()}
           >
-            <div className="flex items-center justify-between px-6 py-4 border-b border-slate-700">
-              <h3 className="font-semibold text-white truncate">{previewItem.title}</h3>
+            <div className="flex items-center justify-between px-6 py-4 border-b border-border">
+              <h3 className="font-semibold text-foreground truncate">{previewItem.title}</h3>
               <button
                 type="button"
                 onClick={() => setPreviewItem(null)}
-                className="p-2 rounded-lg hover:bg-slate-700 text-slate-400"
+                className="p-2 rounded-md hover:bg-accent text-muted-foreground"
               >
                 <X size={20} />
               </button>
             </div>
-            <div className="flex-1 overflow-auto p-6 bg-white text-slate-900">
+            <div className="flex-1 overflow-auto p-6 bg-muted/30 text-foreground">
               {/<\/?[a-z][\s\S]*>/i.test(previewItem.displayText) ? (
                 <div
-                  className="prose prose-slate max-w-none"
+                  className="prose prose-invert prose-sm max-w-none"
                   dangerouslySetInnerHTML={{ __html: previewItem.displayText }}
                 />
               ) : (
-                <pre className="whitespace-pre-wrap text-sm font-sans">{previewItem.displayText}</pre>
+                <pre className="whitespace-pre-wrap text-sm font-sans text-foreground">{previewItem.displayText}</pre>
               )}
             </div>
           </div>

@@ -75,27 +75,27 @@ export default function DashboardSidebar() {
         </div>
       </Link>
 
-      {/* Kompakt özet — minimalist */}
+      {/* Özet */}
       {summary && (
-        <div className="mb-4 flex items-center justify-between gap-2 text-xs text-slate-500 border-b border-slate-800 pb-3">
-          <span>Öğr: <span className="text-white font-mono">{summary.athletes}</span></span>
-          <span>Onay: <span className="text-amber-400 font-mono">{summary.pendingApprovals}</span></span>
-          <span>Başv: <span className="text-white font-mono">{summary.newApplications}</span></span>
-          <span>Frn: <span className="text-white font-mono">{summary.activeFranchises}</span></span>
+        <div className="mb-4 flex items-center justify-between gap-2 text-xs text-muted-foreground border-b border-border pb-3">
+          <span>Öğr: <span className="text-foreground font-mono">{summary.athletes}</span></span>
+          <span>Onay: <span className="text-foreground font-mono">{summary.pendingApprovals}</span></span>
+          <span>Başv: <span className="text-foreground font-mono">{summary.newApplications}</span></span>
+          <span>Frn: <span className="text-foreground font-mono">{summary.activeFranchises}</span></span>
         </div>
       )}
 
-      <nav className="space-y-2 flex-1">
+      <nav className="space-y-1 flex-1">
         {NAV.map(({ href, label, icon: Icon }) => {
           const active = pathname === href
           return (
             <Link
               key={href}
               href={href}
-              className={`flex items-center gap-3 px-4 py-3 rounded-xl transition-colors ${
+              className={`flex items-center gap-3 px-4 py-3 rounded-lg transition-colors ${
                 active
-                  ? 'bg-cyan-500/10 text-cyan-400'
-                  : 'text-slate-400 hover:bg-slate-800 hover:text-white'
+                  ? 'bg-accent text-accent-foreground'
+                  : 'text-muted-foreground hover:bg-accent/50 hover:text-accent-foreground'
               }`}
             >
               <Icon size={20} />
@@ -108,7 +108,7 @@ export default function DashboardSidebar() {
       <div>
         <button
           onClick={handleLogout}
-          className="flex items-center gap-3 px-4 py-3 w-full rounded-xl text-slate-400 hover:bg-red-500/10 hover:text-red-400 transition-colors"
+          className="flex items-center gap-3 px-4 py-3 w-full rounded-lg text-muted-foreground hover:bg-destructive/10 hover:text-destructive transition-colors"
         >
           <LogOut size={20} />
           Çıkış Yap
@@ -123,12 +123,11 @@ export default function DashboardSidebar() {
       <button
         type="button"
         onClick={() => setMobileOpen(!mobileOpen)}
-        className="lg:hidden fixed top-4 left-4 z-50 p-2 rounded-xl bg-slate-800 border border-slate-700 text-white"
+        className="lg:hidden fixed top-4 left-4 z-50 p-2 rounded-lg bg-card border border-border text-foreground"
         aria-label="Menüyü aç"
       >
         {mobileOpen ? <X size={24} /> : <Menu size={24} />}
       </button>
-      {/* Overlay mobilde */}
       {mobileOpen && (
         <div
           className="lg:hidden fixed inset-0 bg-black/60 z-40"
@@ -138,7 +137,7 @@ export default function DashboardSidebar() {
       )}
       <aside
         className={`
-          w-64 min-h-screen bg-slate-900 border-r border-slate-800 p-4 flex flex-col
+          w-64 min-h-screen bg-card border-r border-border p-4 flex flex-col
           fixed lg:static inset-y-0 left-0 z-40 transform transition-transform duration-200 ease-out
           ${mobileOpen ? 'translate-x-0' : '-translate-x-full lg:translate-x-0'}
         `}

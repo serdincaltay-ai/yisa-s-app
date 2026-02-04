@@ -35,14 +35,14 @@ export default function DashboardLayout({
 
   if (loading) {
     return (
-      <div className="min-h-screen flex items-center justify-center bg-slate-950">
-        <div className="text-amber-500">Yükleniyor...</div>
+      <div className="min-h-screen flex items-center justify-center bg-background">
+        <div className="text-muted-foreground">Yükleniyor...</div>
       </div>
     )
   }
 
   return (
-    <div className="min-h-screen bg-slate-950 flex">
+    <div className="min-h-screen bg-background flex">
       <DashboardSidebar />
       <main className="flex-1 overflow-auto pt-14 pl-14 lg:pt-0 lg:pl-0">{children}</main>
     </div>
