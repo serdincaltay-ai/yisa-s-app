@@ -61,7 +61,7 @@ export default function DashboardPage() {
   const [editText, setEditText] = useState('')
   const [showFlow, setShowFlow] = useState(false)
   const [useQualityFlow, setUseQualityFlow] = useState(true)
-  const [assistantProvider, setAssistantProvider] = useState<'GEMINI' | 'CLAUDE' | 'CURSOR' | 'CLOUD'>('GEMINI')
+  const [assistantProvider, setAssistantProvider] = useState<'GPT' | 'GEMINI' | 'CLAUDE' | 'CLOUD' | 'V0' | 'CURSOR' | 'SUPABASE' | 'GITHUB' | 'VERCEL' | 'RAILWAY' | 'FAL'>('GEMINI')
   const [asRoutine, setAsRoutine] = useState(false)
   const [currentStepLabel, setCurrentStepLabel] = useState<string | null>(null)
   const [pendingApproval, setPendingApproval] = useState<{
@@ -984,22 +984,34 @@ export default function DashboardPage() {
         )}
         {chatExpanded && (
           <>
-            {/* Robot seçim paneli — hangi AI ile konuşulacak */}
+            {/* Robot seçim paneli — tüm AI ve platformlar */}
             <div className="px-4 pt-3 pb-2 border-b border-slate-700/50">
               <p className="text-xs text-slate-500 mb-2 font-medium">Asistan robotu seçin (sohbet için)</p>
               <div className="flex flex-wrap gap-2">
-                {(['GEMINI', 'CLAUDE', 'CURSOR', 'CLOUD'] as const).map((p) => (
+                {[
+                  { id: 'GPT', label: 'GPT' },
+                  { id: 'GEMINI', label: 'Gemini' },
+                  { id: 'CLAUDE', label: 'Claude' },
+                  { id: 'CLOUD', label: 'Together' },
+                  { id: 'V0', label: 'V0' },
+                  { id: 'CURSOR', label: 'Cursor' },
+                  { id: 'SUPABASE', label: 'Supabase' },
+                  { id: 'GITHUB', label: 'GitHub' },
+                  { id: 'VERCEL', label: 'Vercel' },
+                  { id: 'RAILWAY', label: 'Railway' },
+                  { id: 'FAL', label: 'Fal' },
+                ].map(({ id, label }) => (
                   <button
-                    key={p}
+                    key={id}
                     type="button"
-                    onClick={() => setAssistantProvider(p)}
+                    onClick={() => setAssistantProvider(id as typeof assistantProvider)}
                     className={`px-3 py-1.5 rounded-lg text-sm font-medium transition-colors ${
-                      assistantProvider === p
+                      assistantProvider === id
                         ? 'bg-cyan-500/30 text-cyan-300 border border-cyan-500/50'
                         : 'bg-slate-800/50 text-slate-400 border border-slate-700/50 hover:border-cyan-500/30 hover:text-slate-200'
                     }`}
                   >
-                    {p === 'CLOUD' ? 'Cloud (Together)' : p}
+                    {label}
                   </button>
                 ))}
               </div>

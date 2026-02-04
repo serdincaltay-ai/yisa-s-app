@@ -68,8 +68,9 @@ export async function POST(req: NextRequest) {
     const savePrivate = body.save_private === true
     const privateCommand = typeof body.private_command === 'string' ? body.private_command : undefined
     const privateResult = typeof body.private_result === 'string' ? body.private_result : undefined
-    const assistantProvider = (['GEMINI', 'CLAUDE', 'CURSOR', 'CLOUD'] as const).includes(body.assistant_provider)
-      ? body.assistant_provider
+    const VALID_PROVIDERS = ['GPT', 'GEMINI', 'CLAUDE', 'CLOUD', 'V0', 'CURSOR', 'SUPABASE', 'GITHUB', 'VERCEL', 'RAILWAY', 'FAL'] as const
+    const assistantProvider = VALID_PROVIDERS.includes(body.assistant_provider as (typeof VALID_PROVIDERS)[number])
+      ? (body.assistant_provider as AssistantProvider)
       : ('GEMINI' as AssistantProvider)
     const sendAsCommand = body.send_as_command === true
     const asRoutine = body.as_routine === true
