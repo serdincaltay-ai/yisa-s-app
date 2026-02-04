@@ -59,7 +59,7 @@ export async function callClaude(
     body: JSON.stringify({
       model: 'claude-3-5-haiku-20241022',
       max_tokens: 1024,
-      system: system ?? 'Sen YİSA-S CELF direktörlük asistanısın. Kısa, net ve Türkçe yanıt ver.',
+      system: system ?? 'Sen YİSA-S CELF direktörlük asistanısın. Kısa, net ve Türkçe yanıt ver. Uydurma firma/isim/proje yazma; sadece YİSA-S bağlamında üret.',
       messages: [{ role: 'user', content: message }],
     }),
   })
@@ -78,7 +78,7 @@ async function callOpenAI(message: string): Promise<string | null> {
       model: 'gpt-4-turbo-preview',
       max_tokens: 1024,
       messages: [
-        { role: 'system', content: 'Sen YİSA-S CELF direktörlük asistanısın. Kısa, net, Türkçe.' },
+        { role: 'system', content: 'Sen YİSA-S CELF direktörlük asistanısın. Kısa, net, Türkçe. Uydurma firma/isim yazma; sadece YİSA-S bağlamında üret.' },
         { role: 'user', content: message },
       ],
     }),
@@ -265,7 +265,7 @@ export async function runCelfDirector(
   if (isCtoDirector(directorKey)) {
     const claudeCode = await callClaude(
       message,
-      'Sen YİSA-S CTO asistanısın. Kod veya teknik çözüm üret; kısa, net, Türkçe açıklama ekle.',
+      'Sen YİSA-S CTO asistanısın. Kod veya teknik çözüm üret; kısa, net, Türkçe açıklama ekle. Uydurma firma/isim yazma; sadece YİSA-S projesi bağlamında üret.',
       'celf'
     )
     const codeBlock = claudeCode ?? message
@@ -303,7 +303,7 @@ export async function runCelfDirector(
     : ''
   const orchestratorSystem = `Sen YİSA-S CELF görevlendiricisisin. Direktörlük: ${director?.name ?? directorKey} (${director?.work ?? 'genel'}).
 Mevcut API'ler: GPT, CLAUDE, GEMINI, TOGETHER.
-ÖNEMLİ: "Gerçek sistemlerle etkileşemem", "yapamam" gibi genel reddetme YAZMA. Sen CELF'in beynisin; ya doğrudan yol gösterici kısa Türkçe yanıt ver ya da DELEGATE ile devret.${reportDelegateHint}
+ÖNEMLİ: Uydurma firma, isim veya proje yazma. Sadece YİSA-S (spor tesisi, franchise, çocuk gelişimi) bağlamında üret. "Gerçek sistemlerle etkileşemem", "yapamam" gibi genel reddetme YAZMA. Sen CELF'in beynisin; ya doğrudan yol gösterici kısa Türkçe yanıt ver ya da DELEGATE ile devret.${reportDelegateHint}
 Kurallar:
 1) Doğrudan yanıt: Supabase/alan kontrolü isterse → "Supabase tabloları için Dashboard → SQL Editor veya /api/health ile sistem durumu kontrol edilebilir; chat ve patron komutları flow üzerinden loglanıyor." gibi kısa, net Türkçe yanıt ver. V0/Cursor/dashboard tasarımı isterse → "Dashboard tasarımı ve V0/Cursor entegrasyonu roadmap'te; şu an CELF bu görevi DELEGATE ile GPT veya CLAUDE'a devredebilir." deyip gerekirse ilk satırda DELEGATE:GPT veya DELEGATE:CLAUDE yaz.
 2) Devretmek istersen: İlk satırda sadece "DELEGATE:API_ADI" yaz (örn. DELEGATE:GPT, DELEGATE:GEMINI). O API görevi alacak, sonucu CELF'e teslim edecek.

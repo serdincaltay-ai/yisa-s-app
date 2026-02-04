@@ -9,27 +9,27 @@ export function ProjectManagement() {
   const [projects] = useState([
     {
       id: 1,
-      title: 'E-ticaret Panel Tasarımı',
-      partner: 'AY Teknoloji',
+      title: 'Patron Komuta Merkezi Güncellemesi',
+      partner: 'Beşiktaş Tuzla Cimnastik',
       status: 'review',
       priority: 'high',
-      dueDate: '2024-01-15',
+      dueDate: '2025-02-15',
     },
     {
       id: 2,
-      title: 'Mobil Uygulama Arayüzü',
-      partner: 'FD Dijital',
+      title: 'Şablon Sistemi Entegrasyonu',
+      partner: 'YISA-S Pilot Tesis',
       status: 'in-progress',
       priority: 'medium',
-      dueDate: '2024-01-20',
+      dueDate: '2025-02-20',
     },
     {
       id: 3,
-      title: 'Dashboard Yenileme',
-      partner: 'MK Solutions',
+      title: 'Veli Paneli İyileştirmesi',
+      partner: 'YISA-S Franchise',
       status: 'pending',
       priority: 'low',
-      dueDate: '2024-01-25',
+      dueDate: '2025-02-25',
     },
   ])
 
