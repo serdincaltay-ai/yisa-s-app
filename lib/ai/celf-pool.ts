@@ -50,9 +50,11 @@ export const CELF_DIRECTOR_EXTERNAL_APIS: Record<DirectorKey, string[]> = {
   CPO: ['v0', 'cursor'],
   CDO: ['together', 'gemini', 'gpt'],
   CISO: ['claude'],
-  CCO: ['claude'],
+  CCO: ['gemini', 'gpt'],
   CSO_STRATEJI: ['gpt', 'gemini'],
-  CSPO: ['claude', 'gpt'], // Spor Direktörlüğü
+  CSPO: ['claude', 'gemini'],
+  COO: ['gemini', 'claude', 'vercel'],
+  RND: ['claude', 'together', 'github'],
 }
 
 /** CPO direktörlüğü mü (V0 + Cursor) */

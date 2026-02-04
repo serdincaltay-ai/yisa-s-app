@@ -1015,6 +1015,29 @@ export default function DashboardPage() {
                   </button>
                 ))}
               </div>
+              {/* LLM ve Araçlar açıklaması — robotların altında */}
+              <div className="mt-3 pt-3 border-t border-slate-700/50 space-y-3 text-xs text-slate-400">
+                <div>
+                  <p className="font-medium text-slate-300 mb-1.5">🧠 LLM (Dil Modelleri)</p>
+                  <ul className="space-y-1 pl-1">
+                    <li><span className="text-cyan-400/90">Claude</span> — Akıl, analiz, karar</li>
+                    <li><span className="text-cyan-400/90">GPT</span> — Genel amaçlı, çeşitlilik</li>
+                    <li><span className="text-cyan-400/90">Gemini</span> — Hızlı, multimodal</li>
+                    <li><span className="text-cyan-400/90">Together.ai</span> — Ucuz, batch işlemler</li>
+                  </ul>
+                </div>
+                <div>
+                  <p className="font-medium text-slate-300 mb-1.5">🛠️ Araçlar</p>
+                  <ul className="space-y-1 pl-1">
+                    <li><span className="text-amber-400/90">Cursor</span> — Kod yazma, düzenleme</li>
+                    <li><span className="text-amber-400/90">v0</span> — UI/Frontend üretimi</li>
+                    <li><span className="text-amber-400/90">GitHub</span> — Kod depolama, versiyon</li>
+                    <li><span className="text-amber-400/90">Vercel</span> — Deploy, hosting</li>
+                    <li><span className="text-amber-400/90">Supabase</span> — Veritabanı, auth, storage</li>
+                    <li><span className="text-amber-400/90">Railway</span> — Backend worker&apos;lar</li>
+                  </ul>
+                </div>
+              </div>
             </div>
             <div className="flex-1 min-h-[200px] max-h-[340px] overflow-y-auto p-4 space-y-4">
               {chatMessages.length === 0 && (

@@ -11,7 +11,8 @@
     "lint": "eslint .",
     "lint:fix": "eslint . --fix",
     "go": "npm install && npm run dev",
-    "db:migrate": "node scripts/run-migrations.js"
+    "db:migrate": "node scripts/run-migrations.js",
+    "db:full-migrate": "node scripts/run-full-migrations.js"
   },
   "dependencies": {
     "@anthropic-ai/sdk": "^0.72.1",

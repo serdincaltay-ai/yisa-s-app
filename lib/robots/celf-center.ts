@@ -17,9 +17,12 @@ export type DirectorKey =
   | 'CISO'
   | 'CCO'
   | 'CSO_STRATEJI'
-  | 'CSPO' // Spor Direktörlüğü - Anayasa uyumu
+  | 'CSPO'
+  | 'COO'
+  | 'RND'
 
 export type CelfAIProvider = 'GPT' | 'CLAUDE' | 'GEMINI' | 'TOGETHER' | 'V0' | 'CURSOR'
+export type CelfTool = 'GITHUB' | 'SUPABASE' | 'VERCEL' | 'RAILWAY' | 'V0'
 
 export interface Directorate {
   name: string
@@ -27,6 +30,8 @@ export interface Directorate {
   triggers: string[]
   work: string
   aiProviders: CelfAIProvider[]
+  /** Platform/araç (GitHub, Supabase, Vercel, Railway) */
+  tools?: CelfTool[]
   hasVeto?: boolean
   /** Erişebildiği veriler */
   dataAccess?: string[]
@@ -43,8 +48,9 @@ export const CELF_DIRECTORATES: Record<DirectorKey, Directorate> = {
     name: 'Finans',
     tasks: ['bütçe', 'gelir', 'gider', 'tahsilat', 'maliyet'],
     triggers: ['gelir', 'gider', 'bütçe', 'tahsilat', 'maliyet', 'finans'],
-    work: 'Supabase finansal veri, rapor',
-    aiProviders: ['GEMINI', 'GPT'], // Gemini önce denenir; key yoksa GPT'ye düşer
+    work: 'Akıl, analiz, karar (Claude); genel amaçlı (GPT); Supabase veritabanı',
+    aiProviders: ['CLAUDE', 'GPT'],
+    tools: ['SUPABASE'],
     dataAccess: ['payments', 'invoices', 'expenses', 'revenue'],
     readOnly: ['franchise_contracts'],
     protectedData: ['pricing_history'],
@@ -54,8 +60,9 @@ export const CELF_DIRECTORATES: Record<DirectorKey, Directorate> = {
     name: 'Teknoloji',
     tasks: ['sistem', 'kod', 'api', 'performans', 'hata'],
     triggers: ['sistem', 'kod', 'api', 'performans', 'hata', 'teknoloji'],
-    work: 'Sistem durumu, kod yaz/düzelt',
-    aiProviders: ['GPT', 'CURSOR'],
+    work: 'Kod yazma, düzenleme (Cursor); akıl, analiz (Claude); GitHub depolama',
+    aiProviders: ['CURSOR', 'CLAUDE'],
+    tools: ['GITHUB'],
     dataAccess: ['system_logs', 'api_health', 'deployments'],
     readOnly: ['user_data'],
     protectedData: ['env_variables', 'api_keys'],
@@ -76,8 +83,9 @@ export const CELF_DIRECTORATES: Record<DirectorKey, Directorate> = {
     name: 'Pazarlama',
     tasks: ['kampanya', 'reklam', 'sosyal medya', 'tanıtım'],
     triggers: ['kampanya', 'reklam', 'sosyal medya', 'tanıtım', 'pazarlama'],
-    work: 'İçerik üret, kampanya planla',
-    aiProviders: ['GPT', 'CLAUDE'],
+    work: 'Genel amaçlı (GPT); hızlı, multimodal (Gemini); v0 UI/Frontend üretimi',
+    aiProviders: ['GPT', 'GEMINI'],
+    tools: ['V0'],
     dataAccess: ['campaigns', 'content'],
     readOnly: ['franchise_data'],
     protectedData: [],
@@ -87,8 +95,9 @@ export const CELF_DIRECTORATES: Record<DirectorKey, Directorate> = {
     name: 'İnsan Kaynakları',
     tasks: ['personel', 'eğitim', 'performans', 'izin'],
     triggers: ['personel', 'eğitim', 'performans', 'izin', 'insan kaynakları'],
-    work: 'Personel yönetimi, eğitim planı',
-    aiProviders: ['CLAUDE'],
+    work: 'Akıl, analiz (Claude); genel amaçlı (GPT); Supabase veritabanı',
+    aiProviders: ['CLAUDE', 'GPT'],
+    tools: ['SUPABASE'],
     dataAccess: ['personnel', 'training'],
     readOnly: ['contracts'],
     protectedData: ['salary_data'],
@@ -98,8 +107,8 @@ export const CELF_DIRECTORATES: Record<DirectorKey, Directorate> = {
     name: 'Hukuk',
     tasks: ['sözleşme', 'patent', 'uyum', 'kvkk'],
     triggers: ['sözleşme', 'patent', 'uyum', 'kvkk', 'hukuk'],
-    work: 'Hukuki kontrol, sözleşme hazırla',
-    aiProviders: ['CLAUDE'],
+    work: 'Akıl, analiz (Claude); genel amaçlı (GPT)',
+    aiProviders: ['CLAUDE', 'GPT'],
     hasVeto: true,
     dataAccess: ['contracts', 'compliance_logs', 'kvkk_records'],
     readOnly: ['tüm veriler'],
@@ -110,8 +119,8 @@ export const CELF_DIRECTORATES: Record<DirectorKey, Directorate> = {
     name: 'Satış',
     tasks: ['müşteri', 'sipariş', 'crm', 'satış'],
     triggers: ['müşteri', 'sipariş', 'crm', 'satış'],
-    work: 'Müşteri yönetimi, satış takibi',
-    aiProviders: ['GPT'],
+    work: 'Genel amaçlı (GPT); hızlı, multimodal (Gemini)',
+    aiProviders: ['GPT', 'GEMINI'],
     dataAccess: ['orders', 'crm', 'customers'],
     readOnly: ['pricing_history'],
     protectedData: [],
@@ -129,11 +138,12 @@ export const CELF_DIRECTORATES: Record<DirectorKey, Directorate> = {
     requiresApproval: ['template_delete', 'brand_change'],
   },
   CDO: {
-    name: 'Veri',
+    name: 'Veri / Analitik',
     tasks: ['analiz', 'rapor', 'dashboard', 'istatistik'],
     triggers: ['analiz', 'rapor', 'dashboard', 'istatistik', 'veri'],
-    work: 'Veri analizi, rapor oluştur',
-    aiProviders: ['GEMINI', 'GPT'],
+    work: 'Ucuz batch (Together); akıl, analiz (Claude); Supabase veritabanı',
+    aiProviders: ['TOGETHER', 'CLAUDE'],
+    tools: ['SUPABASE'],
     dataAccess: ['analytics', 'reports', 'dashboards'],
     readOnly: ['raw_user_data'],
     protectedData: ['audit_logs'],
@@ -143,19 +153,20 @@ export const CELF_DIRECTORATES: Record<DirectorKey, Directorate> = {
     name: 'Bilgi Güvenliği',
     tasks: ['güvenlik', 'audit', 'erişim', 'şifre'],
     triggers: ['güvenlik', 'audit', 'erişim', 'şifre'],
-    work: 'Güvenlik kontrolü, audit log',
+    work: 'Akıl, analiz, karar (Claude); Railway backend worker',
     aiProviders: ['CLAUDE'],
+    tools: ['RAILWAY'],
     dataAccess: ['security_logs', 'access_logs'],
     readOnly: ['user_data'],
     protectedData: ['audit_logs'],
     requiresApproval: ['access_grant', 'password_reset'],
   },
   CCO: {
-    name: 'Müşteri',
+    name: 'Müşteri İlişkileri',
     tasks: ['destek', 'şikayet', 'memnuniyet', 'ticket'],
     triggers: ['destek', 'şikayet', 'memnuniyet', 'ticket'],
-    work: 'Müşteri desteği, şikayet çözümü',
-    aiProviders: ['CLAUDE'],
+    work: 'Hızlı multimodal (Gemini); genel amaçlı (GPT)',
+    aiProviders: ['GEMINI', 'GPT'],
     dataAccess: ['tickets', 'feedback'],
     readOnly: ['customer_contracts'],
     protectedData: [],
@@ -167,17 +178,38 @@ export const CELF_DIRECTORATES: Record<DirectorKey, Directorate> = {
     triggers: ['plan', 'hedef', 'büyüme', 'vizyon', 'strateji'],
     work: 'Strateji planı, hedef belirleme',
     aiProviders: ['GPT', 'GEMINI'],
+  },
+  COO: {
+    name: 'Operasyon',
+    tasks: ['operasyon', 'süreç', 'tesis', 'lojistik'],
+    triggers: ['operasyon', 'süreç', 'tesis', 'lojistik', 'deploy'],
+    work: 'Hızlı multimodal (Gemini); akıl, analiz (Claude); Vercel deploy/hosting',
+    aiProviders: ['GEMINI', 'CLAUDE'],
+    tools: ['VERCEL'],
     dataAccess: ['reports', 'analytics'],
     readOnly: ['financial_summary'],
     protectedData: [],
     requiresApproval: ['strategy_publish'],
   },
+  RND: {
+    name: 'AR-GE',
+    tasks: ['ar-ge', 'araştırma', 'geliştirme', 'inovasyon'],
+    triggers: ['ar-ge', 'araştırma', 'geliştirme', 'inovasyon', 'r&d'],
+    work: 'Akıl, analiz (Claude); ucuz batch (Together); GitHub depolama',
+    aiProviders: ['CLAUDE', 'TOGETHER'],
+    tools: ['GITHUB'],
+    dataAccess: ['research', 'prototypes'],
+    readOnly: ['patents'],
+    protectedData: [],
+    requiresApproval: ['patent_filing'],
+  },
   CSPO: {
-    name: 'Spor',
+    name: 'Spor (SD)',
     tasks: ['antrenman', 'hareket', 'sporcu', 'program', 'seviye', 'branş', 'ölçüm'],
     triggers: ['antrenman', 'hareket', 'sporcu', 'program', 'seviye', 'branş', 'ölçüm', 'spor', 'cimnastik', 'kamp'],
-    work: 'Hareket havuzu, antrenman programı, sporcu değerlendirme, seviye sistemi',
-    aiProviders: ['CLAUDE', 'GPT'],
+    work: 'Akıl, analiz (Claude); hızlı multimodal (Gemini); Supabase veritabanı',
+    aiProviders: ['CLAUDE', 'GEMINI'],
+    tools: ['SUPABASE'],
     dataAccess: ['athletes', 'movements', 'training_programs', 'evaluations'],
     readOnly: ['health_records'],
     protectedData: ['medical_data'],
