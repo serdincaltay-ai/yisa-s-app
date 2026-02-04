@@ -48,6 +48,7 @@ const SQL_FILES = [
   path.join(migrationsDir, '20260203_patron_commands_komut_sonuc_durum.sql'),
   path.join(migrationsDir, '20260130_ceo_tasks_awaiting_approval.sql'),
   path.join(migrationsDir, '20260130_ceo_tasks_idempotency.sql'),
+  path.join(migrationsDir, '20260204_athlete_health_records.sql'),
 ]
 
 async function run() {

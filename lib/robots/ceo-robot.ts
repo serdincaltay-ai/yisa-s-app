@@ -84,6 +84,10 @@ export const CEO_RULES = {
     spor: 'CSPO',
     cimnastik: 'CSPO',
     kamp: 'CSPO',
+    sağlık: 'CSPO',
+    health: 'CSPO',
+    çocuk: 'CSPO',
+    yaş: 'CSPO',
   } as Record<string, DirectorKey>,
 
   /** Deploy / Commit kuralları - PATRON ONAYI ŞART */

@@ -34,6 +34,8 @@ const DIRECTOR_ALIASES: Record<string, DirectorKey> = {
   ciso: 'CISO',
   cco: 'CCO',
   cspo: 'CSPO',
+  coo: 'COO',
+  rnd: 'RND',
 }
 
 const DIRECTOR_NAMES_TR: Record<string, DirectorKey> = {

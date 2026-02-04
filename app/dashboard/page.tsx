@@ -62,6 +62,7 @@ export default function DashboardPage() {
   const [showFlow, setShowFlow] = useState(false)
   const [useQualityFlow, setUseQualityFlow] = useState(true)
   const [assistantProvider, setAssistantProvider] = useState<'GPT' | 'GEMINI' | 'CLAUDE' | 'CLOUD' | 'V0' | 'CURSOR' | 'SUPABASE' | 'GITHUB' | 'VERCEL' | 'RAILWAY' | 'FAL'>('GEMINI')
+  const [targetDirector, setTargetDirector] = useState<string>('')
   const [asRoutine, setAsRoutine] = useState(false)
   const [currentStepLabel, setCurrentStepLabel] = useState<string | null>(null)
   const [pendingApproval, setPendingApproval] = useState<{
@@ -212,6 +213,7 @@ export default function DashboardPage() {
           confirm_type: 'company',
           confirmed_first_step: true,
           as_routine: asRoutine,
+          target_director: targetDirector || undefined,
           user: user ?? undefined,
           user_id: user?.id ?? undefined,
           assistant_provider: assistantProvider,
@@ -278,13 +280,14 @@ export default function DashboardPage() {
         const res = await fetch('/api/chat/flow', {
           method: 'POST',
           headers: { 'Content-Type': 'application/json' },
-          body: JSON.stringify({
-            message: msg,
-            user: user ?? undefined,
-            user_id: user?.id ?? undefined,
-            assistant_provider: assistantProvider,
-            as_routine: asRoutine,
-          }),
+        body: JSON.stringify({
+          message: msg,
+          user: user ?? undefined,
+          user_id: user?.id ?? undefined,
+          assistant_provider: assistantProvider,
+          as_routine: asRoutine,
+          target_director: targetDirector || undefined,
+        }),
         })
         const data = await res.json()
         setCurrentStepLabel(null)
@@ -445,6 +448,7 @@ export default function DashboardPage() {
             confirmed_first_step: true,
             idempotency_key: crypto.randomUUID(),
           }),
+          target_director: targetDirector || undefined,
         }),
       })
       const data = await res.json()
@@ -985,8 +989,9 @@ export default function DashboardPage() {
         {chatExpanded && (
           <>
             {/* Robot seçim paneli — tüm AI ve platformlar */}
-            <div className="px-4 pt-3 pb-2 border-b border-slate-700/50">
-              <p className="text-xs text-slate-500 mb-2 font-medium">Asistan robotu seçin (sohbet için)</p>
+            <div className="px-4 pt-3 pb-2 border-b border-slate-700/50 space-y-3">
+              <div>
+                <p className="text-xs text-slate-500 mb-2 font-medium">1. Asistan seçin → Sohbet edin → Komut olarak gönder</p>
               <div className="flex flex-wrap gap-2">
                 {[
                   { id: 'GPT', label: 'GPT' },
@@ -1014,6 +1019,32 @@ export default function DashboardPage() {
                     {label}
                   </button>
                 ))}
+              </div>
+            </div>
+            <div>
+              <p className="text-xs text-slate-500 mb-2 font-medium">2. Hedef direktör (komut gönderirken — boş = otomatik)</p>
+                <select
+                  value={targetDirector}
+                  onChange={(e) => setTargetDirector(e.target.value)}
+                  className="w-full max-w-xs bg-slate-800 border border-slate-700 rounded-lg px-3 py-2 text-sm text-white"
+                >
+                  <option value="">Otomatik (CEO yönlendirir)</option>
+                  <option value="CFO">CFO — Finans</option>
+                  <option value="CTO">CTO — Teknoloji</option>
+                  <option value="CIO">CIO — Bilgi Sistemleri</option>
+                  <option value="CMO">CMO — Pazarlama</option>
+                  <option value="CHRO">CHRO — İnsan Kaynakları</option>
+                  <option value="CLO">CLO — Hukuk</option>
+                  <option value="CSO_SATIS">CSO — Satış</option>
+                  <option value="CPO">CPO — Ürün</option>
+                  <option value="CDO">CDO — Veri</option>
+                  <option value="CISO">CISO — Güvenlik</option>
+                  <option value="CCO">CCO — Müşteri</option>
+                  <option value="CSO_STRATEJI">CSO — Strateji</option>
+                  <option value="CSPO">CSPO — Spor (antrenman, çocuk yaşı)</option>
+                  <option value="COO">COO — Operasyon</option>
+                  <option value="RND">RND — AR-GE</option>
+                </select>
               </div>
               {/* LLM ve Araçlar açıklaması — robotların altında */}
               <div className="mt-3 pt-3 border-t border-slate-700/50 space-y-3 text-xs text-slate-400">

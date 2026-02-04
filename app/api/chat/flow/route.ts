@@ -19,7 +19,7 @@ import {
 import { analyzeCommand, isStrategyChange, type CIOAnalysisResult } from '@/lib/robots/cio-robot'
 import { logCIOAnalysis } from '@/lib/db/cio-logs'
 import { CELF_DIRECTORATES, runCelfChecks, type DirectorKey } from '@/lib/robots/celf-center'
-import { parsePatronDirective, getDirectorFromDirective } from '@/lib/robots/patron-directives'
+import { parsePatronDirective, getDirectorFromDirective, isValidDirectorKey } from '@/lib/robots/patron-directives'
 import { securityCheck } from '@/lib/robots/security-robot'
 import { archiveTaskResult } from '@/lib/robots/data-robot'
 import { saveChatMessage } from '@/lib/db/chat-messages'
@@ -74,6 +74,8 @@ export async function POST(req: NextRequest) {
       : ('GEMINI' as AssistantProvider)
     const sendAsCommand = body.send_as_command === true
     const asRoutine = body.as_routine === true
+    const rawTarget = typeof body.target_director === 'string' ? body.target_director.trim().toUpperCase() : ''
+    const targetDirector = rawTarget && isValidDirectorKey(rawTarget) ? rawTarget : undefined
 
     const messageToUse = correctedMessage ?? message
 
@@ -337,9 +339,9 @@ export async function POST(req: NextRequest) {
       }
     }
 
-    // Patron doğrudan talimatı: "CFO'ya şunu yaptır", "CTO'yu hatırlat" → direktörü zorla seç
+    // Patron doğrudan talimatı: UI'dan seçim (target_director) veya metinden "CFO'ya şunu yaptır"
     const directive = parsePatronDirective(messageToUse)
-    const forcedDirector = getDirectorFromDirective(directive)
+    const forcedDirector = targetDirector ?? getDirectorFromDirective(directive)
     const messageForCelf = directive.task && (directive.type === 'director' || directive.type === 'remind') ? directive.task : messageToUse
 
     // CIO'dan gelen analizi kullan (CEO'ya iş emri); Patron direktifi varsa öncelikli
