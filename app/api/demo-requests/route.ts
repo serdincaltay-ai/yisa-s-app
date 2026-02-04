@@ -90,8 +90,9 @@ export async function POST(req: NextRequest) {
 
       const tenantId = newTenant?.id
 
-      // E-posta ile kullanıcı var mı? Varsa user_tenants'a ata ve owner_id güncelle
+      // E-posta ile kullanıcı var mı? Yoksa oluştur; varsa user_tenants'a ata
       const reqEmail = (row.email ?? '').trim().toLowerCase()
+      let tempPassword: string | undefined
       if (reqEmail && tenantId) {
         try {
           const { data: listData } = await supabase.auth.admin.listUsers({ perPage: 1000 })
@@ -102,18 +103,41 @@ export async function POST(req: NextRequest) {
               { user_id: existingUser.id, tenant_id: tenantId, role: 'owner' },
               { onConflict: 'user_id,tenant_id' }
             )
+          } else {
+            // Kullanıcı yok — otomatik oluştur (geçici şifre)
+            const chars = 'abcdefghjkmnpqrstuvwxyz23456789'
+            tempPassword = Array.from({ length: 12 }, () => chars[Math.floor(Math.random() * chars.length)]).join('')
+            const { data: newUser, error: createErr } = await supabase.auth.admin.createUser({
+              email: reqEmail,
+              password: tempPassword,
+              email_confirm: true,
+              user_metadata: { role: 'franchise', tenant_slug: slug },
+            })
+            if (!createErr && newUser?.user) {
+              await supabase.from('tenants').update({ owner_id: newUser.user.id }).eq('id', tenantId)
+              await supabase.from('user_tenants').upsert(
+                { user_id: newUser.user.id, tenant_id: tenantId, role: 'owner' },
+                { onConflict: 'user_id,tenant_id' }
+              )
+            } else {
+              tempPassword = undefined
+            }
           }
         } catch (_) {
-          // Kullanıcı eşleştirme hatası - tenant yine de oluşturuldu
+          tempPassword = undefined
         }
       }
 
       await supabase.from('demo_requests').update({ status: 'converted' }).eq('id', id)
       return NextResponse.json({
         ok: true,
-        message: 'Talep onaylandı, tenant oluşturuldu.',
+        message: tempPassword
+          ? `Talep onaylandı. Tenant oluşturuldu. Firma sahibi hesabı açıldı. Giriş: ${reqEmail} / Geçici şifre: ${tempPassword} — İlk girişte değiştirsin.`
+          : 'Talep onaylandı, tenant oluşturuldu.',
         tenant_id: tenantId,
         slug,
+        temp_password: tempPassword,
+        login_email: tempPassword ? reqEmail : undefined,
       })
     }
 

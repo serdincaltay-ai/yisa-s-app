@@ -20,7 +20,7 @@ Patron → CELF motoru → Franchise vitrini → Satış → Tesis kurulumu
 | **Patron** | ✅ Çalışıyor | Patron paneli (app.yisa-s.com), giriş, dashboard |
 | **CELF motoru** | ✅ Kısmen çalışıyor | CEO → 13 direktörlük (CFO, CTO, CIO, CMO, CHRO, CLO, CSO_SATIS, CPO, CDO, CISO, CCO, CSO_STRATEJI, CSPO) tanımlı. Chat flow: imla → Şirket İşi/Özel İş → CEO → CELF → Patron onayı |
 | **Franchise vitrini** | ⚠️ Kısmen | Tanıtım sayfası (www), demo sayfası (/demo), franchise paneli (/franchise) mock data ile |
-| **Satış** | ❌ Eksik | Paket seçimi, fiyatlandırma, ödeme akışı yok. Franchise başvuru formu sadece `alert()` — DB'ye kaydetmiyor |
+| **Satış** | ⚠️ Kısmen | Franchise başvuru DB'ye kaydediliyor. Vitrin seçim + demo_requests. Ödeme kaydı (record_payment) var. Online ödeme entegrasyonu yok. |
 | **Tesis kurulumu** | ❌ Eksik | Otomatik tesis paneli kurulumu, site şablonu seçimi, tenant provisioning yok |
 
 **Sonuç:** Akışın **ilk yarısı (Patron → CELF)** çalışıyor. **Satış ve tesis kurulumu** tarafı henüz implemente edilmemiş.
@@ -37,11 +37,11 @@ Patron → CELF motoru → Franchise vitrini → Satış → Tesis kurulumu
 | Patron Paneli linki | ✅ | /auth/login |
 | Sistemi Tanıyın (Demo) | ✅ | /demo |
 | Veli Girişi linki | ✅ | /auth/login?panel=veli |
-| Franchise Başvurusu | ⚠️ | Form var; **DB'ye kaydetmiyor**, sadece `alert("Başvurunuz alındı!")` |
+| Franchise Başvurusu | ✅ | Form `/api/demo-requests` POST ile DB'ye kaydediyor (demo_requests) |
 | CO Vitrin bölümü | ✅ | Metin ve kartlar |
 | Pilot tesis (Tuzla Beşiktaş) | ✅ | Referans ve giriş CTA |
 
-**Eksik:** Başvuru verisinin `demo_requests`, `demo_talepleri` veya `leads` tablosuna yazılması.
+**Tamamlandı:** Başvuru verisi `demo_requests` tablosuna yazılıyor. Demo onayında tenant oluşturuluyor; e-posta Auth'da yoksa otomatik kullanıcı + geçici şifre oluşturuluyor.
 
 ---
 

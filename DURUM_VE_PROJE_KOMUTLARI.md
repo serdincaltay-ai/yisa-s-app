@@ -36,6 +36,8 @@ Supabase Dashboard → **SQL Editor** → Aşağıdaki dosyaları **sırayla** �
 | 4 | `supabase/SABLONLAR_TEK_SQL.sql` | 66 şablon INSERT (template_name, content ile) |
 | 5 | `supabase/migrations/20260203_patron_commands_komut_sonuc_durum.sql` | patron_commands: komut, sonuc, durum, completed_at |
 
+**Tam kurulum (SISTEM_AKTIF_KURULUM):** `npm run db:full-migrate` veya `SISTEM_AKTIF_KURULUM.ps1` — DATABASE_URL varsa tüm SQL otomatik.
+
 ### 2.2 Proje komutları (build + çalıştırma)
 
 PowerShell’de proje klasöründe:
@@ -69,7 +71,7 @@ npm run dev
 
 ## 3. EKSİK / İSTEĞE BAĞLI (Şu an zorunlu değil)
 
-- **Firma sahibi Auth hesabı:** Demo onayında tenant oluşuyor; e-posta **zaten** Supabase Auth’da varsa otomatik owner bağlanıyor. **Yoksa** sizin Supabase → Authentication → Users’dan o e-postayı eklemeniz (veya davet göndermeniz) gerekir; kod şu an otomatik kullanıcı oluşturmuyor.
+- **Firma sahibi Auth hesabı:** Demo onayında tenant oluşuyor; e-posta **zaten** Supabase Auth’da varsa otomatik owner bağlanıyor. **Yoksa** sizin Supabase → Authentication → Users’dan o e-postayı eklemeniz (veya davet göndermeniz) gerekir; kod şu an otomatik kullanıcı + geçici şifre oluşturuluyor; Patron onay ekranında giriş bilgileri gösteriliyor.
 - **Patron şifresi:** Uygulama içinde sabit şifre yok; Supabase Auth’da Patron e-postası için şifre tanımlı olmalı.
 - **CELF/İK sözleşmelerinin tenant paneline inmesi:** Şu an Patron/onay tarafında; istenirse ileride firma sahibi paneline otomatik düşecek akış eklenebilir.
 

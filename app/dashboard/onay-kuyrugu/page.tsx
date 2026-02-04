@@ -150,7 +150,12 @@ export default function OnayKuyruguPage() {
         setError(data?.error ?? 'İşlem başarısız.')
         return
       }
-      if (data.message) setError(null)
+      setError(null)
+      if (data.temp_password && data.login_email) {
+        alert(`✅ Onaylandı. Firma sahibi giriş bilgileri:\n\nE-posta: ${data.login_email}\nGeçici şifre: ${data.temp_password}\n\nBu bilgiyi kopyalayıp franchise sahibine iletin. İlk girişte şifreyi değiştirmesini söyleyin.`)
+      } else if (data.message) {
+        alert(data.message)
+      }
       await fetchDemoRequests()
     } catch {
       setError('İstek gönderilemedi.')
