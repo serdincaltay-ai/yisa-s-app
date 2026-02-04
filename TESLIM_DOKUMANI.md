@@ -83,6 +83,7 @@ Araştırma özeti: **`ASISTANLARIN_SITELERI_YONETMESI_ARASTIRMA.md`**
 | **`ROBOT_ENTEGRASYON_ANAYASA.md`** | **Tüm robotların tetikleme zinciri, hangi CELF şablon üretir, ziyaretçi/üye faydası, anayasa eşlemesi** |
 | **`HAZIRLIK_DURUMU.md`** | **Tesis müdürü, franchise, personel, paket — kim neyi kullanacak, nerede** |
 | **`SON_GOREV_DEPLOY_CHECKLIST.md`** | **Son görev, deploy kontrol listesi, Vercel/Railway, kompozit depolar** |
+| **`DATABASE_URL_HAZIRLA.md`** | **DATABASE_URL formatı (Supabase + Railway), migration çalıştırma** |
 
 ---
 

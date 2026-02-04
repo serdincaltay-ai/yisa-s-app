@@ -46,7 +46,24 @@
 
 ---
 
-## 4. Deploy Komutları
+## 4. Supabase migration (TEK_SEFERDE) — Nasıl çalıştırılır
+
+**A) DATABASE_URL ile (yerelde veya CI):**
+```bash
+# .env.local içinde DATABASE_URL tanımlı olmalı (bkz. DATABASE_URL_HAZIRLA.md)
+npm run db:tek-seferde
+```
+
+**B) Supabase SQL Editor (DATABASE_URL yok):**
+1. Supabase Dashboard → SQL Editor → New query
+2. `supabase/TEK_SEFERDE_YENI_MIGRASYONLAR.sql` dosyasının **tüm içeriğini** kopyala-yapıştır
+3. Run
+
+**C) Detay:** `DATABASE_URL_HAZIRLA.md`
+
+---
+
+## 5. Deploy Komutları
 
 ```bash
 # 1. Değişiklikleri commit + push
@@ -55,12 +72,12 @@ git commit -m "Son görev: migration, tebrikler, personel alanları, deploy conf
 git push origin main
 
 # 2. Vercel otomatik deploy alır (repo bağlıysa)
-# 3. Birkaç dakika sonra canlı link güncel olur
+# 3. Railway: Projeyi Railway'a bağlayın, DATABASE_URL ve diğer env'leri ekleyin (bkz. DATABASE_URL_HAZIRLA.md)
 ```
 
 ---
 
-## 5. Kitap / Doküman Referansları
+## 6. Kitap / Doküman Referansları
 
 | Dosya | İçerik |
 |-------|--------|
@@ -74,7 +91,7 @@ git push origin main
 
 ---
 
-## 6. Kompozit Depolar (COO)
+## 7. Kompozit Depolar (COO)
 
 Anayasa: Talep → CIO planlama → CEO dağıtım → CELF üretim → **COO depolama** → Patron onayı → Yayınlama.
 
