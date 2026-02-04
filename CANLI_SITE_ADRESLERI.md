@@ -4,6 +4,20 @@ Lokal (localhost) kullanmadan **doğrudan canlı sitelere** girmek için adresle
 
 ---
 
+## Canlı siteler (özet)
+
+| Site | Adres | Açıklama |
+|------|-------|----------|
+| **Patron paneli** | https://app.yisa-s.com | Ana giriş — tek geçerli domain |
+| **Franchise paneli** | https://franchise.yisa-s.com | Tesis yönetimi |
+| **Veli paneli** | https://veli.yisa-s.com | Veli / çocuk takibi |
+| **Tanıtım** | https://yisa-s.com | Ayrı proje (YISA_S_SITE_KOMPLE) |
+| **Vercel varsayılan** | https://yisa-s-app.vercel.app | → app.yisa-s.com'a yönlendirilir |
+
+**Not:** `yisa-s.com`, `www.yisa-s.com`, `yisa-s-app.vercel.app` ile giriş yapıldığında otomatik olarak `app.yisa-s.com` adresine yönlendirilir.
+
+---
+
 ## Ana canlı adres
 
 - **Vercel linki (örnek):** `https://yisa-s-app.vercel.app`  
