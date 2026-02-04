@@ -143,6 +143,44 @@ export async function GET(req: NextRequest) {
         }))
       }
 
+      // v0_template_library: ceo_templates boşsa veya az şablon varsa V0 ücretsiz şablonları ekle (robot bağlantısı gerekmez)
+      if (sablonlar.length < 20) {
+        try {
+          const { data: v0Data } = await supabase
+            .from('v0_template_library')
+            .select('id, slug, ad, aciklama, kategori, director_key, source_path, is_free, quality_tier, icerik_ozeti, durum, created_at')
+            .eq('durum', 'aktif')
+            .order('created_at', { ascending: false })
+            .limit(50)
+          if (Array.isArray(v0Data) && v0Data.length > 0) {
+            const v0Sablonlar = v0Data.map((row: Record<string, unknown>) => ({
+              id: 'v0_' + String(row.slug ?? row.id),
+              ad: String(row.ad ?? row.slug ?? '—'),
+              kategori: String(row.kategori ?? row.director_key ?? 'V0'),
+              icerik: (row.icerik_ozeti as Record<string, unknown>) ?? {},
+              durum: String(row.durum ?? 'aktif'),
+              olusturan: String(row.director_key ?? 'V0'),
+              created_at: row.created_at != null ? String(row.created_at) : undefined,
+            }))
+            sablonlar = [...sablonlar, ...v0Sablonlar]
+            for (const v of v0Sablonlar) {
+              if (!cooTemplates.some((c) => c.id === v.id)) {
+                cooTemplates.push({
+                  id: v.id,
+                  template_id: v.id,
+                  name: v.ad,
+                  type: v.kategori,
+                  source: 'ceo',
+                  created_at: v.created_at ?? '',
+                })
+              }
+            }
+          }
+        } catch (_) {
+          // v0_template_library yoksa veya migration çalışmadıysa sessiz geç
+        }
+      }
+
       // COO Mağazası: ceo_templates (onaylı/durum=aktif) + templates birleşik liste
       cooTemplates = []
       for (const s of sablonlar) {

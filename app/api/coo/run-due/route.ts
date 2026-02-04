@@ -8,6 +8,7 @@
 import { NextRequest, NextResponse } from 'next/server'
 import { getDueCeoRoutines, updateCeoRoutineResult, computeNextRun, type ScheduleType } from '@/lib/db/ceo-routines'
 import { runCelfDirector } from '@/lib/ai/celf-execute'
+import { archiveTaskResult } from '@/lib/robots/data-robot'
 import type { DirectorKey } from '@/lib/robots/celf-center'
 
 export const dynamic = 'force-dynamic'
@@ -58,6 +59,15 @@ async function runDueRoutines(req: NextRequest) {
         results.push({ id: routine.id, director_key: directorKey, status: 'update_failed' })
         continue
       }
+      // Veri Arşivleme: Rutin sonucu task_results'a yaz (anayasa uyumu)
+      await archiveTaskResult({
+        routineTaskId: routine.id,
+        directorKey,
+        aiProviders: celfResult.text ? [(celfResult as { provider: string }).provider] : [],
+        inputCommand: command,
+        outputResult: resultText,
+        status: celfResult.text ? 'completed' : 'failed',
+      })
       results.push({ id: routine.id, director_key: directorKey, status: 'ok', next_run: nextRunIso })
     }
 

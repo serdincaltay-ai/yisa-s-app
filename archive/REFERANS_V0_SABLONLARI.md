@@ -41,6 +41,21 @@
 - **COO Mağazası:** `is_free = true` olanlar ücretsiz olarak listelenebilir.
 - **tenant_templates:** `template_source = 'v0_template_library'` ile franchise ataması yapılabilir (ileride).
 
+## Patron Paneli ve Ana Sayfa İçin Önerilen Şablonlar
+
+| Kullanım | Şablon | Özellik |
+|----------|--------|---------|
+| **Patron paneli** | extr-up-admin-panel | Kurumsal admin: sidebar, tablo, form — az bilgi, net yapı |
+| **Kartlar / özetler** | minimalist-profile-cards | Minimalist — en az görsel, işi anlatan |
+| **Dashboard grid** | futuristic-dashboard | Modern, temiz grid |
+| **Ana sayfa (landing)** | product-launch-timer-landing | Net mesaj, tek CTA odak |
+| **Ana sayfa (uygulanan)** | Brillance SaaS (zdiN8dHwaaT) | Hero, Features, Social Proof, Pricing, FAQ, Footer — app/page.tsx |
+| **Vurgu öğeleri** | neobrutalist-ui-design | Bold, şık butonlar |
+
+**Tasarım ilkeleri:** Az bilgi, az görsel, işi kolaylaştıran, şık. Karmaşıklıktan uzak.
+
+Referans: `docs/V0_SABLON_PATRON_ANA_SAYFA_TASARIM.md`
+
 ## Anayasa Uyumu
 
 - Sistem omurgası değiştirilmez.

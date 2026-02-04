@@ -56,3 +56,31 @@ export async function getTaskResultsByTaskId(taskId: string): Promise<{
   if (error) return { error: error.message }
   return { data: (data ?? []) as { id: string; output_result: string; status: string; created_at: string }[] }
 }
+
+export interface TaskResultRow {
+  id: string
+  task_id: string | null
+  routine_task_id: string | null
+  director_key: string | null
+  ai_providers: string[]
+  input_command: string
+  output_result: string
+  status: string
+  created_at: string
+}
+
+export async function getRecentTaskResults(limit = 50): Promise<{
+  data?: TaskResultRow[]
+  error?: string
+}> {
+  const db = getSupabaseServer()
+  if (!db) return { error: 'Supabase bağlantısı yok' }
+
+  const { data, error } = await db
+    .from('task_results')
+    .select('id, task_id, routine_task_id, director_key, ai_providers, input_command, output_result, status, created_at')
+    .order('created_at', { ascending: false })
+    .limit(limit)
+  if (error) return { error: error.message }
+  return { data: (data ?? []) as TaskResultRow[] }
+}

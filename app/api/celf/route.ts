@@ -1,6 +1,7 @@
 import { NextRequest, NextResponse } from 'next/server'
 import { createClient } from '@supabase/supabase-js'
 import { securityCheck } from '@/lib/robots/security-robot'
+import { archiveTaskResult } from '@/lib/robots/data-robot'
 import {
   CELF_DIRECTORATES,
   getDirectorAIProviders,
@@ -95,6 +96,18 @@ export async function POST(req: NextRequest) {
 
     const commandId = insertedCmd?.id
     const celfResult = await runCelfDirector(directorKey, command)
+    const displayText = celfResult.text ?? (celfResult as { errorReason?: string }).errorReason ?? 'Yanıt oluşturulamadı.'
+    const usedProviders = celfResult.text ? [(celfResult as { provider: string }).provider] : []
+
+    // Veri Arşivleme: CELF sonucu task_results'a yaz (anayasa uyumu)
+    await archiveTaskResult({
+      taskId: commandId,
+      directorKey,
+      aiProviders: usedProviders,
+      inputCommand: command,
+      outputResult: displayText,
+      status: celfResult.text ? 'completed' : 'failed',
+    })
 
     if (celfResult.text !== null) {
       const outputPayload: Record<string, unknown> = {
@@ -102,7 +115,7 @@ export async function POST(req: NextRequest) {
         completed_at: new Date().toISOString(),
         director_key: directorKey,
         director_name: director?.name,
-        ai_providers: aiProviders,
+        ai_providers: usedProviders,
         provider: celfResult.provider,
         displayText: celfResult.text,
         assignments: [{ director: directorKey, provider_used: celfResult.provider, status: 'done', has_veto: hasVeto }],
@@ -120,7 +133,7 @@ export async function POST(req: NextRequest) {
         command_id: commandId,
         director_key: directorKey,
         director_name: director?.name,
-        ai_providers: aiProviders,
+        ai_providers: usedProviders,
         provider: celfResult.provider,
         text: celfResult.text,
         status: 'pending',

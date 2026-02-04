@@ -1,8 +1,27 @@
 -- ═══════════════════════════════════════════════════════════════════════════════
 -- YİSA-S — TÜM YENİ MİGRASYONLAR TEK DOSYADA
 -- Supabase Dashboard → SQL Editor → Yapıştır → Run
--- Sıra: celf_kasa → tenant ayarları → tenant_schedule → tenant_purchases
+-- Sıra: patron_private_tasks → celf_kasa → tenant ayarları → tenant_schedule → tenant_purchases
 -- ═══════════════════════════════════════════════════════════════════════════════
+
+-- 0. patron_private_tasks (özel iş kaydetme — "Kaydet?" Evet)
+CREATE TABLE IF NOT EXISTS patron_private_tasks (
+  id UUID PRIMARY KEY DEFAULT gen_random_uuid(),
+  patron_id UUID NOT NULL,
+  task_type TEXT,
+  command TEXT NOT NULL,
+  result TEXT,
+  ai_providers TEXT[] DEFAULT '{}',
+  is_private BOOLEAN DEFAULT true,
+  created_at TIMESTAMPTZ DEFAULT NOW()
+);
+CREATE INDEX IF NOT EXISTS idx_patron_private_tasks_patron_id ON patron_private_tasks(patron_id);
+CREATE INDEX IF NOT EXISTS idx_patron_private_tasks_created_at ON patron_private_tasks(created_at DESC);
+ALTER TABLE patron_private_tasks ENABLE ROW LEVEL SECURITY;
+DROP POLICY IF EXISTS "Users can read own patron_private_tasks" ON patron_private_tasks;
+CREATE POLICY "Users can read own patron_private_tasks" ON patron_private_tasks FOR SELECT USING (auth.uid() = patron_id);
+DROP POLICY IF EXISTS "Service can manage patron_private_tasks" ON patron_private_tasks;
+CREATE POLICY "Service can manage patron_private_tasks" ON patron_private_tasks FOR ALL USING (true) WITH CHECK (true);
 
 -- 1. CELF Kasa
 CREATE TABLE IF NOT EXISTS celf_kasa (
@@ -209,3 +228,17 @@ CREATE INDEX IF NOT EXISTS idx_ceo_routines_director_key ON ceo_routines(directo
 ALTER TABLE ceo_routines ENABLE ROW LEVEL SECURITY;
 DROP POLICY IF EXISTS "Service can manage ceo_routines" ON ceo_routines;
 CREATE POLICY "Service can manage ceo_routines" ON ceo_routines FOR ALL USING (true) WITH CHECK (true);
+
+-- 9b. ceo_routines örnek rutin seed
+INSERT INTO ceo_routines (
+  routine_name, routine_type, director_key, command_template, data_sources,
+  schedule, schedule_time, is_active, next_run, approved_at
+)
+SELECT
+  'Günlük CFO Özeti', 'rapor', 'CFO',
+  'Günlük finansal durum özeti ver. Gelir, gider, tahsilat durumunu kısaca özetle.',
+  ARRAY['payments', 'expenses']::TEXT[],
+  'daily', '02:00', true,
+  (CURRENT_DATE + INTERVAL '1 day')::TIMESTAMPTZ + INTERVAL '2 hours',
+  NOW()
+WHERE NOT EXISTS (SELECT 1 FROM ceo_routines WHERE routine_name = 'Günlük CFO Özeti' LIMIT 1);

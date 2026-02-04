@@ -15,15 +15,11 @@ import {
   Edit3,
   ChevronDown,
   ChevronUp,
-  ChevronLeft,
-  ChevronRight,
-  Calendar,
   Clock,
   Play,
   Store,
   Maximize2,
   Minimize2,
-  Search,
   ClipboardCheck,
   RefreshCw,
   Ban,
@@ -94,10 +90,7 @@ export default function DashboardPage() {
   const [approvalBusy, setApprovalBusy] = useState(false)
 
   // Genişletilebilir paneller
-  const [statsExpanded, setStatsExpanded] = useState(true)
   const [chatExpanded, setChatExpanded] = useState(true)
-  const [calendarView, setCalendarView] = useState<'day' | 'week'>('day')
-  const [selectedDate, setSelectedDate] = useState(new Date())
   const [startupStatus, setStartupStatus] = useState<{
     summary?: { director: string; total: number; pending: number; completed: number }[]
     total_pending?: number
@@ -133,7 +126,6 @@ export default function DashboardPage() {
   const [suggestedCommand, setSuggestedCommand] = useState<string | null>(null)
   const [commandCopied, setCommandCopied] = useState(false)
   const chatEndRef = useRef<HTMLDivElement>(null)
-  const canvasRef = useRef<HTMLCanvasElement>(null)
 
   function extractCommandFromText(text: string): string | null {
     if (!text || typeof text !== 'string') return null
@@ -737,189 +729,53 @@ export default function DashboardPage() {
     if (lastAssistant?.text) setCommandFromMessage(lastAssistant.text)
   }, [chatMessages])
 
-  // Particle background
-  useEffect(() => {
-    const canvas = canvasRef.current
-    if (!canvas) return
-    const ctx = canvas.getContext('2d')
-    if (!ctx) return
-    canvas.width = canvas.offsetWidth
-    canvas.height = canvas.offsetHeight
-    type P = { x: number; y: number; size: number; speedX: number; speedY: number; color: string; update: () => void; draw: () => void }
-    const particles: P[] = []
-    for (let i = 0; i < 60; i++) {
-      const p: P = {
-        x: Math.random() * canvas.width,
-        y: Math.random() * canvas.height,
-        size: Math.random() * 2 + 0.5,
-        speedX: (Math.random() - 0.5) * 0.4,
-        speedY: (Math.random() - 0.5) * 0.4,
-        color: `rgba(34, 211, 238, ${Math.random() * 0.3 + 0.1})`,
-        update() {
-          this.x += this.speedX
-          this.y += this.speedY
-          if (this.x > canvas!.width) this.x = 0
-          if (this.x < 0) this.x = canvas!.width
-          if (this.y > canvas!.height) this.y = 0
-          if (this.y < 0) this.y = canvas!.height
-        },
-        draw() {
-          ctx.fillStyle = this.color
-          ctx.beginPath()
-          ctx.arc(this.x, this.y, this.size, 0, Math.PI * 2)
-          ctx.fill()
-        },
-      }
-      particles.push(p)
-    }
-    function animate() {
-      if (!ctx || !canvas) return
-      ctx.clearRect(0, 0, canvas.width, canvas.height)
-      particles.forEach((p) => { p.update(); p.draw() })
-      requestAnimationFrame(animate)
-    }
-    animate()
-    const onResize = () => { if (canvas) { canvas.width = canvas.offsetWidth; canvas.height = canvas.offsetHeight } }
-    window.addEventListener('resize', onResize)
-    return () => window.removeEventListener('resize', onResize)
-  }, [])
-
-  const formatDate = (d: Date) =>
-    d.toLocaleDateString('tr-TR', { day: 'numeric', month: 'short', year: 'numeric' })
-  const prevDay = () => {
-    const d = new Date(selectedDate)
-    d.setDate(d.getDate() - 1)
-    setSelectedDate(d)
-  }
-  const nextDay = () => {
-    const d = new Date(selectedDate)
-    d.setDate(d.getDate() + 1)
-    setSelectedDate(d)
-  }
-
   return (
-    <div className="min-h-screen bg-gradient-to-br from-black via-slate-950 to-slate-900 text-slate-100 relative overflow-hidden">
-      <canvas ref={canvasRef} className="absolute inset-0 w-full h-full opacity-40 pointer-events-none" aria-hidden />
-      <div className="relative z-10 p-4 sm:p-6 space-y-4 sm:space-y-6">
-        {/* Futuristik Header */}
-        <header className="flex items-center justify-between py-4 border-b border-slate-700/50 mb-6">
-          <div className="flex items-center space-x-3">
-            <div className="relative w-9 h-9 flex-shrink-0">
+    <div className="min-h-screen bg-[#0a0a0a] text-slate-100">
+      <div className="p-4 sm:p-6 space-y-6">
+        {/* Minimal Header — extr-up-admin-panel tarzı */}
+        <header className="flex items-center justify-between py-3 border-b border-slate-800">
+          <div className="flex items-center gap-3">
+            <div className="relative w-8 h-8 flex-shrink-0">
               <Image src="/logo.png" alt="YİSA-S" fill className="object-contain" />
             </div>
             <div>
-              <span className="text-xl font-bold bg-gradient-to-r from-amber-400 to-amber-600 bg-clip-text text-transparent">
-                YİSA-S
-              </span>
-              <p className="text-xs text-slate-500">Yönetici İşletmeci Sporcu Antrenör Sistemi · Patron Komuta Merkezi</p>
+              <span className="text-lg font-semibold text-white">YİSA-S</span>
+              <p className="text-xs text-slate-500">Patron Komuta Merkezi</p>
             </div>
           </div>
-          <div className="flex items-center space-x-4">
-            <div className="hidden md:flex items-center space-x-1 bg-slate-800/50 rounded-full px-3 py-1.5 border border-slate-700/50 backdrop-blur-sm">
-              <Search className="h-4 w-4 text-slate-400" />
-              <input type="text" placeholder="Ara..." className="bg-transparent border-none focus:outline-none text-sm w-32 placeholder:text-slate-500" />
-            </div>
-            <div className="flex items-center space-x-2 bg-slate-800/50 rounded-full px-3 py-1.5 border border-slate-700/50">
-              <Clock className="h-4 w-4 text-cyan-500" />
-              <span className="text-sm font-mono text-cyan-400">
-                {new Date().toLocaleTimeString('tr-TR', { hour12: false, hour: '2-digit', minute: '2-digit', second: '2-digit' })}
-              </span>
-            </div>
-            <Avatar className="h-9 w-9 border border-cyan-500/30">
-              <AvatarFallback className="bg-slate-800 text-cyan-400 text-sm">
+          <div className="flex items-center gap-3">
+            <span className="text-xs text-slate-500 font-mono">
+              {new Date().toLocaleTimeString('tr-TR', { hour12: false, hour: '2-digit', minute: '2-digit' })}
+            </span>
+            <Avatar className="h-8 w-8 border border-slate-600">
+              <AvatarFallback className="bg-slate-800 text-slate-400 text-xs">
                 {(user?.email ?? 'P').charAt(0).toUpperCase()}
               </AvatarFallback>
             </Avatar>
           </div>
         </header>
 
-        {/* Tebrikler / Hoş geldin — Patron girişinde gösterilir */}
+        {/* Tek satır hoş geldin */}
         {user && isPatron(user) && (
-          <div className="mb-4 rounded-xl border border-emerald-500/30 bg-emerald-500/10 px-4 py-3 backdrop-blur-sm">
-            <p className="text-emerald-400 font-semibold">
-              Tebrikler, Serdinç Bey! Hoş geldiniz — sistem hazır.
-            </p>
-            <p className="text-slate-400 text-sm mt-0.5">
-              Patron Komuta Merkezi aktif. Komut gönderebilir, onay kuyruğunu yönetebilirsiniz.
-            </p>
-          </div>
+          <p className="text-sm text-emerald-400/90">Sistem hazır. Komut gönderin veya onay kuyruğunu yönetin.</p>
         )}
 
-        {/* Genişletilebilir İstatistikler - Futuristik Kartlar */}
-        <Card className="bg-slate-900/50 border-slate-700/50 backdrop-blur-sm overflow-hidden">
-          <button
-            type="button"
-            onClick={() => setStatsExpanded(!statsExpanded)}
-            className="w-full flex items-center justify-between px-6 py-4 hover:bg-slate-700/30 transition-colors text-left"
-          >
-            <CardTitle className="text-slate-100 flex items-center gap-2 !text-lg !mb-0">
-              <div className="h-2 w-2 rounded-full bg-cyan-500 animate-pulse" />
-              SİSTEM ÖZETİ
-            </CardTitle>
-            {statsExpanded ? <Minimize2 size={18} className="text-slate-400" /> : <Maximize2 size={18} className="text-slate-400" />}
-          </button>
-          {statsExpanded && (
-            <CardContent className="pt-0">
-              <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-5 gap-4">
-                {[
-                  { label: 'Franchise Geliri', value: `₺${stats.franchiseRevenueMonth.toLocaleString('tr-TR')}`, color: 'cyan' },
-                  { label: 'Gider', value: `₺${stats.expensesMonth.toLocaleString('tr-TR')}`, color: 'rose' },
-                  { label: 'Aktif Franchise', value: String(stats.activeFranchises), color: 'white' },
-                  { label: 'Onay Bekleyen', value: String(stats.pendingApprovals), color: 'amber' },
-                  { label: 'Yeni Başvuru', value: String(stats.newFranchiseApplications), color: 'emerald' },
-                ].map((s, i) => (
-                  <div
-                    key={i}
-                    className="bg-slate-800/50 rounded-lg border border-slate-700/50 p-4 relative overflow-hidden group hover:border-cyan-500/30 transition-colors"
-                  >
-                    <p className="text-slate-400 text-xs mb-1 uppercase tracking-wider">{s.label}</p>
-                    <p className={`text-xl font-bold font-mono ${
-                      s.color === 'cyan' ? 'text-cyan-400' :
-                      s.color === 'rose' ? 'text-rose-400' :
-                      s.color === 'amber' ? 'text-amber-400' :
-                      s.color === 'emerald' ? 'text-emerald-400' : 'text-slate-100'
-                    }`}>{s.value}</p>
-                    <div className="absolute -bottom-4 -right-4 h-16 w-16 rounded-full bg-gradient-to-r from-cyan-500/10 to-blue-500/10 blur-xl" />
-                  </div>
-                ))}
-              </div>
-            </CardContent>
-          )}
-        </Card>
+        {/* Kompakt İstatistikler — minimalist 4 kart */}
+        <div className="grid grid-cols-2 lg:grid-cols-4 gap-3">
+          {[
+            { label: 'Gelir', value: `₺${stats.franchiseRevenueMonth.toLocaleString('tr-TR')}`, c: 'text-cyan-400' },
+            { label: 'Gider', value: `₺${stats.expensesMonth.toLocaleString('tr-TR')}`, c: 'text-rose-400' },
+            { label: 'Onay', value: stats.pendingApprovals, c: 'text-amber-400' },
+            { label: 'Başvuru', value: stats.newFranchiseApplications, c: 'text-emerald-400' },
+          ].map((s, i) => (
+            <div key={i} className="rounded-lg border border-slate-800 bg-slate-900/50 p-4">
+              <p className="text-xs text-slate-500 mb-0.5">{s.label}</p>
+              <p className={`text-lg font-semibold font-mono ${s.c}`}>{s.value}</p>
+            </div>
+          ))}
+        </div>
 
-        <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4 lg:gap-6">
-          {/* Takvimli Görünüm */}
-          <Card className="bg-slate-900/50 border-slate-700/50 backdrop-blur-sm overflow-hidden">
-            <CardHeader className="py-4 border-b border-slate-700/50">
-              <div className="flex items-center justify-between">
-                <CardTitle className="text-base flex items-center gap-2 !mb-0">
-                  <Calendar size={18} className="text-cyan-500" />
-                  Takvim
-                </CardTitle>
-                <div className="flex items-center gap-1">
-                  <Button type="button" variant="ghost" size="icon" onClick={prevDay} className="h-8 w-8 text-slate-400 hover:text-cyan-400" title="Önceki gün">
-                    <ChevronLeft size={18} />
-                  </Button>
-                  <span className="text-xs font-mono text-cyan-400 min-w-[100px] text-center">{formatDate(selectedDate)}</span>
-                  <Button type="button" variant="ghost" size="icon" onClick={nextDay} className="h-8 w-8 text-slate-400 hover:text-cyan-400" title="Sonraki gün">
-                    <ChevronRight size={18} />
-                  </Button>
-                </div>
-              </div>
-            </CardHeader>
-            <CardContent className="p-4">
-              <div className="space-y-1.5 max-h-[280px] overflow-y-auto">
-                {[7, 8, 9, 10, 11, 12, 13, 14, 15, 16, 17, 18, 19, 20, 21, 22].map((h) => (
-                  <div key={h} className="flex items-center gap-3 text-sm">
-                    <span className="text-slate-500 w-10 font-mono text-xs">{h}:00</span>
-                    <div className="flex-1 h-8 rounded-md bg-slate-800/50 border border-slate-700/50" />
-                  </div>
-                ))}
-              </div>
-              <p className="text-xs text-slate-500 mt-3 font-mono">7–22 saatli görünüm</p>
-            </CardContent>
-          </Card>
-
+        <div className="grid grid-cols-1 lg:grid-cols-2 gap-4 lg:gap-6">
         {/* Başlangıç Görevleri & Vitrin */}
         <div className="space-y-4">
           <Card className="bg-slate-900/50 border-slate-700/50 backdrop-blur-sm">

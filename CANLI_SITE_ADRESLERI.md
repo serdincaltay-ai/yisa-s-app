@@ -8,9 +8,10 @@ Lokal (localhost) kullanmadan **doğrudan canlı sitelere** girmek için adresle
 
 - **Vercel linki (örnek):** `https://yisa-s-app.vercel.app`  
   (Kendi projenizin linki: Vercel → Proje → Domain’ler)
-- **Özel domain (varsa):** `https://yisa-s.com`
+- **Patron paneli:** `https://app.yisa-s.com`
+- **Tanıtım (ayrı proje):** `https://yisa-s.com`
 
-Aşağıdaki tüm adreslerde **[SİTE]** = yukarıdaki ana adres (örn. `https://yisa-s-app.vercel.app` veya `https://yisa-s.com`).
+Aşağıdaki tüm adreslerde **[SİTE]** = `https://app.yisa-s.com` (Patron paneli).
 
 ---
 
@@ -27,16 +28,16 @@ Aşağıdaki tüm adreslerde **[SİTE]** = yukarıdaki ana adres (örn. `https:/
 
 ---
 
-## Örnek (Vercel linkiniz `https://yisa-s-app.vercel.app` ise)
+## Örnek (app.yisa-s.com)
 
 | Kim | Adres |
 |-----|--------|
-| Patron | https://yisa-s-app.vercel.app/patron/login |
-| Patron giriş sonrası | https://yisa-s-app.vercel.app/dashboard |
-| Firma sahibi / Tesis / Antrenör / Veli giriş | https://yisa-s-app.vercel.app/auth/login |
-| Firma sahibi giriş sonrası | https://yisa-s-app.vercel.app/franchise |
-| Vitrin (müşteri seçim sayfası) | https://yisa-s-app.vercel.app/vitrin |
-| Ana sayfa (tanıtım) | https://yisa-s-app.vercel.app |
+| Patron | https://app.yisa-s.com/patron/login |
+| Patron giriş sonrası | https://app.yisa-s.com/dashboard |
+| Firma sahibi / Tesis / Antrenör / Veli giriş | https://app.yisa-s.com/auth/login |
+| Firma sahibi giriş sonrası | https://app.yisa-s.com/franchise |
+| Vitrin (müşteri seçim sayfası) | https://app.yisa-s.com/vitrin |
+| Ana sayfa | https://app.yisa-s.com |
 
 ---
 

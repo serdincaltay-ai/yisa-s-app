@@ -33,11 +33,9 @@ npx vercel --prod
 ### 2.3 Vercel Domain Ayarları
 
 1. Vercel Dashboard → Proje → **Settings** → **Domains**
-2. Varsayılan: `yisa-s-app.vercel.app` (veya proje adınıza göre)
-3. Özel domain eklemek için:
-   - **Add** → `yisa-s.com` veya `app.yisa-s.com` yazın
-   - DNS'te Vercel'in verdiği CNAME/A kayıtlarını ekleyin
-   - SSL otomatik (Let's Encrypt)
+2. **Patron paneli:** `app.yisa-s.com` ekleyin (bu uygulama)
+3. DNS: CNAME `app.yisa-s.com` → `cname.vercel-dns.com`
+4. `yisa-s.com` tanıtım sitesine aittir (ayrı proje)
 
 ### 2.4 Vercel Environment Variables
 
@@ -134,7 +132,9 @@ Supabase Dashboard → SQL Editor'de de çalıştırılabilir.
 | V0 şablon kütüphanesi | ✅ Migration + seed |
 | Veri kaynakları dokümantasyonu | ✅ docs/VERI_KAYNAKLARI_ROBOT_GOREVLENDIRME.md |
 | OKUTULDU, V3, V0 referansları | ✅ archive/ |
-| Vercel deploy | ✅ Tamamlandı (yisa-s.com) |
+| Vercel deploy | ✅ Tamamlandı |
+| Patron paneli domain | app.yisa-s.com (Vercel → Settings → Domains) |
+| Tanıtım (ayrı) | yisa-s.com (YISA_S_SITE_KOMPLE) |
 | Railway deploy | İsteğe bağlı; Dashboard'dan GitHub bağlayın |
 | Domain | Her iki platformda Settings → Domains |
 
@@ -142,17 +142,18 @@ Supabase Dashboard → SQL Editor'de de çalıştırılabilir.
 
 ## 8. CANLI ADRESLER (Deploy Sonrası)
 
-**Vercel Production:** https://yisa-s.com (özel domain)  
-**Vercel Varsayılan:** https://yisa-s-app.vercel.app
+**Patron Paneli (bu uygulama):** https://app.yisa-s.com  
+**Tanıtım sitesi (ayrı proje):** https://yisa-s.com  
+**Vercel varsayılan:** https://yisa-s-app.vercel.app
 
 | Sayfa | Adres |
 |-------|-------|
-| Ana sayfa | https://yisa-s.com |
-| Patron giriş | https://yisa-s.com/patron/login |
-| Dashboard | https://yisa-s.com/dashboard |
-| Auth (firma/tesis/veli) | https://yisa-s.com/auth/login |
-| Vitrin | https://yisa-s.com/vitrin |
-| Franchise paneli | https://yisa-s.com/franchise |
+| Patron giriş | https://app.yisa-s.com/patron/login |
+| Dashboard | https://app.yisa-s.com/dashboard |
+| Auth (firma/tesis/veli) | https://app.yisa-s.com/auth/login |
+| Vitrin | https://app.yisa-s.com/vitrin |
+| Franchise paneli | https://app.yisa-s.com/franchise |
+| Ana sayfa | https://app.yisa-s.com |
 
 ---
 

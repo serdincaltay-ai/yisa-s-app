@@ -1,27 +1,32 @@
 "use client"
 
-import { useState, useEffect } from "react"
+/**
+ * YİSA-S Ana Sayfa — V0 Brillance SaaS Landing Page şablonu
+ * Kaynak: https://v0.dev/templates/zdiN8dHwaaT (Brillance SaaS Landing Page)
+ * Yapı: Hero & CTA | Product Features | Social Proof | Pricing | FAQ | Footer
+ */
+
+import { useState } from "react"
 import { Button } from "@/components/ui/button"
 import { Input } from "@/components/ui/input"
+import { Card, CardContent, CardDescription, CardFooter, CardHeader, CardTitle } from "@/components/ui/card"
 import {
-  ArrowRight,
+  Accordion,
+  AccordionContent,
+  AccordionItem,
+  AccordionTrigger,
+} from "@/components/ui/accordion"
+import {
   Bot,
-  BarChart3,
-  Dumbbell,
-  Heart,
-  Target,
   Zap,
-  Shield,
-  FileCheck,
+  Users,
+  BarChart3,
   User,
   Crown,
   Store,
-  LayoutTemplate,
-  Users,
   Mail,
-  Phone,
-  Building2,
   MapPin,
+  Check,
 } from "lucide-react"
 import Link from "next/link"
 import { YisaLogoInline } from "@/components/YisaLogo"
@@ -55,25 +60,21 @@ const FEATURES = [
     icon: Bot,
     title: "AI Robotlar",
     desc: "Mailler, demolar, aidat takibi. Karşılama ve acil destek robotları.",
-    color: "emerald",
   },
   {
     icon: Zap,
     title: "Otomatik Yönetim",
     desc: "İşletmeyi robotlar yürütür. Ders programı, yoklama, kasa defteri.",
-    color: "cyan",
   },
   {
     icon: Users,
     title: "Veli Takibi",
     desc: "Çocuk gelişimi, ölçümler, antrenman programı. Veliler panelden takip eder.",
-    color: "purple",
   },
   {
     icon: BarChart3,
     title: "Veri ile Eğitim",
     desc: "Parametreler, grafikler, raporlar. Bilimsel veriyle sporcu gelişimi.",
-    color: "amber",
   },
 ]
 
@@ -82,6 +83,25 @@ const REFERANSLAR = [
   { ad: "Emre Han Dalgıç", unvan: "Uzman Antrenör" },
   { ad: "Özlem Kuşkan", unvan: "Antrenör" },
   { ad: "Alper Görmezler", unvan: "İşletme Müdürü" },
+]
+
+const FAQ_ITEMS = [
+  {
+    q: "YİSA-S nedir?",
+    a: "Spor tesislerini AI robotlarla yöneten franchise sistemidir. Cimnastik, yüzme ve benzeri tesisler için otomatik yönetim, veli takibi ve veri odaklı eğitim sunar.",
+  },
+  {
+    q: "Demo nasıl talep edilir?",
+    a: "Bu sayfadaki Demo Talep Et butonuna tıklayın, formu doldurun. 10 iş günü içinde sizinle iletişime geçeceğiz.",
+  },
+  {
+    q: "Hangi paket bana uygun?",
+    a: "Küçük tesisler için Starter, orta ölçek için Pro, çok şubeli işletmeler için Enterprise önerilir. Detaylar için Fiyatlar sayfasına bakın.",
+  },
+  {
+    q: "Pilot tesis nedir?",
+    a: "Tuzla Beşiktaş Cimnastik Okulu ilk pilot tesisimizdir. Demo girişi ile paneli deneyebilirsiniz.",
+  },
 ]
 
 export default function Home() {
@@ -132,230 +152,216 @@ export default function Home() {
   }
 
   return (
-    <div className="min-h-screen bg-[#0a0a0a] text-white overflow-hidden relative">
-      <div className="fixed inset-0 overflow-hidden pointer-events-none">
-        <FloatingBall size={380} color="emerald" top="8%" left="-5%" delay={0} />
-        <FloatingBall size={260} color="cyan" top="55%" right="-8%" delay={2} />
-        <FloatingBall size={160} color="purple" bottom="15%" left="25%" delay={4} />
-      </div>
-      <div
-        className="fixed inset-0 pointer-events-none opacity-[0.03]"
-        style={{
-          backgroundImage: `linear-gradient(rgba(255,255,255,0.08) 1px, transparent 1px), linear-gradient(90deg, rgba(255,255,255,0.08) 1px, transparent 1px)`,
-          backgroundSize: "80px 80px",
-        }}
-      />
-
-      <nav className="fixed top-0 left-0 right-0 z-50 px-6 py-5">
+    <div className="min-h-screen bg-[#0a0a0a] text-white">
+      {/* Nav — V0 Brillance style */}
+      <nav className="fixed top-0 left-0 right-0 z-50 px-6 py-4 border-b border-white/5 bg-[#0a0a0a]/95 backdrop-blur-md">
         <div className="max-w-6xl mx-auto flex items-center justify-between">
-          <div className="flex items-center gap-2">
-            <YisaLogoInline href="/" />
-            <span className="hidden md:inline text-sm text-white/50">Yönetici İşletmeci Sporcu Antrenör Sistemi</span>
-          </div>
+          <YisaLogoInline href="/" />
           <div className="flex items-center gap-2">
             <Link href="/patron/login">
-              <Button variant="ghost" className="text-white/70 hover:text-white hover:bg-white/10 rounded-full gap-2">
+              <Button variant="ghost" className="text-white/80 hover:text-white hover:bg-white/10 rounded-lg gap-2 text-sm">
                 <Crown className="h-4 w-4" />
-                <span className="hidden sm:inline">Patron Paneli</span>
+                Giriş
               </Button>
             </Link>
             <Link href="/vitrin">
-              <Button variant="ghost" className="text-white/70 hover:text-white hover:bg-white/10 rounded-full gap-2">
+              <Button variant="ghost" className="text-white/80 hover:text-white hover:bg-white/10 rounded-lg gap-2 text-sm">
                 <Store className="h-4 w-4" />
-                <span className="hidden sm:inline">Sistemi Tanıyın — Franchise</span>
+                Vitrin
               </Button>
             </Link>
             <Link href="/fiyatlar">
-              <Button variant="ghost" className="text-white/70 hover:text-white hover:bg-white/10 rounded-full gap-2">
-                <BarChart3 className="h-4 w-4" />
-                <span className="hidden sm:inline">Fiyatlar</span>
+              <Button variant="ghost" className="text-white/80 hover:text-white hover:bg-white/10 rounded-lg gap-2 text-sm">
+                Fiyatlar
               </Button>
             </Link>
-            <Link href="/vitrin">
-              <Button variant="ghost" className="text-white/70 hover:text-white hover:bg-white/10 rounded-full gap-2">
-                <LayoutTemplate className="h-4 w-4" />
-                <span className="hidden sm:inline">Vitrin</span>
-              </Button>
-            </Link>
-            <a href="https://veli.yisa-s.com" target="_blank" rel="noopener noreferrer">
-              <Button variant="ghost" className="text-white/70 hover:text-white hover:bg-white/10 rounded-full gap-2">
-                <Users className="h-4 w-4" />
-                <span className="hidden sm:inline">Veli Girişi</span>
-              </Button>
-            </a>
           </div>
         </div>
       </nav>
 
-      <main className="relative z-10">
-        {/* Hero */}
-        <section className="min-h-screen flex flex-col items-center justify-center px-6 text-center pt-16">
-          <h1 className="text-4xl sm:text-5xl md:text-6xl lg:text-7xl font-bold tracking-tight leading-tight mb-6 max-w-4xl">
-            <span className="block text-white/95">YİSA-S ile</span>
-            <span className="block text-transparent bg-clip-text bg-gradient-to-r from-emerald-400 to-cyan-400 mt-2">
-              Tesisinizi Yönetin
-            </span>
+      <main>
+        {/* Hero & CTA — Brillance: bold headline, sub-text, clear CTA */}
+        <section className="min-h-[90vh] flex flex-col items-center justify-center px-6 text-center pt-20">
+          <h1 className="text-4xl sm:text-5xl md:text-6xl font-bold tracking-tight text-white mb-6 max-w-3xl">
+            Tesisinizi AI Robotlarla Yönetin
           </h1>
-          <p className="text-lg text-white/50 max-w-xl mb-10">
-            Cimnastik ve spor tesisi yönetimi. AI robotlar işletmeyi yürütür — siz yönetirsiniz.
+          <p className="text-white/60 max-w-xl mb-10 text-base sm:text-lg">
+            Cimnastik ve spor tesisi yönetimi. Ders programı, yoklama, veli takibi — hepsi otomatik.
           </p>
-          <div className="flex flex-col sm:flex-row gap-4 justify-center flex-wrap">
+          <div className="flex flex-col sm:flex-row gap-4">
             <Link href="/patron/login">
-              <Button size="lg" className="rounded-full bg-white text-black hover:bg-white/90 px-8 h-12 text-base font-medium w-full sm:w-auto gap-2">
-                <Crown className="h-5 w-5" />
-                Patron Paneli — Giriş
-                <ArrowRight className="ml-1 h-5 w-5" />
+              <Button size="lg" className="rounded-xl bg-emerald-500 hover:bg-emerald-600 text-white px-8 h-12 font-semibold text-base">
+                Giriş Yap
               </Button>
             </Link>
-            <Link href="/vitrin">
-              <Button size="lg" variant="outline" className="rounded-full border-white/20 bg-white/5 hover:bg-white/10 px-8 h-12 text-base w-full sm:w-auto gap-2">
-                <Store className="h-5 w-5" />
-                Sistemi Tanıyın — Franchise
-              </Button>
-            </Link>
-            <Button onClick={() => setShowForm(true)} size="lg" variant="outline" className="rounded-full border-emerald-500/50 text-emerald-400 hover:bg-emerald-500/10 px-8 h-12">
+            <Button onClick={() => setShowForm(true)} size="lg" variant="outline" className="rounded-xl border-white/20 text-white/90 hover:bg-white/10 px-8 h-12 font-medium">
               Demo Talep Et
             </Button>
           </div>
         </section>
 
-        {/* Özellikler */}
-        <section className="max-w-5xl mx-auto px-6 py-20 border-t border-white/5">
-          <h2 className="text-2xl font-bold text-center mb-3 text-white/90">
+        {/* Product Features — Brillance: feature blocks with visuals */}
+        <section className="max-w-6xl mx-auto px-6 py-24 border-t border-white/5">
+          <h2 className="text-3xl font-bold text-center mb-4 text-white">
             Neler Sunuyoruz?
           </h2>
-          <p className="text-center text-white/50 mb-14 max-w-xl mx-auto text-sm">
+          <p className="text-center text-white/50 mb-16 max-w-2xl mx-auto">
             AI robotlar, otomatik yönetim ve veli takibi ile tesisinizi verimli yönetin.
           </p>
-          <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-5">
-            {FEATURES.map((f) => (
-              <BentoCard key={f.title} icon={f.icon} title={f.title} desc={f.desc} color={f.color as "emerald" | "cyan" | "purple" | "amber"} />
-            ))}
+          <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6">
+            {FEATURES.map((f) => {
+              const Icon = f.icon
+              return (
+              <Card key={f.title} className="bg-white/5 border-white/10 rounded-2xl overflow-hidden hover:bg-white/[0.07] transition-colors">
+                <CardHeader>
+                  <div className="flex h-12 w-12 items-center justify-center rounded-xl bg-emerald-500/20 text-emerald-400 mb-2">
+                    <Icon className="h-6 w-6" />
+                  </div>
+                  <CardTitle className="text-lg text-white">{f.title}</CardTitle>
+                </CardHeader>
+                <CardContent>
+                  <p className="text-sm text-white/60">{f.desc}</p>
+                </CardContent>
+              </Card>
+            )
+            })}
           </div>
         </section>
 
-        {/* Paketler */}
-        <section className="max-w-5xl mx-auto px-6 py-20 border-t border-white/5">
-          <h2 className="text-2xl font-bold text-center mb-3 text-white/90">
-            Paketler
+        {/* Social Proof & Integrations — Brillance: testimonials, trust */}
+        <section className="max-w-6xl mx-auto px-6 py-24 border-t border-white/5">
+          <h2 className="text-3xl font-bold text-center mb-4 text-white">
+            İlk Pilot Tesisimiz
           </h2>
-          <p className="text-center text-white/50 mb-14 max-w-xl mx-auto text-sm">
-            İhtiyacınıza uygun paketi seçin. Detaylar için fiyatlar sayfasına bakın.
-          </p>
-          <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
-            {PACKAGES.map((pkg) => (
-              <div
-                key={pkg.name}
-                className={`rounded-2xl border p-6 ${
-                  pkg.highlight
-                    ? "border-emerald-500/50 bg-emerald-500/5"
-                    : "border-white/10 bg-white/5"
-                }`}
-              >
-                <h3 className="text-xl font-bold text-white/90 mb-1">{pkg.name}</h3>
-                <p className="text-2xl font-bold text-emerald-400 mb-4">
-                  {pkg.price}
-                  <span className="text-sm font-normal text-white/50">{pkg.period}</span>
-                </p>
-                <ul className="space-y-2 text-sm text-white/70">
-                  {pkg.features.map((f, i) => (
-                    <li key={i} className="flex items-center gap-2">
-                      <span className="text-emerald-400">✓</span> {f}
-                    </li>
-                  ))}
-                </ul>
-                <Link href="/fiyatlar" className="mt-6 block">
-                  <Button variant={pkg.highlight ? "default" : "outline"} className="w-full rounded-xl">
-                    Detay
-                  </Button>
-                </Link>
-              </div>
-            ))}
-          </div>
-        </section>
-
-        {/* Pilot Tesis */}
-        <section className="max-w-4xl mx-auto px-6 py-20 border-t border-white/5">
-          <h2 className="text-2xl font-bold text-center mb-2 text-white/90">İlk pilot tesisimiz</h2>
-          <p className="text-center text-white/50 mb-12 text-sm">
+          <p className="text-center text-white/50 mb-12 max-w-xl mx-auto">
             Tuzla Beşiktaş Cimnastik Okulu — Demo girişi ile paneli deneyin.
           </p>
-          <div className="rounded-2xl bg-white/5 border border-white/10 p-8">
-            <p className="text-center font-semibold text-white/90 mb-6">Tuzla Beşiktaş Cimnastik Okulu</p>
-            <div className="grid grid-cols-1 sm:grid-cols-2 gap-6">
-              {REFERANSLAR.map((r, i) => (
-                <div key={i} className="flex items-center gap-4 rounded-xl bg-white/5 border border-white/10 p-4">
-                  <div className="flex h-12 w-12 items-center justify-center rounded-full bg-emerald-500/20 text-emerald-400">
+          <div className="grid grid-cols-1 sm:grid-cols-2 gap-6">
+            {REFERANSLAR.map((r, i) => (
+              <Card key={i} className="bg-white/5 border-white/10 rounded-2xl">
+                <CardContent className="flex items-center gap-4 p-6">
+                  <div className="flex h-12 w-12 items-center justify-center rounded-full bg-emerald-500/20 text-emerald-400 shrink-0">
                     <User className="h-6 w-6" />
                   </div>
                   <div>
-                    <p className="font-medium text-white/90">{r.ad}</p>
+                    <p className="font-semibold text-white">{r.ad}</p>
                     <p className="text-sm text-white/50">{r.unvan}</p>
                   </div>
-                </div>
-              ))}
-            </div>
-            <div className="mt-8 text-center">
-              <Link href="/patron/login">
-                <Button className="rounded-full bg-emerald-500 hover:bg-emerald-600 text-white px-6">
-                  Giriş Yap — Deneyin
-                </Button>
-              </Link>
-            </div>
+                </CardContent>
+              </Card>
+            ))}
           </div>
+          <div className="mt-10 text-center">
+            <Link href="/patron/login">
+              <Button className="rounded-xl bg-emerald-500 hover:bg-emerald-600 text-white px-6 h-11">
+                Giriş Yap — Deneyin
+              </Button>
+            </Link>
+          </div>
+        </section>
+
+        {/* Pricing Plans — Brillance: tiered pricing cards */}
+        <section className="max-w-5xl mx-auto px-6 py-24 border-t border-white/5">
+          <h2 className="text-3xl font-bold text-center mb-4 text-white">
+            Paketler
+          </h2>
+          <p className="text-center text-white/50 mb-16 max-w-xl mx-auto">
+            İhtiyacınıza uygun paketi seçin.
+          </p>
+          <div className="grid grid-cols-1 md:grid-cols-3 gap-8">
+            {PACKAGES.map((pkg) => (
+              <Card
+                key={pkg.name}
+                className={`rounded-2xl overflow-hidden ${
+                  pkg.highlight
+                    ? "border-emerald-500/50 bg-emerald-500/5 ring-2 ring-emerald-500/30"
+                    : "bg-white/5 border-white/10"
+                }`}
+              >
+                <CardHeader>
+                  <CardTitle className="text-xl text-white">{pkg.name}</CardTitle>
+                  <CardDescription className="text-white/50">
+                    <span className="text-2xl font-bold text-emerald-400">{pkg.price}</span>
+                    <span className="text-sm font-normal">{pkg.period}</span>
+                  </CardDescription>
+                </CardHeader>
+                <CardContent>
+                  <ul className="space-y-3">
+                    {pkg.features.map((f, i) => (
+                      <li key={i} className="flex items-center gap-2 text-sm text-white/80">
+                        <Check className="h-4 w-4 text-emerald-400 shrink-0" />
+                        {f}
+                      </li>
+                    ))}
+                  </ul>
+                </CardContent>
+                <CardFooter>
+                  <Link href="/fiyatlar" className="w-full">
+                    <Button
+                      variant={pkg.highlight ? "default" : "outline"}
+                      className={`w-full rounded-xl ${pkg.highlight ? "bg-emerald-500 hover:bg-emerald-600" : "border-white/20 text-white hover:bg-white/10"}`}
+                    >
+                      Detay
+                    </Button>
+                  </Link>
+                </CardFooter>
+              </Card>
+            ))}
+          </div>
+        </section>
+
+        {/* FAQ — Brillance: accordion */}
+        <section className="max-w-3xl mx-auto px-6 py-24 border-t border-white/5">
+          <h2 className="text-3xl font-bold text-center mb-4 text-white">
+            Sıkça Sorulan Sorular
+          </h2>
+          <p className="text-center text-white/50 mb-12">
+            Merak ettiklerinizin yanıtları.
+          </p>
+          <Accordion type="single" collapsible className="w-full">
+            {FAQ_ITEMS.map((item, i) => (
+              <AccordionItem key={i} value={`item-${i}`}>
+                <AccordionTrigger>{item.q}</AccordionTrigger>
+                <AccordionContent>{item.a}</AccordionContent>
+              </AccordionItem>
+            ))}
+          </Accordion>
         </section>
 
         {/* CTA + Demo */}
-        <section className="max-w-3xl mx-auto px-6 py-16 text-center border-t border-white/5">
-          <div className="rounded-2xl bg-white/5 border border-white/10 p-8">
-            <Shield className="h-10 w-10 text-emerald-400 mx-auto mb-4" />
-            <p className="text-lg text-white/90 font-medium mb-4">
+        <section className="max-w-3xl mx-auto px-6 py-20 text-center border-t border-white/5">
+          <Card className="bg-white/5 border-white/10 rounded-2xl p-8">
+            <p className="text-lg text-white font-medium mb-6">
               Spor tesislerini teknoloji ve bilimle yönetiyoruz. Çocukların gelişimini veriyle takip ediyoruz.
             </p>
-            <p className="text-white/50 text-xs mb-6">YISA-S — Anayasamıza uygun.</p>
-            <Button onClick={() => setShowForm(true)} size="lg" className="rounded-full bg-emerald-500 text-white hover:bg-emerald-600 px-6 h-11">
+            <p className="text-white/50 text-sm mb-6">YİSA-S — Anayasamıza uygun.</p>
+            <Button onClick={() => setShowForm(true)} size="lg" className="rounded-xl bg-emerald-500 text-white hover:bg-emerald-600 px-8 h-12">
               Franchise / Demo Başvurusu
             </Button>
-          </div>
+          </Card>
         </section>
 
-        {/* Footer */}
-        <footer className="py-12 border-t border-white/5">
-          <div className="max-w-5xl mx-auto px-6">
-            <div className="grid grid-cols-1 md:grid-cols-3 gap-8 mb-8">
-              <div>
-                <h4 className="font-semibold text-white/90 mb-3">İletişim</h4>
-                <div className="space-y-2 text-sm text-white/50">
-                  <p className="flex items-center gap-2">
-                    <Mail className="h-4 w-4" /> info@yisa-s.com
-                  </p>
-                  <p className="flex items-center gap-2">
-                    <Phone className="h-4 w-4" /> +90 xxx xxx xx xx
-                  </p>
-                  <p className="flex items-center gap-2">
-                    <MapPin className="h-4 w-4" /> İstanbul, Türkiye
-                  </p>
-                </div>
+        {/* Footer — Brillance: clean footer */}
+        <footer className="py-16 border-t border-white/5">
+          <div className="max-w-6xl mx-auto px-6">
+            <div className="flex flex-col md:flex-row items-center justify-between gap-8">
+              <div className="flex flex-col sm:flex-row items-center gap-6 text-sm text-white/50">
+                <span className="flex items-center gap-2">
+                  <Mail className="h-4 w-4" /> info@yisa-s.com
+                </span>
+                <span className="flex items-center gap-2">
+                  <MapPin className="h-4 w-4" /> İstanbul
+                </span>
               </div>
-              <div>
-                <h4 className="font-semibold text-white/90 mb-3">Bağlantılar</h4>
-                <div className="space-y-2 text-sm">
-                  <Link href="/" className="block text-white/50 hover:text-white/70">Ana Sayfa</Link>
-                  <Link href="/vitrin" className="block text-white/50 hover:text-white/70">Sistemi Tanıyın</Link>
-                  <Link href="/fiyatlar" className="block text-white/50 hover:text-white/70">Fiyatlar</Link>
-                  <Link href="/patron/login" className="block text-white/50 hover:text-white/70">Giriş Yap</Link>
-                </div>
-              </div>
-              <div>
-                <h4 className="font-semibold text-white/90 mb-3">Sosyal Medya</h4>
-                <div className="flex gap-4 text-white/50">
-                  <a href="#" className="hover:text-white/80" aria-label="Twitter">𝕏</a>
-                  <a href="#" className="hover:text-white/80" aria-label="LinkedIn">in</a>
-                  <a href="#" className="hover:text-white/80" aria-label="Instagram">📷</a>
-                </div>
+              <div className="flex gap-8 text-sm">
+                <Link href="/vitrin" className="text-white/50 hover:text-white transition-colors">Vitrin</Link>
+                <Link href="/fiyatlar" className="text-white/50 hover:text-white transition-colors">Fiyatlar</Link>
+                <Link href="/patron/login" className="text-white/50 hover:text-white transition-colors">Giriş</Link>
               </div>
             </div>
-            <p className="text-center text-white/40 text-sm">YİSA-S · Tesis işletmecileri için robot yönetimli spor tesisi franchise</p>
+            <p className="text-center text-white/40 text-sm mt-10">
+              YİSA-S · Robot yönetimli spor tesisi franchise
+            </p>
           </div>
         </footer>
       </main>
@@ -363,93 +369,30 @@ export default function Home() {
       {/* Demo Form Modal */}
       {showForm && (
         <div className="fixed inset-0 z-50 bg-black/90 backdrop-blur-xl flex items-center justify-center p-6" onClick={() => setShowForm(false)}>
-          <div className="bg-[#111] border border-white/10 rounded-3xl p-10 w-full max-w-md" onClick={(e) => e.stopPropagation()}>
-            <h3 className="text-2xl font-bold mb-2">Demo Talep Formu</h3>
-            <p className="text-white/40 mb-8">10 iş günü içinde dönüş yapılacaktır.</p>
-            {formDone ? (
-              <p className="text-emerald-400 text-center py-8">Başvurunuz alındı. Teşekkürler!</p>
-            ) : (
-              <form onSubmit={handleSubmit} className="space-y-4">
-                <Input placeholder="Ad Soyad" value={formData.ad} onChange={(e) => setFormData({ ...formData, ad: e.target.value })} className="bg-white/5 border-white/10 h-12 rounded-xl" required />
-                <Input type="email" placeholder="E-posta" value={formData.email} onChange={(e) => setFormData({ ...formData, email: e.target.value })} className="bg-white/5 border-white/10 h-12 rounded-xl" required />
-                <Input placeholder="Telefon" value={formData.telefon} onChange={(e) => setFormData({ ...formData, telefon: e.target.value })} className="bg-white/5 border-white/10 h-12 rounded-xl" />
-                <Input placeholder="Tesis türü (örn. Cimnastik)" value={formData.tesis_turu} onChange={(e) => setFormData({ ...formData, tesis_turu: e.target.value })} className="bg-white/5 border-white/10 h-12 rounded-xl" />
-                <Input placeholder="Şehir" value={formData.sehir} onChange={(e) => setFormData({ ...formData, sehir: e.target.value })} className="bg-white/5 border-white/10 h-12 rounded-xl" required />
-                <Button type="submit" disabled={formSending} className="w-full rounded-xl bg-white text-black hover:bg-white/90 h-12 font-medium">
-                  {formSending ? "Gönderiliyor…" : "Gönder"}
-                </Button>
-              </form>
-            )}
-          </div>
+          <Card className="bg-[#111] border-white/10 rounded-2xl p-10 w-full max-w-md" onClick={(e) => e.stopPropagation()}>
+            <CardHeader>
+              <CardTitle className="text-2xl">Demo Talep Formu</CardTitle>
+              <CardDescription>10 iş günü içinde dönüş yapılacaktır.</CardDescription>
+            </CardHeader>
+            <CardContent>
+              {formDone ? (
+                <p className="text-emerald-400 text-center py-8 font-medium">Başvurunuz alındı. Teşekkürler!</p>
+              ) : (
+                <form onSubmit={handleSubmit} className="space-y-4">
+                  <Input placeholder="Ad Soyad" value={formData.ad} onChange={(e) => setFormData({ ...formData, ad: e.target.value })} className="bg-white/5 border-white/10 h-12 rounded-xl" required />
+                  <Input type="email" placeholder="E-posta" value={formData.email} onChange={(e) => setFormData({ ...formData, email: e.target.value })} className="bg-white/5 border-white/10 h-12 rounded-xl" required />
+                  <Input placeholder="Telefon" value={formData.telefon} onChange={(e) => setFormData({ ...formData, telefon: e.target.value })} className="bg-white/5 border-white/10 h-12 rounded-xl" />
+                  <Input placeholder="Tesis türü (örn. Cimnastik)" value={formData.tesis_turu} onChange={(e) => setFormData({ ...formData, tesis_turu: e.target.value })} className="bg-white/5 border-white/10 h-12 rounded-xl" />
+                  <Input placeholder="Şehir" value={formData.sehir} onChange={(e) => setFormData({ ...formData, sehir: e.target.value })} className="bg-white/5 border-white/10 h-12 rounded-xl" required />
+                  <Button type="submit" disabled={formSending} className="w-full rounded-xl bg-white text-black hover:bg-white/90 h-12 font-medium">
+                    {formSending ? "Gönderiliyor…" : "Gönder"}
+                  </Button>
+                </form>
+              )}
+            </CardContent>
+          </Card>
         </div>
       )}
     </div>
-  )
-}
-
-function BentoCard({
-  icon: Icon,
-  title,
-  desc,
-  color,
-}: {
-  icon: React.ElementType
-  title: string
-  desc: string
-  color: "emerald" | "cyan" | "purple" | "amber"
-}) {
-  const colors = {
-    emerald: "from-emerald-500/20 to-emerald-500/5 text-emerald-400",
-    cyan: "from-cyan-500/20 to-cyan-500/5 text-cyan-400",
-    purple: "from-purple-500/20 to-purple-500/5 text-purple-400",
-    amber: "from-amber-500/20 to-amber-500/5 text-amber-400",
-  }
-  return (
-    <div className="rounded-2xl border border-white/10 bg-white/5 p-5 hover:bg-white/[0.07] transition">
-      <div className={`flex h-12 w-12 items-center justify-center rounded-xl bg-gradient-to-br ${colors[color]} mb-3`}>
-        <Icon className="h-6 w-6" />
-      </div>
-      <h3 className="text-base font-semibold text-white/95 mb-1">{title}</h3>
-      <p className="text-sm text-white/50">{desc}</p>
-    </div>
-  )
-}
-
-function FloatingBall({
-  size,
-  color,
-  top,
-  left,
-  right,
-  bottom,
-  delay,
-}: {
-  size: number
-  color: "emerald" | "cyan" | "purple"
-  top?: string
-  left?: string
-  right?: string
-  bottom?: string
-  delay: number
-}) {
-  const [position, setPosition] = useState({ x: 0, y: 0 })
-  useEffect(() => {
-    const animate = () => {
-      const time = Date.now() / 1000 + delay
-      setPosition({ x: Math.sin(time * 0.5) * 25, y: Math.cos(time * 0.3) * 15 })
-    }
-    const interval = setInterval(animate, 50)
-    return () => clearInterval(interval)
-  }, [delay])
-  const colorMap = {
-    emerald: "from-emerald-500/20 to-emerald-500/5",
-    cyan: "from-cyan-500/20 to-cyan-500/5",
-    purple: "from-purple-500/20 to-purple-500/5",
-  }
-  return (
-    <div
-      className={`absolute rounded-full bg-gradient-to-br ${colorMap[color]} blur-3xl`}
-      style={{ width: size, height: size, top, left, right, bottom, transform: `translate(${position.x}px, ${position.y}px)`, transition: "transform 0.5s ease-out" }}
-    />
   )
 }

@@ -14,9 +14,7 @@ import {
   Wallet,
   LayoutTemplate,
   Store,
-  Users,
   ClipboardCheck,
-  FileText,
   Menu,
   X,
 } from 'lucide-react'
@@ -77,32 +75,13 @@ export default function DashboardSidebar() {
         </div>
       </Link>
 
-      {/* Sistem Özeti */}
+      {/* Kompakt özet — minimalist */}
       {summary && (
-        <div className="mb-4 p-3 rounded-xl bg-slate-800/50 border border-slate-700/50 space-y-2">
-          <p className="text-[10px] font-medium text-slate-500 uppercase tracking-wider">Sistem Özeti</p>
-          <div className="grid grid-cols-2 gap-1.5 text-xs">
-            <div className="flex items-center gap-2 px-2 py-1 rounded bg-slate-800">
-              <Users size={12} className="text-cyan-400" />
-              <span className="text-slate-400">Öğrenci</span>
-              <span className="font-mono text-white ml-auto">{summary.athletes}</span>
-            </div>
-            <div className="flex items-center gap-2 px-2 py-1 rounded bg-slate-800">
-              <ClipboardCheck size={12} className="text-amber-400" />
-              <span className="text-slate-400">Onay</span>
-              <span className="font-mono text-amber-400 ml-auto">{summary.pendingApprovals}</span>
-            </div>
-            <div className="flex items-center gap-2 px-2 py-1 rounded bg-slate-800">
-              <FileText size={12} className="text-emerald-400" />
-              <span className="text-slate-400">Başvuru</span>
-              <span className="font-mono text-white ml-auto">{summary.newApplications}</span>
-            </div>
-            <div className="flex items-center gap-2 px-2 py-1 rounded bg-slate-800">
-              <Store size={12} className="text-blue-400" />
-              <span className="text-slate-400">Franchise</span>
-              <span className="font-mono text-white ml-auto">{summary.activeFranchises}</span>
-            </div>
-          </div>
+        <div className="mb-4 flex items-center justify-between gap-2 text-xs text-slate-500 border-b border-slate-800 pb-3">
+          <span>Öğr: <span className="text-white font-mono">{summary.athletes}</span></span>
+          <span>Onay: <span className="text-amber-400 font-mono">{summary.pendingApprovals}</span></span>
+          <span>Başv: <span className="text-white font-mono">{summary.newApplications}</span></span>
+          <span>Frn: <span className="text-white font-mono">{summary.activeFranchises}</span></span>
         </div>
       )}
 
