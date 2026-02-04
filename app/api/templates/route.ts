@@ -45,22 +45,32 @@ export interface RDSuggestion {
   created_at: string
 }
 
+/** SQL veya geçersiz string mi? — şablon içeriği değilse boş döner */
+function isInvalidTemplateContent(s: string): boolean {
+  const upper = s.trim().toUpperCase()
+  return upper.startsWith('SELECT ') || upper.startsWith('INSERT ') || upper.startsWith('CREATE ') ||
+    upper.startsWith('UPDATE ') || upper.startsWith('DELETE ') || upper.startsWith('DROP ') ||
+    upper.includes('FROM ') || upper.includes('INTO ') || (upper.length > 500 && !s.includes('"'))
+}
+
 function mapCeoRowToSablon(row: Record<string, unknown>): SablonItem {
   const ad = (row.ad ?? row.template_name ?? '—') as string
   const kategori = (row.kategori ?? row.template_type ?? row.director_key ?? '—') as string
   const rawIcerik = row.icerik ?? row.content
-  const icerik =
-    rawIcerik != null && typeof rawIcerik === 'object' && !Array.isArray(rawIcerik)
-      ? (rawIcerik as Record<string, unknown>)
-      : typeof rawIcerik === 'string'
-        ? (() => {
-            try {
-              return JSON.parse(rawIcerik) as Record<string, unknown>
-            } catch {
-              return { aciklama: rawIcerik }
-            }
-          })()
-        : {}
+  let icerik: Record<string, unknown> = {}
+  if (rawIcerik != null && typeof rawIcerik === 'object' && !Array.isArray(rawIcerik)) {
+    icerik = rawIcerik as Record<string, unknown>
+  } else if (typeof rawIcerik === 'string') {
+    if (isInvalidTemplateContent(rawIcerik)) {
+      icerik = { aciklama: 'İçerik SQL veya geçersiz format — SABLONLAR_TEK_SQL.sql çalıştırın.' }
+    } else {
+      try {
+        icerik = JSON.parse(rawIcerik) as Record<string, unknown>
+      } catch {
+        icerik = rawIcerik.length < 500 ? { aciklama: rawIcerik } : { aciklama: 'İçerik okunamadı.' }
+      }
+    }
+  }
   return {
     id: String(row.id ?? ''),
     ad,

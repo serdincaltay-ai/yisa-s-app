@@ -235,12 +235,27 @@ export default function SablonlarPage() {
                   <span className="mx-2">·</span>
                   <span className="text-slate-500">Oluşturan:</span> {modalSablon.olusturan}
                 </div>
-                <div className="flex-1 overflow-auto p-4 pt-0">
-                  <pre className="bg-slate-950 border border-slate-700 rounded-xl p-4 text-xs text-slate-300 overflow-auto whitespace-pre-wrap font-mono">
+                <div className="flex-1 overflow-auto p-4 pt-0 space-y-4">
+                  {typeof modalSablon.icerik?.aciklama === 'string' ? (
+                    <div className="bg-slate-800/50 rounded-xl p-4 border border-slate-700">
+                      <p className="text-xs text-slate-500 font-medium mb-1">Açıklama</p>
+                      <p className="text-slate-300 text-sm">{modalSablon.icerik.aciklama}</p>
+                    </div>
+                  ) : null}
+                  {modalSablon.icerik?.tip != null ? (
+                    <div><span className="text-slate-500">Tip:</span> <span className="text-cyan-400">{String(modalSablon.icerik.tip)}</span></div>
+                  ) : null}
+                  {Array.isArray(modalSablon.icerik?.alanlar) ? (
+                    <div>
+                      <p className="text-slate-500 text-xs mb-1">Alanlar</p>
+                      <p className="text-slate-300 text-sm">{(modalSablon.icerik.alanlar as string[]).join(', ')}</p>
+                    </div>
+                  ) : null}
+                  <pre className="bg-slate-950 border border-slate-700 rounded-xl p-4 text-xs text-slate-400 overflow-auto whitespace-pre-wrap font-mono">
                     {JSON.stringify(modalSablon.icerik, null, 2)}
                   </pre>
                   {isEmptyIcerik(modalSablon.icerik) && (
-                    <p className="mt-2 text-red-400 text-sm">Bu şablonun içeriği boş.</p>
+                    <p className="mt-2 text-red-400 text-sm">Bu şablonun içeriği boş. Supabase&apos;de SABLONLAR_TEK_SQL.sql çalıştırın.</p>
                   )}
                 </div>
               </div>

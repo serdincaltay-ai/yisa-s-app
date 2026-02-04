@@ -17,6 +17,7 @@ import {
   ChevronUp,
   Clock,
   Play,
+  Rocket,
   Store,
   Maximize2,
   Minimize2,
@@ -61,6 +62,7 @@ export default function DashboardPage() {
   const [showFlow, setShowFlow] = useState(false)
   const [useQualityFlow, setUseQualityFlow] = useState(true)
   const [assistantProvider, setAssistantProvider] = useState<'GPT' | 'GEMINI' | 'CLAUDE' | 'CLOUD' | 'V0' | 'CURSOR' | 'SUPABASE' | 'GITHUB' | 'VERCEL' | 'RAILWAY' | 'FAL'>('GEMINI')
+  const [assistantChain, setAssistantChain] = useState<string[]>(['GEMINI'])
   const [targetDirector, setTargetDirector] = useState<string>('')
   const [asRoutine, setAsRoutine] = useState(false)
   const [currentStepLabel, setCurrentStepLabel] = useState<string | null>(null)
@@ -141,6 +143,15 @@ export default function DashboardPage() {
   function setCommandFromMessage(text: string) {
     const cmd = extractCommandFromText(text)
     if (cmd) setSuggestedCommand(cmd)
+  }
+
+  function toggleAssistantInChain(id: string) {
+    setAssistantChain((prev) => {
+      const idx = prev.indexOf(id)
+      if (idx >= 0) return prev.filter((p) => p !== id)
+      if (prev.length >= 5) return prev
+      return [...prev, id]
+    })
   }
 
   async function copySuggestedCommand() {
@@ -236,7 +247,8 @@ export default function DashboardPage() {
           target_director: targetDirector || undefined,
           user: user ?? undefined,
           user_id: user?.id ?? undefined,
-          assistant_provider: assistantProvider,
+          assistant_provider: assistantChain[0] || assistantProvider,
+          assistant_chain: assistantChain.length > 0 ? assistantChain : undefined,
           idempotency_key: crypto.randomUUID(),
         }),
       })
@@ -304,7 +316,8 @@ export default function DashboardPage() {
           message: msg,
           user: user ?? undefined,
           user_id: user?.id ?? undefined,
-          assistant_provider: assistantProvider,
+          assistant_provider: assistantChain[0] || assistantProvider,
+          assistant_chain: assistantChain.length > 0 ? assistantChain : undefined,
           as_routine: asRoutine,
           target_director: targetDirector || undefined,
         }),
@@ -462,7 +475,8 @@ export default function DashboardPage() {
           corrected_message: correctedMessage,
           user: user ?? undefined,
           user_id: user?.id ?? undefined,
-          assistant_provider: assistantProvider,
+          assistant_provider: assistantChain[0] || assistantProvider,
+          assistant_chain: assistantChain.length > 0 ? assistantChain : undefined,
           as_routine: asRoutine,
           ...(confirmType === 'company' && {
             confirmed_first_step: true,
@@ -808,6 +822,14 @@ export default function DashboardPage() {
               <p className="text-xs text-muted-foreground mt-2">
                 Direktörlükler ilk görevlerini yapacak.
               </p>
+              {stats.pendingApprovals > 0 && (
+                <a href="/dashboard/ozel-araclar" className="block mt-3">
+                  <Button variant="outline" className="w-full bg-emerald-500/10 border-emerald-500/50 text-emerald-700 dark:text-emerald-400 hover:bg-emerald-500/20">
+                    <Rocket size={18} className="mr-2" />
+                    Oyna — Deploy ({stats.pendingApprovals} onay)
+                  </Button>
+                </a>
+              )}
             </CardContent>
           </Card>
 
@@ -892,7 +914,10 @@ export default function DashboardPage() {
             {/* Robot seçim paneli */}
             <div className="px-4 pt-3 pb-2 border-b border-border space-y-3">
               <div>
-                <p className="text-xs text-muted-foreground mb-2 font-medium">1. Asistan seçin → Sohbet edin → Komut olarak gönder</p>
+                <p className="text-xs text-muted-foreground mb-2 font-medium">1. Asistan zinciri (tıkla: sırayla 1. 2. 3. 4. 5.) — seçtiklerin çalışır</p>
+                {assistantChain.length > 0 && (
+                  <p className="text-xs text-emerald-500/80 mb-2 font-mono">Sıra: {assistantChain.map((id, i) => `${i + 1}.${id}`).join(' → ')}</p>
+                )}
               <div className="flex flex-wrap gap-2">
                 {[
                   { id: 'GPT', label: 'GPT' },
@@ -906,20 +931,24 @@ export default function DashboardPage() {
                   { id: 'VERCEL', label: 'Vercel' },
                   { id: 'RAILWAY', label: 'Railway' },
                   { id: 'FAL', label: 'Fal' },
-                ].map(({ id, label }) => (
-                  <button
-                    key={id}
-                    type="button"
-                    onClick={() => setAssistantProvider(id as typeof assistantProvider)}
-                    className={`px-3 py-1.5 rounded-md text-sm font-medium transition-colors border ${
-                      assistantProvider === id
-                        ? 'bg-primary text-primary-foreground border-primary'
-                        : 'bg-muted/50 text-muted-foreground border-border hover:bg-accent hover:text-accent-foreground'
-                    }`}
-                  >
-                    {label}
-                  </button>
-                ))}
+                ].map(({ id, label }) => {
+                  const order = assistantChain.indexOf(id) + 1
+                  const inChain = order > 0
+                  return (
+                    <button
+                      key={id}
+                      type="button"
+                      onClick={() => toggleAssistantInChain(id)}
+                      className={`px-3 py-1.5 rounded-md text-sm font-medium transition-colors border ${
+                        inChain
+                          ? 'bg-primary text-primary-foreground border-primary'
+                          : 'bg-muted/50 text-muted-foreground border-border hover:bg-accent hover:text-accent-foreground'
+                      }`}
+                    >
+                      {inChain ? `${order}. ${label}` : label}
+                    </button>
+                  )
+                })}
               </div>
             </div>
             <div>

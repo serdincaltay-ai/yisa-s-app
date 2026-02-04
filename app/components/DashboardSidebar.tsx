@@ -14,14 +14,20 @@ import {
   Wallet,
   LayoutTemplate,
   Store,
+  Briefcase,
   ClipboardCheck,
   Menu,
   X,
+  Monitor,
+  Wrench,
 } from 'lucide-react'
 
 /** Patron paneli menüsü — sadece gerekli sayfalar */
 const NAV = [
   { href: '/dashboard', label: 'Ana Sayfa', icon: Home },
+  { href: '/dashboard/genis-ekran', label: 'Geniş Ekran', icon: Monitor },
+  { href: '/dashboard/ozel-araclar', label: 'Özel Araçlar', icon: Wrench },
+  { href: '/dashboard/franchise-yonetim', label: 'Franchise Yönetim', icon: Briefcase },
   { href: '/dashboard/directors', label: 'CELF Direktörlükleri', icon: Bot },
   { href: '/dashboard/robots', label: 'Direktörler (Canlı)', icon: Bot },
   { href: '/dashboard/onay-kuyrugu', label: 'Onay Kuyruğu', icon: ClipboardCheck },

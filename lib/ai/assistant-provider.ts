@@ -83,3 +83,26 @@ export async function callAssistantByProvider(
     provider: usedProvider,
   }
 }
+
+const CHAIN_CONTEXT = 'Önceki asistanın çıktısı. Bunu geliştir, kontrol et veya tamamla. Kısa ve Türkçe yanıt ver.'
+
+/** Zincir: 1. asistan mesajla çalışır, 2. öncekinin çıktısıyla, 3. öncekinin çıktısıyla... En son çıktı döner */
+export async function callAssistantChain(
+  providers: string[],
+  message: string,
+  system?: string
+): Promise<{ text: string; providers: string[] }> {
+  if (!providers.length) return callAssistantByProvider('GEMINI', message, system).then((r) => ({ text: r.text, providers: [r.provider] }))
+  if (providers.length === 1) return callAssistantByProvider(providers[0] as AssistantProvider, message, system).then((r) => ({ text: r.text, providers: [r.provider] }))
+
+  let currentInput = message
+  const usedProviders: string[] = []
+  for (let i = 0; i < providers.length; i++) {
+    const p = providers[i] as AssistantProvider
+    const sys = i === 0 ? system : `${CHAIN_CONTEXT}\n\n${system ?? ASSISTANT_SYSTEM}`
+    const result = await callAssistantByProvider(p, currentInput, sys)
+    currentInput = result.text
+    usedProviders.push(result.provider)
+  }
+  return { text: currentInput, providers: usedProviders }
+}

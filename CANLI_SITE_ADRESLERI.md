@@ -11,10 +11,10 @@ Lokal (localhost) kullanmadan **doğrudan canlı sitelere** girmek için adresle
 | **Patron paneli** | https://app.yisa-s.com | Ana giriş — tek geçerli domain |
 | **Franchise paneli** | https://franchise.yisa-s.com | Tesis yönetimi |
 | **Veli paneli** | https://veli.yisa-s.com | Veli / çocuk takibi |
-| **Tanıtım** | https://yisa-s.com | Ayrı proje (YISA_S_SITE_KOMPLE) |
+| **Tanıtım** | https://yisa-s.com | Bu proje — landing / tanıtım sayfası |
 | **Vercel varsayılan** | https://yisa-s-app.vercel.app | → app.yisa-s.com'a yönlendirilir |
 
-**Not:** `yisa-s.com`, `www.yisa-s.com`, `yisa-s-app.vercel.app` ile giriş yapıldığında otomatik olarak `app.yisa-s.com` adresine yönlendirilir.
+**Not:** `yisa-s.com` ve `www.yisa-s.com` bu sitede kalır, tanıtım sayfası gösterilir. `yisa-s-app.vercel.app` → app.yisa-s.com'a yönlendirilir.
 
 ---
 
@@ -23,7 +23,7 @@ Lokal (localhost) kullanmadan **doğrudan canlı sitelere** girmek için adresle
 - **Vercel linki (örnek):** `https://yisa-s-app.vercel.app`  
   (Kendi projenizin linki: Vercel → Proje → Domain’ler)
 - **Patron paneli:** `https://app.yisa-s.com`
-- **Tanıtım (ayrı proje):** `https://yisa-s.com`
+- **Tanıtım (bu proje):** `https://yisa-s.com`
 
 Aşağıdaki tüm adreslerde **[SİTE]** = `https://app.yisa-s.com` (Patron paneli).
 

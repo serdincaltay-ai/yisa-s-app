@@ -41,7 +41,7 @@ import { correctSpelling, askConfirmation } from '@/lib/ai/gpt-service'
 import { runCelfDirector, callClaude } from '@/lib/ai/celf-execute'
 import { classifyPatronMessage, isApprovalPhrase } from '@/lib/patron-chat-classifier'
 import { githubPush } from '@/lib/api/github-client'
-import { callAssistantByProvider, type AssistantProvider } from '@/lib/ai/assistant-provider'
+import { callAssistantByProvider, callAssistantChain, type AssistantProvider } from '@/lib/ai/assistant-provider'
 
 function taskTypeToLabel(taskType: string): string {
   const map: Record<string, string> = {
@@ -72,6 +72,9 @@ export async function POST(req: NextRequest) {
     const assistantProvider = VALID_PROVIDERS.includes(body.assistant_provider as (typeof VALID_PROVIDERS)[number])
       ? (body.assistant_provider as AssistantProvider)
       : ('GEMINI' as AssistantProvider)
+    const assistantChain = Array.isArray(body.assistant_chain) && body.assistant_chain.length > 0
+      ? body.assistant_chain.filter((p: unknown) => typeof p === 'string' && VALID_PROVIDERS.includes(p as (typeof VALID_PROVIDERS)[number])).slice(0, 5)
+      : []
     const sendAsCommand = body.send_as_command === true
     const asRoutine = body.as_routine === true
     const rawTarget = typeof body.target_director === 'string' ? body.target_director.trim().toUpperCase() : ''
@@ -207,22 +210,24 @@ export async function POST(req: NextRequest) {
       if (sendAsCommand) {
         // Aşağıya düşer: CIO → CEO → CELF
       } else if (classifyPatronMessage(messageToUse) === 'conversation') {
-        // Konuşma/araştırma → Seçilen robotla yanıtlar, CEO/CELF'e gitmez
-        const { text: conversationText, provider } = await callAssistantByProvider(assistantProvider, messageToUse)
+        // Konuşma/araştırma → Zincir varsa sırayla çalıştır, yoksa tek asistan
+        const chain = assistantChain.length > 0 ? assistantChain : [assistantProvider]
+        const { text: conversationText, providers } = await callAssistantChain(chain, messageToUse)
         const resultText = conversationText ?? 'Yanıt oluşturulamadı.'
         if (userId) {
           await saveChatMessage({
             user_id: userId,
             message: messageToUse,
             response: resultText,
-            ai_providers: [provider],
+            ai_providers: providers,
           })
         }
         return NextResponse.json({
           status: 'patron_conversation_done',
-          flow: `Patron konuşma (${provider})`,
+          flow: chain.length > 1 ? `Patron konuşma (zincir: ${providers.join(' → ')})` : `Patron konuşma (${providers[0] ?? assistantProvider})`,
           text: resultText,
-          ai_provider: provider,
+          ai_provider: providers[providers.length - 1],
+          ai_providers: providers,
           message: 'Konuşma tamamlandı. Onaylamak istediğiniz bir iş varsa "Onaylıyorum" yazın veya CEO\'ya Gönder ile komut gönderin.',
         })
       }

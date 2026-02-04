@@ -4,15 +4,18 @@ import { getPanelFromHost, PANEL_DEFAULT_PATH } from '@/lib/subdomain'
 
 const APP_DOMAIN = 'app.yisa-s.com'
 const VALID_SUBDOMAINS = ['app.', 'franchise.', 'veli.']
+const ROOT_SITE_DOMAINS = ['yisa-s.com', 'www.yisa-s.com']
 
 export async function updateSession(request: NextRequest) {
   const host = request.headers.get('host') ?? ''
   const hostname = host.split(':')[0].toLowerCase()
 
-  // Ana giriş domaini kaldırıldı — yisa-s.com, www, vercel.app → app.yisa-s.com (franchise/veli korunur)
+  // yisa-s.com ve www.yisa-s.com → Bu sitede kal (tanıtım/landing). app/franchise/veli subdomain'leri → aynı proje.
+  // Diğer domainler (vercel.app vb.) → app.yisa-s.com'a yönlendir
   const isLocal = hostname.includes('localhost') || hostname.includes('127.0.0.1')
+  const isRootSite = ROOT_SITE_DOMAINS.includes(hostname)
   const hasValidSubdomain = VALID_SUBDOMAINS.some((s) => hostname.startsWith(s))
-  if (!isLocal && !hasValidSubdomain) {
+  if (!isLocal && !isRootSite && !hasValidSubdomain) {
     const url = request.nextUrl.clone()
     url.protocol = 'https:'
     url.host = APP_DOMAIN
