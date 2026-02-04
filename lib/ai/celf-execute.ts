@@ -200,6 +200,25 @@ async function callTogether(message: string): Promise<string | null> {
   return data.choices?.[0]?.message?.content ?? null
 }
 
+/** Asistan sohbeti için Together (Cloud) — sistem promptu mesaja eklenir */
+export async function callTogetherForAssistant(message: string, system?: string): Promise<string | null> {
+  const apiKey = getCelfKey('CELF_TOGETHER_API_KEY', ['TOGETHER_API_KEY'])
+  if (!apiKey) return null
+  const fullMessage = system ? `[Sistem: ${system}]\n\nKullanıcı: ${message}` : message
+  const res = await fetchWithRetry(TOGETHER_URL, {
+    method: 'POST',
+    headers: { 'Content-Type': 'application/json', Authorization: `Bearer ${apiKey}` },
+    body: JSON.stringify({
+      model: 'meta-llama/Llama-3-70b-chat-hf',
+      max_tokens: 1024,
+      messages: [{ role: 'user', content: fullMessage }],
+    }),
+  })
+  if (!res.ok) return null
+  const data = await res.json()
+  return data.choices?.[0]?.message?.content ?? null
+}
+
 export type CelfResult =
   | { text: string; provider: string; githubPreparedCommit?: { commitSha: string; owner: string; repo: string; branch: string } }
   | { text: null; errorReason: string }

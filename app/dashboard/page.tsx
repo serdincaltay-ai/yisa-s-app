@@ -61,6 +61,8 @@ export default function DashboardPage() {
   const [editText, setEditText] = useState('')
   const [showFlow, setShowFlow] = useState(false)
   const [useQualityFlow, setUseQualityFlow] = useState(true)
+  const [assistantProvider, setAssistantProvider] = useState<'GEMINI' | 'CLAUDE' | 'CURSOR' | 'CLOUD'>('GEMINI')
+  const [asRoutine, setAsRoutine] = useState(false)
   const [currentStepLabel, setCurrentStepLabel] = useState<string | null>(null)
   const [pendingApproval, setPendingApproval] = useState<{
     output: Record<string, unknown>
@@ -188,6 +190,70 @@ export default function DashboardPage() {
     return () => clearInterval(t)
   }, [])
 
+  const handleSendAsCommand = async () => {
+    const lastUserMsg = [...chatMessages].reverse().find((m) => m.role === 'user')
+    const msg = lastUserMsg?.text?.trim() ?? chatInput.trim()
+    if (!msg || chatSending) return
+    setLockError(null)
+    const lockCheck = checkPatronLock(msg)
+    if (!lockCheck.allowed) {
+      setLockError(lockCheck.reason ?? 'Bu işlem AI için yasaktır.')
+      return
+    }
+    setChatSending(true)
+    setCurrentStepLabel('CEO\'ya gönderiliyor...')
+    try {
+      const res = await fetch('/api/chat/flow', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({
+          message: msg,
+          send_as_command: true,
+          confirm_type: 'company',
+          confirmed_first_step: true,
+          as_routine: asRoutine,
+          user: user ?? undefined,
+          user_id: user?.id ?? undefined,
+          assistant_provider: assistantProvider,
+          idempotency_key: crypto.randomUUID(),
+        }),
+      })
+      const data = await res.json()
+      setCurrentStepLabel(null)
+      if (data.error) {
+        setChatMessages((prev) => [...prev, { role: 'assistant', text: `Hata: ${data.error}`, aiProviders: [] }])
+      } else if (data.status === 'awaiting_patron_approval') {
+        const displayTextRaw = typeof data.text === 'string' ? data.text : undefined
+        setPendingApproval({
+          output: data.output ?? {},
+          aiResponses: data.aiResponses ?? [],
+          flow: data.flow ?? QUALITY_FLOW.name,
+          message: msg,
+          command_id: data.command_id,
+          displayText: displayTextRaw,
+          director_key: data.director_key,
+        })
+        setChatMessages((prev) => [
+          ...prev,
+          { role: 'assistant', text: displayTextRaw ?? 'Komut CEO\'ya gönderildi. Havuzda onay bekliyor.', aiProviders: data.ai_providers ?? [] },
+        ])
+        fetchApprovalQueue()
+      } else if (data.status === 'pending_task_exists') {
+        setChatMessages((prev) => [...prev, { role: 'assistant', text: data.message ?? 'Zaten bekleyen bir iş var.', aiProviders: [] }])
+      } else if (data.status === 'celf_check_failed') {
+        const errs = Array.isArray((data as { errors?: string[] }).errors) ? (data as { errors: string[] }).errors : []
+        setChatMessages((prev) => [...prev, { role: 'assistant', text: errs.length ? `⚠️ ${errs.join(' ')}` : (data.message ?? 'CELF denetimi geçilemedi.'), aiProviders: [] }])
+      } else {
+        setChatMessages((prev) => [...prev, { role: 'assistant', text: data.message ?? data.text ?? 'İşlem tamamlandı.', aiProviders: [] }])
+      }
+    } catch {
+      setCurrentStepLabel(null)
+      setChatMessages((prev) => [...prev, { role: 'assistant', text: 'Bağlantı hatası.', aiProviders: [] }])
+    } finally {
+      setChatSending(false)
+    }
+  }
+
   const handleSendChat = async () => {
     const msg = chatInput.trim()
     if (!msg || chatSending) return
@@ -216,6 +282,8 @@ export default function DashboardPage() {
             message: msg,
             user: user ?? undefined,
             user_id: user?.id ?? undefined,
+            assistant_provider: assistantProvider,
+            as_routine: asRoutine,
           }),
         })
         const data = await res.json()
@@ -249,6 +317,21 @@ export default function DashboardPage() {
             { role: 'assistant', text: '✅ Kendi alanınıza kaydedildi.', aiProviders: [] },
           ])
           setPendingPrivateSave(null)
+        } else if (data.status === 'patron_approval_done') {
+          const text = typeof data.text === 'string' ? data.text : 'Patron onayı uygulandı.'
+          setPendingApproval(null)
+          setChatMessages((prev) => [
+            ...prev,
+            { role: 'assistant', text: `✅ ${text}`, aiProviders: [] },
+          ])
+          fetchApprovalQueue()
+        } else if (data.status === 'patron_conversation_done') {
+          const text = typeof data.text === 'string' ? data.text : 'Yanıt oluşturulamadı.'
+          const prov = data.ai_provider ?? 'CLAUDE'
+          setChatMessages((prev) => [
+            ...prev,
+            { role: 'assistant', text, aiProviders: [prov] },
+          ])
         } else if (data.status === 'patron_direct_done') {
           const text = typeof data.text === 'string' ? data.text : 'İşlem tamamlandı.'
           setChatMessages((prev) => [
@@ -356,6 +439,8 @@ export default function DashboardPage() {
           corrected_message: correctedMessage,
           user: user ?? undefined,
           user_id: user?.id ?? undefined,
+          assistant_provider: assistantProvider,
+          as_routine: asRoutine,
           ...(confirmType === 'company' && {
             confirmed_first_step: true,
             idempotency_key: crypto.randomUUID(),
@@ -899,6 +984,26 @@ export default function DashboardPage() {
         )}
         {chatExpanded && (
           <>
+            {/* Robot seçim paneli — hangi AI ile konuşulacak */}
+            <div className="px-4 pt-3 pb-2 border-b border-slate-700/50">
+              <p className="text-xs text-slate-500 mb-2 font-medium">Asistan robotu seçin (sohbet için)</p>
+              <div className="flex flex-wrap gap-2">
+                {(['GEMINI', 'CLAUDE', 'CURSOR', 'CLOUD'] as const).map((p) => (
+                  <button
+                    key={p}
+                    type="button"
+                    onClick={() => setAssistantProvider(p)}
+                    className={`px-3 py-1.5 rounded-lg text-sm font-medium transition-colors ${
+                      assistantProvider === p
+                        ? 'bg-cyan-500/30 text-cyan-300 border border-cyan-500/50'
+                        : 'bg-slate-800/50 text-slate-400 border border-slate-700/50 hover:border-cyan-500/30 hover:text-slate-200'
+                    }`}
+                  >
+                    {p === 'CLOUD' ? 'Cloud (Together)' : p}
+                  </button>
+                ))}
+              </div>
+            </div>
             <div className="flex-1 min-h-[200px] max-h-[340px] overflow-y-auto p-4 space-y-4">
               {chatMessages.length === 0 && (
                 <div className="text-center py-8 text-slate-500">
@@ -1182,24 +1287,48 @@ export default function DashboardPage() {
                 <button type="button" onClick={() => setLockError(null)}>×</button>
               </div>
             )}
-            <CardFooter className="border-t border-slate-700/50 p-4 flex gap-2">
-              <input
-                type="text"
-                value={chatInput}
-                onChange={(e) => setChatInput(e.target.value)}
-                onKeyDown={(e) => e.key === 'Enter' && !e.shiftKey && handleSendChat()}
-                placeholder="Görev ver veya soru sor..."
-                className="flex-1 bg-slate-800/50 border border-slate-700 rounded-lg px-4 py-3 text-white placeholder-slate-500 focus:outline-none focus:ring-2 focus:ring-cyan-500/50 focus:border-cyan-500/50"
-                disabled={chatSending}
-              />
-              <Button
-                onClick={handleSendChat}
-                disabled={chatSending || !chatInput.trim()}
-                className="bg-gradient-to-r from-cyan-600 to-blue-600 hover:from-cyan-500 hover:to-blue-500 text-white border border-cyan-500/30 px-5"
-              >
-                <Send size={18} className="mr-2" />
-                Gönder
-              </Button>
+            <CardFooter className="border-t border-slate-700/50 p-4 flex flex-col gap-3">
+              <div className="flex items-center gap-2 flex-wrap">
+                <label className="flex items-center gap-2 text-sm text-slate-400 cursor-pointer">
+                  <input
+                    type="checkbox"
+                    checked={asRoutine}
+                    onChange={(e) => setAsRoutine(e.target.checked)}
+                    className="rounded border-slate-600 bg-slate-800 text-amber-500 focus:ring-amber-500/50"
+                  />
+                  <span>Rutin olarak yapılsın</span>
+                </label>
+                <Button
+                  type="button"
+                  variant="outline"
+                  size="sm"
+                  onClick={handleSendAsCommand}
+                  disabled={chatSending || (!chatInput.trim() && !chatMessages.some((m) => m.role === 'user'))}
+                  className="border-amber-500/50 text-amber-400 hover:bg-amber-500/10"
+                  title="Son mesajı veya yazdığınızı CEO'ya komut olarak gönderir"
+                >
+                  CEO&apos;ya Gönder
+                </Button>
+              </div>
+              <div className="flex gap-2">
+                <input
+                  type="text"
+                  value={chatInput}
+                  onChange={(e) => setChatInput(e.target.value)}
+                  onKeyDown={(e) => e.key === 'Enter' && !e.shiftKey && handleSendChat()}
+                  placeholder="Görev ver veya soru sor..."
+                  className="flex-1 bg-slate-800/50 border border-slate-700 rounded-lg px-4 py-3 text-white placeholder-slate-500 focus:outline-none focus:ring-2 focus:ring-cyan-500/50 focus:border-cyan-500/50"
+                  disabled={chatSending}
+                />
+                <Button
+                  onClick={handleSendChat}
+                  disabled={chatSending || !chatInput.trim()}
+                  className="bg-gradient-to-r from-cyan-600 to-blue-600 hover:from-cyan-500 hover:to-blue-500 text-white border border-cyan-500/30 px-5"
+                >
+                  <Send size={18} className="mr-2" />
+                  Gönder
+                </Button>
+              </div>
             </CardFooter>
           </>
         )}
@@ -1216,7 +1345,7 @@ export default function DashboardPage() {
             >
               <div className="flex items-center gap-2">
                 <ClipboardCheck size={20} className="text-amber-400" />
-                <span className="font-semibold text-white">Onay Kuyruğu</span>
+                <span className="font-semibold text-white">Havuz (Onay Kuyruğu)</span>
                 <Badge variant="outline" className="bg-amber-500/10 text-amber-400 border-amber-500/30 text-xs">
                   {approvalItems.filter((i) => i.status === 'pending').length} bekliyor
                 </Badge>
@@ -1226,7 +1355,7 @@ export default function DashboardPage() {
             {queueExpanded && (
               <CardContent className="p-4">
                 <p className="text-xs text-amber-400/90 mb-3 font-medium">
-                  📌 İçeriği görmek için: Bekleyen işte <strong>Göster</strong> veya başlığa tıkla. Onaylamadan önce içeriği mutlaka kontrol et.
+                  📌 Direktör işleri burada. <strong>Onayla</strong> basınca push, commit, deploy otomatik. İçeriği görmek için Göster veya başlığa tıkla.
                 </p>
                 {approvalLoading ? (
                   <div className="flex justify-center py-8">

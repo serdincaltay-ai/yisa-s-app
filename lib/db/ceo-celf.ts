@@ -24,6 +24,35 @@ export async function getPendingPatronCommandCount(
   return { count: count ?? 0 }
 }
 
+/** Patron için en son bekleyen (pending) komutu getirir. Chat'te "onaylıyorum" denince bu komut onaylanır. */
+export async function getLatestPendingPatronCommand(userId: string | undefined): Promise<{
+  id?: string
+  command?: string
+  output_payload?: Record<string, unknown>
+  ceo_task_id?: string | null
+  error?: string
+}> {
+  if (!userId) return {}
+  const db = getSupabaseServer()
+  if (!db) return { error: 'Supabase bağlantısı yok' }
+  const { data, error } = await db
+    .from('patron_commands')
+    .select('id, command, output_payload, ceo_task_id')
+    .eq('user_id', userId)
+    .eq('status', 'pending')
+    .order('created_at', { ascending: false })
+    .limit(1)
+    .maybeSingle()
+  if (error) return { error: error.message }
+  if (!data) return {}
+  return {
+    id: data.id as string,
+    command: data.command as string | undefined,
+    output_payload: (data.output_payload as Record<string, unknown>) ?? {},
+    ceo_task_id: data.ceo_task_id as string | null | undefined,
+  }
+}
+
 export async function getPendingCeoTaskCount(userId: string | undefined): Promise<{ count: number; error?: string }> {
   if (!userId) return { count: 0 }
   const db = getSupabaseServer()
