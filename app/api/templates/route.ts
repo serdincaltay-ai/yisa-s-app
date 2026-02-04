@@ -3,7 +3,7 @@ import { createClient } from '@supabase/supabase-js'
 
 export const dynamic = 'force-dynamic'
 
-const KATEGORILER = ['CFO', 'CLO', 'CHRO', 'CMO', 'CTO', 'CSO', 'CSPO', 'COO', 'CMDO', 'CCO', 'CDO', 'CISO'] as const
+const KATEGORILER = ['CFO', 'CLO', 'CHRO', 'CMO', 'CTO', 'CSO', 'CSPO', 'COO', 'CMDO', 'CCO', 'CDO', 'CISO', 'RND'] as const
 
 function getSupabase() {
   const url = process.env.NEXT_PUBLIC_SUPABASE_URL ?? process.env.SUPABASE_URL

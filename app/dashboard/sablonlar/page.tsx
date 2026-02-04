@@ -17,6 +17,7 @@ const KATEGORILER = [
   'CCO',
   'CDO',
   'CISO',
+  'RND',
 ] as const
 
 type SablonItem = {
@@ -103,7 +104,12 @@ export default function SablonlarPage() {
       <div className="mb-8 flex items-center justify-between flex-wrap gap-4">
         <div>
           <h1 className="text-2xl font-bold text-white">Şablonlar</h1>
-          <p className="text-slate-400">66 direktörlük şablonu — kategoriye göre filtreleyin, içeriği görüntüleyin.</p>
+          <p className="text-slate-400">Direktörlük şablonları — kategoriye göre filtreleyin, tıklayarak içeriği kontrol edin.</p>
+          <div className="mt-3 p-3 rounded-xl bg-slate-800/50 border border-slate-700/50 text-xs text-slate-400 space-y-1">
+            <p><strong className="text-cyan-400">Kim hazırlıyor:</strong> CELF direktörleri (CFO, CMO, vb.) → CEO → Havuzda onay → ceo_templates.</p>
+            <p><strong className="text-amber-400">Format:</strong> JSON (icerik). v0/HT50 için template_type: ui kullanılabilir.</p>
+            <p><strong className="text-emerald-400">Komut zinciri:</strong> Siz komut verirsiniz → Asistanlar işler → Siz sadece onay + push/deploy.</p>
+          </div>
         </div>
         <button
           type="button"

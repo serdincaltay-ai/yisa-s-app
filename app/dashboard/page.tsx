@@ -763,7 +763,7 @@ export default function DashboardPage() {
   return (
     <div className="min-h-screen bg-gradient-to-br from-black via-slate-950 to-slate-900 text-slate-100 relative overflow-hidden">
       <canvas ref={canvasRef} className="absolute inset-0 w-full h-full opacity-40 pointer-events-none" aria-hidden />
-      <div className="relative z-10 p-6 space-y-6">
+      <div className="relative z-10 p-4 sm:p-6 space-y-4 sm:space-y-6">
         {/* Futuristik Header */}
         <header className="flex items-center justify-between py-4 border-b border-slate-700/50 mb-6">
           <div className="flex items-center space-x-3">
@@ -838,7 +838,7 @@ export default function DashboardPage() {
           )}
         </Card>
 
-        <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
+        <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4 lg:gap-6">
           {/* Takvimli Görünüm */}
           <Card className="bg-slate-900/50 border-slate-700/50 backdrop-blur-sm overflow-hidden">
             <CardHeader className="py-4 border-b border-slate-700/50">

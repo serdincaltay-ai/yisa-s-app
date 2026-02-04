@@ -17,6 +17,8 @@ import {
   Users,
   ClipboardCheck,
   FileText,
+  Menu,
+  X,
 } from 'lucide-react'
 
 /** Patron paneli menüsü — sadece gerekli sayfalar */
@@ -35,7 +37,12 @@ const NAV = [
 export default function DashboardSidebar() {
   const router = useRouter()
   const pathname = usePathname()
+  const [mobileOpen, setMobileOpen] = useState(false)
   const [summary, setSummary] = useState<{ athletes: number; pendingApprovals: number; newApplications: number; activeFranchises: number } | null>(null)
+
+  useEffect(() => {
+    setMobileOpen(false)
+  }, [pathname])
 
   useEffect(() => {
     Promise.all([
@@ -58,8 +65,8 @@ export default function DashboardSidebar() {
     router.push('/')
   }
 
-  return (
-    <aside className="w-64 min-h-screen bg-slate-900 border-r border-slate-800 p-4 flex flex-col">
+  const sidebarContent = (
+    <>
       <Link href="/dashboard" className="flex items-center gap-3 mb-6 hover:opacity-90 transition-opacity">
         <div className="relative w-10 h-10 flex-shrink-0">
           <Image src="/logo.png" alt="YİSA-S" fill className="object-contain" />
@@ -128,6 +135,37 @@ export default function DashboardSidebar() {
           Çıkış Yap
         </button>
       </div>
-    </aside>
+    </>
+  )
+
+  return (
+    <>
+      {/* Mobil hamburger */}
+      <button
+        type="button"
+        onClick={() => setMobileOpen(!mobileOpen)}
+        className="lg:hidden fixed top-4 left-4 z-50 p-2 rounded-xl bg-slate-800 border border-slate-700 text-white"
+        aria-label="Menüyü aç"
+      >
+        {mobileOpen ? <X size={24} /> : <Menu size={24} />}
+      </button>
+      {/* Overlay mobilde */}
+      {mobileOpen && (
+        <div
+          className="lg:hidden fixed inset-0 bg-black/60 z-40"
+          onClick={() => setMobileOpen(false)}
+          aria-hidden
+        />
+      )}
+      <aside
+        className={`
+          w-64 min-h-screen bg-slate-900 border-r border-slate-800 p-4 flex flex-col
+          fixed lg:static inset-y-0 left-0 z-40 transform transition-transform duration-200 ease-out
+          ${mobileOpen ? 'translate-x-0' : '-translate-x-full lg:translate-x-0'}
+        `}
+      >
+        {sidebarContent}
+      </aside>
+    </>
   )
 }
