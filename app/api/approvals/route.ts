@@ -1,5 +1,6 @@
 import { NextRequest, NextResponse } from 'next/server'
 import { createClient } from '@supabase/supabase-js'
+import { requireDashboard, requirePatronOrFlow } from '@/lib/auth/api-auth'
 import {
   updatePatronCommand,
   updateCeoTask,
@@ -50,7 +51,7 @@ export async function GET() {
   try {
     const supabase = getSupabase()
     if (!supabase) {
-      return NextResponse.json({ error: 'Veritabani baglantisi yok', items: [], table: null }, { status: 503 })
+      return NextResponse.json({ error: 'Veritabani baglantisi yok', items: [], table: null, orphan_count: 0, unprocessed_count: 0 }, { status: 503 })
     }
 
     const { data, error } = await supabase
@@ -64,7 +65,18 @@ export async function GET() {
     }
 
     if (!Array.isArray(data) || data.length === 0) {
-      return NextResponse.json({ items: [], table: 'patron_commands' })
+      return NextResponse.json({ items: [], table: 'patron_commands', orphan_count: 0, unprocessed_count: 0 })
+    }
+
+    const now = Date.now()
+    const dayAgo = new Date(now - 24 * 60 * 60 * 1000).toISOString()
+    const finalStatuses = new Set(['approved', 'rejected', 'cancelled'])
+    let orphanCount = 0
+    let unprocessedCount = 0
+    for (const row of data) {
+      const s = String(row.status ?? 'pending')
+      if (!finalStatuses.has(s)) unprocessedCount++
+      if (s === 'pending' && String(row.created_at ?? '') < dayAgo) orphanCount++
     }
 
     const items: ApprovalItem[] = data.map((row: Record<string, unknown>) => {
@@ -99,21 +111,24 @@ export async function GET() {
       }
     })
 
-    return NextResponse.json({ items, table: 'patron_commands' })
+    return NextResponse.json({ items, table: 'patron_commands', orphan_count: orphanCount, unprocessed_count: unprocessedCount })
   } catch (e) {
     const err = e instanceof Error ? e.message : String(e)
-    return NextResponse.json({ error: err, items: [], table: null }, { status: 500 })
+    return NextResponse.json({ error: err, items: [], table: null, orphan_count: 0, unprocessed_count: 0 }, { status: 500 })
   }
 }
 
 export async function POST(req: NextRequest) {
   try {
+    const auth = await requirePatronOrFlow()
+    if (auth instanceof NextResponse) return auth
+    const userId = auth.user.id
+
     const body = await req.json()
     const commandId = typeof body.command_id === 'string' ? body.command_id : undefined
     const decision = body.decision as 'approve' | 'reject' | 'cancel' | 'modify' | 'suggest' | 'push'
     const cancelAll = body.cancel_all === true
     const cancelPendingOnly = body.cancel_pending_only === true
-    const userId = typeof body.user_id === 'string' ? body.user_id : undefined
     const modifyText = typeof body.modify_text === 'string' ? body.modify_text : undefined
     const saveRoutine = body.save_routine === true
     const schedule = (body.schedule as ScheduleType) ?? undefined

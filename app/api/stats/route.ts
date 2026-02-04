@@ -1,6 +1,7 @@
 import { NextResponse } from 'next/server'
 import { createClient, type SupabaseClient } from '@supabase/supabase-js'
 import { FRANCHISE_SEED } from '@/lib/data/franchises-seed'
+import { requireDashboard } from '@/lib/auth/api-auth'
 
 export const dynamic = 'force-dynamic'
 
@@ -90,6 +91,9 @@ async function revenueThisMonth(supabase: SupabaseClient): Promise<number> {
 
 export async function GET() {
   try {
+    const auth = await requireDashboard()
+    if (auth instanceof NextResponse) return auth
+
     const supabase = getSupabase()
     if (!supabase) {
       return NextResponse.json({

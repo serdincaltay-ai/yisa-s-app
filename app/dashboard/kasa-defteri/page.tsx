@@ -1,7 +1,7 @@
 'use client'
 
 import { useEffect, useState } from 'react'
-import { Wallet, Calendar, TrendingDown, RefreshCw, AlertCircle } from 'lucide-react'
+import { Wallet, Calendar, TrendingDown, TrendingUp, RefreshCw, AlertCircle, CheckCircle } from 'lucide-react'
 
 type ExpenseItem = {
   id: string
@@ -21,11 +21,23 @@ type PaymentScheduleItem = {
   status: string
 }
 
+type KasaGelirItem = {
+  id: string
+  aciklama: string
+  tutar: number
+  hareket_tipi: string
+  created_at: string
+  odeme_onaylandi?: boolean
+  tenant_id?: string
+}
+
 export default function KasaDefteriPage() {
   const [expenses, setExpenses] = useState<ExpenseItem[]>([])
   const [schedule, setSchedule] = useState<PaymentScheduleItem[]>([])
+  const [gelirler, setGelirler] = useState<KasaGelirItem[]>([])
   const [loading, setLoading] = useState(true)
   const [error, setError] = useState<string | null>(null)
+  const [approvingId, setApprovingId] = useState<string | null>(null)
 
   const fetchData = async () => {
     setLoading(true)
@@ -35,10 +47,12 @@ export default function KasaDefteriPage() {
       const data = await res.json()
       setExpenses(Array.isArray(data?.expenses) ? data.expenses : [])
       setSchedule(Array.isArray(data?.schedule) ? data.schedule : [])
+      setGelirler(Array.isArray(data?.gelirler) ? data.gelirler : [])
     } catch {
       setError('Veri yüklenemedi.')
       setExpenses([])
       setSchedule([])
+      setGelirler([])
     } finally {
       setLoading(false)
     }
@@ -50,6 +64,28 @@ export default function KasaDefteriPage() {
 
   const totalExpenses = expenses.reduce((s, e) => s + e.amount, 0)
   const totalScheduled = schedule.reduce((s, p) => s + p.amount, 0)
+  const totalGelir = gelirler.reduce((s, g) => s + g.tutar, 0)
+
+  const handleApprovePayment = async (kasaId: string) => {
+    setApprovingId(kasaId)
+    try {
+      const res = await fetch('/api/kasa/approve', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ kasa_id: kasaId }),
+      })
+      const data = await res.json()
+      if (data?.ok) {
+        fetchData()
+      } else {
+        alert(data?.error ?? 'Onaylanamadı')
+      }
+    } catch {
+      alert('İstek gönderilemedi')
+    } finally {
+      setApprovingId(null)
+    }
+  }
 
   return (
     <div className="p-8">
@@ -81,7 +117,15 @@ export default function KasaDefteriPage() {
         </div>
       ) : (
         <>
-          <div className="grid grid-cols-1 md:grid-cols-2 gap-6 mb-8">
+          <div className="grid grid-cols-1 md:grid-cols-3 gap-6 mb-8">
+            <div className="bg-slate-800/50 border border-slate-700 rounded-2xl p-6">
+              <div className="flex items-center gap-3 mb-2">
+                <TrendingUp className="text-emerald-400" size={24} />
+                <h2 className="text-lg font-semibold text-white">CELF Kasa Gelir</h2>
+              </div>
+              <p className="text-2xl font-bold text-emerald-400">₺{totalGelir.toLocaleString('tr-TR')}</p>
+              <p className="text-slate-500 text-sm mt-1">{gelirler.length} satış</p>
+            </div>
             <div className="bg-slate-800/50 border border-slate-700 rounded-2xl p-6">
               <div className="flex items-center gap-3 mb-2">
                 <TrendingDown className="text-rose-400" size={24} />
@@ -101,6 +145,61 @@ export default function KasaDefteriPage() {
           </div>
 
           <div className="grid grid-cols-1 lg:grid-cols-2 gap-8">
+            <div>
+              <h2 className="text-lg font-semibold text-white mb-4 flex items-center gap-2">
+                <TrendingUp size={20} className="text-emerald-400" /> CELF Kasa Gelir (Satışlar)
+              </h2>
+              {gelirler.length === 0 ? (
+                <div className="bg-slate-800/50 border border-slate-700 rounded-2xl p-8 text-center">
+                  <AlertCircle className="mx-auto mb-2 text-slate-500" size={32} />
+                  <p className="text-slate-500 text-sm">
+                    Henüz satış kaydı yok. COO Mağazasından satış yapıldığında burada listelenecek.
+                  </p>
+                </div>
+              ) : (
+                <div className="bg-slate-800/50 border border-slate-700 rounded-2xl overflow-hidden">
+                  <div className="overflow-x-auto max-h-[400px] overflow-y-auto">
+                    <table className="w-full text-left">
+                      <thead className="sticky top-0 bg-slate-800">
+                        <tr className="border-b border-slate-700">
+                          <th className="px-4 py-3 text-slate-400 font-medium text-sm">Açıklama</th>
+                          <th className="px-4 py-3 text-slate-400 font-medium text-sm">Tutar</th>
+                          <th className="px-4 py-3 text-slate-400 font-medium text-sm">Tarih</th>
+                          <th className="px-4 py-3 text-slate-400 font-medium text-sm">İşlem</th>
+                        </tr>
+                      </thead>
+                      <tbody>
+                        {gelirler.map((g) => (
+                          <tr key={g.id} className="border-b border-slate-700/50">
+                            <td className="px-4 py-3 text-white text-sm">{g.aciklama}</td>
+                            <td className="px-4 py-3 text-emerald-400 font-medium">₺{g.tutar.toLocaleString('tr-TR')}</td>
+                            <td className="px-4 py-3 text-slate-500 text-sm">
+                              {g.created_at ? new Date(g.created_at).toLocaleDateString('tr-TR') : '—'}
+                            </td>
+                            <td className="px-4 py-3">
+                              {g.odeme_onaylandi ? (
+                                <span className="text-emerald-400 text-xs flex items-center gap-1">
+                                  <CheckCircle size={14} /> Onaylandı
+                                </span>
+                              ) : (
+                                <button
+                                  type="button"
+                                  onClick={() => handleApprovePayment(g.id)}
+                                  disabled={approvingId === g.id}
+                                  className="text-amber-400 hover:text-amber-300 text-xs font-medium disabled:opacity-50"
+                                >
+                                  {approvingId === g.id ? '…' : 'Ödemeyi onayla'}
+                                </button>
+                              )}
+                            </td>
+                          </tr>
+                        ))}
+                      </tbody>
+                    </table>
+                  </div>
+                </div>
+              )}
+            </div>
             <div>
               <h2 className="text-lg font-semibold text-white mb-4 flex items-center gap-2">
                 <Wallet size={20} /> Giderler

@@ -48,7 +48,10 @@ import { useRouter } from "next/navigation"
 import { supabase } from "@/lib/supabase"
 
 type Athlete = { id: string; name: string; surname?: string | null; birth_date?: string | null; gender?: string | null; branch?: string | null; level?: string | null; status?: string; created_at?: string }
-type StaffMember = { id: string; name: string; surname?: string | null; email?: string | null; phone?: string | null; role?: string; branch?: string | null; is_active?: boolean; created_at?: string }
+type StaffMember = {
+  id: string; name: string; surname?: string | null; email?: string | null; phone?: string | null; role?: string; branch?: string | null; is_active?: boolean; created_at?: string;
+  birth_date?: string | null; address?: string | null; city?: string | null; district?: string | null; previous_work?: string | null; chronic_condition?: string | null; has_driving_license?: boolean | null; languages?: string | null;
+}
 type TenantInfo = { id: string; name: string; slug?: string; status?: string; packageType?: string; franchise?: { businessName?: string; contactName?: string; memberCount?: number; staffCount?: number; monthlyRevenue?: number } }
 
 const mockStudents = [
@@ -183,7 +186,7 @@ export default function FranchiseDashboard() {
               {activeTab === "overview" && <OverviewTab tenant={tenant} athletes={athletes} staff={staff} onRefresh={() => { fetchAthletes(); fetchStaff(); fetchTenant(); }} />}
               {activeTab === "students" && <StudentsTab athletes={athletes} onRefresh={fetchAthletes} hasTenant={!!tenant?.id} />}
               {activeTab === "trainers" && <TrainersTab staff={staff} onRefresh={fetchStaff} />}
-              {activeTab === "schedule" && <ScheduleTab />}
+              {activeTab === "schedule" && <ScheduleTab staff={staff} hasTenant={!!tenant?.id} />}
               {activeTab === "aidat" && <AidatTab athletes={athletes} hasTenant={!!tenant?.id} />}
               {activeTab === "yoklama" && <YoklamaTab athletes={athletes} hasTenant={!!tenant?.id} />}
               {activeTab === "health" && <HealthTab athletes={athletes} />}
@@ -191,7 +194,7 @@ export default function FranchiseDashboard() {
               {activeTab === "marketing" && <MarketingTab />}
               {activeTab === "personel" && <PersonelTab staff={staff} onRefresh={fetchStaff} hasTenant={!!tenant?.id} />}
               {activeTab === "reports" && <ReportsTab />}
-              {activeTab === "settings" && <SettingsTab tenant={tenant} />}
+              {activeTab === "settings" && <SettingsTab tenant={tenant} hasTenant={!!tenant?.id} />}
             </>
           )}
         </div>
@@ -538,34 +541,140 @@ function TrainersTab({ staff, onRefresh }: { staff: StaffMember[]; onRefresh: ()
   )
 }
 
-function ScheduleTab() {
-  const days = ["Pazartesi", "Sali", "Carsamba", "Persembe", "Cuma", "Cumartesi"]
-  const hours = ["09:00", "10:00", "11:00", "14:00", "15:00", "16:00", "17:00"]
+type ScheduleItem = { id: string; gun: string; saat: string; ders_adi: string; brans?: string | null }
+
+function ScheduleTab({ staff, hasTenant }: { staff: StaffMember[]; hasTenant: boolean }) {
+  const days = ["Pazartesi", "Sali", "Carsamba", "Persembe", "Cuma", "Cumartesi", "Pazar"]
+  const hours = ["08:00", "09:00", "10:00", "11:00", "12:00", "14:00", "15:00", "16:00", "17:00", "18:00"]
+  const [items, setItems] = useState<ScheduleItem[]>([])
+  const [showForm, setShowForm] = useState(false)
+  const [sending, setSending] = useState(false)
+  const [form, setForm] = useState({ gun: "Pazartesi", saat: "09:00", ders_adi: "", brans: "" })
+
+  const fetchSchedule = useCallback(async () => {
+    if (!hasTenant) return
+    const res = await fetch("/api/franchise/schedule")
+    const data = await res.json()
+    setItems(Array.isArray(data?.items) ? data.items : [])
+  }, [hasTenant])
+
+  useEffect(() => {
+    fetchSchedule()
+  }, [fetchSchedule])
+
+  const getSlot = (gun: string, saat: string) => items.find((i) => i.gun === gun && i.saat === saat)
+
+  const handleAdd = async (e: React.FormEvent) => {
+    e.preventDefault()
+    if (!form.ders_adi.trim() || sending || !hasTenant) return
+    setSending(true)
+    try {
+      const res = await fetch("/api/franchise/schedule", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ ...form, brans: form.brans || null }),
+      })
+      const data = await res.json()
+      if (data?.ok) {
+        setForm({ gun: "Pazartesi", saat: "09:00", ders_adi: "", brans: "" })
+        setShowForm(false)
+        fetchSchedule()
+      } else alert(data?.error ?? "Kayit basarisiz")
+    } catch {
+      alert("Istek gonderilemedi")
+    } finally {
+      setSending(false)
+    }
+  }
+
+  const handleDelete = async (id: string) => {
+    if (!confirm("Bu dersi silmek istiyor musunuz?")) return
+    const res = await fetch(`/api/franchise/schedule?id=${id}`, { method: "DELETE" })
+    const data = await res.json()
+    if (data?.ok) fetchSchedule()
+    else alert(data?.error ?? "Silinemedi")
+  }
+
   return (
     <div className="space-y-6">
       <div className="flex items-center justify-between">
         <div>
           <h2 className="text-2xl font-bold text-foreground">Ders Programi</h2>
-          <p className="text-muted-foreground">Haftalik ders plani</p>
+          <p className="text-muted-foreground">Haftalik ders plani — gun ve saate gore ders ekleyin</p>
         </div>
-        <Button><Plus className="mr-2 h-4 w-4" />Ders Ekle</Button>
+        {hasTenant && (
+          <Button onClick={() => setShowForm(!showForm)}>
+            <Plus className="mr-2 h-4 w-4" />Ders Ekle
+          </Button>
+        )}
       </div>
+      {showForm && hasTenant && (
+        <Card>
+          <CardHeader>
+            <CardTitle>Yeni Ders</CardTitle>
+          </CardHeader>
+          <CardContent>
+            <form onSubmit={handleAdd} className="grid gap-4 md:grid-cols-4">
+              <div className="space-y-2">
+                <Label>Gun</Label>
+                <select className="flex h-10 w-full rounded-md border border-input bg-background px-3 py-2 text-sm" value={form.gun} onChange={(e) => setForm({ ...form, gun: e.target.value })}>
+                  {days.map((d) => (
+                    <option key={d} value={d}>{d}</option>
+                  ))}
+                </select>
+              </div>
+              <div className="space-y-2">
+                <Label>Saat</Label>
+                <select className="flex h-10 w-full rounded-md border border-input bg-background px-3 py-2 text-sm" value={form.saat} onChange={(e) => setForm({ ...form, saat: e.target.value })}>
+                  {hours.map((h) => (
+                    <option key={h} value={h}>{h}</option>
+                  ))}
+                </select>
+              </div>
+              <div className="space-y-2">
+                <Label>Ders Adi</Label>
+                <Input value={form.ders_adi} onChange={(e) => setForm({ ...form, ders_adi: e.target.value })} placeholder="Orn. Baslangic Grubu" required />
+              </div>
+              <div className="space-y-2">
+                <Label>Brans</Label>
+                <Input value={form.brans} onChange={(e) => setForm({ ...form, brans: e.target.value })} placeholder="Orn. Artistik Cimnastik" />
+              </div>
+              <div className="md:col-span-4">
+                <Button type="submit" disabled={sending}>{sending ? "Kaydediliyor…" : "Ekle"}</Button>
+              </div>
+            </form>
+          </CardContent>
+        </Card>
+      )}
       <Card>
         <CardContent className="overflow-x-auto p-4">
           <div className="min-w-[800px]">
-            <div className="grid grid-cols-7 gap-2">
+            <div className="grid gap-2" style={{ gridTemplateColumns: `80px repeat(${days.length}, 1fr)` }}>
               <div className="p-2" />
               {days.map((day) => (
-                <div key={day} className="rounded-lg bg-muted p-2 text-center font-medium text-foreground">{day}</div>
+                <div key={day} className="rounded-lg bg-muted p-2 text-center font-medium text-foreground text-sm">{day}</div>
               ))}
               {hours.map((hour) => (
                 <React.Fragment key={hour}>
                   <div className="flex items-center justify-center p-2 text-sm text-muted-foreground">{hour}</div>
-                  {days.map((day) => (
-                    <div key={`${hour}-${day}`} className="rounded-lg border border-[hsl(var(--border))] p-2 text-center text-xs">
-                      Ders
-                    </div>
-                  ))}
+                  {days.map((day) => {
+                    const slot = getSlot(day, hour)
+                    return (
+                      <div key={`${hour}-${day}`} className="rounded-lg border border-[hsl(var(--border))] p-2 text-center text-xs min-h-[48px] flex flex-col items-center justify-center gap-1">
+                        {slot ? (
+                          <>
+                            <span className="font-medium truncate w-full">{slot.ders_adi}</span>
+                            {slot.brans && <span className="text-muted-foreground truncate w-full">{slot.brans}</span>}
+                            {hasTenant && (
+                              <button type="button" onClick={() => handleDelete(slot.id)} className="text-red-500 hover:underline text-[10px]">Sil</button>
+                            )}
+                          </>
+                        ) : (
+                          <span className="text-muted-foreground">—</span>
+                        )}
+                      </div>
+                    )
+                  })}
                 </React.Fragment>
               ))}
             </div>
@@ -929,13 +1038,14 @@ function COOTab({ products, hasTenant }: { products: typeof mockCOOProducts; has
   const [templates, setTemplates] = useState<{ id: string; template_id?: string; name: string; type: string; source?: string }[]>([])
   const [templateLoading, setTemplateLoading] = useState(false)
   const [usingId, setUsingId] = useState<string | null>(null)
+  const [buyingId, setBuyingId] = useState<string | number | null>(null)
 
   useEffect(() => {
     if (selectedCategory === "template" || selectedCategory === "all") {
       setTemplateLoading(true)
       fetch("/api/templates")
         .then((r) => r.json())
-        .then((d) => setTemplates(Array.isArray(d?.templates) ? d.templates : []))
+        .then((d) => setTemplates(Array.isArray(d?.coo_templates) ? d.coo_templates : (Array.isArray(d?.templates) ? d.templates : [])))
         .catch(() => setTemplates([]))
         .finally(() => setTemplateLoading(false))
     }
@@ -959,6 +1069,30 @@ function COOTab({ products, hasTenant }: { products: typeof mockCOOProducts; has
       alert("Istek gonderilemedi")
     } finally {
       setUsingId(null)
+    }
+  }
+
+  const handleBuyProduct = async (product: { id: number; name: string; price: number }) => {
+    if (!hasTenant || buyingId !== null) return
+    setBuyingId(product.id)
+    try {
+      const res = await fetch("/api/sales", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({
+          amount: product.price,
+          aciklama: product.name,
+          product_key: `product_${product.id}`,
+          para_birimi: "TRY",
+        }),
+      })
+      const data = await res.json()
+      if (data?.ok) alert("Satin alindi. Tutar CELF Kasaya kaydedildi.")
+      else alert(data?.error ?? "Kayit basarisiz")
+    } catch {
+      alert("Istek gonderilemedi")
+    } finally {
+      setBuyingId(null)
     }
   }
 
@@ -1027,8 +1161,14 @@ function COOTab({ products, hasTenant }: { products: typeof mockCOOProducts; has
                     <h3 className="font-semibold text-foreground">{product.name}</h3>
                     <p className="mt-1 text-sm text-muted-foreground">{product.description}</p>
                     <div className="mt-4 flex items-center justify-between">
-                      <p className="text-lg font-bold text-primary">{product.price} Token</p>
-                      <Button size="sm">Satin Al</Button>
+                      <p className="text-lg font-bold text-primary">{product.price} ₺</p>
+                      <Button
+                        size="sm"
+                        disabled={!hasTenant || buyingId === product.id}
+                        onClick={() => handleBuyProduct(product)}
+                      >
+                        {buyingId === product.id ? "Kaydediliyor…" : "Satin Al"}
+                      </Button>
                     </div>
                   </div>
                 </CardContent>
@@ -1080,9 +1220,18 @@ function ReportsTab() {
   )
 }
 
+type PersonelRole = "trainer" | "manager" | "admin" | "receptionist" | "cleaning" | "other"
+const personelFormDefaults: {
+  name: string; surname: string; email: string; phone: string; role: PersonelRole; branch: string;
+  birth_date: string; address: string; city: string; district: string; previous_work: string; chronic_condition: string; has_driving_license: boolean; languages: string;
+} = {
+  name: "", surname: "", email: "", phone: "", role: "trainer", branch: "",
+  birth_date: "", address: "", city: "", district: "", previous_work: "", chronic_condition: "", has_driving_license: false, languages: "",
+}
+
 function PersonelTab({ staff, onRefresh, hasTenant }: { staff: StaffMember[]; onRefresh: () => void; hasTenant: boolean }) {
   const [sending, setSending] = useState(false)
-  const [form, setForm] = useState({ name: "", surname: "", email: "", phone: "", role: "trainer", branch: "" })
+  const [form, setForm] = useState(personelFormDefaults)
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault()
@@ -1092,11 +1241,17 @@ function PersonelTab({ staff, onRefresh, hasTenant }: { staff: StaffMember[]; on
       const res = await fetch("/api/franchise/staff", {
         method: "POST",
         headers: { "Content-Type": "application/json" },
-        body: JSON.stringify(form),
+        body: JSON.stringify({
+          name: form.name, surname: form.surname || undefined, email: form.email || undefined, phone: form.phone || undefined,
+          role: form.role, branch: form.branch || undefined,
+          birth_date: form.birth_date || undefined, address: form.address || undefined, city: form.city || undefined, district: form.district || undefined,
+          previous_work: form.previous_work || undefined, chronic_condition: form.chronic_condition || undefined,
+          has_driving_license: form.has_driving_license, languages: form.languages || undefined,
+        }),
       })
       const data = await res.json()
       if (data?.ok) {
-        setForm({ name: "", surname: "", email: "", phone: "", role: "trainer", branch: "" })
+        setForm(personelFormDefaults)
         onRefresh()
       } else {
         alert(data?.error ?? "Kayit basarisiz")
@@ -1125,7 +1280,7 @@ function PersonelTab({ staff, onRefresh, hasTenant }: { staff: StaffMember[]; on
         <Card>
         <CardHeader>
           <CardTitle>Personel Ekle</CardTitle>
-          <CardDescription>Ad, soyad, e-posta, telefon, rol, brans</CardDescription>
+          <CardDescription>Ad, soyad, iletisim, rol, brans; dogum tarihi, adres, onceki is, saglik, araba, dil bilgileri</CardDescription>
         </CardHeader>
         <CardContent>
           <form onSubmit={handleSubmit} className="space-y-6">
@@ -1139,6 +1294,10 @@ function PersonelTab({ staff, onRefresh, hasTenant }: { staff: StaffMember[]; on
                 <Input value={form.surname} onChange={e => setForm({ ...form, surname: e.target.value })} placeholder="Soyad" />
               </div>
               <div className="space-y-2">
+                <Label>Dogum tarihi</Label>
+                <Input type="date" value={form.birth_date} onChange={e => setForm({ ...form, birth_date: e.target.value })} placeholder="YYYY-MM-DD" />
+              </div>
+              <div className="space-y-2">
                 <Label>E-posta</Label>
                 <Input type="email" value={form.email} onChange={e => setForm({ ...form, email: e.target.value })} placeholder="E-posta" />
               </div>
@@ -1148,17 +1307,46 @@ function PersonelTab({ staff, onRefresh, hasTenant }: { staff: StaffMember[]; on
               </div>
               <div className="space-y-2">
                 <Label>Rol</Label>
-                <select className="flex h-10 w-full rounded-md border border-input bg-background px-3 py-2 text-sm" value={form.role} onChange={e => setForm({ ...form, role: e.target.value })}>
+                <select className="flex h-10 w-full rounded-md border border-input bg-background px-3 py-2 text-sm" value={form.role} onChange={e => setForm({ ...form, role: e.target.value as PersonelRole })}>
                   <option value="trainer">Antrenor</option>
-                  <option value="manager">Mudur</option>
+                  <option value="manager">Tesis Muduru</option>
                   <option value="admin">Admin</option>
                   <option value="receptionist">Kayit</option>
+                  <option value="cleaning">Temizlik personeli</option>
                   <option value="other">Diger</option>
                 </select>
               </div>
               <div className="space-y-2">
                 <Label>Brans</Label>
                 <Input value={form.branch} onChange={e => setForm({ ...form, branch: e.target.value })} placeholder="Orn. Artistik Cimnastik" />
+              </div>
+              <div className="space-y-2 md:col-span-2">
+                <Label>Oturdugu yer / Adres</Label>
+                <Input value={form.address} onChange={e => setForm({ ...form, address: e.target.value })} placeholder="Adres" />
+              </div>
+              <div className="space-y-2">
+                <Label>Il</Label>
+                <Input value={form.city} onChange={e => setForm({ ...form, city: e.target.value })} placeholder="Il" />
+              </div>
+              <div className="space-y-2">
+                <Label>Ilce</Label>
+                <Input value={form.district} onChange={e => setForm({ ...form, district: e.target.value })} placeholder="Ilce" />
+              </div>
+              <div className="space-y-2 md:col-span-2">
+                <Label>Daha once calistigi yer</Label>
+                <Input value={form.previous_work} onChange={e => setForm({ ...form, previous_work: e.target.value })} placeholder="Is yeri / pozisyon" />
+              </div>
+              <div className="space-y-2 md:col-span-2">
+                <Label>Surekli rahatsizlik (varsa)</Label>
+                <Input value={form.chronic_condition} onChange={e => setForm({ ...form, chronic_condition: e.target.value })} placeholder="Bos birakilabilir" />
+              </div>
+              <div className="space-y-2 flex items-center gap-2">
+                <input type="checkbox" id="has_driving_license" checked={form.has_driving_license} onChange={e => setForm({ ...form, has_driving_license: e.target.checked })} className="rounded border-input" />
+                <Label htmlFor="has_driving_license">Araba kullanabiliyor</Label>
+              </div>
+              <div className="space-y-2 md:col-span-2">
+                <Label>Dil bilgileri</Label>
+                <Input value={form.languages} onChange={e => setForm({ ...form, languages: e.target.value })} placeholder="Orn. Turkce, Ingilizce" />
               </div>
             </div>
             <Button type="submit" disabled={sending}>{sending ? "Kaydediliyor…" : "Kaydet"}</Button>
@@ -1180,9 +1368,12 @@ function PersonelTab({ staff, onRefresh, hasTenant }: { staff: StaffMember[]; on
                   <div className="flex h-10 w-10 items-center justify-center rounded-full bg-primary/10 text-sm font-medium text-primary">
                     {(s.name[0] ?? "") + (s.surname?.[0] ?? "")}
                   </div>
-                  <div>
+                  <div className="min-w-0 flex-1">
                     <p className="font-medium">{s.name} {s.surname ?? ""}</p>
-                    <p className="text-sm text-muted-foreground">{s.role} — {s.branch ?? "—"}</p>
+                    <p className="text-sm text-muted-foreground">{s.role === "cleaning" ? "Temizlik" : s.role} — {s.branch ?? "—"}</p>
+                    {(s.city || s.languages) && (
+                      <p className="text-xs text-muted-foreground mt-0.5">{[s.city, s.district].filter(Boolean).join(", ")}{s.languages ? ` · ${s.languages}` : ""}</p>
+                    )}
                   </div>
                 </div>
               ))}
@@ -1194,12 +1385,69 @@ function PersonelTab({ staff, onRefresh, hasTenant }: { staff: StaffMember[]; on
   )
 }
 
-function SettingsTab({ tenant }: { tenant: TenantInfo | null }) {
+function SettingsTab({ tenant, hasTenant }: { tenant: TenantInfo | null; hasTenant: boolean }) {
+  const [saving, setSaving] = useState(false)
+  const [settings, setSettings] = useState({
+    antrenor_hedef: 0,
+    temizlik_hedef: 0,
+    mudur_hedef: 0,
+    aidat_25: 500,
+    aidat_45: 700,
+    aidat_60: 900,
+  })
+  const [loaded, setLoaded] = useState(false)
+
+  useEffect(() => {
+    if (!hasTenant) return
+    fetch("/api/franchise/settings")
+      .then((r) => r.json())
+      .then((d) => {
+        const t = d?.tenant
+        if (t) {
+          const tiers = t.aidat_tiers ?? {}
+          setSettings({
+            antrenor_hedef: t.antrenor_hedef ?? 0,
+            temizlik_hedef: t.temizlik_hedef ?? 0,
+            mudur_hedef: t.mudur_hedef ?? 0,
+            aidat_25: Number(tiers["25"]) || 500,
+            aidat_45: Number(tiers["45"]) || 700,
+            aidat_60: Number(tiers["60"]) || 900,
+          })
+        }
+        setLoaded(true)
+      })
+      .catch(() => setLoaded(true))
+  }, [hasTenant])
+
+  const handleSave = async () => {
+    if (!hasTenant || saving) return
+    setSaving(true)
+    try {
+      const res = await fetch("/api/franchise/settings", {
+        method: "PATCH",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({
+          antrenor_hedef: settings.antrenor_hedef,
+          temizlik_hedef: settings.temizlik_hedef,
+          mudur_hedef: settings.mudur_hedef,
+          aidat_tiers: { "25": settings.aidat_25, "45": settings.aidat_45, "60": settings.aidat_60 },
+        }),
+      })
+      const data = await res.json()
+      if (data?.ok) alert("Ayarlar kaydedildi.")
+      else alert(data?.error ?? "Kayit basarisiz")
+    } catch {
+      alert("Istek gonderilemedi")
+    } finally {
+      setSaving(false)
+    }
+  }
+
   return (
     <div className="space-y-6">
       <div>
         <h2 className="text-2xl font-bold text-foreground">Tesis Ayarlari</h2>
-        <p className="text-muted-foreground">Franchise ayarlarinizi yonetin</p>
+        <p className="text-muted-foreground">Personel hedefleri, aidat kademeleri</p>
       </div>
       <Card>
         <CardHeader>
@@ -1216,9 +1464,89 @@ function SettingsTab({ tenant }: { tenant: TenantInfo | null }) {
               <Input defaultValue={tenant?.packageType ?? "starter"} readOnly className="bg-muted" />
             </div>
           </div>
-          <p className="text-sm text-muted-foreground">Tesis bilgileri Patron onayi ile guncellenir.</p>
         </CardContent>
       </Card>
+      {hasTenant && (
+        <Card>
+          <CardHeader>
+            <CardTitle>Personel Hedefleri</CardTitle>
+            <CardDescription>Kac antrenor, temizlik, mudur planliyorsunuz?</CardDescription>
+          </CardHeader>
+          <CardContent className="space-y-4">
+            <div className="grid gap-4 md:grid-cols-3">
+              <div className="space-y-2">
+                <Label>Antrenor sayisi</Label>
+                <Input
+                  type="number"
+                  min={0}
+                  value={settings.antrenor_hedef}
+                  onChange={(e) => setSettings((s) => ({ ...s, antrenor_hedef: parseInt(e.target.value, 10) || 0 }))}
+                />
+              </div>
+              <div className="space-y-2">
+                <Label>Temizlik personeli</Label>
+                <Input
+                  type="number"
+                  min={0}
+                  value={settings.temizlik_hedef}
+                  onChange={(e) => setSettings((s) => ({ ...s, temizlik_hedef: parseInt(e.target.value, 10) || 0 }))}
+                />
+              </div>
+              <div className="space-y-2">
+                <Label>Mudur sayisi</Label>
+                <Input
+                  type="number"
+                  min={0}
+                  value={settings.mudur_hedef}
+                  onChange={(e) => setSettings((s) => ({ ...s, mudur_hedef: parseInt(e.target.value, 10) || 0 }))}
+                />
+              </div>
+            </div>
+          </CardContent>
+        </Card>
+      )}
+      {hasTenant && (
+        <Card>
+          <CardHeader>
+            <CardTitle>Aidat Kademeleri (saat / aylik TL)</CardTitle>
+            <CardDescription>25 saat, 45 saat, 60 saat kademelerinde aylik ucret</CardDescription>
+          </CardHeader>
+          <CardContent className="space-y-4">
+            <div className="grid gap-4 md:grid-cols-3">
+              <div className="space-y-2">
+                <Label>25 saat (TL/ay)</Label>
+                <Input
+                  type="number"
+                  min={0}
+                  value={settings.aidat_25}
+                  onChange={(e) => setSettings((s) => ({ ...s, aidat_25: parseInt(e.target.value, 10) || 0 }))}
+                />
+              </div>
+              <div className="space-y-2">
+                <Label>45 saat (TL/ay)</Label>
+                <Input
+                  type="number"
+                  min={0}
+                  value={settings.aidat_45}
+                  onChange={(e) => setSettings((s) => ({ ...s, aidat_45: parseInt(e.target.value, 10) || 0 }))}
+                />
+              </div>
+              <div className="space-y-2">
+                <Label>60 saat (TL/ay)</Label>
+                <Input
+                  type="number"
+                  min={0}
+                  value={settings.aidat_60}
+                  onChange={(e) => setSettings((s) => ({ ...s, aidat_60: parseInt(e.target.value, 10) || 0 }))}
+                />
+              </div>
+            </div>
+            <Button onClick={handleSave} disabled={saving || !loaded}>
+              {saving ? "Kaydediliyor…" : "Kaydet"}
+            </Button>
+          </CardContent>
+        </Card>
+      )}
     </div>
   )
 }

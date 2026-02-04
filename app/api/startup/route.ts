@@ -16,7 +16,7 @@ import { runCelfDirector } from '@/lib/ai/celf-execute'
 import { createCeoTask, insertCelfLog, createPatronCommand } from '@/lib/db/ceo-celf'
 import { saveCeoTemplate } from '@/lib/db/ceo-templates'
 import type { TemplateType } from '@/lib/db/ceo-templates'
-import { canTriggerFlow } from '@/lib/auth/roles'
+import { requirePatronOrFlow } from '@/lib/auth/api-auth'
 import type { DirectorKey } from '@/lib/robots/celf-center'
 
 export const dynamic = 'force-dynamic'
@@ -53,20 +53,14 @@ export async function GET(req: NextRequest) {
 
 export async function POST(req: NextRequest) {
   try {
+    const auth = await requirePatronOrFlow()
+    if (auth instanceof NextResponse) return auth
+    const userId = auth.user.id
+
     const body = await req.json()
     const action = body.action as 'run_task' | 'run_director' | 'run_all'
     const taskId = body.task_id as string | undefined
     const director = body.director as DirectorKey | undefined
-    const userId = body.user_id as string | undefined
-    const user = body.user ?? null
-
-    // Yetki kontrolü
-    if (!canTriggerFlow(user)) {
-      return NextResponse.json(
-        { error: 'Yetkisiz. Sadece Patron başlangıç görevlerini tetikleyebilir.' },
-        { status: 403 }
-      )
-    }
 
     // Tek görev çalıştır
     if (action === 'run_task' && taskId) {

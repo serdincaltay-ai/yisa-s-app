@@ -1,7 +1,7 @@
 'use client'
 
 import { useEffect, useState } from 'react'
-import { Check, X, Clock, AlertCircle, RefreshCw, Loader2, Trash2, Ban, GitBranch, FileText } from 'lucide-react'
+import { Check, X, Clock, AlertCircle, RefreshCw, Loader2, Trash2, Ban, GitBranch, FileText, Bot, Rocket } from 'lucide-react'
 
 type ApprovalItem = {
   id: string
@@ -45,8 +45,12 @@ export default function OnayKuyruguPage() {
   const [loading, setLoading] = useState(true)
   const [demoLoading, setDemoLoading] = useState(true)
   const [activeTab, setActiveTab] = useState<'commands' | 'demo'>('commands')
+  const [directorFilter, setDirectorFilter] = useState<string>('')
   const [error, setError] = useState<string | null>(null)
   const [actingId, setActingId] = useState<string | null>(null)
+  const [migrateLoading, setMigrateLoading] = useState(false)
+  const [orphanCount, setOrphanCount] = useState(0)
+  const [unprocessedCount, setUnprocessedCount] = useState(0)
 
   const fetchData = async () => {
     setLoading(true)
@@ -62,6 +66,8 @@ export default function OnayKuyruguPage() {
       }
       setItems(Array.isArray(data?.items) ? data.items : [])
       setTable(data?.table ?? null)
+      setOrphanCount(typeof data?.orphan_count === 'number' ? data.orphan_count : 0)
+      setUnprocessedCount(typeof data?.unprocessed_count === 'number' ? data.unprocessed_count : 0)
     } catch {
       setError('Veri yüklenemedi.')
       setItems([])
@@ -69,6 +75,47 @@ export default function OnayKuyruguPage() {
     } finally {
       setLoading(false)
     }
+  }
+
+  const handleMigrate = async () => {
+    if (!confirm('Veritabanı migration çalıştırılacak. Devam?')) return
+    setMigrateLoading(true)
+    try {
+      const res = await fetch('/api/db/migrate', { method: 'POST' })
+      const data = await res.json().catch(() => ({}))
+      if (res.ok && data.ok) {
+        alert('✅ ' + (data.message ?? 'Migration tamamlandı.'))
+      } else {
+        alert('❌ ' + (data.error ?? 'Migration başarısız.'))
+      }
+    } catch {
+      alert('❌ İstek gönderilemedi.')
+    } finally {
+      setMigrateLoading(false)
+    }
+  }
+
+  const handleApproveAllPending = async () => {
+    const toApprove = items.filter((i) => i.status === 'pending')
+    if (toApprove.length === 0) return
+    if (!confirm(`${toApprove.length} bekleyen işi tek tuşla onaylayıp push/deploy yapacaksınız. Devam?`)) return
+    setActingId('approve_all')
+    let done = 0
+    for (const item of toApprove) {
+      try {
+        const res = await fetch('/api/approvals', {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({ command_id: item.id, decision: 'approve' }),
+        })
+        const data = await res.json().catch(() => ({}))
+        if (res.ok && !data.error) done++
+      } catch { /* skip */ }
+    }
+    setActingId(null)
+    setError(null)
+    await fetchData()
+    alert(`Tebrikler! ✅ ${done} iş onaylandı. Push/deploy otomatik tetiklendi.`)
   }
 
   const handleDecision = async (commandId: string, decision: 'approve' | 'reject' | 'cancel' | 'push') => {
@@ -201,7 +248,28 @@ export default function OnayKuyruguPage() {
   const rejected = items.filter((i) => ['rejected', 'cancelled'].includes(i.status))
   const cancellable = items.filter((i) => ['pending', 'approved', 'modified'].includes(i.status))
 
-  const actionableStatuses = new Set(['pending', 'approved', 'modified'])
+  const directorKeys = [...new Set(items.map((i) => i.director_key).filter(Boolean))] as string[]
+  const filteredItems = directorFilter
+    ? items.filter((i) => (i.director_key ?? '') === directorFilter)
+    : items
+
+  const DIRECTOR_LABELS: Record<string, string> = {
+    CFO: 'Finans',
+    CTO: 'Teknoloji',
+    CIO: 'Bilgi',
+    CMO: 'Pazarlama',
+    CHRO: 'İK',
+    CLO: 'Hukuk',
+    CSO_SATIS: 'Satış',
+    CPO: 'Ürün',
+    CDO: 'Veri',
+    CISO: 'Güvenlik',
+    CCO: 'Müşteri',
+    CSO_STRATEJI: 'Strateji',
+    CSPO: 'Spor',
+    COO: 'Operasyon',
+    RND: 'AR-GE',
+  }
 
   return (
     <div className="p-8">
@@ -213,7 +281,19 @@ export default function OnayKuyruguPage() {
             {table && <span className="ml-2 text-xs text-slate-500">(Kaynak: {table})</span>}
           </p>
         </div>
-        <div className="flex items-center gap-2">
+        <div className="flex items-center gap-2 flex-wrap">
+          {pending.length > 0 && (
+            <button
+              type="button"
+              onClick={handleApproveAllPending}
+              disabled={loading || actingId !== null}
+              className="flex items-center gap-2 px-4 py-2 rounded-xl bg-emerald-500/20 text-emerald-400 hover:bg-emerald-500/30 border border-emerald-500/40 text-sm font-medium transition-colors disabled:opacity-50"
+              title="Tüm bekleyen işleri onayla — Push + Deploy otomatik"
+            >
+              {actingId === 'approve_all' ? <Loader2 size={16} className="animate-spin" /> : <Rocket size={16} />}
+              Tümünü Onayla ({pending.length})
+            </button>
+          )}
           {cancellable.length > 0 && (
             <button
               type="button"
@@ -226,6 +306,16 @@ export default function OnayKuyruguPage() {
               Tümünü İptal Et ({cancellable.length})
             </button>
           )}
+          <button
+            type="button"
+            onClick={handleMigrate}
+            disabled={migrateLoading}
+            className="flex items-center gap-2 px-4 py-2 rounded-xl bg-purple-500/20 text-purple-400 hover:bg-purple-500/30 border border-purple-500/40 text-sm transition-colors disabled:opacity-50"
+            title="Veritabanı migration — athlete_health_records vb."
+          >
+            {migrateLoading ? <Loader2 size={16} className="animate-spin" /> : <FileText size={16} />}
+            Migrate
+          </button>
           <button
             type="button"
             onClick={() => { fetchData(); fetchDemoRequests(); }}
@@ -258,6 +348,16 @@ export default function OnayKuyruguPage() {
           Demo Talepleri ({newDemoRequests.length} yeni)
         </button>
       </div>
+
+      {orphanCount > 0 && (
+        <div className="mb-6 p-4 bg-amber-500/10 border border-amber-500/30 rounded-xl text-amber-400 text-sm flex items-center gap-2">
+          <AlertCircle size={20} />
+          <span>
+            <strong>{orphanCount}</strong> komut 24 saatten uzun süredir açıkta (onay/red bekliyor). 
+            {unprocessedCount > 0 && ` Toplam işlenmemiş: ${unprocessedCount}.`} Lütfen onaylayın veya iptal edin.
+          </span>
+        </div>
+      )}
 
       {error && (
         <div className="mb-6 p-4 bg-red-500/10 border border-red-500/30 rounded-xl text-red-400 text-sm">
@@ -380,6 +480,22 @@ export default function OnayKuyruguPage() {
         </div>
       ) : (
         <>
+          <div className="flex flex-wrap items-center gap-4 mb-6">
+            <div className="flex items-center gap-2">
+              <Bot size={18} className="text-slate-400" />
+              <span className="text-slate-400 text-sm">Direktör:</span>
+              <select
+                value={directorFilter}
+                onChange={(e) => setDirectorFilter(e.target.value)}
+                className="bg-slate-800 border border-slate-700 rounded-lg px-3 py-2 text-sm text-white"
+              >
+                <option value="">Tümü</option>
+                {directorKeys.sort().map((k) => (
+                  <option key={k} value={k}>{k} — {DIRECTOR_LABELS[k] ?? k}</option>
+                ))}
+              </select>
+            </div>
+          </div>
           <div className="grid grid-cols-3 gap-4 mb-6">
             <div className="bg-amber-500/10 border border-amber-500/30 rounded-xl p-4">
               <p className="text-amber-400 text-sm">Bekleyen</p>
@@ -410,15 +526,17 @@ export default function OnayKuyruguPage() {
                   </tr>
                 </thead>
                 <tbody>
-                  {items.map((item) => (
+                  {filteredItems.map((item) => (
                     <tr key={item.id} className="border-b border-slate-700/50 hover:bg-slate-700/30">
                       <td className="px-6 py-4 text-slate-300 text-sm" title={item.sent_by_email ?? 'Patron'}>
                         {item.sent_by_email ? (item.sent_by_email.length > 18 ? item.sent_by_email.slice(0, 18) + '…' : item.sent_by_email) : 'Patron'}
                       </td>
                       <td className="px-6 py-4">
                         <span className="text-white">{item.type}</span>
-                        {item.director_name && (
-                          <span className="block text-xs text-slate-500">{item.director_name}</span>
+                        {(item.director_key || item.director_name) && (
+                          <span className="block text-xs text-cyan-400 font-medium">
+                            {item.director_key} {DIRECTOR_LABELS[item.director_key ?? ''] ? `— ${DIRECTOR_LABELS[item.director_key ?? '']}` : ''}
+                          </span>
                         )}
                       </td>
                       <td className="px-6 py-4">
@@ -484,9 +602,10 @@ export default function OnayKuyruguPage() {
                               onClick={() => handleDecision(item.id, 'approve')}
                               disabled={actingId !== null}
                               className="flex items-center gap-1 px-3 py-1.5 rounded-lg bg-emerald-500/20 text-emerald-400 hover:bg-emerald-500/30 text-sm font-medium transition-colors disabled:opacity-50"
+                              title={item.has_github_commit ? 'Onayla → Push + Deploy otomatik' : 'Onayla'}
                             >
                               {actingId === item.id + '_approve' ? <Loader2 size={14} className="animate-spin" /> : <Check size={14} />}
-                              Onayla
+                              {item.has_github_commit ? 'Onayla (Push+Deploy)' : 'Onayla'}
                             </button>
                             <button
                               type="button"
@@ -541,9 +660,10 @@ export default function OnayKuyruguPage() {
                               onClick={() => handleDecision(item.id, 'approve')}
                               disabled={actingId !== null}
                               className="flex items-center gap-1 px-3 py-1.5 rounded-lg bg-emerald-500/20 text-emerald-400 hover:bg-emerald-500/30 text-sm font-medium transition-colors disabled:opacity-50"
+                              title={item.has_github_commit ? 'Onayla → Push + Deploy otomatik' : 'Onayla'}
                             >
                               {actingId === item.id + '_approve' ? <Loader2 size={14} className="animate-spin" /> : <Check size={14} />}
-                              Onayla
+                              {item.has_github_commit ? 'Onayla (Push+Deploy)' : 'Onayla'}
                             </button>
                             <button
                               type="button"

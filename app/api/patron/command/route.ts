@@ -1,12 +1,16 @@
 // YİSA-S Patron Robot - API Route
-// POST /api/patron/command
+// POST /api/patron/command — Sadece Patron / yetkili roller
 
 import { NextRequest, NextResponse } from "next/server"
 import { runPatronCommand } from "@/lib/patron-robot/orchestrator"
 import type { Mode, Stage } from "@/lib/patron-robot/types"
+import { requirePatronOrFlow } from "@/lib/auth/api-auth"
 
 export async function POST(req: NextRequest) {
   try {
+    const auth = await requirePatronOrFlow()
+    if (auth instanceof NextResponse) return auth
+
     const body = await req.json()
     const text = typeof body.text === "string" ? body.text.trim() : ""
     const tenantId =

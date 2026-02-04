@@ -43,7 +43,7 @@ export async function GET() {
     const service = createServiceClient(url, key)
     const { data, error } = await service
       .from('staff')
-      .select('id, name, surname, email, phone, role, branch, is_active, created_at')
+      .select('id, name, surname, email, phone, role, branch, is_active, created_at, birth_date, address, city, district, previous_work, chronic_condition, has_driving_license, languages')
       .eq('tenant_id', tenantId)
       .order('created_at', { ascending: false })
 
@@ -69,10 +69,18 @@ export async function POST(req: NextRequest) {
     const surname = typeof body.surname === 'string' ? body.surname.trim() : null
     const email = typeof body.email === 'string' ? body.email.trim() : null
     const phone = typeof body.phone === 'string' ? body.phone.trim() : null
-    const role = typeof body.role === 'string' && ['admin', 'manager', 'trainer', 'receptionist', 'other'].includes(body.role)
+    const role = typeof body.role === 'string' && ['admin', 'manager', 'trainer', 'receptionist', 'other', 'cleaning'].includes(body.role)
       ? body.role
       : 'trainer'
     const branch = typeof body.branch === 'string' ? body.branch.trim() : null
+    const birth_date = body.birth_date && /^\d{4}-\d{2}-\d{2}$/.test(String(body.birth_date)) ? body.birth_date : null
+    const address = typeof body.address === 'string' ? body.address.trim() : null
+    const city = typeof body.city === 'string' ? body.city.trim() : null
+    const district = typeof body.district === 'string' ? body.district.trim() : null
+    const previous_work = typeof body.previous_work === 'string' ? body.previous_work.trim() : null
+    const chronic_condition = typeof body.chronic_condition === 'string' ? body.chronic_condition.trim() : null
+    const has_driving_license = typeof body.has_driving_license === 'boolean' ? body.has_driving_license : (body.has_driving_license === true || body.has_driving_license === 'true' || body.has_driving_license === '1')
+    const languages = typeof body.languages === 'string' ? body.languages.trim() : null
 
     if (!name) return NextResponse.json({ error: 'Ad zorunludur' }, { status: 400 })
 
@@ -92,6 +100,14 @@ export async function POST(req: NextRequest) {
         role,
         branch: branch || null,
         is_active: true,
+        birth_date: birth_date || null,
+        address: address || null,
+        city: city || null,
+        district: district || null,
+        previous_work: previous_work || null,
+        chronic_condition: chronic_condition || null,
+        has_driving_license: has_driving_license ?? null,
+        languages: languages || null,
       })
       .select('id, name, surname, role, created_at')
       .single()

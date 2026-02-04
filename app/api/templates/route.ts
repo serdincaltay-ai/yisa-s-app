@@ -80,6 +80,8 @@ export async function GET(req: NextRequest) {
     let sablonlar: SablonItem[] = []
     let templates: TemplateItem[] = []
     let suggestions: RDSuggestion[] = []
+    let ceoRows: Record<string, unknown>[] = []
+    let cooTemplates: TemplateItem[] = []
 
     if (supabase) {
       // ceo_templates: 66 şablon (ad, kategori, icerik) — öncelikli
@@ -99,6 +101,7 @@ export async function GET(req: NextRequest) {
                 (r.director_key as string) === kategoriParam
             )
           }
+          ceoRows = rows
           sablonlar = rows.map((row) => mapCeoRowToSablon(row))
         }
       } catch (_) {
@@ -140,6 +143,29 @@ export async function GET(req: NextRequest) {
         }))
       }
 
+      // COO Mağazası: ceo_templates (onaylı/durum=aktif) + templates birleşik liste
+      cooTemplates = []
+      for (const s of sablonlar) {
+        const row = ceoRows.find((r: Record<string, unknown>) => String(r.id) === s.id)
+        const isApproved = row ? (row.is_approved === true) : false
+        const durumAktif = (s.durum ?? 'aktif') === 'aktif'
+        if (ceoRows.length > 0 ? (isApproved || durumAktif) : true) {
+          cooTemplates.push({
+            id: s.id,
+            template_id: s.id,
+            name: s.ad,
+            type: s.kategori,
+            source: ceoRows.length > 0 ? 'ceo' : 'db',
+            created_at: s.created_at ?? '',
+          })
+        }
+      }
+      for (const t of templates) {
+        if (!cooTemplates.some((c) => c.id === t.id)) {
+          cooTemplates.push({ ...t, source: (t.source ?? 'db') as 'ceo' | 'db' })
+        }
+      }
+
       const suggestionTables = ['rd_suggestions', 'ceo_updates', 'ar_ge', 'suggestions']
       for (const table of suggestionTables) {
         const { data, error } = await supabase
@@ -166,6 +192,7 @@ export async function GET(req: NextRequest) {
       sablonlar,
       toplam: sablonlar.length,
       templates,
+      coo_templates: cooTemplates,
       suggestions,
     })
   } catch {
@@ -173,6 +200,7 @@ export async function GET(req: NextRequest) {
       sablonlar: [],
       toplam: 0,
       templates: [],
+      coo_templates: [],
       suggestions: [],
     })
   }

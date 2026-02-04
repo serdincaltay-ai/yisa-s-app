@@ -5,6 +5,7 @@ import { supabase } from '@/lib/supabase'
 import { startTaskFlow, FLOW_DESCRIPTION } from '@/lib/assistant/task-flow'
 import { QUALITY_FLOW } from '@/lib/ai-router'
 import { checkPatronLock } from '@/lib/security/patron-lock'
+import { isPatron } from '@/lib/auth/roles'
 import { PatronApprovalUI } from '@/app/components/PatronApproval'
 import {
   Send,
@@ -27,6 +28,8 @@ import {
   RefreshCw,
   Ban,
   Loader2,
+  Copy,
+  Terminal,
 } from 'lucide-react'
 import Image from 'next/image'
 import { Button } from '@/components/ui/button'
@@ -127,8 +130,33 @@ export default function DashboardPage() {
   const [approvalLoading, setApprovalLoading] = useState(false)
   const [approvalActingId, setApprovalActingId] = useState<string | null>(null)
   const [queueExpanded, setQueueExpanded] = useState(true)
+  const [suggestedCommand, setSuggestedCommand] = useState<string | null>(null)
+  const [commandCopied, setCommandCopied] = useState(false)
   const chatEndRef = useRef<HTMLDivElement>(null)
   const canvasRef = useRef<HTMLCanvasElement>(null)
+
+  function extractCommandFromText(text: string): string | null {
+    if (!text || typeof text !== 'string') return null
+    const codeBlock = text.match(/```(?:bash|sh|powershell|ps1|cmd)?\s*\n?([\s\S]*?)```/)
+    if (codeBlock?.[1]) return codeBlock[1].trim()
+    const cdMatch = text.match(/(?:cd\s+[^\n]+|npm\s+run\s+[^\n]+)/)
+    if (cdMatch) return cdMatch[0].trim()
+    const patronMatch = text.match(/Patron\s+şunu\s+çalıştır[:\s]+([^\n]+)/i)
+    if (patronMatch) return patronMatch[1].trim()
+    return null
+  }
+
+  function setCommandFromMessage(text: string) {
+    const cmd = extractCommandFromText(text)
+    if (cmd) setSuggestedCommand(cmd)
+  }
+
+  async function copySuggestedCommand() {
+    if (!suggestedCommand) return
+    await navigator.clipboard.writeText(suggestedCommand)
+    setCommandCopied(true)
+    setTimeout(() => setCommandCopied(false), 2000)
+  }
 
   useEffect(() => {
     supabase.auth.getUser().then(({ data: { user: u } }) =>
@@ -704,6 +732,11 @@ export default function DashboardPage() {
     chatEndRef.current?.scrollIntoView({ behavior: 'smooth' })
   }, [chatMessages])
 
+  useEffect(() => {
+    const lastAssistant = [...chatMessages].reverse().find((m) => m.role === 'assistant')
+    if (lastAssistant?.text) setCommandFromMessage(lastAssistant.text)
+  }, [chatMessages])
+
   // Particle background
   useEffect(() => {
     const canvas = canvasRef.current
@@ -799,6 +832,18 @@ export default function DashboardPage() {
             </Avatar>
           </div>
         </header>
+
+        {/* Tebrikler / Hoş geldin — Patron girişinde gösterilir */}
+        {user && isPatron(user) && (
+          <div className="mb-4 rounded-xl border border-emerald-500/30 bg-emerald-500/10 px-4 py-3 backdrop-blur-sm">
+            <p className="text-emerald-400 font-semibold">
+              Tebrikler, Serdinç Bey! Hoş geldiniz — sistem hazır.
+            </p>
+            <p className="text-slate-400 text-sm mt-0.5">
+              Patron Komuta Merkezi aktif. Komut gönderebilir, onay kuyruğunu yönetebilirsiniz.
+            </p>
+          </div>
+        )}
 
         {/* Genişletilebilir İstatistikler - Futuristik Kartlar */}
         <Card className="bg-slate-900/50 border-slate-700/50 backdrop-blur-sm overflow-hidden">
@@ -1347,6 +1392,36 @@ export default function DashboardPage() {
               )}
               <div ref={chatEndRef} />
             </div>
+            {suggestedCommand && (
+              <div className="mx-4 mb-2 p-4 rounded-xl bg-amber-500/10 border border-amber-500/30 relative">
+                <button
+                  type="button"
+                  onClick={() => setSuggestedCommand(null)}
+                  className="absolute top-2 right-2 p-1 rounded text-slate-400 hover:text-white hover:bg-slate-700"
+                  aria-label="Kapat"
+                >
+                  <X size={16} />
+                </button>
+                <div className="flex items-center gap-2 mb-2">
+                  <Terminal size={18} className="text-amber-400" />
+                  <span className="text-sm font-medium text-amber-400">Patron — PowerShell&apos;te çalıştırın</span>
+                </div>
+                <pre className="bg-slate-950 rounded-lg p-3 text-xs text-slate-200 font-mono overflow-x-auto whitespace-pre-wrap">{suggestedCommand}</pre>
+                <div className="flex justify-between items-center mt-2">
+                  <span className="text-xs text-amber-400/80">Asistan önerisi — kopyalayıp terminalde yapıştırın</span>
+                  <Button
+                    type="button"
+                    variant="outline"
+                    size="sm"
+                    onClick={copySuggestedCommand}
+                    className="border-amber-500/50 text-amber-400 hover:bg-amber-500/20"
+                  >
+                    <Copy size={14} className="mr-1" />
+                    {commandCopied ? 'Kopyalandı!' : 'Kopyala'}
+                  </Button>
+                </div>
+              </div>
+            )}
             {lockError && (
               <div className="mx-4 mb-2 px-4 py-3 bg-red-500/10 border border-red-500/30 rounded-xl text-red-400 text-sm flex justify-between">
                 <span>{lockError}</span>

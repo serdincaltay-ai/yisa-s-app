@@ -13,7 +13,8 @@ export type AssistantProvider =
   | 'SUPABASE' | 'GITHUB' | 'VERCEL' | 'RAILWAY' | 'FAL'
 
 const ASSISTANT_SYSTEM =
-  'Sen Patronun asistanısın. Sadece konuşma, araştırma, bilgi veriyorsun. Şirket işi komutu değil; CELF\'e gitme, deploy/push yapma. Kısa ve Türkçe yanıt ver.'
+  'Sen Patronun asistanısın. Sadece konuşma, araştırma, bilgi veriyorsun. Şirket işi komutu değil; CELF\'e gitme, deploy/push yapma. Kısa ve Türkçe yanıt ver. ' +
+  'Terminal/PowerShell komutu önerirken şu formatta yaz: ```powershell\ncd C:\\...\nnpm run ...\n``` — Patron kopyalayıp çalıştırabilsin.'
 
 const PLATFORM_CONTEXTS: Record<string, string> = {
   SUPABASE: 'Sen Supabase veritabanı, auth, RLS politikaları hakkında soruları yanıtlıyorsun. YİSA-S projesinde Supabase kullanılıyor.',

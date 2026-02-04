@@ -11,9 +11,10 @@
 # FRANCHİSE YÖNETİM PLATFORMU
 #
 # İnceleme raporuna göre güncellenmiş taslak (Cursor, 29 Ocak 2026)
+# Güncelleme: 4 Şubat 2026 — Teslim, deploy, COO depolar, personel alanları
 # Kurucu & Tek Yetkili: Serdinç ALTAY
-# Tarih: 29 Ocak 2026
-# Durum: TASLAK — Patron onayı bekleniyor
+# Tarih: 29 Ocak 2026 | Son güncelleme: 4 Şubat 2026
+# Durum: TESLİM NET — Deploy: GitHub push → Vercel otomatik
 # ═══════════════════════════════════════════════════════════════════════════════════════
 
 ---
@@ -316,6 +317,18 @@ Onay kuyruğu, kasa defteri, franchise listesi, şablon ve Ar-Ge için kullanıl
 | 10.3 | "İşletme" → "Franchise işletmesi" |
 | EK-A | "10 Perspektif" → "EK-A.1 Perspektif Değerlendirme (10 Madde)" |
 | EK-C | Patron/Operasyon tabloları listesi eklendi |
+
+---
+
+## 4 ŞUBAT 2026 GÜNCELLEMELERİ (Teslim)
+
+| Alan | Güncelleme |
+|------|------------|
+| **Deploy** | GitHub push → Vercel otomatik deploy. `git push origin main` ile tetiklenir. |
+| **COO Depolar** | `coo_depo_drafts`, `coo_depo_approved`, `coo_depo_published` tabloları eklendi. Akış: CELF üretir → drafts; Patron onaylar → approved; Yayınlanır → published (Vitrin/COO Mağazası). |
+| **Personel (IK)** | Staff tablosu: doğum tarihi, adres, il/ilçe, önceki iş, sürekli rahatsızlık, araba kullanabiliyor mu, dil bilgileri; Temizlik personeli rolü. |
+| **Tebrikler** | Patron girişinde dashboard'da "Tebrikler, Serdinç Bey! Hoş geldiniz"; Onay Kuyruğu'nda demo/iş onayında "Tebrikler!" mesajı. |
+| **Vercel** | vercel.json: framework nextjs, buildCommand, installCommand. Push = deploy. |
 
 ---
 

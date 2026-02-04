@@ -1,5 +1,6 @@
 import { NextResponse } from 'next/server'
 import { createClient } from '@supabase/supabase-js'
+import { requireDashboard } from '@/lib/auth/api-auth'
 
 export const dynamic = 'force-dynamic'
 
@@ -21,6 +22,16 @@ export interface ExpenseItem {
   created_at: string
 }
 
+export interface KasaGelirItem {
+  id: string
+  aciklama: string
+  tutar: number
+  hareket_tipi: string
+  created_at: string
+  odeme_onaylandi?: boolean
+  tenant_id?: string
+}
+
 export interface PaymentScheduleItem {
   id: string
   franchise_name: string
@@ -31,12 +42,39 @@ export interface PaymentScheduleItem {
 
 export async function GET() {
   try {
+    const auth = await requireDashboard()
+    if (auth instanceof NextResponse) return auth
+
     const supabase = getSupabase()
     const expenseTables = ['expenses', 'kasa_defteri', 'outgoing_payments', 'payments']
     let expenses: ExpenseItem[] = []
     let schedule: PaymentScheduleItem[] = []
+    let gelirler: KasaGelirItem[] = []
 
     if (supabase) {
+      // CELF Kasa gelirleri (satış)
+      try {
+        const { data: kasaData } = await supabase
+          .from('celf_kasa')
+          .select('*')
+          .eq('hareket_tipi', 'gelir')
+          .order('created_at', { ascending: false })
+          .limit(100)
+        if (Array.isArray(kasaData) && kasaData.length > 0) {
+          gelirler = kasaData.map((row: Record<string, unknown>) => ({
+            id: String(row.id ?? ''),
+            aciklama: String(row.aciklama ?? '—'),
+            tutar: Number(row.tutar ?? 0),
+            hareket_tipi: 'gelir',
+            created_at: String(row.created_at ?? ''),
+            odeme_onaylandi: row.odeme_onaylandi === true,
+            tenant_id: row.tenant_id != null ? String(row.tenant_id) : undefined,
+          }))
+        }
+      } catch (_) {
+        // celf_kasa yoksa devam
+      }
+
       for (const table of expenseTables) {
         const { data, error } = await supabase
           .from(table)
@@ -79,8 +117,8 @@ export async function GET() {
       }
     }
 
-    return NextResponse.json({ expenses, schedule })
+    return NextResponse.json({ expenses, schedule, gelirler })
   } catch {
-    return NextResponse.json({ expenses: [], schedule: [] })
+    return NextResponse.json({ expenses: [], schedule: [], gelirler: [] })
   }
 }

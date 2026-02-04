@@ -50,7 +50,7 @@ function PatronLoginContent() {
       setIsLoading(false)
       return
     }
-    router.push("/dashboard")
+    router.push("/dashboard?welcome=1")
     setIsLoading(false)
   }
 
