@@ -1,0 +1,9 @@
+# Railway/Nixpacks: npm kullan, pnpm kullanma
+[phases.setup]
+nixPkgs = ["nodejs_20", "npm"]
+
+[phases.install]
+cmds = ["npm ci"]
+
+[variables]
+NIXPACKS_NODE_VERSION = "20"
