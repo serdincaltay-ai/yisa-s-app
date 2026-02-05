@@ -880,18 +880,6 @@ export default function DashboardPage() {
             </CardContent>
           </Card>
         </div>
-
-        {/* Sistem Durumu */}
-        <Card className="bg-gray-900 border-gray-800">
-          <CardHeader className="py-4">
-            <CardTitle className="text-base !mb-0 text-white">Sistem Durumu</CardTitle>
-          </CardHeader>
-          <CardContent className="pt-0">
-            <a href="/api/system/status" target="_blank" rel="noopener noreferrer" className="text-sm text-pink-300 hover:underline font-mono">
-              /api/system/status
-            </a>
-          </CardContent>
-        </Card>
       </div>
 
       {/* Chat + Onay Kuyruğu */}
