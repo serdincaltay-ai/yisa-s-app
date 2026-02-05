@@ -49,7 +49,7 @@ export default function DashboardLayout({
     <AccentProvider>
       <div className="min-h-screen bg-[#0a0e17] text-white flex">
         <DashboardSidebar />
-        <main className="flex-1 overflow-auto pt-14 pl-14 lg:pt-0 lg:pl-0">{children}</main>
+        <main className="flex-1 overflow-auto pt-14 pl-14 lg:pt-0 lg:pl-0 bg-[#0a0e17] min-h-screen">{children}</main>
       </div>
     </AccentProvider>
   )

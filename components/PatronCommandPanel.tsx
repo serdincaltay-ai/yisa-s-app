@@ -30,6 +30,58 @@ export default function PatronCommandPanel() {
   const [results, setResults] = useState<CommandResult[]>([])
   const [loading, setLoading] = useState(false)
 
+  const handleCelfSubmit = async () => {
+    if (!command.trim()) return
+    setLoading(true)
+    try {
+      const res = await fetch("/api/celf", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ command: command.trim(), run: true }),
+      })
+      const data = await res.json()
+      if (data.ok) {
+        setResults((prev) => [
+          {
+            status: "RELEASE_READY",
+            build: {
+              agent: "celf",
+              output: {
+                message: `CFO: ${data.director_key} | ${(data.text ?? "").slice(0, 150)}...`,
+              },
+            },
+          } as CommandResult,
+          ...prev,
+        ])
+      } else {
+        setResults((prev) => [
+          {
+            status: "ERROR",
+            build: {
+              agent: "celf",
+              output: { message: data.error ?? "CELF hatası" },
+            },
+          } as CommandResult,
+          ...prev,
+        ])
+      }
+    } catch (e) {
+      setResults((prev) => [
+        {
+          status: "ERROR",
+          build: {
+            agent: "celf",
+            output: { message: e instanceof Error ? e.message : "Bağlantı hatası" },
+          },
+        } as CommandResult,
+        ...prev,
+      ])
+    } finally {
+      setCommand("")
+      setLoading(false)
+    }
+  }
+
   const handleSubmit = async () => {
     if (!command.trim()) return
     setLoading(true)
@@ -86,45 +138,45 @@ export default function PatronCommandPanel() {
   }
 
   return (
-    <div className="rounded-2xl bg-zinc-900/80 p-5 border border-zinc-800">
+    <div className="rounded-2xl bg-[#111827] p-5 border border-[#1e293b]">
       <div className="mb-4">
-        <h2 className="text-lg font-semibold text-white mb-1">
+        <h2 className="text-lg font-semibold text-[#f8fafc] mb-1">
           Patron Komut Merkezi
         </h2>
-        <p className="text-sm text-zinc-400">
+        <p className="text-sm text-[#94a3b8]">
           Komut yazın, PLAN → BUILD → CHECK → PREFLIGHT → RELEASE akışı çalışır
         </p>
       </div>
 
       <div className="grid grid-cols-2 md:grid-cols-4 gap-4 mb-4">
         <div>
-          <label className="block text-xs text-zinc-500 mb-1">Tenant</label>
+          <label className="block text-xs text-[#94a3b8] mb-1">Tenant</label>
           <input
             type="text"
             value={tenant}
             onChange={(e) => setTenant(e.target.value)}
-            className="w-full bg-zinc-800 rounded-lg px-3 py-2 text-sm text-white border border-zinc-700 focus:border-emerald-500 outline-none"
+            className="w-full bg-[#0a0e17] rounded-lg px-3 py-2 text-sm text-[#f8fafc] border border-[#1e293b] focus:border-[#10b981] outline-none"
           />
         </div>
         <div>
-          <label className="block text-xs text-zinc-500 mb-1">Mod</label>
+          <label className="block text-xs text-[#94a3b8] mb-1">Mod</label>
           <select
             value={mode}
             onChange={(e) => setMode(e.target.value as "DEMO" | "LIVE")}
-            className="w-full bg-zinc-800 rounded-lg px-3 py-2 text-sm text-white border border-zinc-700 focus:border-emerald-500 outline-none"
+            className="w-full bg-[#0a0e17] rounded-lg px-3 py-2 text-sm text-[#f8fafc] border border-[#1e293b] focus:border-[#10b981] outline-none"
           >
             <option value="DEMO">DEMO</option>
             <option value="LIVE">LIVE</option>
           </select>
         </div>
         <div>
-          <label className="block text-xs text-zinc-500 mb-1">Stage</label>
+          <label className="block text-xs text-[#94a3b8] mb-1">Stage</label>
           <select
             value={stage}
             onChange={(e) =>
               setStage(e.target.value as "STAGING" | "CANARY" | "PROD")
             }
-            className="w-full bg-zinc-800 rounded-lg px-3 py-2 text-sm text-white border border-zinc-700 focus:border-emerald-500 outline-none"
+            className="w-full bg-[#0a0e17] rounded-lg px-3 py-2 text-sm text-[#f8fafc] border border-[#1e293b] focus:border-[#10b981] outline-none"
           >
             <option value="STAGING">STAGING</option>
             <option value="CANARY">CANARY</option>
@@ -132,14 +184,14 @@ export default function PatronCommandPanel() {
           </select>
         </div>
         <div>
-          <label className="block text-xs text-zinc-500 mb-1">Dry-Run</label>
+          <label className="block text-xs text-[#94a3b8] mb-1">Dry-Run</label>
           <button
             type="button"
             onClick={() => setDryRun(!dryRun)}
             className={`w-full rounded-lg px-3 py-2 text-sm font-medium transition ${
               dryRun
-                ? "bg-amber-600/80 hover:bg-amber-600 text-white"
-                : "bg-emerald-600/80 hover:bg-emerald-600 text-white"
+                ? "bg-[#f97316]/80 hover:bg-[#f97316] text-white"
+                : "bg-[#10b981]/80 hover:bg-[#10b981] text-white"
             }`}
           >
             {dryRun ? "AÇIK" : "KAPALI"}
@@ -153,16 +205,26 @@ export default function PatronCommandPanel() {
           value={command}
           onChange={(e) => setCommand(e.target.value)}
           onKeyDown={(e) => e.key === "Enter" && handleSubmit()}
-          placeholder="Patron komutu yazın... (örn: Konsolide rapor üret)"
-          className="flex-1 bg-zinc-800 rounded-lg px-4 py-3 text-white placeholder-zinc-500 border border-zinc-700 focus:border-emerald-500 outline-none"
+          placeholder="Patron komutu yazın... (örn: butce raporu hazirla)"
+          className="flex-1 bg-[#0a0e17] rounded-lg px-4 py-3 text-[#f8fafc] placeholder-[#94a3b8] border border-[#1e293b] focus:border-[#10b981] outline-none"
         />
+        <button
+          type="button"
+          onClick={handleCelfSubmit}
+          disabled={loading}
+          className="bg-[#10b981] hover:bg-[#059669] disabled:opacity-50 rounded-lg px-4 py-3 font-medium text-white transition"
+          title="CELF'e gönder (CEO → Direktörlük)"
+        >
+          {loading ? "⏳" : "CELF"}
+        </button>
         <button
           type="button"
           onClick={handleSubmit}
           disabled={loading}
-          className="bg-emerald-600 hover:bg-emerald-500 disabled:opacity-50 rounded-lg px-6 py-3 font-medium text-white transition"
+          className="bg-[#3b82f6] hover:bg-[#2563eb] disabled:opacity-50 rounded-lg px-4 py-3 font-medium text-white transition"
+          title="Patron komut akışı"
         >
-          {loading ? "⏳" : "Gönder"}
+          {loading ? "⏳" : "Plan"}
         </button>
       </div>
 
@@ -173,51 +235,51 @@ export default function PatronCommandPanel() {
               key={i}
               className={`rounded-lg p-3 border-l-4 ${
                 result.status === "RELEASE_READY"
-                  ? "border-emerald-500 bg-emerald-500/10"
+                  ? "border-[#10b981] bg-[#10b981]/10"
                   : result.status === "DRY_RUN"
-                  ? "border-amber-500 bg-amber-500/10"
+                  ? "border-[#f97316] bg-[#f97316]/10"
                   : result.status === "BLOCKED" || result.status === "ERROR"
-                  ? "border-red-500 bg-red-500/10"
-                  : "border-zinc-600 bg-zinc-800/50"
+                  ? "border-[#ef4444] bg-[#ef4444]/10"
+                  : "border-[#1e293b] bg-[#111827]"
               }`}
             >
               <div className="flex justify-between items-start mb-2">
                 <span
                   className={`px-2 py-0.5 rounded text-xs font-medium ${
                     result.status === "RELEASE_READY"
-                      ? "bg-emerald-900/50 text-emerald-300"
+                      ? "bg-[#10b981]/20 text-[#10b981]"
                       : result.status === "DRY_RUN"
-                      ? "bg-amber-900/50 text-amber-300"
-                      : "bg-red-900/50 text-red-300"
+                      ? "bg-[#f97316]/20 text-[#f97316]"
+                      : "bg-[#ef4444]/20 text-[#ef4444]"
                   }`}
                 >
                   {result.status}
                 </span>
-                <span className="text-zinc-500 text-xs">
+                <span className="text-[#94a3b8] text-xs">
                   {result.build?.agent?.toUpperCase()}
                 </span>
               </div>
-              <div className="text-sm text-zinc-300 space-y-1">
+              <div className="text-sm text-[#94a3b8] space-y-1">
                 {result.plan && (
                   <>
                     <p>
-                      <span className="text-zinc-500">Intent:</span>{" "}
+                      <span className="text-[#94a3b8]">Intent:</span>{" "}
                       {result.plan.intent}
                     </p>
                     <p>
-                      <span className="text-zinc-500">TaskType:</span>{" "}
+                      <span className="text-[#94a3b8]">TaskType:</span>{" "}
                       {result.plan.taskType}
                     </p>
                   </>
                 )}
                 {result.build?.output?.message && (
-                  <p className="text-zinc-400 truncate max-w-md">
+                  <p className="text-[#94a3b8] truncate max-w-md">
                     {String(result.build.output.message).substring(0, 100)}...
                   </p>
                 )}
                 {result.release && (
                   <p>
-                    <span className="text-zinc-500">Release:</span>{" "}
+                    <span className="text-[#94a3b8]">Release:</span>{" "}
                     {result.release.releaseId}
                   </p>
                 )}

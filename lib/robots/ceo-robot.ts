@@ -17,6 +17,7 @@ export const CEO_RULES = {
   TASK_DISTRIBUTION: {
     finans: 'CFO',
     bütçe: 'CFO',
+    butce: 'CFO',
     gelir: 'CFO',
     gider: 'CFO',
     tahsilat: 'CFO',
@@ -52,6 +53,8 @@ export const CEO_RULES = {
     satış: 'CSO_SATIS',
     şablon: 'CPO',
     tasarım: 'CPO',
+    tasarla: 'CPO',
+    logo: 'CPO',
     ürün: 'CPO',
     özellik: 'CPO',
     ui: 'CPO',

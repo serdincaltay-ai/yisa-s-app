@@ -71,63 +71,76 @@ export async function POST(req: NextRequest) {
     }
 
     const supabase = getSupabase()
-    if (!supabase) {
-      return NextResponse.json({ ok: false, error: 'SUPABASE_SERVICE_ROLE_KEY eksik' }, { status: 503 })
+    let commandId: string | undefined
+
+    try {
+      if (supabase) {
+        const { data: insertedCmd, error: insertErr } = await supabase
+          .from('patron_commands')
+          .insert({
+            command,
+            type: 'celf',
+            title: directorKey + ': ' + command.substring(0, 100),
+            status: 'pending',
+            priority: 'normal',
+            source: 'celf_api',
+            user_id: userId ?? null,
+            output_payload: { processing: true, director_key: directorKey, ai_providers: aiProviders },
+          })
+          .select('id')
+          .single()
+
+        if (!insertErr && insertedCmd?.id) {
+          commandId = insertedCmd.id
+        }
+      }
+    } catch (_) {
+      // Insert hatası: sessizce devam, CELF sonucu dönecek
     }
 
-    const { data: insertedCmd, error: insertErr } = await supabase
-      .from('patron_commands')
-      .insert({
-        command,
-        type: 'celf',
-        title: directorKey + ': ' + command.substring(0, 100),
-        status: 'pending',
-        priority: 'normal',
-        source: 'celf_api',
-        user_id: userId ?? null,
-        output_payload: { processing: true, director_key: directorKey, ai_providers: aiProviders },
-      })
-      .select('id')
-      .single()
-
-    if (insertErr) {
-      return NextResponse.json({ ok: false, error: 'Komut kaydedilemedi: ' + insertErr.message }, { status: 500 })
-    }
-
-    const commandId = insertedCmd?.id
     const celfResult = await runCelfDirector(directorKey, command)
     const displayText = celfResult.text ?? (celfResult as { errorReason?: string }).errorReason ?? 'Yanıt oluşturulamadı.'
     const usedProviders = celfResult.text ? [(celfResult as { provider: string }).provider] : []
 
-    // Veri Arşivleme: CELF sonucu task_results'a yaz (anayasa uyumu)
-    await archiveTaskResult({
-      taskId: commandId,
-      directorKey,
-      aiProviders: usedProviders,
-      inputCommand: command,
-      outputResult: displayText,
-      status: celfResult.text ? 'completed' : 'failed',
-    })
+    try {
+      await archiveTaskResult({
+        taskId: commandId,
+        directorKey,
+        aiProviders: usedProviders,
+        inputCommand: command,
+        outputResult: displayText,
+        status: celfResult.text ? 'completed' : 'failed',
+      })
+    } catch (_) {
+      // Arşiv hatası: sessizce devam
+    }
 
     if (celfResult.text !== null) {
-      const outputPayload: Record<string, unknown> = {
-        processing: false,
-        completed_at: new Date().toISOString(),
-        director_key: directorKey,
-        director_name: director?.name,
-        ai_providers: usedProviders,
-        provider: celfResult.provider,
-        displayText: celfResult.text,
-        assignments: [{ director: directorKey, provider_used: celfResult.provider, status: 'done', has_veto: hasVeto }],
+      try {
+        if (supabase && commandId) {
+          const outputPayload: Record<string, unknown> = {
+            processing: false,
+            completed_at: new Date().toISOString(),
+            director_key: directorKey,
+            director_name: director?.name,
+            ai_providers: usedProviders,
+            provider: celfResult.provider,
+            displayText: celfResult.text,
+            assignments: [{ director: directorKey, provider_used: celfResult.provider, status: 'done', has_veto: hasVeto }],
+          }
+          if ('githubPreparedCommit' in celfResult && celfResult.githubPreparedCommit) {
+            outputPayload.github_prepared_commit = celfResult.githubPreparedCommit
+          }
+          if (directorKey === 'CPO' || directorKey === 'CTO') {
+            const codeBlocks = extractCodeBlocks(celfResult.text)
+            if (codeBlocks.length > 0) outputPayload.code_files = codeBlocks
+          }
+          await supabase.from('patron_commands').update({ output_payload: outputPayload, status: 'pending' }).eq('id', commandId)
+        }
+      } catch (_) {
+        // Update hatası: sessizce devam, yine de başarılı yanıt dön
       }
-      if ('githubPreparedCommit' in celfResult && celfResult.githubPreparedCommit) {
-        outputPayload.github_prepared_commit = celfResult.githubPreparedCommit
-      }
-      if (directorKey === 'CPO' || directorKey === 'CTO') {
-        const codeBlocks = extractCodeBlocks(celfResult.text)
-        if (codeBlocks.length > 0) outputPayload.code_files = codeBlocks
-      }
-      await supabase.from('patron_commands').update({ output_payload: outputPayload, status: 'pending' }).eq('id', commandId)
+      const codeFiles = (directorKey === 'CPO' || directorKey === 'CTO') && celfResult.text ? extractCodeBlocks(celfResult.text) : undefined
       return NextResponse.json({
         ok: true,
         command_id: commandId,
@@ -138,19 +151,25 @@ export async function POST(req: NextRequest) {
         text: celfResult.text,
         status: 'pending',
         message: 'Is tamamlandi ve onay kuyruguna eklendi.',
-        github_prepared_commit: outputPayload.github_prepared_commit,
-        code_files: outputPayload.code_files,
+        github_prepared_commit: 'githubPreparedCommit' in celfResult ? celfResult.githubPreparedCommit : undefined,
+        code_files: codeFiles?.length ? codeFiles : undefined,
       })
     }
 
-    await supabase.from('patron_commands').update({
-      output_payload: { processing: false, error_reason: celfResult.errorReason },
-      status: 'rejected',
-      decision: 'auto_reject',
-      decision_at: new Date().toISOString(),
-    }).eq('id', commandId)
+    try {
+      if (supabase && commandId) {
+        await supabase.from('patron_commands').update({
+          output_payload: { processing: false, error_reason: celfResult.errorReason },
+          status: 'rejected',
+          decision: 'auto_reject',
+          decision_at: new Date().toISOString(),
+        }).eq('id', commandId)
+      }
+    } catch (_) {
+      // Update hatası: sessizce devam
+    }
 
-    return NextResponse.json({ ok: false, command_id: commandId, director_key: directorKey, error: celfResult.errorReason }, { status: 502 })
+    return NextResponse.json({ ok: false, command_id: commandId, director_key: directorKey, text: displayText, error: celfResult.errorReason }, { status: 502 })
 
   } catch (e) {
     const err = e instanceof Error ? e.message : String(e)

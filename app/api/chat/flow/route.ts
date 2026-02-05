@@ -81,6 +81,7 @@ export async function POST(req: NextRequest) {
     const targetDirector = rawTarget && isValidDirectorKey(rawTarget) ? rawTarget : undefined
 
     const messageToUse = correctedMessage ?? message
+    const skipSpelling = body.skip_spelling === true || body.skip_imla === true
 
     // ─── Rol guard: Flow (CEO/CELF/onay) sadece Patron ve üst roller tetikleyebilir ─
     const flowUser = user ?? (userId ? { user_metadata: { role: undefined } } : null)
@@ -211,8 +212,29 @@ export async function POST(req: NextRequest) {
         // Aşağıya düşer: CIO → CEO → CELF
       } else if (classifyPatronMessage(messageToUse) === 'conversation') {
         // Konuşma/araştırma → Zincir varsa sırayla çalıştır, yoksa tek asistan
+        // Sistem durumu/bilgisi istendiğinde gerçek veriyi enjekte et
+        const sistemSoru = /\b(sistem\s+(durumu|bilgisi|özeti)|genel\s+durum|ne\s+durumda|durum\s+nedir)\b/i.test(messageToUse)
+        let promptForAssistant = messageToUse
+        if (sistemSoru) {
+          try {
+            const host = req.headers.get('x-forwarded-host') || req.headers.get('host') || 'localhost:3000'
+            const proto = req.headers.get('x-forwarded-proto') || 'http'
+            const base = `${proto}://${host}`
+            const [statusRes, healthRes] = await Promise.all([
+              fetch(`${base}/api/system/status`).then((r) => r.json()).catch(() => null),
+              fetch(`${base}/api/health`).then((r) => r.json()).catch(() => null),
+            ])
+            const sistemOzeti = [
+              statusRes ? `Sistem durumu: ${statusRes.overall ?? 'bilinmiyor'}. Veritabanı: ${statusRes.database?.connected ? 'OK' : 'Hata'}. Direktörlükler: ${statusRes.directorates?.length ?? 0}. AI servisleri: ${statusRes.aiServices?.filter((s: { configured: boolean }) => s.configured).length ?? 0}/${statusRes.aiServices?.length ?? 0}.` : '',
+              healthRes ? `Health: ${healthRes.ok ? 'OK' : healthRes.error ?? 'bilinmiyor'}.` : '',
+            ].filter(Boolean).join(' ')
+            if (sistemOzeti) {
+              promptForAssistant = `[Sistem verisi: ${sistemOzeti}]\n\nKullanıcı sorusu: ${messageToUse}\n\nYukarıdaki gerçek sistem verisine göre kısa, net Türkçe yanıt ver.`
+            }
+          } catch (_) { /* sistem verisi alınamazsa normal devam */ }
+        }
         const chain = assistantChain.length > 0 ? assistantChain : [assistantProvider]
-        const { text: conversationText, providers } = await callAssistantChain(chain, messageToUse)
+        const { text: conversationText, providers } = await callAssistantChain(chain, promptForAssistant)
         const resultText = conversationText ?? 'Yanıt oluşturulamadı.'
         if (userId) {
           await saveChatMessage({
@@ -235,10 +257,31 @@ export async function POST(req: NextRequest) {
       // 3) Komut (veya send_as_command) → Aşağıya düşer: CIO → CEO → CELF → sonuç onay kuyruğuna
     }
 
-    // ─── 1) İLK ADIM: confirm_type yoksa imla + "Bu mu demek istediniz?" — PATRON ATLANIR ─
+    // ─── 1) İLK ADIM: confirm_type yoksa imla + "Bu mu demek istediniz?" — skip_spelling veya basit selamlaşmada ATLANIR ─
     if (!confirmType) {
       if (isPatronUser) {
         // Patron: konuşma/onay yukarıda halledildi; kalan komut aşağıya düşer
+      } else if (skipSpelling || /^\s*(merhaba|selam|hey|hi|hello)\s*$/i.test(message.trim())) {
+        // İmla atla: direkt Gemini yanıtı dön
+        const chain = assistantChain.length > 0 ? assistantChain : [assistantProvider]
+        const { text: conversationText, providers } = await callAssistantChain(chain, messageToUse)
+        const resultText = conversationText ?? 'Yanıt oluşturulamadı.'
+        if (userId) {
+          await saveChatMessage({
+            user_id: userId,
+            message: messageToUse,
+            response: resultText,
+            ai_providers: providers,
+          })
+        }
+        return NextResponse.json({
+          status: 'patron_conversation_done',
+          flow: `Direkt Gemini (${providers[providers.length - 1] ?? 'GEMINI'})`,
+          text: resultText,
+          ai_provider: providers[providers.length - 1],
+          ai_providers: providers,
+          message: resultText,
+        })
       } else {
         const spell = await correctSpelling(message)
         const confirmation = askConfirmation(spell.correctedMessage)
@@ -344,10 +387,12 @@ export async function POST(req: NextRequest) {
       }
     }
 
-    // Patron doğrudan talimatı: UI'dan seçim (target_director) veya metinden "CFO'ya şunu yaptır"
+    // Patron doğrudan talimatı: UI'dan seçim (target_director) veya metinden "CFO'ya şunu yaptır", "v0'a gönder", "cursor'u çağır"
     const directive = parsePatronDirective(messageToUse)
-    const forcedDirector = targetDirector ?? getDirectorFromDirective(directive)
-    const messageForCelf = directive.task && (directive.type === 'director' || directive.type === 'remind') ? directive.task : messageToUse
+    let forcedDirector = targetDirector ?? getDirectorFromDirective(directive)
+    if (!forcedDirector && directive.type === 'v0') forcedDirector = 'CPO' as DirectorKey   // v0 → CPO (UI/tasarım)
+    if (!forcedDirector && directive.type === 'cursor') forcedDirector = 'CTO' as DirectorKey // cursor → CTO (kod)
+    const messageForCelf = directive.task && (directive.type === 'director' || directive.type === 'remind' || directive.type === 'v0' || directive.type === 'cursor') ? directive.task : messageToUse
 
     // CIO'dan gelen analizi kullan (CEO'ya iş emri); Patron direktifi varsa öncelikli
     const taskType = cioAnalysis.taskType
@@ -418,8 +463,10 @@ export async function POST(req: NextRequest) {
       })
     }
 
-    // ─── c) CELF: İlgili direktörlük AI'ını çalıştır (Patron "X'e yaptır" dediyse mesaj = task) ───────────────────────
-    const celfResult = await runCelfDirector(directorKey, messageForCelf)
+    // ─── c) CELF: İlgili direktörlük AI'ını çalıştır. v0 direktifi → v0Only (sadece V0, Cursor atlanır) ─
+    const celfResult = await runCelfDirector(directorKey, messageForCelf, {
+      v0Only: directive.type === 'v0',
+    })
     const errorReason = (celfResult as { text: string | null; errorReason?: string }).errorReason
     const displayText = celfResult.text ?? (errorReason && errorReason.trim()) ?? 'Yanıt oluşturulamadı. API anahtarlarını (.env) kontrol edin.'
     const aiProvider = celfResult.text ? (celfResult as { provider: string }).provider : '—'

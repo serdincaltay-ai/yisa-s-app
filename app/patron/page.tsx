@@ -1,252 +1,153 @@
-"use client"
+'use client'
 
-import { useState } from "react"
-import Link from "next/link"
-import Image from "next/image"
-import { motion } from "framer-motion"
+import { useState } from 'react'
+import Link from 'next/link'
+import Image from 'next/image'
+import { motion } from 'framer-motion'
 import {
-  Brain, Target, Users, Building2, TrendingUp,
-  Sparkles, Bot, Globe, Shield, Bell,
-  CheckCircle2, XCircle, ArrowRight
-} from "lucide-react"
-import PatronCommandPanel from "@/components/PatronCommandPanel"
+  Home,
+  Bot,
+  ClipboardCheck,
+  BarChart3,
+  MessageSquare,
+  Calendar,
+  Settings,
+  Bell,
+  Menu,
+  X,
+} from 'lucide-react'
+import PatronCommandPanel from '@/components/PatronCommandPanel'
+import RobotStatusGrid from '@/components/patron/RobotStatusGrid'
+import ApprovalQueue from '@/components/patron/ApprovalQueue'
+import AssistantChat from '@/components/patron/AssistantChat'
+
+const NAV = [
+  { href: '/patron', label: 'Ana', icon: Home },
+  { href: '/dashboard', label: 'Robot', icon: Bot },
+  { href: '/dashboard/onay-kuyrugu', label: 'Onay', icon: ClipboardCheck },
+  { href: '/dashboard/reports', label: 'Rapor', icon: BarChart3 },
+  { href: '/dashboard', label: 'Chat', icon: MessageSquare },
+  { href: '/dashboard', label: 'Takvim', icon: Calendar },
+  { href: '/dashboard/settings', label: 'Ayarlar', icon: Settings },
+]
 
 export default function PatronPanel() {
-  const [hoveredCard, setHoveredCard] = useState<string | null>(null)
+  const [mobileOpen, setMobileOpen] = useState(false)
 
   return (
-    <div className="min-h-screen bg-zinc-950 text-white p-4 md:p-8">
-      <header className="flex items-center justify-between mb-8">
-        <Link href="/" className="flex items-center gap-3 hover:opacity-90 transition-opacity">
-          <div className="relative w-10 h-10 flex-shrink-0">
+    <div className="min-h-screen bg-[#0a0e17] text-[#f8fafc] flex">
+      {/* Sidebar */}
+      <aside
+        className={`
+          w-64 min-h-screen bg-[#0f172a] border-r border-[#1e293b] p-4 flex flex-col
+          fixed lg:static inset-y-0 left-0 z-40 transform transition-transform duration-200
+          ${mobileOpen ? 'translate-x-0' : '-translate-x-full lg:translate-x-0'}
+        `}
+      >
+        <Link href="/" className="flex items-center gap-3 mb-6 hover:opacity-90">
+          <div className="relative w-10 h-10 flex-shrink-0 rounded-xl overflow-hidden">
             <Image src="/logo.png" alt="YİSA-S" fill className="object-contain" />
           </div>
           <div>
-            <span className="text-xl font-bold text-white">YİSA-S</span>
-            <p className="text-[10px] text-zinc-500">Yönetici İşletmeci Sporcu Antrenör Sistemi</p>
+            <h1 className="font-bold text-[#f8fafc]">YİSA-S</h1>
+            <p className="text-[10px] text-[#94a3b8]">Yönetici İşletmeci Sporcu Antrenör</p>
           </div>
         </Link>
-        <div className="flex items-center gap-3">
-          <Link
-            href="/dashboard"
-            className="flex items-center gap-2 px-4 py-2 rounded-xl bg-emerald-500/20 text-emerald-400 hover:bg-emerald-500/30 border border-emerald-500/40 text-sm font-medium transition"
-          >
-            Komuta Merkezi <ArrowRight className="w-4 h-4" />
-          </Link>
-          <button className="relative p-2 rounded-full bg-zinc-900 hover:bg-zinc-800 transition">
-            <Bell className="w-5 h-5" />
-            <span className="absolute -top-1 -right-1 w-4 h-4 bg-red-500 rounded-full text-[10px] flex items-center justify-center">4</span>
-          </button>
-          <div className="w-10 h-10 rounded-full bg-gradient-to-br from-purple-500 to-pink-500" />
-        </div>
-      </header>
 
-      <div className="grid grid-cols-4 md:grid-cols-8 lg:grid-cols-12 gap-4 auto-rows-[120px]">
-
-        <motion.div
-          className="col-span-4 md:col-span-4 lg:col-span-6 row-span-2 rounded-3xl bg-gradient-to-br from-emerald-500 to-cyan-500 p-6 cursor-pointer overflow-hidden relative group"
-          whileHover={{ scale: 1.02 }}
-          onHoverStart={() => setHoveredCard("main")}
-          onHoverEnd={() => setHoveredCard(null)}
-        >
-          <div className="relative z-10">
-            <p className="text-emerald-100 text-sm mb-2">Hoşgeldiniz</p>
-            <h1 className="text-4xl md:text-5xl font-bold mb-4">Patron</h1>
-            {hoveredCard === "main" && (
-              <motion.div
-                initial={{ opacity: 0, y: 20 }}
-                animate={{ opacity: 1, y: 0 }}
-                className="mt-4"
-              >
-                <p className="text-white/80">CELF Merkezi hazır. 4 onay bekliyor.</p>
-              </motion.div>
-            )}
-          </div>
-          <div className="absolute bottom-0 right-0 w-48 h-48 bg-white/10 rounded-full blur-3xl" />
-        </motion.div>
-
-        <motion.div
-          className="col-span-2 md:col-span-2 lg:col-span-3 row-span-2 rounded-3xl bg-zinc-900 p-5 cursor-pointer group hover:bg-zinc-800 transition"
-          whileHover={{ scale: 1.02 }}
-          onHoverStart={() => setHoveredCard("gelir")}
-          onHoverEnd={() => setHoveredCard(null)}
-        >
-          <TrendingUp className="w-8 h-8 text-emerald-400 mb-3" />
-          <p className="text-zinc-500 text-sm">Aylık Gelir</p>
-          <p className="text-3xl font-bold mt-1">353K</p>
-          {hoveredCard === "gelir" && (
-            <motion.div initial={{ opacity: 0 }} animate={{ opacity: 1 }} className="mt-3 text-sm text-emerald-400">
-              +12% bu ay
-            </motion.div>
-          )}
-        </motion.div>
-
-        <motion.div
-          className="col-span-2 md:col-span-2 lg:col-span-3 row-span-2 rounded-3xl bg-zinc-900 p-5 cursor-pointer group hover:bg-zinc-800 transition"
-          whileHover={{ scale: 1.02 }}
-          onHoverStart={() => setHoveredCard("ogrenci")}
-          onHoverEnd={() => setHoveredCard(null)}
-        >
-          <Users className="w-8 h-8 text-blue-400 mb-3" />
-          <p className="text-zinc-500 text-sm">Öğrenci</p>
-          <p className="text-3xl font-bold mt-1">230</p>
-          {hoveredCard === "ogrenci" && (
-            <motion.div initial={{ opacity: 0 }} animate={{ opacity: 1 }} className="mt-3 text-sm text-blue-400">
-              4 tesiste aktif
-            </motion.div>
-          )}
-        </motion.div>
-
-        <motion.div
-          className="col-span-4 md:col-span-8 lg:col-span-8 row-span-1 rounded-3xl bg-zinc-900 p-5 cursor-pointer overflow-hidden"
-          whileHover={{ scale: 1.01 }}
-        >
-          <div className="flex items-center justify-between h-full">
-            <div className="flex items-center gap-2">
-              <div className="w-8 h-8 rounded-lg bg-purple-500 flex items-center justify-center">
-                <Sparkles className="w-4 h-4" />
-              </div>
-              <span className="text-sm font-medium">Asistan</span>
-            </div>
-            <div className="w-8 h-[2px] bg-zinc-700" />
-            <div className="flex items-center gap-2">
-              <div className="w-8 h-8 rounded-lg bg-indigo-500 flex items-center justify-center">
-                <Brain className="w-4 h-4" />
-              </div>
-              <span className="text-sm font-medium">CIO</span>
-            </div>
-            <div className="w-8 h-[2px] bg-zinc-700" />
-            <div className="flex items-center gap-2">
-              <div className="w-8 h-8 rounded-lg bg-blue-500 flex items-center justify-center">
-                <Target className="w-4 h-4" />
-              </div>
-              <span className="text-sm font-medium">CEO</span>
-            </div>
-            <div className="w-8 h-[2px] bg-zinc-700" />
-            <div className="flex items-center gap-2">
-              <div className="w-8 h-8 rounded-lg bg-teal-500 flex items-center justify-center">
-                <Bot className="w-4 h-4" />
-              </div>
-              <span className="text-sm font-medium">CELF</span>
-            </div>
-            <div className="w-8 h-[2px] bg-zinc-700" />
-            <div className="flex items-center gap-2">
-              <div className="w-8 h-8 rounded-lg bg-green-500 flex items-center justify-center">
-                <Globe className="w-4 h-4" />
-              </div>
-              <span className="text-sm font-medium">COO</span>
-            </div>
-          </div>
-        </motion.div>
-
-        <motion.div
-          className="col-span-4 md:col-span-8 lg:col-span-12 row-span-1"
-          whileHover={{ scale: 1.01 }}
-        >
-          <PatronCommandPanel />
-        </motion.div>
-
-        <motion.div
-          className="col-span-2 md:col-span-2 lg:col-span-4 row-span-2 rounded-3xl bg-gradient-to-br from-orange-500 to-red-500 p-5 cursor-pointer relative overflow-hidden group"
-          whileHover={{ scale: 1.02 }}
-          onHoverStart={() => setHoveredCard("franchise")}
-          onHoverEnd={() => setHoveredCard(null)}
-        >
-          <Building2 className="w-8 h-8 text-white/80 mb-3" />
-          <p className="text-white/60 text-sm">Franchise</p>
-          <p className="text-4xl font-bold mt-1">4</p>
-          {hoveredCard === "franchise" && (
-            <motion.div
-              initial={{ opacity: 0, y: 10 }}
-              animate={{ opacity: 1, y: 0 }}
-              className="mt-3 space-y-1 text-sm text-white/80"
+        <nav className="space-y-1 flex-1">
+          {NAV.map(({ href, label, icon: Icon }) => (
+            <Link
+              key={href + label}
+              href={href}
+              className="flex items-center gap-3 px-4 py-3 rounded-xl text-[#94a3b8] hover:bg-[#1e293b] hover:text-[#f8fafc] transition-colors border-l-2 border-transparent hover:border-[#10b981]"
             >
-              <p>Kadıköy - 85 öğrenci</p>
-              <p>Çankaya - 62 öğrenci</p>
-              <p>Karşıyaka - 45 öğrenci</p>
-              <p>Nilüfer - 38 öğrenci</p>
-            </motion.div>
-          )}
-        </motion.div>
+              <Icon size={20} />
+              {label}
+            </Link>
+          ))}
+        </nav>
 
-        <motion.div
-          className="col-span-4 md:col-span-4 lg:col-span-4 row-span-3 rounded-3xl bg-zinc-900 p-5 cursor-pointer overflow-hidden"
-          whileHover={{ scale: 1.01 }}
-        >
-          <div className="flex items-center justify-between mb-4">
-            <p className="text-zinc-400 text-sm">Onay Bekliyor</p>
-            <span className="w-6 h-6 rounded-full bg-red-500 text-xs flex items-center justify-center">4</span>
-          </div>
-          <div className="space-y-3">
-            <OnayKarti baslik="Yeni antrenör" kaynak="Kadıköy" birim="CHRO" />
-            <OnayKarti baslik="Reklam kampanyası" kaynak="CMO" birim="CMO" />
-            <OnayKarti baslik="Token fiyat güncelle" kaynak="CFO" birim="CFO" />
-            <OnayKarti baslik="Aylık rapor" kaynak="CDO" birim="CDO" />
-          </div>
-        </motion.div>
-
-        <motion.div
-          className="col-span-4 md:col-span-4 lg:col-span-4 row-span-2 rounded-3xl bg-zinc-900 p-5 cursor-pointer"
-          whileHover={{ scale: 1.01 }}
-          onHoverStart={() => setHoveredCard("celf")}
-          onHoverEnd={() => setHoveredCard(null)}
-        >
-          <Bot className="w-8 h-8 text-teal-400 mb-3" />
-          <p className="text-zinc-500 text-sm">12 Direktörlük</p>
-          <p className="text-3xl font-bold mt-1">CELF</p>
-          {hoveredCard === "celf" && (
-            <motion.div initial={{ opacity: 0 }} animate={{ opacity: 1 }} className="mt-3 flex flex-wrap gap-2">
-              {["CFO", "CTO", "CMO", "CHRO", "CLO", "CPO"].map((d) => (
-                <span key={d} className="px-2 py-1 bg-zinc-800 rounded text-xs">{d}</span>
-              ))}
-            </motion.div>
-          )}
-        </motion.div>
-
-        <motion.div
-          className="col-span-4 md:col-span-4 lg:col-span-4 row-span-2 rounded-3xl bg-gradient-to-br from-purple-600 to-pink-600 p-5 cursor-pointer relative overflow-hidden"
-          whileHover={{ scale: 1.02 }}
-          onHoverStart={() => setHoveredCard("asistan")}
-          onHoverEnd={() => setHoveredCard(null)}
-        >
-          <Sparkles className="w-8 h-8 text-white/80 mb-3" />
-          <p className="text-white/60 text-sm">Kişisel</p>
-          <p className="text-3xl font-bold mt-1">Asistan</p>
-          {hoveredCard === "asistan" && (
-            <motion.div
-              initial={{ opacity: 0, y: 10 }}
-              animate={{ opacity: 1, y: 0 }}
-              className="mt-3 text-sm text-white/80"
-            >
-              Claude tabanlı - Sadece sizinle konuşur
-            </motion.div>
-          )}
-          <div className="absolute -bottom-10 -right-10 w-32 h-32 bg-white/10 rounded-full blur-2xl" />
-        </motion.div>
-
-      </div>
-    </div>
-  )
-}
-
-function OnayKarti({ baslik, kaynak, birim }: { baslik: string; kaynak: string; birim: string }) {
-  return (
-    <div className="flex items-center justify-between p-3 rounded-xl bg-zinc-800/50 hover:bg-zinc-800 transition group">
-      <div className="flex items-center gap-3">
-        <span className="text-xs px-2 py-1 rounded bg-zinc-700">{birim}</span>
-        <div>
-          <p className="text-sm font-medium">{baslik}</p>
-          <p className="text-xs text-zinc-500">{kaynak}</p>
+        <div className="pt-4 border-t border-[#1e293b]">
+          <p className="text-xs text-[#94a3b8] flex items-center gap-2">
+            <span className="w-2 h-2 rounded-full bg-[#10b981]" />
+            Sistem: Aktif
+          </p>
         </div>
-      </div>
-      <div className="flex gap-1 opacity-0 group-hover:opacity-100 transition">
-        <button className="p-1.5 rounded-lg bg-red-500/20 hover:bg-red-500/40 transition">
-          <XCircle className="w-4 h-4 text-red-400" />
-        </button>
-        <button className="p-1.5 rounded-lg bg-emerald-500/20 hover:bg-emerald-500/40 transition">
-          <CheckCircle2 className="w-4 h-4 text-emerald-400" />
-        </button>
-      </div>
+      </aside>
+
+      {/* Mobil hamburger */}
+      <button
+        type="button"
+        onClick={() => setMobileOpen(!mobileOpen)}
+        className="lg:hidden fixed top-4 left-4 z-50 p-2 rounded-xl bg-[#111827] border border-[#1e293b] text-[#f8fafc]"
+        aria-label="Menü"
+      >
+        {mobileOpen ? <X size={24} /> : <Menu size={24} />}
+      </button>
+      {mobileOpen && (
+        <div
+          className="lg:hidden fixed inset-0 bg-black/60 z-30"
+          onClick={() => setMobileOpen(false)}
+          aria-hidden
+        />
+      )}
+
+      {/* Main */}
+      <main className="flex-1 overflow-auto pt-14 lg:pt-0 pl-0 lg:pl-0">
+        <div className="p-4 md:p-6 space-y-6">
+          {/* Header */}
+          <header className="flex items-center justify-between flex-wrap gap-4">
+            <div className="flex items-center gap-3">
+              <div className="relative w-9 h-9 rounded-lg overflow-hidden">
+                <Image src="/logo.png" alt="YİSA-S" fill className="object-contain" />
+              </div>
+              <div>
+                <span className="text-lg font-semibold text-[#f8fafc]">YİSA-S Patron Paneli</span>
+                <p className="text-xs text-[#94a3b8]">Komut gönderin, onay kuyruğunu yönetin</p>
+              </div>
+            </div>
+            <div className="flex items-center gap-3">
+              <span className="text-sm font-mono text-[#94a3b8]">
+                🕐 {new Date().toLocaleTimeString('tr-TR', { hour12: false })}
+              </span>
+              <button className="relative p-2 rounded-xl bg-[#111827] border border-[#1e293b] hover:border-[#3b82f6]/40 transition-colors">
+                <Bell className="w-5 h-5 text-[#94a3b8]" />
+              </button>
+              <div className="w-10 h-10 rounded-xl bg-gradient-to-br from-[#10b981] to-[#3b82f6]" />
+            </div>
+          </header>
+
+          {/* Robot Durum Kartları */}
+          <div className="rounded-xl border border-[#1e293b] bg-[#111827] p-4">
+            <h3 className="text-sm font-semibold text-[#f8fafc] mb-3">Robot Durumu</h3>
+            <RobotStatusGrid />
+          </div>
+
+          {/* Orta: Onay Havuzu + Patron Komut */}
+          <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
+            <ApprovalQueue />
+            <div>
+              <h3 className="text-sm font-semibold text-[#f8fafc] mb-3">CELF Komut</h3>
+              <PatronCommandPanel />
+            </div>
+          </div>
+
+          {/* Alt: Asistan Chat */}
+          <div>
+            <h3 className="text-sm font-semibold text-[#f8fafc] mb-3">Asistan Chat</h3>
+            <AssistantChat />
+          </div>
+        </div>
+
+        {/* Footer */}
+        <footer className="mt-8 px-4 py-3 border-t border-[#1e293b] flex flex-wrap items-center justify-between gap-2 text-xs text-[#94a3b8]">
+          <span>© YİSA-S 2026</span>
+          <span className="flex items-center gap-2">
+            <span className="w-2 h-2 rounded-full bg-[#10b981]" />
+            Sistem: Aktif | Robotlar: /api/system/health
+          </span>
+        </footer>
+      </main>
     </div>
   )
 }

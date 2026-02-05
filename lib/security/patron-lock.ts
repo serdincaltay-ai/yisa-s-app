@@ -27,6 +27,9 @@ export const FORBIDDEN_FOR_AI: string[] = [
   'fiyat_degistir',
   'kullanici_sil',
   'yetki_degistir',
+  'veritabanını sil',
+  'veritabani sil',
+  'veritabanı sil',
 ]
 
 /** Patron onayı gerektiren işlemler (Talimat Bölüm 4.2 G2) */

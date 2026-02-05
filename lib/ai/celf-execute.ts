@@ -17,6 +17,7 @@ const ANTHROPIC_URL = 'https://api.anthropic.com/v1/messages'
 const OPENAI_URL = 'https://api.openai.com/v1/chat/completions'
 const GOOGLE_GEMINI_PRO_URL = 'https://generativelanguage.googleapis.com/v1beta/models/gemini-pro:generateContent'
 const GOOGLE_GEMINI_FLASH_URL = 'https://generativelanguage.googleapis.com/v1beta/models/gemini-2.0-flash:generateContent'
+const GOOGLE_GEMINI_15_FLASH_URL = 'https://generativelanguage.googleapis.com/v1beta/models/gemini-1.5-flash:generateContent'
 const TOGETHER_URL = 'https://api.together.xyz/v1/chat/completions'
 
 const DELEGATE_PREFIX = 'DELEGATE:'
@@ -128,59 +129,47 @@ async function readApiError(res: Response): Promise<string> {
   }
 }
 
-/** CELF görevlendirici: Önce 1.5-flash dene, yoksa gemini-pro. Hata olursa gerçek API mesajını döndür. */
+/** CELF görevlendirici: 2.0-flash → 1.5-flash → gemini-pro. GOOGLE_API_KEY .env.local'de tanımlı olmalı. */
 async function callGeminiOrchestrator(system: string, message: string): Promise<string | { error: string }> {
   const apiKey = getCelfKey('CELF_GOOGLE_API_KEY', ['CELF_GOOGLE_GEMINI_API_KEY', 'GOOGLE_API_KEY', 'GOOGLE_GEMINI_API_KEY'])
-  if (!apiKey) return { error: 'GOOGLE_API_KEY .env içinde tanımlı değil.' }
+  if (!apiKey) return { error: 'GOOGLE_API_KEY .env.local içinde tanımlı değil.' }
 
   const userMessage = `[Sistem: ${system}]\n\nPatron görevi:\n${message}`
+  const bodyWithSystem = {
+    systemInstruction: { parts: [{ text: system }] } as { parts: { text: string }[] },
+    contents: [{ role: 'user', parts: [{ text: message }] }],
+    generationConfig: { maxOutputTokens: 1024 },
+  }
+  const bodyInline = {
+    contents: [{ role: 'user', parts: [{ text: userMessage }] }],
+    generationConfig: { maxOutputTokens: 1024 },
+  }
   let lastError = ''
 
-  try {
-    const url15 = `${GOOGLE_GEMINI_FLASH_URL}?key=${apiKey}`
-    const res = await fetchWithRetry(url15, {
+  const tryGemini = async (url: string, body: object, label: string): Promise<string | null> => {
+    const res = await fetchWithRetry(url, {
       method: 'POST',
       headers: { 'Content-Type': 'application/json' },
-      body: JSON.stringify({
-        systemInstruction: { parts: [{ text: system }] } as { parts: { text: string }[] },
-        contents: [{ role: 'user', parts: [{ text: message }] }],
-        generationConfig: { maxOutputTokens: 1024 },
-      }),
+      body: JSON.stringify(body),
     })
     if (res.ok) {
       const data = await res.json()
-      const text = data.candidates?.[0]?.content?.parts?.[0]?.text ?? null
-      if (text) return text
-      lastError = 'Gemini (2.0-flash) yanıt boş.'
-    } else {
-      lastError = `Gemini (2.0-flash): ${await readApiError(res)}`
+      return data.candidates?.[0]?.content?.parts?.[0]?.text?.trim() ?? null
     }
-  } catch (e) {
-    lastError = `Gemini (2.0-flash) istek hatası: ${e instanceof Error ? e.message : String(e)}`
+    lastError = `${label}: ${await readApiError(res)}`
+    return null
   }
 
-  // gemini-pro yedek
-  try {
-    const urlPro = `${GOOGLE_GEMINI_PRO_URL}?key=${apiKey}`
-    const resPro = await fetchWithRetry(urlPro, {
-      method: 'POST',
-      headers: { 'Content-Type': 'application/json' },
-      body: JSON.stringify({
-        contents: [{ role: 'user', parts: [{ text: userMessage }] }],
-        generationConfig: { maxOutputTokens: 1024 },
-      }),
-    })
-    if (resPro.ok) {
-      const dataPro = await resPro.json()
-      const textPro = dataPro.candidates?.[0]?.content?.parts?.[0]?.text ?? null
-      if (textPro) return textPro
-    }
-    lastError = lastError || `Gemini (pro): ${await readApiError(resPro)}`
-  } catch (e) {
-    lastError = lastError || `Gemini (pro) istek hatası: ${e instanceof Error ? e.message : String(e)}`
-  }
+  let text = await tryGemini(`${GOOGLE_GEMINI_FLASH_URL}?key=${apiKey}`, bodyWithSystem, 'Gemini 2.0-flash')
+  if (text) return text
 
-  return { error: lastError || 'Gemini yanıt vermedi.' }
+  text = await tryGemini(`${GOOGLE_GEMINI_15_FLASH_URL}?key=${apiKey}`, bodyWithSystem, 'Gemini 1.5-flash')
+  if (text) return text
+
+  text = await tryGemini(`${GOOGLE_GEMINI_PRO_URL}?key=${apiKey}`, bodyInline, 'Gemini-pro')
+  if (text) return text
+
+  return { error: lastError || 'Gemini yanıt vermedi. GOOGLE_API_KEY .env.local\'de geçerli mi kontrol edin.' }
 }
 
 async function callTogether(message: string): Promise<string | null> {
@@ -228,9 +217,17 @@ export type CelfResult =
  * Gemini ya kendisi yanıtlar (sonuç CELF'e teslim) ya da "DELEGATE:API" ile bir API'ye devreder;
  * o API çalışır, sonuç CELF'e teslim edilir. Başarısız olursa errorReason ile neden döner.
  */
+export interface CelfRunOptions {
+  /** v0/cursor direktifi: Sadece V0 çalışsın, Cursor atlansın (Patron "v0'u görevlendir" dediğinde) */
+  v0Only?: boolean
+  /** cursor direktifi: Sadece CTO (Claude) çalışsın, Cursor incelemesi opsiyonel */
+  cursorOnly?: boolean
+}
+
 export async function runCelfDirector(
   directorKey: DirectorKey,
-  message: string
+  message: string,
+  options?: CelfRunOptions
 ): Promise<CelfResult> {
   const director = await getDirectorateConfigMerged(directorKey)
   const lowerMsg = message.toLowerCase()
@@ -243,11 +240,16 @@ export async function runCelfDirector(
     : 'YİSA-S asistan. Kısa, net, Türkçe yanıt ver.')
   const providers = director?.aiProviders ?? []
 
-  // ─── CPO: V0 (tasarım) + Cursor (inceleme) ─────────────────────────────────
+  // ─── CPO: V0 (tasarım). v0Only ise sadece V0, Cursor atlanır (Patron "v0'u görevlendir" dediğinde) ─
   if (isCpoDirector(directorKey)) {
     const v0Prompt = `Tasarım/UI görevi (Türkçe bağlam): ${message}\n\nNet, uygulanabilir tasarım veya bileşen açıklaması ver.`
     const v0Result = await v0Generate(v0Prompt)
     const v0Text = 'error' in v0Result ? v0Result.error : v0Result.text
+    if (options?.v0Only) {
+      // Patron "v0'u görevlendir" dedi — sadece V0 çalışır, Cursor dinlensin
+      if (v0Text && !('error' in v0Result)) return { text: v0Text, provider: 'V0' }
+      return { text: null, errorReason: v0Text || 'V0_API_KEY .env içinde tanımlı değil. Vercel v0 hesabından alın.' }
+    }
     const cursorResult = await cursorSubmitTask(
       'error' in v0Result ? message : v0Text,
       { context: 'CPO tasarım incelemesi' }
