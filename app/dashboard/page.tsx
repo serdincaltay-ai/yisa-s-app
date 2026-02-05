@@ -747,21 +747,28 @@ export default function DashboardPage() {
   return (
     <div className="min-h-screen text-white bg-gray-950">
       <div className="p-4 sm:p-6 space-y-6">
-        {/* Header */}
+        {/* Header: Logo, Saat (tıklanınca konuş/görev), Avatar */}
         <header className="flex items-center justify-between py-4 border-b border-gray-800">
           <div className="flex items-center gap-3">
             <div className="relative w-9 h-9 flex-shrink-0 rounded-lg overflow-hidden bg-gray-900 border border-gray-700">
               <Image src="/logo.png" alt="YİSA-S" fill className="object-contain" />
             </div>
             <div>
-              <span className="text-lg font-semibold text-white">YİSA-S</span>
-              <p className="text-xs text-gray-400">Patron Komuta Merkezi</p>
+              <span className="text-lg font-semibold text-white">YİSA-S Patron Komuta Merkezi</span>
+              <p className="text-xs text-gray-400">Sistem hazır. Komut gönderin veya onay kuyruğunu yönetin.</p>
             </div>
           </div>
           <div className="flex items-center gap-3">
-            <span className="text-xs text-gray-400 font-mono tabular-nums">
-              {new Date().toLocaleTimeString('tr-TR', { hour12: false, hour: '2-digit', minute: '2-digit' })}
-            </span>
+            <button
+              type="button"
+              onClick={() => setChatExpanded((e) => !e)}
+              className="flex items-center gap-2 px-4 py-2 rounded-xl bg-cyan-500/20 border border-cyan-500/40 hover:bg-cyan-500/30 text-cyan-300 transition-colors"
+              title="Tıklayınca konuş veya görev ver"
+            >
+              <Clock size={18} />
+              <span className="font-mono tabular-nums">{new Date().toLocaleTimeString('tr-TR', { hour12: false, hour: '2-digit', minute: '2-digit' })}</span>
+              <span className="text-xs">Konuş / Görev</span>
+            </button>
             <Avatar className="h-8 w-8 border border-gray-700">
               <AvatarFallback className="bg-gray-800 text-gray-300 text-xs font-medium">
                 {(user?.email ?? 'P').charAt(0).toUpperCase()}
@@ -770,260 +777,243 @@ export default function DashboardPage() {
           </div>
         </header>
 
-        {/* Hoş geldin */}
-        {user && isPatron(user) && (
-          <p className="text-sm text-gray-400">Sistem hazır. Komut gönderin veya onay kuyruğunu yönetin.</p>
-        )}
-
-        {/* İstatistik kartları — renkli vurgular */}
-        <div className="grid grid-cols-2 lg:grid-cols-4 gap-4">
-          {[
-            { label: 'Gelir', value: `₺${stats.franchiseRevenueMonth.toLocaleString('tr-TR')}`, accent: 'bg-pink-500/20 border-pink-500/30', text: 'text-pink-300' },
-            { label: 'Gider', value: `₺${stats.expensesMonth.toLocaleString('tr-TR')}`, accent: 'bg-blue-500/20 border-blue-500/30', text: 'text-blue-300' },
-            { label: 'Onay', value: stats.pendingApprovals, accent: 'bg-amber-500/20 border-amber-500/30', text: 'text-amber-300' },
-            { label: 'Başvuru', value: stats.newFranchiseApplications, accent: 'bg-emerald-500/20 border-emerald-500/30', text: 'text-emerald-300' },
-          ].map((s, i) => (
-            <div key={i} className={`${s.accent} border rounded-xl sm:rounded-2xl p-4 text-white transition-colors`}>
-              <p className={`text-xs ${s.text} mb-1`}>{s.label.toUpperCase()}</p>
-              <p className="text-lg font-semibold font-mono tabular-nums">{s.value}</p>
-            </div>
-          ))}
+        {/* KPI kartları */}
+        <div className="grid grid-cols-2 lg:grid-cols-4 gap-3">
+          <div className="rounded-xl border border-pink-500/30 bg-pink-500/10 p-4">
+            <p className="text-xs text-pink-400/80 mb-1">GELİR</p>
+            <p className="text-xl font-mono font-semibold text-white">₺{stats.franchiseRevenueMonth.toLocaleString('tr-TR')}</p>
+          </div>
+          <div className="rounded-xl border border-blue-500/30 bg-blue-500/10 p-4">
+            <p className="text-xs text-blue-400/80 mb-1">GİDER</p>
+            <p className="text-xl font-mono font-semibold text-white">₺{stats.expensesMonth.toLocaleString('tr-TR')}</p>
+          </div>
+          <div className="rounded-xl border border-amber-500/30 bg-amber-500/10 p-4">
+            <p className="text-xs text-amber-400/80 mb-1">ONAY</p>
+            <p className="text-xl font-mono font-semibold text-white">{stats.pendingApprovals}</p>
+          </div>
+          <div className="rounded-xl border border-emerald-500/30 bg-emerald-500/10 p-4">
+            <p className="text-xs text-emerald-400/80 mb-1">BAŞVURU</p>
+            <p className="text-xl font-mono font-semibold text-white">{stats.newFranchiseApplications}</p>
+          </div>
         </div>
 
-        {/* Geniş Ekran / Şablonlar — ortada */}
-        <div className="flex flex-wrap gap-4">
-          <a href="/dashboard/genis-ekran" className="flex-1 min-w-[200px]">
-            <div className="rounded-2xl border-2 border-pink-500/40 bg-gradient-to-r from-pink-500/10 to-amber-500/10 p-5 hover:border-pink-500/60 transition-colors">
-              <div className="flex items-center gap-3">
-                <div className="w-12 h-12 rounded-xl bg-pink-500/20 flex items-center justify-center">
-                  <Maximize2 className="text-pink-400" size={24} />
-                </div>
-                <div>
-                  <h3 className="font-semibold text-white">Geniş Ekran</h3>
-                  <p className="text-sm text-gray-400">Özet, siteler, çalıştırılacaklar</p>
-                </div>
-              </div>
+        {/* Robot kartları: CELF, YİSA, Güvenlik, Veri + yisa-s.com */}
+        <div className="grid grid-cols-2 lg:grid-cols-5 gap-3">
+          <a href="/dashboard/celf" className="rounded-xl border-2 border-cyan-500/40 bg-cyan-500/10 p-4 hover:border-cyan-500/60 transition-colors flex items-center gap-3">
+            <div className="w-10 h-10 rounded-lg bg-cyan-500/30 flex items-center justify-center">
+              <Bot className="text-cyan-400" size={20} />
+            </div>
+            <div>
+              <p className="font-semibold text-white text-sm">CELF Motor</p>
+              <p className="text-[10px] text-cyan-400/80 flex items-center gap-1"><span className="w-1.5 h-1.5 rounded-full bg-emerald-500 animate-pulse" /> Çalışıyor</p>
             </div>
           </a>
-          <a href="/dashboard/sablonlar" className="flex-1 min-w-[200px]">
-            <div className="rounded-2xl border-2 border-amber-500/40 bg-gradient-to-r from-amber-500/10 to-emerald-500/10 p-5 hover:border-amber-500/60 transition-colors">
+          <a href="/dashboard/directors" className="rounded-xl border-2 border-amber-500/40 bg-amber-500/10 p-4 hover:border-amber-500/60 transition-colors flex items-center gap-3">
+            <div className="w-10 h-10 rounded-lg bg-amber-500/30 flex items-center justify-center">
+              <Bot className="text-amber-400" size={20} />
+            </div>
+            <div>
+              <p className="font-semibold text-white text-sm">YİSA Motor</p>
+              <p className="text-[10px] text-amber-400/80 flex items-center gap-1"><span className="w-1.5 h-1.5 rounded-full bg-emerald-500 animate-pulse" /> Çalışıyor</p>
+            </div>
+          </a>
+          <a href="/dashboard/reports" className="rounded-xl border-2 border-emerald-500/40 bg-emerald-500/10 p-4 hover:border-emerald-500/60 transition-colors flex items-center gap-3">
+            <div className="w-10 h-10 rounded-lg bg-emerald-500/30 flex items-center justify-center">
+              <Bot className="text-emerald-400" size={20} />
+            </div>
+            <div>
+              <p className="font-semibold text-white text-sm">Güvenlik Robotu</p>
+              <p className="text-[10px] text-emerald-400/80 flex items-center gap-1"><span className="w-1.5 h-1.5 rounded-full bg-emerald-500 animate-pulse" /> Aktif</p>
+            </div>
+          </a>
+          <a href="/dashboard/reports" className="rounded-xl border-2 border-violet-500/40 bg-violet-500/10 p-4 hover:border-violet-500/60 transition-colors flex items-center gap-3">
+            <div className="w-10 h-10 rounded-lg bg-violet-500/30 flex items-center justify-center">
+              <Bot className="text-violet-400" size={20} />
+            </div>
+            <div>
+              <p className="font-semibold text-white text-sm">Veri Robotu</p>
+              <p className="text-[10px] text-violet-400/80 flex items-center gap-1"><span className="w-1.5 h-1.5 rounded-full bg-emerald-500 animate-pulse" /> Aktif</p>
+            </div>
+          </a>
+          <a href="https://yisa-s.com" target="_blank" rel="noopener noreferrer" className="rounded-xl border-2 border-slate-500/40 bg-slate-500/10 p-4 hover:border-slate-500/60 transition-colors flex items-center gap-3">
+            <div className="w-10 h-10 rounded-lg bg-slate-500/30 flex items-center justify-center">
+              <Store className="text-slate-400" size={20} />
+            </div>
+            <div>
+              <p className="font-semibold text-white text-sm">yisa-s.com</p>
+              <p className="text-[10px] text-slate-400">Tanıtım</p>
+            </div>
+          </a>
+        </div>
+
+        {/* Geniş Ekran + Şablonlar */}
+        <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
+          <a href="/dashboard/genis-ekran" className="flex items-center gap-4 p-4 rounded-xl border-2 border-cyan-500/40 bg-cyan-500/10 hover:border-cyan-500/60 transition-colors">
+            <div className="w-12 h-12 rounded-xl bg-cyan-500/20 flex items-center justify-center">
+              <Maximize2 size={24} className="text-cyan-400" />
+            </div>
+            <div>
+              <p className="font-semibold text-white">Geniş Ekran</p>
+              <p className="text-xs text-cyan-400/80">Özet, siteler, çalıştırılacaklar</p>
+            </div>
+          </a>
+          <a href="/dashboard/sablonlar" className="flex items-center gap-4 p-4 rounded-xl border-2 border-pink-500/40 bg-pink-500/10 hover:border-pink-500/60 transition-colors">
+            <div className="w-12 h-12 rounded-xl bg-pink-500/20 flex items-center justify-center">
+              <LayoutTemplate size={24} className="text-pink-400" />
+            </div>
+            <div>
+              <p className="font-semibold text-white">Şablonlar</p>
+              <p className="text-xs text-pink-400/80">Büyük ekranda önizleme, v0 Çıkart</p>
+            </div>
+          </a>
+        </div>
+
+        {/* Başlangıç Görevleri */}
+        <div className="rounded-xl border-2 border-amber-500/40 bg-amber-500/10 p-4">
+          <h3 className="font-semibold text-white mb-2">Başlangıç Görevleri</h3>
+          <p className="text-sm text-amber-400/80 mb-3">
+            {startupStatus?.total_pending ?? 0} görev bekliyor. Direktörlükler ilk görevlerini yapacak.
+          </p>
+          <div className="flex flex-wrap gap-3">
+            <Button
+              onClick={() => runStartupTasks('run_all')}
+              disabled={startupTasksLoading}
+              className="bg-cyan-600 hover:bg-cyan-700"
+            >
+              {startupTasksLoading ? <Loader2 size={18} className="animate-spin" /> : <Play size={18} />}
+              <span className="ml-2">Tüm Robotları Başlat</span>
+            </Button>
+            <a href="/dashboard/ozel-araclar" className="inline-flex items-center gap-2 px-4 py-2 rounded-lg bg-emerald-600 hover:bg-emerald-700 text-white text-sm">
+              <Play size={16} />
+              Oyna — Deploy ({stats.pendingApprovals} onay)
+            </a>
+          </div>
+        </div>
+
+      {/* Patron Havuzu (sol, büyük) + Chat (sağ) */}
+      <div className="grid grid-cols-1 lg:grid-cols-12 gap-6 mt-4">
+        {/* Sol: PATRON HAVUZU — Her şey buraya gelir */}
+        <div className="lg:col-span-7">
+          <Card className="bg-gray-900 border-2 border-amber-500/40 overflow-hidden h-full">
+            <div className="px-6 py-4 border-b border-gray-800 flex items-center justify-between">
               <div className="flex items-center gap-3">
                 <div className="w-12 h-12 rounded-xl bg-amber-500/20 flex items-center justify-center">
-                  <LayoutTemplate className="text-amber-400" size={24} />
+                  <ClipboardCheck className="text-amber-400" size={24} />
                 </div>
                 <div>
-                  <h3 className="font-semibold text-white">Şablonlar</h3>
-                  <p className="text-sm text-gray-400">Büyük ekranda önizleme, v0 Çıkart</p>
+                  <h2 className="text-xl font-bold text-white">Patron Havuzu</h2>
+                  <p className="text-xs text-amber-400/90">CEO Havuzu — Her şey buraya gelir. Onayla, oyna.</p>
                 </div>
               </div>
+              <Badge className="bg-amber-500/30 text-amber-300 border-amber-500/50 text-lg px-3 py-1">
+                {approvalItems.filter((i) => i.status === 'pending').length} bekliyor
+              </Badge>
             </div>
-          </a>
-        </div>
-
-        <div className="grid grid-cols-1 lg:grid-cols-2 gap-4 lg:gap-6">
-        {/* Başlangıç Görevleri & Vitrin */}
-        <div className="space-y-4">
-          <Card className="bg-gray-900 border-gray-800">
-            <CardHeader className="py-4">
-              <CardTitle className="text-base !mb-0 text-white">Başlangıç Görevleri</CardTitle>
-              <p className="text-xs text-gray-400 mt-1">
-                <Badge variant="secondary" className="text-xs bg-gray-800 text-gray-300">
-                  {startupStatus?.total_pending ?? 0} görev bekliyor
-                </Badge>
-              </p>
-            </CardHeader>
-            <CardContent className="pt-0">
-              <Button
-                onClick={() => runStartupTasks('run_all')}
-                disabled={startupTasksLoading}
-                className="w-full"
-              >
-                {startupTasksLoading ? (
-                  <span className="flex items-center justify-center gap-2">
-                    <span className="h-4 w-4 border-2 border-primary-foreground/30 border-t-primary-foreground rounded-full animate-spin" />
-                    Tetikleniyor...
-                  </span>
-                ) : (
-                  <>
-                    <Play size={18} className="mr-2" />
-                    Tüm Robotları Başlat
-                  </>
-                )}
-              </Button>
-              <p className="text-xs text-gray-400 mt-2">
-                Direktörlükler ilk görevlerini yapacak.
-              </p>
-              {stats.pendingApprovals > 0 && (
-                <a href="/dashboard/ozel-araclar" className="block mt-3">
-                  <Button variant="outline" className="w-full bg-emerald-500/10 border-emerald-500/50 text-emerald-700 dark:text-emerald-400 hover:bg-emerald-500/20">
-                    <Rocket size={18} className="mr-2" />
-                    Oyna — Deploy ({stats.pendingApprovals} onay)
-                  </Button>
-                </a>
+            <CardContent className="p-4">
+              {approvalLoading ? (
+                <div className="flex justify-center py-12"><Loader2 size={32} className="animate-spin text-amber-400" /></div>
+              ) : approvalItems.filter((i) => i.status === 'pending').length === 0 ? (
+                <div className="text-center py-12 text-gray-500">
+                  <ClipboardCheck size={48} className="mx-auto mb-3 opacity-50" />
+                  <p className="font-medium">Bekleyen iş yok</p>
+                  <p className="text-sm mt-1">Görev verdiğinizde buraya gelecek. Onayla, oyna.</p>
+                  <a href="/dashboard/onay-kuyrugu" className="inline-block mt-4 text-amber-400 hover:text-amber-300 text-sm">Tüm havuz →</a>
+                </div>
+              ) : (
+                <div className="space-y-3 max-h-[340px] overflow-y-auto">
+                  {approvalItems.filter((i) => i.status === 'pending').map((item) => {
+                    const content = item.displayText ?? (item.output_payload as { displayText?: string })?.displayText ?? ''
+                    const snippet = content ? content.slice(0, 60).replace(/\n/g, ' ') + (content.length > 60 ? '…' : '') : ''
+                    return (
+                      <div key={item.id} className="p-4 rounded-xl bg-gray-800/50 border border-gray-700 hover:border-amber-500/40 transition-colors">
+                        <p className="font-medium text-white truncate">{item.title}</p>
+                        {snippet && <p className="text-xs text-gray-400 mt-1 line-clamp-1">« {snippet} »</p>}
+                        <div className="flex gap-2 mt-3">
+                          <button
+                            type="button"
+                            onClick={() => content && setPreviewItem({ id: item.id, title: item.title, displayText: content, status: item.status })}
+                            className="px-3 py-1.5 rounded-lg text-xs border border-gray-600 text-gray-300 hover:bg-gray-700"
+                          >
+                            İçeriği Gör
+                          </button>
+                          <button
+                            type="button"
+                            onClick={() => handleQueueDecision(item.id, 'approve')}
+                            disabled={!!approvalActingId}
+                            className="px-4 py-1.5 rounded-lg text-xs bg-emerald-500/30 text-emerald-400 border border-emerald-500/50 hover:bg-emerald-500/40 disabled:opacity-50"
+                          >
+                            {approvalActingId === item.id + '_approve' ? <Loader2 size={12} className="animate-spin inline" /> : <Check size={12} className="inline mr-1" />} Onayla
+                          </button>
+                          <button
+                            type="button"
+                            onClick={() => handleQueueDecision(item.id, 'reject')}
+                            disabled={!!approvalActingId}
+                            className="px-3 py-1.5 rounded-lg text-xs bg-rose-500/20 text-rose-400 border border-rose-500/40 hover:bg-rose-500/30"
+                          >
+                            <X size={12} className="inline" />
+                          </button>
+                        </div>
+                      </div>
+                    )
+                  })}
+                </div>
               )}
-            </CardContent>
-          </Card>
-
-          <Card className="bg-gray-900 border-gray-800">
-            <CardHeader className="py-4">
-              <CardTitle className="text-base flex items-center gap-2 !mb-0 text-white">
-                <Store size={18} className="text-gray-400" />
-                Vitrin
-              </CardTitle>
-            </CardHeader>
-            <CardContent className="pt-0">
-              <a href="/dashboard/franchises">
-                <Button variant="outline" className="w-full border-gray-700 text-gray-300 hover:bg-gray-800">
-                  Franchise Vitrinleri
-                </Button>
-              </a>
+              <div className="mt-4 flex gap-4">
+                <button type="button" onClick={fetchApprovalQueue} disabled={approvalLoading} className="text-xs text-amber-400 hover:text-amber-300 flex items-center gap-1">
+                  <RefreshCw size={12} className={approvalLoading ? 'animate-spin' : ''} /> Yenile
+                </button>
+                <a href="/dashboard/onay-kuyrugu" className="text-xs text-amber-400 hover:text-amber-300">Tüm havuz →</a>
+              </div>
             </CardContent>
           </Card>
         </div>
-      </div>
 
-      {/* Chat + Onay Kuyruğu */}
-      <div className="grid grid-cols-1 lg:grid-cols-12 gap-6">
-        {/* Sol: Robot Asistan Chat */}
-        <div className="lg:col-span-8">
+        {/* Sağ: Chat — Konuş / Görev ver */}
+        <div className="lg:col-span-5">
       <Card className="bg-gray-900 border-gray-800 overflow-hidden flex flex-col">
         <button
           type="button"
           onClick={() => setChatExpanded(!chatExpanded)}
           className="flex items-center gap-3 px-6 py-4 border-b border-gray-800 hover:bg-gray-800/50 transition-colors w-full text-left"
         >
-          <div className="w-10 h-10 rounded-xl bg-pink-500/20 flex items-center justify-center">
-            <Bot className="text-white" size={22} />
+          <div className="w-10 h-10 rounded-xl bg-cyan-500/20 flex items-center justify-center">
+            <Bot className="text-cyan-400" size={22} />
           </div>
           <div className="flex-1 min-w-0">
-            <h2 className="font-semibold text-white">YİSA-S Robot Asistan</h2>
-            <p className="text-xs text-gray-400 font-mono">
-              {useQualityFlow ? 'CIO → CEO → CELF → Patron Onay' : 'Router + Task Flow'}
-            </p>
+            <h2 className="font-semibold text-white">Konuş / Görev Ver</h2>
+            <p className="text-xs text-gray-400">Yaz → CEO&apos;ya Gönder → Patron Havuzuna gelir</p>
           </div>
           <Badge variant="secondary" className="gap-1.5">
-            <div className="h-1.5 w-1.5 rounded-full bg-primary animate-pulse" />
+            <div className="h-1.5 w-1.5 rounded-full bg-emerald-500 animate-pulse" />
             CANLI
           </Badge>
-          <label className="flex items-center gap-2 text-sm text-muted-foreground cursor-pointer">
-            <input
-              type="checkbox"
-              checked={useQualityFlow}
-              onChange={(e) => setUseQualityFlow(e.target.checked)}
-              className="rounded border-input bg-background text-primary focus:ring-ring"
-            />
-            <span>Seçenek 2</span>
-          </label>
-          <Button variant="ghost" size="sm" onClick={() => setShowFlow((s) => !s)} className="text-muted-foreground">
-            {showFlow ? <ChevronUp size={16} /> : <ChevronDown size={16} />} Akış
-          </Button>
           {chatExpanded ? <Minimize2 size={18} className="text-muted-foreground" /> : <Maximize2 size={18} className="text-muted-foreground" />}
         </button>
-        {showFlow && (
-          <div className="px-6 py-3 border-b border-border bg-muted/30">
-            <pre className="text-xs text-muted-foreground whitespace-pre-wrap font-mono">
-              {useQualityFlow
-                ? `PATRON → İmla (Gemini/GPT) → Şirket/Özel → CIO → CEO → CELF → Patron Onay`
-                : FLOW_DESCRIPTION}
-            </pre>
-          </div>
-        )}
         {chatExpanded && (
           <>
-            {/* Robot seçim paneli */}
-            <div className="px-4 pt-3 pb-2 border-b border-border space-y-3">
-              <div>
-                <p className="text-xs text-muted-foreground mb-2 font-medium">1. Asistan zinciri (tıkla: sırayla 1. 2. 3. 4. 5.) — seçtiklerin çalışır</p>
-                {assistantChain.length > 0 && (
-                  <p className="text-xs text-emerald-500/80 mb-2 font-mono">Sıra: {assistantChain.map((id, i) => `${i + 1}.${id}`).join(' → ')}</p>
-                )}
-              <div className="flex flex-wrap gap-2">
-                {[
-                  { id: 'GPT', label: 'GPT' },
-                  { id: 'GEMINI', label: 'Gemini' },
-                  { id: 'CLAUDE', label: 'Claude' },
-                  { id: 'CLOUD', label: 'Together' },
-                  { id: 'V0', label: 'V0' },
-                  { id: 'CURSOR', label: 'Cursor' },
-                  { id: 'SUPABASE', label: 'Supabase' },
-                  { id: 'GITHUB', label: 'GitHub' },
-                  { id: 'VERCEL', label: 'Vercel' },
-                  { id: 'RAILWAY', label: 'Railway' },
-                  { id: 'FAL', label: 'Fal' },
-                ].map(({ id, label }) => {
-                  const order = assistantChain.indexOf(id) + 1
-                  const inChain = order > 0
-                  return (
-                    <button
-                      key={id}
-                      type="button"
-                      onClick={() => toggleAssistantInChain(id)}
-                      className={`px-3 py-1.5 rounded-md text-sm font-medium transition-colors border ${
-                        inChain
-                          ? 'bg-primary text-primary-foreground border-primary'
-                          : 'bg-muted/50 text-muted-foreground border-border hover:bg-accent hover:text-accent-foreground'
-                      }`}
-                    >
-                      {inChain ? `${order}. ${label}` : label}
-                    </button>
-                  )
-                })}
-              </div>
-            </div>
-            <div>
-              <p className="text-xs text-muted-foreground mb-2 font-medium">2. Hedef direktör (komut gönderirken — boş = otomatik)</p>
-                <select
-                  value={targetDirector}
-                  onChange={(e) => setTargetDirector(e.target.value)}
-                  className="w-full max-w-xs bg-background border border-input rounded-md px-3 py-2 text-sm text-foreground"
-                >
-                  <option value="">Otomatik (CEO yönlendirir)</option>
-                  <option value="CFO">CFO — Finans</option>
-                  <option value="CTO">CTO — Teknoloji</option>
-                  <option value="CIO">CIO — Bilgi Sistemleri</option>
-                  <option value="CMO">CMO — Pazarlama</option>
-                  <option value="CHRO">CHRO — İnsan Kaynakları</option>
-                  <option value="CLO">CLO — Hukuk</option>
-                  <option value="CSO_SATIS">CSO — Satış</option>
-                  <option value="CPO">CPO — Ürün</option>
-                  <option value="CDO">CDO — Veri</option>
-                  <option value="CISO">CISO — Güvenlik</option>
-                  <option value="CCO">CCO — Müşteri</option>
-                  <option value="CSO_STRATEJI">CSO — Strateji</option>
-                  <option value="CSPO">CSPO — Spor (antrenman, çocuk yaşı)</option>
-                  <option value="COO">COO — Operasyon</option>
-                  <option value="RND">RND — AR-GE</option>
-                </select>
-              </div>
-              {/* LLM ve Araçlar */}
-              <div className="mt-3 pt-3 border-t border-border space-y-3 text-xs text-muted-foreground">
-                <div>
-                  <p className="font-medium text-foreground mb-1.5">LLM (Dil Modelleri)</p>
-                  <ul className="space-y-1 pl-1">
-                    <li>Claude — Akıl, analiz, karar</li>
-                    <li>GPT — Genel amaçlı, çeşitlilik</li>
-                    <li>Gemini — Hızlı, multimodal</li>
-                    <li>Together.ai — Ucuz, batch işlemler</li>
-                  </ul>
-                </div>
-                <div>
-                  <p className="font-medium text-foreground mb-1.5">Araçlar</p>
-                  <ul className="space-y-1 pl-1">
-                    <li>Cursor — Kod yazma, düzenleme</li>
-                    <li>v0 — UI/Frontend üretimi</li>
-                    <li>GitHub — Kod depolama, versiyon</li>
-                    <li>Vercel — Deploy, hosting</li>
-                    <li>Supabase — Veritabanı, auth, storage</li>
-                    <li>Railway — Backend worker&apos;lar</li>
-                  </ul>
-                </div>
-              </div>
+            <div className="px-4 pt-3 pb-2 border-b border-border">
+              <p className="text-xs text-muted-foreground mb-2">Hedef direktör (boş = otomatik)</p>
+              <select
+                value={targetDirector}
+                onChange={(e) => setTargetDirector(e.target.value)}
+                className="w-full bg-background border border-input rounded-md px-3 py-2 text-sm text-foreground"
+              >
+                <option value="">Otomatik</option>
+                <option value="CFO">CFO</option>
+                <option value="CTO">CTO</option>
+                <option value="CPO">CPO (v0)</option>
+                <option value="CSPO">CSPO</option>
+                <option value="COO">COO</option>
+              </select>
             </div>
             <div className="flex-1 min-h-[200px] max-h-[340px] overflow-y-auto p-4 space-y-4">
               {chatMessages.length === 0 && (
                 <div className="text-center py-8 text-muted-foreground">
                   <p className="mb-1">Merhaba, ben YİSA-S asistanıyım.</p>
-                  <p className="text-sm">Görev ver veya soru sor. Örnek: &quot;Finans raporu hazırla&quot;, &quot;Hareket havuzunu kontrol et&quot;</p>
+                  <p className="text-sm mb-2">Görev ver veya soru sor.</p>
+                  <p className="text-xs text-muted-foreground/80">
+                    Örn: <span className="text-amber-400/90">&quot;v0&apos;a tasarım yaptır&quot;</span>, <span className="text-cyan-400/90">&quot;CFO&apos;ya rapor hazırla&quot;</span>, <span className="text-emerald-400/90">&quot;Onaylıyorum&quot;</span> — Onay kuyruğu sağda.
+                  </p>
                 </div>
               )}
               {chatMessages.map((m, i) => (
@@ -1354,7 +1344,7 @@ export default function DashboardPage() {
                   value={chatInput}
                   onChange={(e) => setChatInput(e.target.value)}
                   onKeyDown={(e) => e.key === 'Enter' && !e.shiftKey && handleSendChat()}
-                  placeholder="Görev ver veya soru sor..."
+                  placeholder="Örn: v0'a tasarım yaptır, CFO'ya rapor hazırla, Onaylıyorum"
                   className="flex-1 bg-background border border-input rounded-md px-4 py-3 text-foreground placeholder-muted-foreground focus:outline-none focus:ring-2 focus:ring-ring focus:border-ring"
                   disabled={chatSending}
                 />
@@ -1368,169 +1358,7 @@ export default function DashboardPage() {
         )}
       </Card>
         </div>
-
-        {/* Sağ: Onay Kuyruğu */}
-        <div className="lg:col-span-4">
-          <Card className="bg-gray-900 border-gray-800 overflow-hidden h-full">
-            <button
-              type="button"
-              onClick={() => setQueueExpanded(!queueExpanded)}
-              className="w-full flex items-center justify-between px-6 py-4 border-b border-gray-800 hover:bg-gray-800/50 transition-colors text-left"
-            >
-              <div className="flex items-center gap-2">
-                <ClipboardCheck size={20} className="text-gray-400" />
-                <span className="font-semibold text-white">Havuz (Onay Kuyruğu)</span>
-                <Badge variant="secondary" className="text-xs">
-                  {approvalItems.filter((i) => i.status === 'pending').length} bekliyor
-                </Badge>
-              </div>
-              {queueExpanded ? <Minimize2 size={18} className="text-muted-foreground" /> : <Maximize2 size={18} className="text-muted-foreground" />}
-            </button>
-            {queueExpanded && (
-              <CardContent className="p-4">
-                <p className="text-xs text-muted-foreground mb-3">
-                  Direktör işleri burada. <strong>Onayla</strong> basınca push, commit, deploy otomatik.
-                </p>
-                {approvalLoading ? (
-                  <div className="flex justify-center py-8">
-                    <Loader2 size={24} className="animate-spin text-muted-foreground" />
-                  </div>
-                ) : (
-                  <>
-                    {approvalItems.filter((i) => i.status === 'pending').length === 0 ? (
-                      <div className="text-center py-4 text-muted-foreground text-sm">
-                        Bekleyen iş yok.
-                      </div>
-                    ) : (
-                      <>
-                        <Button
-                          type="button"
-                          variant="destructive"
-                          size="sm"
-                          onClick={handleCancelAllPending}
-                          disabled={!!approvalActingId}
-                          className="w-full mb-3"
-                          title="Tekrarlayan veya gereksiz bekleyen tüm işleri iptal eder"
-                        >
-                          {approvalActingId === 'cancel_all' ? (
-                            <Loader2 size={14} className="animate-spin inline mr-2" />
-                          ) : (
-                            <Ban size={14} className="inline mr-2" />
-                          )}
-                          Bekleyen tümünü iptal et
-                        </Button>
-                    <div className="space-y-2 max-h-[280px] overflow-y-auto">
-                      {approvalItems.filter((i) => i.status === 'pending').map((item) => {
-                        const content = item.displayText ?? (item.output_payload as { displayText?: string })?.displayText ?? ''
-                        const snippet = content ? content.slice(0, 80).replace(/\n/g, ' ') + (content.length > 80 ? '…' : '') : ''
-                        return (
-                        <div
-                          key={item.id}
-                          className="p-3 rounded-lg bg-muted/30 border border-border hover:border-ring/50 transition-colors"
-                        >
-                          <button
-                            type="button"
-                            onClick={() => content && setPreviewItem({ id: item.id, title: item.title, displayText: content, status: item.status })}
-                            className="w-full text-left group"
-                          >
-                            <p className="text-sm text-foreground truncate group-hover:text-primary" title={item.title}>
-                              {item.title.length > 50 ? item.title.slice(0, 50) + '…' : item.title}
-                            </p>
-                            {snippet && (
-                              <p className="text-xs text-muted-foreground mt-1 line-clamp-1">« {snippet} »</p>
-                            )}
-                            <p className="text-[10px] text-muted-foreground mt-1">
-                              Tıkla: İçeriği aç
-                            </p>
-                          </button>
-                          <div className="flex flex-wrap gap-2 mt-2">
-                            {content && (
-                              <button
-                                type="button"
-                                onClick={() => setPreviewItem({ id: item.id, title: item.title, displayText: content, status: item.status })}
-                                className="px-2 py-1 rounded-md text-xs border border-input bg-background hover:bg-accent hover:text-accent-foreground transition-colors"
-                              >
-                                İçeriği Gör
-                              </button>
-                            )}
-                            <button
-                              type="button"
-                              onClick={() => handleQueueDecision(item.id, 'approve')}
-                              disabled={!!approvalActingId}
-                              className="px-2 py-1 rounded-md text-xs bg-primary text-primary-foreground hover:opacity-90 disabled:opacity-50 transition-colors"
-                            >
-                              {approvalActingId === item.id + '_approve' ? <Loader2 size={12} className="animate-spin inline" /> : <Check size={12} className="inline" />} Onayla
-                            </button>
-                            <button
-                              type="button"
-                              onClick={() => handleQueueDecision(item.id, 'reject')}
-                              disabled={!!approvalActingId}
-                              className="px-2 py-1 rounded-md text-xs bg-destructive text-destructive-foreground hover:opacity-90 disabled:opacity-50 transition-colors"
-                            >
-                              <X size={12} className="inline" /> Reddet
-                            </button>
-                            <button
-                              type="button"
-                              onClick={() => handleQueueDecision(item.id, 'cancel')}
-                              disabled={!!approvalActingId}
-                              className="px-2 py-1 rounded-md text-xs bg-muted text-muted-foreground hover:bg-accent hover:text-accent-foreground disabled:opacity-50 transition-colors"
-                            >
-                              <Ban size={12} className="inline" /> İptal
-                            </button>
-                          </div>
-                        </div>
-                        )
-                      })}
-                    </div>
-                      </>
-                    )}
-                    <Button
-                      type="button"
-                      variant="ghost"
-                      size="sm"
-                      onClick={fetchApprovalQueue}
-                      disabled={approvalLoading}
-                      className="mt-3 w-full text-muted-foreground"
-                    >
-                      <RefreshCw size={12} className={approvalLoading ? 'animate-spin' : ''} />
-                      Yenile
-                    </Button>
-
-                {/* Onaylanan İşler */}
-                {approvalItems.filter((i) => i.status === 'approved').length > 0 && (
-                  <div className="mt-6 pt-4 border-t border-border">
-                    <p className="text-xs font-medium text-muted-foreground mb-2">Onaylanan İşler</p>
-                    <div className="space-y-1 max-h-[160px] overflow-y-auto">
-                      {approvalItems.filter((i) => i.status === 'approved').slice(0, 10).map((item) => {
-                        const payload = item.output_payload as Record<string, unknown> | undefined
-                        const dt = item.displayText ?? payload?.displayText ?? payload?.output_summary ?? (typeof payload?.text === 'string' ? payload.text : '')
-                        const content = typeof dt === 'string' ? dt : (dt ? String(dt) : '')
-                        return (
-                        <button
-                          key={item.id}
-                          type="button"
-                          onClick={() => setPreviewItem({
-                            id: item.id,
-                            title: item.title,
-                            displayText: content || '(Bu işte kayıtlı içerik yok)',
-                            status: item.status,
-                          })}
-                          className="w-full text-left px-3 py-2.5 rounded-lg bg-muted/50 border border-border text-sm text-foreground hover:bg-accent/50 hover:border-ring/50 transition-colors"
-                        >
-                          <span className="block truncate">{item.title.length > 40 ? item.title.slice(0, 40) + '…' : item.title}</span>
-                          <span className="text-[10px] text-muted-foreground mt-0.5 block">Tıkla içeriği gör</span>
-                        </button>
-                        )
-                      })}
-                    </div>
-                  </div>
-                )}
-                  </>
-                )}
-              </CardContent>
-            )}
-          </Card>
-        </div>
+      </div>
       </div>
 
       {/* Önizleme modal */}
@@ -1566,7 +1394,6 @@ export default function DashboardPage() {
           </div>
         </div>
       )}
-      </div>
     </div>
   )
 }

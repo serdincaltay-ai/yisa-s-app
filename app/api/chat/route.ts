@@ -1,64 +1,60 @@
 import { NextRequest, NextResponse } from 'next/server'
 import { saveChatMessage } from '@/lib/db/chat-messages'
-import { fetchWithRetry } from '@/lib/api/fetch-with-retry'
+import { callClaude, callTogetherForAssistant } from '@/lib/ai/celf-execute'
+import { callOpenAIChat, callGeminiChat, callTogetherChat } from '@/lib/api/chat-providers'
+import { v0Generate } from '@/lib/api/v0-client'
 
-const ANTHROPIC_URL = 'https://api.anthropic.com/v1/messages'
+const SYSTEM_PROMPT = 'Sen YİSA-S Patron Asistanısın. Kısa, net ve Türkçe yanıt ver. Uydurma firma/isim yazma; sadece YİSA-S bağlamında üret.'
 
 export async function POST(req: NextRequest) {
   try {
-    const apiKey = process.env.ANTHROPIC_API_KEY
-    if (!apiKey) {
-      return NextResponse.json(
-        { error: 'ANTHROPIC_API_KEY tanımlı değil' },
-        { status: 500 }
-      )
-    }
-
     const body = await req.json()
     const message = typeof body.message === 'string' ? body.message : (body.message ?? 'Merhaba')
     const taskType = typeof body.taskType === 'string' ? body.taskType : undefined
-    const assignedAI = typeof body.assignedAI === 'string' ? body.assignedAI : 'CLAUDE'
+    const assignedAI = (typeof body.assignedAI === 'string' ? body.assignedAI.toUpperCase() : 'CLAUDE') as string
     const userId = typeof body.user_id === 'string' ? body.user_id : (body.user?.id as string | undefined)
 
-    const res = await fetchWithRetry(ANTHROPIC_URL, {
-      method: 'POST',
-      headers: {
-        'Content-Type': 'application/json',
-        'x-api-key': apiKey,
-        'anthropic-version': '2023-06-01',
-      },
-      body: JSON.stringify({
-        model: 'claude-3-5-haiku-20241022',
-        max_tokens: 1024,
-        system: 'Sen YİSA-S Patron Asistanısın. Kısa, net ve Türkçe yanıt ver.',
-        messages: [{ role: 'user', content: message }],
-      }),
-    })
+    let text: string
+    let provider = assignedAI
 
-    if (!res.ok) {
-      const err = await res.text()
-      return NextResponse.json(
-        { error: 'Claude isteği başarısız', detail: err },
-        { status: res.status }
-      )
+    switch (assignedAI) {
+      case 'GPT':
+        text = (await callOpenAIChat(message)) ?? 'OPENAI_API_KEY tanımlı değil veya yanıt alınamadı.'
+        break
+      case 'GEMINI':
+        text = (await callGeminiChat(message)) ?? 'GOOGLE_API_KEY tanımlı değil veya yanıt alınamadı.'
+        break
+      case 'TOGETHER':
+        text = (await callTogetherChat(message)) ?? (await callTogetherForAssistant(message, SYSTEM_PROMPT)) ?? 'TOGETHER_API_KEY tanımlı değil veya yanıt alınamadı.'
+        break
+      case 'V0': {
+        const v0Result = await v0Generate(`Tasarım isteği (Türkçe): ${message}`)
+        text = 'error' in v0Result ? v0Result.error : v0Result.text
+        provider = 'V0'
+        break
+      }
+      case 'CURSOR':
+        text = 'Cursor kod asistanı — kod istekleri CELF CTO direktörlüğü üzerinden işlenir.'
+        break
+      case 'CLAUDE':
+      default:
+        text = (await callClaude(message, SYSTEM_PROMPT, 'asistan')) ?? 'ANTHROPIC_API_KEY tanımlı değil veya yanıt alınamadı.'
+        provider = 'CLAUDE'
+        break
     }
-
-    const data = await res.json()
-    const text =
-      data.content?.find((c: { type: string }) => c.type === 'text')?.text ?? 'Yanıt oluşturulamadı.'
 
     if (userId) {
       await saveChatMessage({
         user_id: userId,
         message,
         response: text,
-        ai_providers: [assignedAI || 'CLAUDE'],
+        ai_providers: [provider],
       })
     }
 
     return NextResponse.json({
       text,
-      assignedAI: assignedAI || 'CLAUDE',
+      assignedAI: provider,
       taskType: taskType || 'unknown',
     })
   } catch (e) {

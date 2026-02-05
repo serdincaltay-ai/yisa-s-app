@@ -26,6 +26,7 @@ function getSupabase() {
 
 export interface ApprovalItem {
   id: string
+  ticket_no?: string
   type: string
   title: string
   description?: string
@@ -93,6 +94,7 @@ export async function GET() {
       const directorName = typeof outputPayload?.director_name === 'string' ? outputPayload.director_name : undefined
       return {
         id: String(row.id ?? ''),
+        ticket_no: row.ticket_no != null ? String(row.ticket_no) : (outputPayload?.ticket_no != null ? String(outputPayload.ticket_no) : undefined),
         type: String(row.type ?? outputPayload?.task_type ?? 'onay'),
         title: String(row.title ?? row.command ?? '-'),
         description: row.description != null ? String(row.description) : (displayText ? displayText.slice(0, 200) : undefined),

@@ -1,10 +1,12 @@
 'use client'
 
 import { useEffect, useState } from 'react'
-import { Check, X, Clock, AlertCircle, RefreshCw, Loader2, Trash2, Ban, GitBranch, FileText, Bot, Rocket } from 'lucide-react'
+import { Check, X, Clock, AlertCircle, RefreshCw, Loader2, Trash2, Ban, GitBranch, FileText, Bot, Rocket, Eye } from 'lucide-react'
+import { ContentPreview } from '@/app/components/ContentPreview'
 
 type ApprovalItem = {
   id: string
+  ticket_no?: string
   type: string
   title: string
   description?: string
@@ -19,6 +21,9 @@ type ApprovalItem = {
   assistant_summary?: string
   director_key?: string
   director_name?: string
+  /** Önizleme: video, görsel, dosya, metin */
+  displayText?: string
+  output_payload?: Record<string, unknown>
 }
 
 type DemoRequest = {
@@ -51,6 +56,7 @@ export default function OnayKuyruguPage() {
   const [migrateLoading, setMigrateLoading] = useState(false)
   const [orphanCount, setOrphanCount] = useState(0)
   const [unprocessedCount, setUnprocessedCount] = useState(0)
+  const [previewItemId, setPreviewItemId] = useState<string | null>(null)
 
   const fetchData = async () => {
     setLoading(true)
@@ -275,9 +281,9 @@ export default function OnayKuyruguPage() {
     <div className="p-8">
       <div className="mb-8 flex items-center justify-between">
         <div>
-          <h1 className="text-2xl font-bold text-white">Onay Kuyruğu</h1>
+          <h1 className="text-2xl font-bold text-white">10'a Çıkart</h1>
           <p className="text-slate-400">
-            Sistemden gelen işler — Onayla / Reddet / İptal / Push · Demo talepleri
+            CEO Havuzu — Sistemden gelen işler: video, dosya, tasarım. Onayla / Reddet / İptal / Push · Demo talepleri
             {table && <span className="ml-2 text-xs text-slate-500">(Kaynak: {table})</span>}
           </p>
         </div>
@@ -516,6 +522,7 @@ export default function OnayKuyruguPage() {
               <table className="w-full text-left">
                 <thead>
                   <tr className="border-b border-slate-700">
+                    <th className="px-6 py-4 text-slate-400 font-medium text-sm">Ticket</th>
                     <th className="px-6 py-4 text-slate-400 font-medium text-sm">Gönderen</th>
                     <th className="px-6 py-4 text-slate-400 font-medium text-sm">Tip / Direktör</th>
                     <th className="px-6 py-4 text-slate-400 font-medium text-sm">Başlık</th>
@@ -528,6 +535,9 @@ export default function OnayKuyruguPage() {
                 <tbody>
                   {filteredItems.map((item) => (
                     <tr key={item.id} className="border-b border-slate-700/50 hover:bg-slate-700/30">
+                      <td className="px-6 py-4 text-cyan-400 font-mono text-sm">
+                        {item.ticket_no ?? '—'}
+                      </td>
                       <td className="px-6 py-4 text-slate-300 text-sm" title={item.sent_by_email ?? 'Patron'}>
                         {item.sent_by_email ? (item.sent_by_email.length > 18 ? item.sent_by_email.slice(0, 18) + '…' : item.sent_by_email) : 'Patron'}
                       </td>
@@ -595,6 +605,17 @@ export default function OnayKuyruguPage() {
                         {item.created_at ? new Date(item.created_at).toLocaleDateString('tr-TR') : '—'}
                       </td>
                       <td className="px-6 py-4">
+                        {(item.output_payload || item.displayText) && (
+                          <button
+                            type="button"
+                            onClick={() => setPreviewItemId(previewItemId === item.id ? null : item.id)}
+                            className="flex items-center gap-1 px-3 py-1.5 rounded-lg bg-cyan-500/20 text-cyan-400 hover:bg-cyan-500/30 text-sm font-medium transition-colors mr-2"
+                            title="Video, dosya, görsel önizleme"
+                          >
+                            <Eye size={14} />
+                            Görüntüle
+                          </button>
+                        )}
                         {item.status === 'pending' ? (
                           <div className="flex flex-wrap items-center gap-2">
                             <button
@@ -685,6 +706,45 @@ export default function OnayKuyruguPage() {
               </table>
             </div>
           </div>
+
+          {/* Önizleme modal — video, dosya, görsel */}
+          {previewItemId && (() => {
+            const item = items.find((i) => i.id === previewItemId)
+            if (!item) return null
+            const payload = (item.output_payload ?? {}) as Record<string, unknown>
+            const content = { ...payload }
+            if (item.displayText) (content as Record<string, unknown>).content = item.displayText
+            return (
+              <div
+                className="fixed inset-0 z-50 flex items-center justify-center bg-black/80 p-4"
+                onClick={() => setPreviewItemId(null)}
+                role="dialog"
+                aria-modal="true"
+              >
+                <div
+                  className="bg-slate-900 border border-slate-700 rounded-2xl max-w-4xl w-full max-h-[90vh] overflow-auto p-6"
+                  onClick={(e) => e.stopPropagation()}
+                >
+                  <div className="flex items-center justify-between mb-4">
+                    <h3 className="text-lg font-semibold text-white">{item.title}</h3>
+                    <button
+                      type="button"
+                      onClick={() => setPreviewItemId(null)}
+                      className="p-2 rounded-lg hover:bg-slate-700 text-slate-400"
+                    >
+                      <X size={24} />
+                    </button>
+                  </div>
+                  <ContentPreview icerik={content} />
+                  {item.displayText && !payload.video_url && !payload.image_url && !payload.gorsel_url && (
+                    <div className="mt-4 p-4 rounded-xl bg-slate-800 border border-slate-700 text-slate-300 whitespace-pre-wrap text-sm">
+                      {item.displayText}
+                    </div>
+                  )}
+                </div>
+              </div>
+            )
+          })()}
         </>
       )}
     </div>

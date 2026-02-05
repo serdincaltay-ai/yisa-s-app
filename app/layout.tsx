@@ -3,15 +3,17 @@ import { SpeedInsights } from '@vercel/speed-insights/next'
 import Script from 'next/script'
 import { headers } from 'next/headers'
 import { getPanelFromHost } from '@/lib/subdomain'
+import { getFranchiseSubdomains } from '@/lib/db/franchise-subdomains'
 
 export async function generateMetadata() {
   const headersList = await headers()
   const host = headersList.get('host') ?? ''
-  const panel = getPanelFromHost(host)
+  const subdomains = await getFranchiseSubdomains()
+  const panel = getPanelFromHost(host, subdomains)
   const title =
     panel === 'patron'
       ? 'YİSA-S Patron Paneli'
-      : panel === 'franchise'
+      : panel === 'franchise' || panel === 'franchise_site'
         ? 'YİSA-S Franchise Paneli'
         : panel === 'veli'
           ? 'YİSA-S Veli Paneli'
@@ -21,7 +23,7 @@ export async function generateMetadata() {
     description:
       panel === 'patron'
         ? 'Patron Komuta Merkezi — Robotlar, onay, franchise'
-        : panel === 'franchise'
+        : panel === 'franchise' || panel === 'franchise_site'
           ? 'Franchise Paneli — Tesisinizi yönetin'
           : panel === 'veli'
             ? 'Veli Paneli — Çocuk takibi, ödeme'

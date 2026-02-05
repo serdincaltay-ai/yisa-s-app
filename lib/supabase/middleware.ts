@@ -1,9 +1,14 @@
 import { createServerClient } from '@supabase/ssr'
 import { NextResponse, type NextRequest } from 'next/server'
-import { getPanelFromHost, PANEL_DEFAULT_PATH } from '@/lib/subdomain'
+import { getPanelFromHost, getFranchiseSlugFromHost, PANEL_DEFAULT_PATH, FRANCHISE_SUBDOMAINS_DEFAULT } from '@/lib/subdomain'
+import { getFranchiseSubdomains } from '@/lib/db/franchise-subdomains'
 
 const APP_DOMAIN = 'app.yisa-s.com'
-const VALID_SUBDOMAINS = ['app.', 'franchise.', 'veli.']
+const WWW_DOMAIN = 'www.yisa-s.com'
+
+function getValidSubdomains(subdomains: string[]) {
+  return ['app.', 'franchise.', 'veli.', ...subdomains.map((s) => s + '.')]
+}
 const ROOT_SITE_DOMAINS = ['yisa-s.com', 'www.yisa-s.com']
 
 export async function updateSession(request: NextRequest) {
@@ -12,9 +17,11 @@ export async function updateSession(request: NextRequest) {
 
   // yisa-s.com ve www.yisa-s.com → Bu sitede kal (tanıtım/landing). app/franchise/veli subdomain'leri → aynı proje.
   // Diğer domainler (vercel.app vb.) → app.yisa-s.com'a yönlendir
+  const subdomains = await getFranchiseSubdomains()
+  const validSubdomains = getValidSubdomains(subdomains)
   const isLocal = hostname.includes('localhost') || hostname.includes('127.0.0.1')
   const isRootSite = ROOT_SITE_DOMAINS.includes(hostname)
-  const hasValidSubdomain = VALID_SUBDOMAINS.some((s) => hostname.startsWith(s))
+  const hasValidSubdomain = validSubdomains.some((s) => hostname.startsWith(s))
   if (!isLocal && !isRootSite && !hasValidSubdomain) {
     const url = request.nextUrl.clone()
     url.protocol = 'https:'
@@ -22,8 +29,16 @@ export async function updateSession(request: NextRequest) {
     return NextResponse.redirect(url)
   }
 
-  const panel = getPanelFromHost(host)
+  const panel = getPanelFromHost(host, subdomains)
   const pathname = request.nextUrl.pathname
+
+  // franchise.yisa-s.com → www.yisa-s.com (spor okulları listesi)
+  if (hostname.startsWith('franchise.')) {
+    const url = request.nextUrl.clone()
+    url.protocol = 'https:'
+    url.host = WWW_DOMAIN
+    return NextResponse.redirect(url)
+  }
 
   let supabaseResponse = NextResponse.next({ request })
 
@@ -67,6 +82,8 @@ export async function updateSession(request: NextRequest) {
     const target = user ? PANEL_DEFAULT_PATH[panel] : '/auth/login'
     const url = request.nextUrl.clone()
     url.pathname = target
+    const franchiseSlug = getFranchiseSlugFromHost(host, subdomains)
+    if (franchiseSlug) url.searchParams.set('t', franchiseSlug)
     if (!user) url.searchParams.set('from', panel)
     const redirect = NextResponse.redirect(url)
     supabaseResponse.cookies.getAll().forEach((c) => {

@@ -135,7 +135,7 @@ $body = '{"message":"Merhaba, sistem durumu nedir?","user_id":"test"}'
 Invoke-RestMethod -Uri "http://localhost:3000/api/chat/flow" -Method POST -Body $body -ContentType "application/json" | ConvertTo-Json -Depth 5
 
 # Vitrin demo
-$demo = '{"name":"Test","email":"test@test.com","phone":"555","facility_type":"jimnastik","city":"Istanbul","source":"vitrin"}'
+$demo = '{"name":"Test","email":"demo@yisa-s.com","phone":"555","facility_type":"jimnastik","city":"Istanbul","source":"vitrin"}'
 Invoke-RestMethod -Uri "http://localhost:3000/api/demo-requests" -Method POST -Body $demo -ContentType "application/json" | ConvertTo-Json
 ```
 

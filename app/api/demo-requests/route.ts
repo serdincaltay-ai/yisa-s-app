@@ -1,5 +1,6 @@
 import { NextRequest, NextResponse } from 'next/server'
 import { createClient } from '@supabase/supabase-js'
+import { requirePatronOrFlow } from '@/lib/auth/api-auth'
 
 export const dynamic = 'force-dynamic'
 
@@ -41,9 +42,11 @@ export async function POST(req: NextRequest) {
   try {
     const body = await req.json()
 
-    // Onay/Red — Patron panelinden
+    // Onay/Red — Patron panelinden (yetkili kullanıcı gerekli)
     const action = body.action as string | undefined
     if (action === 'decide') {
+      const auth = await requirePatronOrFlow()
+      if (auth instanceof NextResponse) return auth
       const id = typeof body.id === 'string' ? body.id.trim() : ''
       const decision = body.decision as 'approve' | 'reject'
       if (!id || !['approve', 'reject'].includes(decision)) {
@@ -63,7 +66,8 @@ export async function POST(req: NextRequest) {
         return NextResponse.json({ ok: true, message: 'Talep reddedildi.' })
       }
 
-      // approve: tenant oluştur
+      // approve: tenant oluştur (Vitrin veya demo)
+      const isVitrin = row.source === 'vitrin'
       const baseName = row.name?.trim() || row.facility_type || 'Yeni Tesis'
       const cityPart = row.city ? ` ${row.city}` : ''
       const tenantName = `${baseName}${cityPart}`.trim() || 'Yeni Tesis'
@@ -128,6 +132,44 @@ export async function POST(req: NextRequest) {
         }
       }
 
+      // Vitrin: franchise kaydı + tenant_purchases (seçilen paketler)
+      if (isVitrin && tenantId) {
+        let notesObj: { sablonId?: string; tesisSablonId?: string; toplamTek?: number; aylik?: number } = {}
+        try {
+          notesObj = typeof row.notes === 'string' ? JSON.parse(row.notes) : {}
+        } catch {
+          /* notes parse edilemezse boş */
+        }
+        const nameParts = baseName.trim().split(/\s+/)
+        const yetkiliAd = nameParts[0] || 'Tesis'
+        const yetkiliSoyad = nameParts.slice(1).join(' ') || 'Sahibi'
+        try {
+          await supabase.from('franchises').insert({
+            tenant_id: tenantId,
+            isletme_adi: baseName,
+            yetkili_ad: yetkiliAd,
+            yetkili_soyad: yetkiliSoyad,
+            durum: 'aktif',
+            il: row.city ?? null,
+          } as Record<string, unknown>)
+        } catch (_) {
+          /* franchises tablosu yoksa veya hata varsa devam et */
+        }
+        try {
+          await supabase.from('tenant_purchases').insert({
+            tenant_id: tenantId,
+            product_key: `vitrin_${notesObj.sablonId ?? 'modern'}_${notesObj.tesisSablonId ?? 'temel'}`,
+            product_name: `Vitrin paket: ${notesObj.sablonId ?? 'modern'} + ${notesObj.tesisSablonId ?? 'temel'}`,
+            amount: notesObj.toplamTek ?? 0,
+            para_birimi: 'TRY',
+            odeme_onaylandi: true,
+            approved_at: new Date().toISOString(),
+          })
+        } catch (_) {
+          /* tenant_purchases hatası */
+        }
+      }
+
       await supabase.from('demo_requests').update({ status: 'converted' }).eq('id', id)
       return NextResponse.json({
         ok: true,
@@ -138,11 +180,14 @@ export async function POST(req: NextRequest) {
         slug,
         temp_password: tempPassword,
         login_email: tempPassword ? reqEmail : undefined,
+        franchise_created: isVitrin,
       })
     }
 
     // Ödeme kaydı — Patron: "Merve ödedi" → bu talep için ödeme alındı işaretle
     if (action === 'record_payment') {
+      const authPay = await requirePatronOrFlow()
+      if (authPay instanceof NextResponse) return authPay
       const id = typeof body.id === 'string' ? body.id.trim() : ''
       const amount = typeof body.amount === 'number' ? body.amount : (typeof body.amount === 'string' ? parseFloat(body.amount) : undefined)
       const paidAt = typeof body.paid_at === 'string' ? body.paid_at : (body.paid_at ? new Date().toISOString() : undefined)

@@ -12,6 +12,7 @@ import {
   Sparkles,
   Monitor,
 } from 'lucide-react'
+import { ContentPreview, hasMediaContent } from '@/app/components/ContentPreview'
 
 const KATEGORILER = [
   'Tümü',
@@ -90,7 +91,7 @@ export default function SablonlarPage() {
   const [previewExpanded, setPreviewExpanded] = useState(true)
   const [v0Output, setV0Output] = useState<string | null>(null)
   const [v0Loading, setV0Loading] = useState(false)
-  const [previewMode, setPreviewMode] = useState<'raw' | 'html' | 'v0'>('raw')
+  const [previewMode, setPreviewMode] = useState<'raw' | 'media' | 'html' | 'v0'>('raw')
 
   const fetchData = useCallback(async (kategori?: string) => {
     setLoading(true)
@@ -128,7 +129,8 @@ export default function SablonlarPage() {
     setSelectedSablon(s)
     setV0Output(null)
     const html = s ? extractHtml(s.icerik) : null
-    setPreviewMode(html ? 'html' : 'raw')
+    const media = s ? hasMediaContent(s.icerik) : false
+    setPreviewMode(media ? 'media' : html ? 'html' : 'raw')
   }
 
   const handleV0Cikart = async () => {
@@ -158,6 +160,7 @@ export default function SablonlarPage() {
 
   const bosIcerikSayisi = sablonlar.filter((s) => isEmptyIcerik(s.icerik)).length
   const hasHtml = selectedSablon ? !!extractHtml(selectedSablon.icerik) : false
+  const hasMedia = selectedSablon ? hasMediaContent(selectedSablon.icerik) : false
 
   return (
     <div className="p-6 min-h-screen bg-gray-950 text-white">
@@ -167,7 +170,7 @@ export default function SablonlarPage() {
           <p className="text-gray-400">Şablona tıklayın — sağdaki büyük ekranda içeriği görün, v0 ile görselleştirin.</p>
           <div className="mt-3 p-3 rounded-xl bg-pink-500/10 border border-pink-500/30 text-xs text-gray-300 space-y-1">
             <p><strong className="text-pink-400">Geniş Ekran:</strong> Şablon seçince burada görünür. v0 Çıkart ile tasarım üretilir.</p>
-            <p><strong className="text-amber-400">Format:</strong> JSON (icerik). html/ui alanı varsa doğrudan render edilir.</p>
+            <p><strong className="text-amber-400">Format:</strong> JSON (icerik). Resim, video, ses, dosya, Word, MD — Medya sekmesinde önizlenir.</p>
             <p><strong className="text-emerald-400">Komut:</strong> Siz komut verirsiniz → Asistanlar işler → Onay + deploy.</p>
           </div>
         </div>
@@ -286,7 +289,7 @@ export default function SablonlarPage() {
                   </button>
                 </div>
                 {selectedSablon && (
-                  <div className="flex items-center gap-2">
+                  <div className="flex items-center gap-2 flex-wrap">
                     <button
                       type="button"
                       onClick={() => setPreviewMode('raw')}
@@ -296,6 +299,17 @@ export default function SablonlarPage() {
                     >
                       Ham
                     </button>
+                    {hasMedia && (
+                      <button
+                        type="button"
+                        onClick={() => setPreviewMode('media')}
+                        className={`px-3 py-1.5 rounded-lg text-xs font-medium ${
+                          previewMode === 'media' ? 'bg-cyan-500/30 text-cyan-300' : 'bg-gray-800 text-gray-400 hover:text-white'
+                        }`}
+                      >
+                        Medya
+                      </button>
+                    )}
                     {hasHtml && (
                       <button
                         type="button"
@@ -352,6 +366,8 @@ export default function SablonlarPage() {
                       </div>
                     ) : null}
                   </div>
+                ) : previewMode === 'media' && hasMedia ? (
+                  <ContentPreview icerik={selectedSablon.icerik} />
                 ) : previewMode === 'html' && hasHtml ? (
                   <div className="rounded-xl border border-blue-500/30 bg-white overflow-auto">
                     <iframe
@@ -363,6 +379,9 @@ export default function SablonlarPage() {
                   </div>
                 ) : (
                   <div className="space-y-4">
+                    {hasMedia && (
+                      <ContentPreview icerik={selectedSablon.icerik} />
+                    )}
                     {typeof selectedSablon.icerik?.aciklama === 'string' && (
                       <div className="bg-emerald-500/10 border border-emerald-500/30 rounded-xl p-4">
                         <p className="text-xs text-emerald-400 font-medium mb-1">Açıklama</p>

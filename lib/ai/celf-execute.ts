@@ -89,25 +89,31 @@ async function callOpenAI(message: string): Promise<string | null> {
   return data.choices?.[0]?.message?.content ?? null
 }
 
+/** DELEGATE:GEMINI veya doğrudan Gemini çağrısı. gemini-1.5-flash → gemini-2.0-flash → gemini-pro dener. */
 async function callGemini(message: string, systemHint?: string): Promise<string | null> {
   const apiKey = getCelfKey('CELF_GOOGLE_API_KEY', ['CELF_GOOGLE_GEMINI_API_KEY', 'GOOGLE_API_KEY', 'GOOGLE_GEMINI_API_KEY'])
   if (!apiKey) return null
-  const url = `${GOOGLE_GEMINI_PRO_URL}?key=${apiKey}`
-  const body: Record<string, unknown> = {
-    contents: [{ role: 'user', parts: [{ text: systemHint ? `${systemHint}\n\n${message}` : message }] }],
+  const baseUrl = 'https://generativelanguage.googleapis.com/v1beta/models'
+  const text = systemHint ? `[Sistem: ${systemHint}]\n\nKullanıcı görevi:\n${message}` : message
+  const body = {
+    contents: [{ role: 'user', parts: [{ text }] }],
     generationConfig: { maxOutputTokens: 1024 },
   }
-  if (systemHint) {
-    body.contents = [{ role: 'user', parts: [{ text: `[Sistem: ${systemHint}]\n\nKullanıcı görevi:\n${message}` }] }]
+  const models = ['gemini-1.5-flash', 'gemini-2.0-flash', 'gemini-pro']
+  for (const model of models) {
+    const url = `${baseUrl}/${model}:generateContent?key=${apiKey}`
+    const res = await fetchWithRetry(url, {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify(body),
+    })
+    if (res.ok) {
+      const data = await res.json()
+      const out = data.candidates?.[0]?.content?.parts?.[0]?.text?.trim()
+      if (out) return out
+    }
   }
-  const res = await fetchWithRetry(url, {
-    method: 'POST',
-    headers: { 'Content-Type': 'application/json' },
-    body: JSON.stringify(body),
-  })
-  if (!res.ok) return null
-  const data = await res.json()
-  return data.candidates?.[0]?.content?.parts?.[0]?.text ?? null
+  return null
 }
 
 /** API hata gövdesini kısa metin olarak al (neden hata verdiğini bulmak için) */
@@ -129,14 +135,15 @@ async function readApiError(res: Response): Promise<string> {
   }
 }
 
-/** CELF görevlendirici: 2.0-flash → 1.5-flash → gemini-pro. GOOGLE_API_KEY .env.local'de tanımlı olmalı. */
+/** CELF görevlendirici: gemini-2.0-flash → gemini-1.5-flash → gemini-pro. URL: generativelanguage.googleapis.com/v1beta/models/MODEL:generateContent?key=GOOGLE_API_KEY */
 async function callGeminiOrchestrator(system: string, message: string): Promise<string | { error: string }> {
   const apiKey = getCelfKey('CELF_GOOGLE_API_KEY', ['CELF_GOOGLE_GEMINI_API_KEY', 'GOOGLE_API_KEY', 'GOOGLE_GEMINI_API_KEY'])
   if (!apiKey) return { error: 'GOOGLE_API_KEY .env.local içinde tanımlı değil.' }
 
+  const baseUrl = 'https://generativelanguage.googleapis.com/v1beta/models'
   const userMessage = `[Sistem: ${system}]\n\nPatron görevi:\n${message}`
   const bodyWithSystem = {
-    systemInstruction: { parts: [{ text: system }] } as { parts: { text: string }[] },
+    systemInstruction: { parts: [{ text: system }] },
     contents: [{ role: 'user', parts: [{ text: message }] }],
     generationConfig: { maxOutputTokens: 1024 },
   }
@@ -146,7 +153,8 @@ async function callGeminiOrchestrator(system: string, message: string): Promise<
   }
   let lastError = ''
 
-  const tryGemini = async (url: string, body: object, label: string): Promise<string | null> => {
+  const tryGemini = async (model: string, body: object, label: string): Promise<string | null> => {
+    const url = `${baseUrl}/${model}:generateContent?key=${apiKey}`
     const res = await fetchWithRetry(url, {
       method: 'POST',
       headers: { 'Content-Type': 'application/json' },
@@ -160,13 +168,16 @@ async function callGeminiOrchestrator(system: string, message: string): Promise<
     return null
   }
 
-  let text = await tryGemini(`${GOOGLE_GEMINI_FLASH_URL}?key=${apiKey}`, bodyWithSystem, 'Gemini 2.0-flash')
+  // Sıra: gemini-1.5-flash (en stabil) → gemini-2.0-flash → gemini-pro
+  let text = await tryGemini('gemini-1.5-flash', bodyInline, 'Gemini 1.5-flash')
   if (text) return text
 
-  text = await tryGemini(`${GOOGLE_GEMINI_15_FLASH_URL}?key=${apiKey}`, bodyWithSystem, 'Gemini 1.5-flash')
+  text = await tryGemini('gemini-2.0-flash', bodyInline, 'Gemini 2.0-flash')
+  if (text) return text
+  text = await tryGemini('gemini-2.0-flash', bodyWithSystem, 'Gemini 2.0-flash (system)')
   if (text) return text
 
-  text = await tryGemini(`${GOOGLE_GEMINI_PRO_URL}?key=${apiKey}`, bodyInline, 'Gemini-pro')
+  text = await tryGemini('gemini-pro', bodyInline, 'Gemini-pro')
   if (text) return text
 
   return { error: lastError || 'Gemini yanıt vermedi. GOOGLE_API_KEY .env.local\'de geçerli mi kontrol edin.' }

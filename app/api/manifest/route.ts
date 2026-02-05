@@ -4,14 +4,14 @@ import {
   PANEL_START_URL,
   PANEL_PWA_NAME,
 } from '@/lib/subdomain'
+import { getFranchiseSubdomains } from '@/lib/db/franchise-subdomains'
 
 const APP_BASE = 'https://app.yisa-s.com'
 
-/** Subdomain'e göre PWA manifest — her panel kendi uygulaması.
- * yisa-s.com (www) üzerinden yüklenirse PWA app.yisa-s.com/dashboard açılır. */
 export async function GET(request: NextRequest) {
   const host = request.headers.get('host') ?? ''
-  const panel = getPanelFromHost(host)
+  const subdomains = await getFranchiseSubdomains()
+  const panel = getPanelFromHost(host, subdomains)
 
   const startUrl = PANEL_START_URL[panel]
   const useAbsoluteScope = panel === 'www' && startUrl.startsWith('http')
@@ -23,7 +23,7 @@ export async function GET(request: NextRequest) {
     description:
       panel === 'patron'
         ? 'YİSA-S Patron Komuta Merkezi'
-        : panel === 'franchise'
+        : panel === 'franchise' || panel === 'franchise_site'
           ? 'YİSA-S Franchise Paneli — Tesisinizi yönetin'
           : panel === 'veli'
             ? 'YİSA-S Veli Paneli — Çocuk takibi'

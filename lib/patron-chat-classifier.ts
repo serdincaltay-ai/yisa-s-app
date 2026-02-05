@@ -22,6 +22,15 @@ const APPROVAL_PATTERNS = [
   /\b(uygula|yap)\s*(bunu|bunu\s+onayla)?\s*$/i,
 ]
 
+/** v0/cursor/görevlendir — bunlar her zaman komut, konuşmaya gitmez */
+const COMMAND_TRIGGERS = [
+  /\bv0\b|\bv\s*0\b/i,
+  /\bcursor\b/i,
+  /\bgörevlendir\b/i,
+  /\bceo'ya\s+gönder\b|\b10'a\s+çıkart\b/i,
+  /\b(cfo|cto|cio|cmo|chro|clo|cpo|cdo|ciso|cco|cspo|coo)'ya\b/i,
+]
+
 const CONVERSATION_PATTERNS = [
   /\bara[sş]t[ıi]r\b/i,
   /\bne\s+demek\b/i,
@@ -54,6 +63,9 @@ export function classifyPatronMessage(message: string): PatronMessageIntent {
 
   for (const p of APPROVAL_PATTERNS) {
     if (p.test(trimmed)) return 'approval'
+  }
+  for (const p of COMMAND_TRIGGERS) {
+    if (p.test(trimmed)) return 'command'
   }
   for (const p of CONVERSATION_PATTERNS) {
     if (p.test(trimmed)) return 'conversation'

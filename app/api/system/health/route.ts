@@ -50,7 +50,7 @@ export async function GET() {
           robots.push({
             id: robot.id,
             name: robot.name,
-            status: error ? 'error' : latency > 2000 ? 'ok' : 'ok',
+            status: error ? 'error' : 'ok',
             latency,
           })
         } catch {

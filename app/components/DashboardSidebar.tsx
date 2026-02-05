@@ -9,7 +9,6 @@ import { useAccent } from '@/lib/context/accent-context'
 import {
   LogOut,
   Home,
-  Settings,
   BarChart3,
   Bot,
   Wallet,
@@ -29,14 +28,13 @@ const NAV = [
   { href: '/dashboard/genis-ekran', label: 'Geniş Ekran', icon: Monitor },
   { href: '/dashboard/ozel-araclar', label: 'Özel Araçlar', icon: Wrench },
   { href: '/dashboard/franchise-yonetim', label: 'Franchise Yönetim', icon: Briefcase },
-  { href: '/dashboard/directors', label: 'CELF Direktörlükleri', icon: Bot },
-  { href: '/dashboard/robots', label: 'Direktörler (Canlı)', icon: Bot },
-  { href: '/dashboard/onay-kuyrugu', label: 'Onay Kuyruğu', icon: ClipboardCheck },
+  { href: '/dashboard/celf', label: 'CELF Direktörlükleri', icon: Bot },
+  { href: '/dashboard/directors', label: 'Direktörler (Canlı)', icon: Bot },
+  { href: '/dashboard/onay-kuyrugu', label: 'Patron Havuzu', icon: ClipboardCheck },
   { href: '/dashboard/franchises', label: 'Franchise / Vitrin', icon: Store },
   { href: '/dashboard/kasa-defteri', label: 'Kasa Defteri', icon: Wallet },
   { href: '/dashboard/sablonlar', label: 'Şablonlar', icon: LayoutTemplate },
   { href: '/dashboard/reports', label: 'Raporlar', icon: BarChart3 },
-  { href: '/dashboard/settings', label: 'Ayarlar', icon: Settings },
 ]
 
 export default function DashboardSidebar() {

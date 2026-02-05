@@ -9,7 +9,8 @@ try {
 } catch { Write-Host "Hata: $_" }
 
 Write-Host "`n=== 2. Demo Request (POST /api/demo-requests, source=vitrin) ===" -ForegroundColor Cyan
-$body = '{"name":"Test Kullanici","email":"test@test.com","phone":"5551234567","facility_type":"jimnastik","city":"Istanbul","source":"vitrin"}'
+# Test verisi — canlıda kullanma, karıştırma
+$body = '{"name":"Test Kullanici","email":"demo@yisa-s.com","phone":"5551234567","facility_type":"jimnastik","city":"Istanbul","source":"vitrin"}'
 try {
   $demo = Invoke-RestMethod -Uri "$base/api/demo-requests" -Method POST -Body $body -ContentType "application/json"
   $demo | ConvertTo-Json -Depth 3

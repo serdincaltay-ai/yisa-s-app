@@ -61,15 +61,15 @@ export function parsePatronDirective(message: string): PatronDirective {
   const raw = (message || '').trim()
   const lower = raw.toLowerCase()
 
-  // "V0 çalıştır", "v0'da şunu yap", "v0 ile tasarım"
-  if (/\bv0\b/.test(lower)) {
-    const task = raw.replace(/\b(v0|v\s*0)\s*(çalıştır|ile|da|'da|'a)?\s*/gi, '').trim() || raw
+  // "V0 çalıştır", "v0'da şunu yap", "v0 ile tasarım", "v0'a gönder", "v0'u çağır", "v0'u görevlendir"
+  if (/\bv0\b|\bv\s*0\b/.test(lower)) {
+    const task = raw.replace(/\b(v0|v\s*0)\s*('u\s*çağır|'a\s*gönder|'u\s*görevlendir|çalıştır|ile|'da|da|'a|'u)?\s*/gi, '').trim() || raw
     return { type: 'v0', task: task || undefined, rawMessage: raw }
   }
 
-  // "Cursor çalıştır", "cursor'a gönder", "cursor ile kod"
+  // "Cursor çalıştır", "cursor'a gönder", "cursor ile kod", "cursor'u çağır"
   if (/\bcursor\b/.test(lower)) {
-    const task = raw.replace(/\bcursor\s*(çalıştır|ile|'a|a gönder)?\s*/gi, '').trim() || raw
+    const task = raw.replace(/\bcursor\s*(çalıştır|ile|'a|a gönder|'u|u çağır)?\s*/gi, '').trim() || raw
     return { type: 'cursor', task: task || undefined, rawMessage: raw }
   }
 
