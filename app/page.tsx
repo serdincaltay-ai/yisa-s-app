@@ -2,10 +2,10 @@
 
 /**
  * YİSA-S Ana Sayfa — V0 Brillance SaaS Landing Page şablonu
- * app/franchise/veli subdomain'lerinde / → /auth/login yönlendir (middleware yedek)
+ * Sadece yisa-s.com ve www.yisa-s.com için. app/franchise/veli → middleware /auth/login'e yönlendirir.
  */
 
-import { useState, useEffect } from "react"
+import { useState } from "react"
 import { Button } from "@/components/ui/button"
 import { Input } from "@/components/ui/input"
 import { Card, CardContent, CardDescription, CardFooter, CardHeader, CardTitle } from "@/components/ui/card"
@@ -114,15 +114,6 @@ export default function Home() {
   })
   const [formSending, setFormSending] = useState(false)
   const [formDone, setFormDone] = useState(false)
-
-  // app/franchise/veli subdomain'inde landing yerine girişe yönlendir (middleware yedek)
-  useEffect(() => {
-    if (typeof window === "undefined") return
-    const h = window.location.hostname.toLowerCase()
-    if (h.startsWith("app.") || h.startsWith("franchise.") || h.startsWith("veli.")) {
-      window.location.replace("/auth/login?from=" + (h.startsWith("app.") ? "patron" : h.startsWith("franchise.") ? "franchise" : "veli"))
-    }
-  }, [])
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault()
