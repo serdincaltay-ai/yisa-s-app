@@ -33,12 +33,18 @@ export async function POST() {
       return NextResponse.json({ error: 'Veritabanı bağlantısı yok', ok: false }, { status: 503 })
     }
 
-    const { data: rows } = await supabase
+    const { data: rows, error } = await supabase
       .from('patron_commands')
       .select('id, ceo_task_id')
       .eq('status', 'pending')
       .order('created_at', { ascending: true })
 
+    if (error) {
+      return NextResponse.json(
+        { error: `Supabase: ${error.message}`, ok: false },
+        { status: 503 }
+      )
+    }
     const items = Array.isArray(rows) ? rows : []
     const now = new Date().toISOString()
     let approved = 0
