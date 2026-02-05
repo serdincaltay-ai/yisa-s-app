@@ -31,8 +31,8 @@ export async function GET(request: NextRequest) {
     start_url: startUrl,
     scope,
     display: 'standalone',
-    background_color: '#030508',
-    theme_color: '#0891b2',
+    background_color: '#0a0e17',
+    theme_color: '#06b6d4',
     orientation: 'portrait',
     lang: 'tr',
     icons: [

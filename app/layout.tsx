@@ -43,7 +43,7 @@ export async function generateMetadata() {
 }
 
 export const viewport = {
-  themeColor: '#0891b2',
+  themeColor: '#06b6d4',
   width: 'device-width',
   initialScale: 1,
   maximumScale: 5,
@@ -61,16 +61,16 @@ export default function RootLayout({
         <link rel="apple-touch-icon" sizes="192x192" href="/icon-192.png" />
         <link rel="icon" type="image/png" sizes="192x192" href="/icon-192.png" />
         <link rel="icon" type="image/png" sizes="512x512" href="/icon-512.png" />
-        <meta name="theme-color" content="#0891b2" />
+        <meta name="theme-color" content="#06b6d4" />
         <meta name="apple-mobile-web-app-capable" content="yes" />
         <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent" />
         <meta name="apple-mobile-web-app-title" content="YİSA-S" />
         <meta name="mobile-web-app-capable" content="yes" />
         <meta name="application-name" content="YİSA-S" />
-        <meta name="msapplication-TileColor" content="#030508" />
+        <meta name="msapplication-TileColor" content="#06b6d4" />
         <meta name="msapplication-TileImage" content="/icon-192.png" />
       </head>
-      <body className="bg-[#030508] text-white min-h-screen">
+      <body className="text-white min-h-screen bg-[#0a0e17]">
         {children}
         <SpeedInsights />
         <Script id="sw-register" strategy="afterInteractive">

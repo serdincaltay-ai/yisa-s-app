@@ -36,15 +36,18 @@ export default function DashboardLayout({
 
   if (loading) {
     return (
-      <div className="min-h-screen flex items-center justify-center bg-gray-950">
-        <div className="text-gray-400">Yükleniyor...</div>
+      <div className="min-h-screen flex items-center justify-center bg-[#0a0e17]">
+        <div className="flex flex-col items-center gap-3">
+          <div className="w-10 h-10 rounded-full border-2 border-cyan-400/60 border-t-cyan-400 animate-spin" />
+          <span className="text-cyan-400/90 font-medium">Yükleniyor...</span>
+        </div>
       </div>
     )
   }
 
   return (
     <AccentProvider>
-      <div className="min-h-screen bg-gray-950 text-white flex">
+      <div className="min-h-screen bg-[#0a0e17] text-white flex">
         <DashboardSidebar />
         <main className="flex-1 overflow-auto pt-14 pl-14 lg:pt-0 lg:pl-0">{children}</main>
       </div>

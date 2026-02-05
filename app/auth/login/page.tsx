@@ -11,14 +11,48 @@ import Link from 'next/link'
 import { useRouter, useSearchParams } from 'next/navigation'
 import { useState, useEffect, Suspense } from 'react'
 
+/** Supabase Auth hatalarını Türkçe mesaja çevir */
+function translateAuthError(msg: string): string {
+  const m = msg?.toLowerCase() ?? ''
+  if (m.includes('invalid login') || m.includes('invalid credentials')) return 'E-posta veya şifre hatalı. Lütfen kontrol edin.'
+  if (m.includes('email not confirmed')) return 'E-posta adresiniz henüz onaylanmamış. Gelen kutunuzu kontrol edin.'
+  if (m.includes('user not found')) return 'Bu e-posta ile kayıtlı hesap bulunamadı.'
+  if (m.includes('too many requests')) return 'Çok fazla deneme. Lütfen birkaç dakika sonra tekrar deneyin.'
+  if (m.includes('44000') || m.includes('invalid configuration')) return 'Veritabanı bağlantı hatası. Lütfen daha sonra tekrar deneyin.'
+  return msg || 'Giriş hatası'
+}
+
 function LoginForm() {
   const [email, setEmail] = useState('')
   const [password, setPassword] = useState('')
   const [error, setError] = useState<string | null>(null)
   const [isLoading, setIsLoading] = useState(false)
+  const [resetSent, setResetSent] = useState(false)
+  const [resetLoading, setResetLoading] = useState(false)
   const router = useRouter()
   const searchParams = useSearchParams()
   const unauthorized = searchParams.get('unauthorized') === '1'
+
+  const handleResetPassword = async () => {
+    if (!email?.trim()) {
+      setError('Şifre sıfırlama için önce e-posta adresinizi girin.')
+      return
+    }
+    setResetLoading(true)
+    setError(null)
+    try {
+      const supabase = createClient()
+      const { error: err } = await supabase.auth.resetPasswordForEmail(email.trim(), {
+        redirectTo: `${typeof window !== 'undefined' ? window.location.origin : ''}/auth/reset-password`,
+      })
+      if (err) throw err
+      setResetSent(true)
+    } catch (e) {
+      setError(e instanceof Error ? e.message : 'Şifre sıfırlama e-postası gönderilemedi.')
+    } finally {
+      setResetLoading(false)
+    }
+  }
 
   const handleLogin = async (e: React.FormEvent) => {
     e.preventDefault()
@@ -37,29 +71,24 @@ function LoginForm() {
       const meta = data.user?.user_metadata || {}
 
       // Rol çözümle: PATRON_EMAIL > kullanicilar > profiles > user_metadata
+      // kullanicilar/profiles 44000 veya başka hata verirse yine de devam et
       let kullaniciRolKod: string | null = null
+      let profilesRole: string | null = null
       try {
-        const { data: kullanici } = await supabase
-          .from('kullanicilar')
-          .select('rol_id, roller(kod)')
-          .eq('auth_id', userId)
-          .maybeSingle()
+        const [kullaniciRes, profileRes] = await Promise.all([
+          supabase.from('kullanicilar').select('rol_id, roller(kod)').eq('auth_id', userId).maybeSingle(),
+          supabase.from('profiles').select('role').eq('id', userId).maybeSingle(),
+        ])
+        const kullanici = kullaniciRes.data as { roller?: unknown } | null
         const roller = kullanici?.roller
         if (Array.isArray(roller)) {
-          kullaniciRolKod = roller[0]?.kod ?? null
+          kullaniciRolKod = (roller[0] as { kod?: string })?.kod ?? null
         } else if (roller != null && typeof roller === 'object' && 'kod' in roller) {
           kullaniciRolKod = (roller as { kod?: string }).kod ?? null
         }
+        profilesRole = (profileRes.data as { role?: string } | null)?.role ?? null
       } catch {
-        // kullanicilar tablosu yoksa devam et
-      }
-
-      let profilesRole: string | null = null
-      try {
-        const { data: profile } = await supabase.from('profiles').select('role').eq('id', userId).maybeSingle()
-        profilesRole = profile?.role ?? null
-      } catch {
-        // profiles yoksa devam et
+        // Tablo yok veya 44000 vb. — devam et, PATRON_EMAIL ile rol çözülecek
       }
 
       const role = resolveLoginRole({
@@ -74,8 +103,8 @@ function LoginForm() {
       const panel = meta.panel as string | undefined
       const finalPath = role === 'franchise' && panel === 'tesis' ? '/tesis' : path
       router.push(finalPath.startsWith('/') ? finalPath : '/veli')
-    } catch (error: unknown) {
-      setError(error instanceof Error ? error.message : 'Giris hatasi')
+    } catch (err: unknown) {
+      setError(translateAuthError(err instanceof Error ? err.message : 'Giris hatasi'))
     } finally {
       setIsLoading(false)
     }
@@ -131,6 +160,12 @@ function LoginForm() {
               <p className="text-red-400 text-sm">{error}</p>
             )}
 
+            {resetSent && (
+              <p className="text-emerald-400 text-sm">
+                Şifre sıfırlama bağlantısı e-posta adresinize gönderildi. Gelen kutunuzu (ve spam klasörünü) kontrol edin.
+              </p>
+            )}
+
             <Button
               type="submit"
               className="w-full h-14 rounded-2xl bg-white text-black hover:bg-white/90 text-lg font-medium"
@@ -141,7 +176,15 @@ function LoginForm() {
           </form>
 
           <p className="text-center text-white/40 mt-4 text-sm">
-            Ilk kez giris yapiyorsaniz sifrenizi degistirmeniz onerilir.
+            Şifrenizi mi unuttunuz?{' '}
+            <button
+              type="button"
+              onClick={handleResetPassword}
+              disabled={resetLoading}
+              className="text-cyan-400 hover:text-cyan-300 underline"
+            >
+              {resetLoading ? 'Gönderiliyor...' : 'Şifre sıfırlama e-postası al'}
+            </button>
           </p>
           <p className="text-center text-white/40 mt-6">
             Hesabiniz yok mu?{' '}

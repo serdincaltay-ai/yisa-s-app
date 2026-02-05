@@ -2,11 +2,10 @@
 
 /**
  * YİSA-S Ana Sayfa — V0 Brillance SaaS Landing Page şablonu
- * Kaynak: https://v0.dev/templates/zdiN8dHwaaT (Brillance SaaS Landing Page)
- * Yapı: Hero & CTA | Product Features | Social Proof | Pricing | FAQ | Footer
+ * app/franchise/veli subdomain'lerinde / → /auth/login yönlendir (middleware yedek)
  */
 
-import { useState } from "react"
+import { useState, useEffect } from "react"
 import { Button } from "@/components/ui/button"
 import { Input } from "@/components/ui/input"
 import { Card, CardContent, CardDescription, CardFooter, CardHeader, CardTitle } from "@/components/ui/card"
@@ -116,6 +115,15 @@ export default function Home() {
   const [formSending, setFormSending] = useState(false)
   const [formDone, setFormDone] = useState(false)
 
+  // app/franchise/veli subdomain'inde landing yerine girişe yönlendir (middleware yedek)
+  useEffect(() => {
+    if (typeof window === "undefined") return
+    const h = window.location.hostname.toLowerCase()
+    if (h.startsWith("app.") || h.startsWith("franchise.") || h.startsWith("veli.")) {
+      window.location.replace("/auth/login?from=" + (h.startsWith("app.") ? "patron" : h.startsWith("franchise.") ? "franchise" : "veli"))
+    }
+  }, [])
+
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault()
     if (formSending) return
@@ -158,7 +166,7 @@ export default function Home() {
         <div className="max-w-6xl mx-auto flex items-center justify-between">
           <YisaLogoInline href="/" />
           <div className="flex items-center gap-2">
-            <Link href="/patron/login">
+            <Link href="/auth/login">
               <Button variant="ghost" className="text-gray-300 hover:text-white hover:bg-pink-500/20 rounded-lg gap-2 text-sm">
                 <Crown className="h-4 w-4" />
                 Giriş
@@ -190,7 +198,7 @@ export default function Home() {
             Cimnastik ve spor tesisi yönetimi. Ders programı, yoklama, veli takibi — hepsi otomatik.
           </p>
           <div className="flex flex-col sm:flex-row gap-4 relative">
-            <Link href="/patron/login">
+            <Link href="/auth/login">
               <Button size="lg" className="rounded-xl bg-emerald-500 hover:bg-emerald-600 text-white px-8 h-12 font-semibold text-base shadow-lg shadow-emerald-500/25">
                 Giriş Yap
               </Button>

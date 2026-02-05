@@ -15,6 +15,7 @@ import { Shield, Archive, Palette, Clock, Calendar, StickyNote } from 'lucide-re
 
 const NOTES_KEY = 'yisa-settings-notes'
 const ACCENT_OPTIONS: { value: AccentColor; label: string; color: string; selectedClass: string }[] = [
+  { value: 'cyan', label: 'Cyan', color: 'bg-cyan-500', selectedClass: 'border-cyan-500 bg-cyan-500/20' },
   { value: 'pink', label: 'Pembe', color: 'bg-pink-500', selectedClass: 'border-pink-500 bg-pink-500/20' },
   { value: 'blue', label: 'Mavi', color: 'bg-blue-500', selectedClass: 'border-blue-500 bg-blue-500/20' },
   { value: 'amber', label: 'Turuncu', color: 'bg-amber-500', selectedClass: 'border-amber-500 bg-amber-500/20' },

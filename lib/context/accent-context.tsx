@@ -2,10 +2,10 @@
 
 import React, { createContext, useContext, useEffect, useState, useCallback } from 'react'
 
-export type AccentColor = 'pink' | 'blue' | 'amber' | 'green' | 'emerald'
+export type AccentColor = 'cyan' | 'pink' | 'blue' | 'amber' | 'green' | 'emerald'
 
 const STORAGE_KEY = 'yisa-accent'
-const DEFAULT: AccentColor = 'pink'
+const DEFAULT: AccentColor = 'cyan'
 
 type AccentContextValue = {
   accent: AccentColor
@@ -16,6 +16,7 @@ type AccentContextValue = {
 }
 
 const ACCENT_CLASSES: Record<AccentColor, { active: string; text: string; border: string }> = {
+  cyan: { active: 'bg-cyan-500/20', text: 'text-cyan-400', border: 'border-cyan-500/30' },
   pink: { active: 'bg-pink-500/20', text: 'text-pink-400', border: 'border-pink-500/30' },
   blue: { active: 'bg-blue-500/20', text: 'text-blue-400', border: 'border-blue-500/30' },
   amber: { active: 'bg-amber-500/20', text: 'text-amber-400', border: 'border-amber-500/30' },
@@ -62,8 +63,8 @@ export function useAccent() {
   return ctx ?? {
     accent: DEFAULT as AccentColor,
     setAccent: () => {},
-    activeClass: ACCENT_CLASSES.pink.active,
-    textClass: ACCENT_CLASSES.pink.text,
-    borderClass: ACCENT_CLASSES.pink.border,
+    activeClass: ACCENT_CLASSES.cyan.active,
+    textClass: ACCENT_CLASSES.cyan.text,
+    borderClass: ACCENT_CLASSES.cyan.border,
   }
 }

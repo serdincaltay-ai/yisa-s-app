@@ -73,23 +73,23 @@ export default function DashboardSidebar() {
 
   const sidebarContent = (
     <>
-      <Link href="/dashboard" className="flex items-center gap-3 mb-6 hover:opacity-90 transition-opacity">
-        <div className="relative w-10 h-10 flex-shrink-0">
-          <Image src="/logo.png" alt="YİSA-S" fill className="object-contain" />
+      <Link href="/dashboard" className="flex items-center gap-3 mb-6 hover:opacity-90 transition-opacity group">
+        <div className="relative w-10 h-10 flex-shrink-0 rounded-xl ring-2 ring-cyan-400/20 group-hover:ring-cyan-400/40 transition-all overflow-hidden">
+          <Image src="/logo.png" alt="YİSA-S" fill className="object-contain p-1" />
         </div>
         <div>
           <h1 className="font-bold text-white">YİSA-S</h1>
-          <p className="text-xs text-gray-500">Yönetici İşletmeci Sporcu Antrenör Sistemi</p>
+          <p className="text-xs text-muted-foreground">Yönetici İşletmeci Sporcu Antrenör Sistemi</p>
         </div>
       </Link>
 
       {/* Özet */}
       {summary && (
-        <div className="mb-4 flex items-center justify-between gap-2 text-xs text-gray-400 border-b border-gray-800 pb-3">
-          <span>Öğr: <span className="text-white font-mono">{summary.athletes}</span></span>
-          <span>Onay: <span className="text-white font-mono">{summary.pendingApprovals}</span></span>
-          <span>Başv: <span className="text-white font-mono">{summary.newApplications}</span></span>
-          <span>Frn: <span className="text-white font-mono">{summary.activeFranchises}</span></span>
+        <div className="mb-4 flex items-center justify-between gap-2 text-xs text-muted-foreground border-b border-border pb-3">
+          <span>Öğr: <span className="text-cyan-400 font-mono font-medium">{summary.athletes}</span></span>
+          <span>Onay: <span className="text-amber-400 font-mono font-medium">{summary.pendingApprovals}</span></span>
+          <span>Başv: <span className="text-emerald-400 font-mono font-medium">{summary.newApplications}</span></span>
+          <span>Frn: <span className="text-violet-400 font-mono font-medium">{summary.activeFranchises}</span></span>
         </div>
       )}
 
@@ -100,10 +100,10 @@ export default function DashboardSidebar() {
             <Link
               key={href}
               href={href}
-              className={`flex items-center gap-3 px-4 py-3 rounded-xl transition-colors ${
+              className={`flex items-center gap-3 px-4 py-3 rounded-xl transition-all ${
                 active
-                  ? `${activeClass} text-white`
-                  : 'text-gray-400 hover:bg-gray-800 hover:text-white'
+                  ? `${activeClass} text-white ring-1 ring-cyan-400/30 shadow-[0_0_12px_-2px_rgba(34,211,238,0.25)]`
+                  : 'text-muted-foreground hover:bg-muted hover:text-white'
               }`}
             >
               <Icon size={20} />
@@ -116,7 +116,7 @@ export default function DashboardSidebar() {
       <div>
         <button
           onClick={handleLogout}
-          className="flex items-center gap-3 px-4 py-3 w-full rounded-xl text-gray-400 hover:bg-gray-800 hover:text-red-400 transition-colors"
+          className="flex items-center gap-3 px-4 py-3 w-full rounded-xl text-muted-foreground hover:bg-destructive/20 hover:text-red-400 transition-colors"
         >
           <LogOut size={20} />
           Çıkış Yap
@@ -131,7 +131,7 @@ export default function DashboardSidebar() {
       <button
         type="button"
         onClick={() => setMobileOpen(!mobileOpen)}
-        className="lg:hidden fixed top-4 left-4 z-50 p-2 rounded-lg bg-gray-900 border border-gray-700 text-white"
+        className="lg:hidden fixed top-4 left-4 z-50 p-2 rounded-xl bg-card border border-border text-white shadow-[0_0_12px_-2px_rgba(34,211,238,0.2)]"
         aria-label="Menüyü aç"
       >
         {mobileOpen ? <X size={24} /> : <Menu size={24} />}
@@ -145,8 +145,9 @@ export default function DashboardSidebar() {
       )}
       <aside
         className={`
-          w-64 min-h-screen bg-gray-900 border-r border-gray-800 p-4 flex flex-col
+          w-64 min-h-screen bg-card/95 backdrop-blur-sm border-r border-border p-4 flex flex-col
           fixed lg:static inset-y-0 left-0 z-40 transform transition-transform duration-200 ease-out
+          shadow-[4px_0_24px_-8px_rgba(0,0,0,0.4)]
           ${mobileOpen ? 'translate-x-0' : '-translate-x-full lg:translate-x-0'}
         `}
       >
