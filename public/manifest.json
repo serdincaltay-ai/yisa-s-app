@@ -2,7 +2,7 @@
   "name": "YİSA-S Patron Paneli",
   "short_name": "YİSA-S",
   "description": "YİSA-S Spor Tesisi Yönetim Paneli",
-  "start_url": "/dashboard",
+  "start_url": "/patron",
   "scope": "/",
   "display": "standalone",
   "background_color": "#030508",
