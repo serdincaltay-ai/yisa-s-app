@@ -1,148 +1,247 @@
-'use client'
+"use client"
 
-import { useEffect, useState } from 'react'
-import Link from 'next/link'
-import Image from 'next/image'
-import { Bell } from 'lucide-react'
-import { ROBOTS } from '@/lib/patron/robots'
-import ApprovalQueue from '@/components/patron/ApprovalQueue'
-import AssistantChat from '@/components/patron/AssistantChat'
+import { useState, useEffect, useRef } from "react"
+import Link from "next/link"
+import {
+  Brain, Target, Users, Building2, TrendingUp,
+  Sparkles, Bot, Globe, Shield, Bell, Send,
+  CheckCircle2, XCircle, Eye, ArrowRight, Activity,
+  RefreshCw
+} from "lucide-react"
+import PatronCommandPanel from "@/components/PatronCommandPanel"
 
-/** Health check'ten gelen veriyi 5 robota dağıt */
-function mapHealthToRobots(health: { robots?: { id: string; name: string; status: string }[]; ok?: boolean }) {
-  const robots = health?.robots ?? []
-  const byId: Record<string, boolean> = {}
-  for (const r of robots) {
-    byId[r.id] = r.status === 'ok'
-    byId[r.name] = r.status === 'ok'
-  }
-  const supabaseOk = byId['Supabase'] ?? false
-  const gptOk = byId['GPT'] ?? false
-  const claudeOk = byId['Claude'] ?? false
-  const geminiOk = byId['Gemini'] ?? false
-  const togetherOk = byId['Together'] ?? false
-  const vercelOk = byId['Vercel'] ?? false
-  const aiCount = [gptOk, claudeOk, geminiOk, togetherOk].filter(Boolean).length
+/* ─── TIPLER ─── */
+type AIStatus = { ok: boolean; ms?: number; error?: string; text?: string }
+type HealthData = { ok: number; total: number; results: Record<string, AIStatus> }
+type PendingItem = { id: string; command: string; title: string; director_key?: string; output_payload?: { displayText?: string; denetim?: { puan: number; notlar: string[] } }; created_at: string }
+type ChatMsg = { role: 'patron' | 'ai'; text: string; provider?: string }
 
-  return {
-    ceo: 'ok' as const,
-    guvenlik: health?.ok ? 'ok' : 'error',
-    veri: supabaseOk ? 'ok' : 'error',
-    celf: aiCount >= 2 ? 'ok' : aiCount >= 1 ? 'warning' : 'error',
-    yisas: vercelOk ? 'ok' : 'warning',
-  }
+/* ─── ROBOT DURUM KARTI ─── */
+function RobotCard({ name, status }: { name: string; status: AIStatus }) {
+  const color = status.ok ? '#10b981' : '#ef4444'
+  return (
+    <div className="flex items-center gap-2 px-3 py-2 rounded-xl" style={{ background: '#111827', border: '1px solid #1e293b' }}>
+      <div className="w-2.5 h-2.5 rounded-full" style={{ background: color, boxShadow: status.ok ? `0 0 8px ${color}` : 'none' }} />
+      <span className="text-xs font-medium" style={{ color: '#f8fafc' }}>{name}</span>
+      {status.ok && status.ms && <span className="text-[10px] ml-auto" style={{ color: '#94a3b8' }}>{status.ms}ms</span>}
+    </div>
+  )
 }
 
-export default function PatronPanel() {
-  const [robotStatus, setRobotStatus] = useState<ReturnType<typeof mapHealthToRobots> | null>(null)
-  const [pendingCount, setPendingCount] = useState(0)
+/* ─── ONAY KARTI ─── */
+function OnayCard({ item, onApprove, onReject }: { item: PendingItem; onApprove: () => void; onReject: () => void }) {
+  const [showDetail, setShowDetail] = useState(false)
+  return (
+    <div className="p-4 rounded-xl" style={{ background: '#111827', border: '1px solid #1e293b' }}>
+      <div className="flex items-center justify-between mb-2">
+        <span className="text-xs px-2 py-0.5 rounded font-medium" style={{ background: '#10b981', color: '#fff' }}>{item.director_key || 'CELF'}</span>
+        <span className="text-[10px]" style={{ color: '#94a3b8' }}>{new Date(item.created_at).toLocaleString('tr-TR')}</span>
+      </div>
+      <p className="text-sm font-medium mb-2" style={{ color: '#f8fafc' }}>{item.title || item.command?.slice(0, 100)}</p>
+      {item.output_payload?.denetim && (
+        <div className="flex items-center gap-2 mb-2">
+          <span className="text-[10px] px-1.5 py-0.5 rounded" style={{ background: '#3b82f6', color: '#fff' }}>Denetim: {item.output_payload.denetim.puan}/100</span>
+        </div>
+      )}
+      {showDetail && item.output_payload?.displayText && (
+        <div className="p-3 rounded-lg mb-2 text-xs" style={{ background: '#0a0e17', color: '#94a3b8', maxHeight: 200, overflow: 'auto' }}>
+          {item.output_payload.displayText}
+        </div>
+      )}
+      <div className="flex gap-2">
+        <button onClick={() => setShowDetail(!showDetail)} className="p-1.5 rounded-lg transition" style={{ background: '#3b82f620' }}><Eye className="w-4 h-4" style={{ color: '#3b82f6' }} /></button>
+        <button onClick={onApprove} className="p-1.5 rounded-lg transition" style={{ background: '#10b98120' }}><CheckCircle2 className="w-4 h-4" style={{ color: '#10b981' }} /></button>
+        <button onClick={onReject} className="p-1.5 rounded-lg transition" style={{ background: '#ef444420' }}><XCircle className="w-4 h-4" style={{ color: '#ef4444' }} /></button>
+      </div>
+    </div>
+  )
+}
 
+/* ─── ANA SAYFA ─── */
+export default function PatronPanel() {
+  const [health, setHealth] = useState<HealthData | null>(null)
+  const [pending, setPending] = useState<PendingItem[]>([])
+  const [chatMsgs, setChatMsgs] = useState<ChatMsg[]>([])
+  const [chatInput, setChatInput] = useState('')
+  const [chatProvider, setChatProvider] = useState('GEMINI')
+  const [chatLoading, setChatLoading] = useState(false)
+  const chatEndRef = useRef<HTMLDivElement>(null)
+
+  // Health check - 60 saniyede bir
   useEffect(() => {
-    const fetchAll = () => {
-      Promise.all([
-        fetch('/api/system/health').then((r) => r.json()),
-        fetch('/api/approvals').then((r) => r.json()),
-      ]).then(([health, approvals]) => {
-        setRobotStatus(mapHealthToRobots(health))
-        const items = (approvals?.items ?? []).filter((i: { status: string }) => i.status === 'pending')
-        setPendingCount(items.length)
-      })
-    }
-    fetchAll()
-    const t = setInterval(fetchAll, 60000)
-    return () => clearInterval(t)
+    const fetchHealth = () => fetch('/api/test/ai').then(r => r.json()).then(setHealth).catch(() => {})
+    fetchHealth()
+    const i = setInterval(fetchHealth, 60000)
+    return () => clearInterval(i)
   }, [])
 
+  // Pending komutlar
+  useEffect(() => {
+    const fetchPending = () =>
+      fetch('/api/patron/pending').then(r => r.ok ? r.json() : []).then(d => setPending(Array.isArray(d) ? d : d.items || [])).catch(() => {})
+    fetchPending()
+    const i = setInterval(fetchPending, 15000)
+    return () => clearInterval(i)
+  }, [])
+
+  // Chat scroll
+  useEffect(() => { chatEndRef.current?.scrollIntoView({ behavior: 'smooth' }) }, [chatMsgs])
+
+  // Onayla/Reddet
+  async function handleDecision(id: string, decision: string) {
+    try {
+      await fetch('/api/patron/approve', { method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify({ command_id: id, decision }) })
+      setPending(prev => prev.filter(p => p.id !== id))
+    } catch { /* */ }
+  }
+
+  // Chat gönder
+  async function sendChat() {
+    if (!chatInput.trim() || chatLoading) return
+    const msg = chatInput.trim()
+    setChatInput('')
+    setChatMsgs(prev => [...prev, { role: 'patron', text: msg }])
+    setChatLoading(true)
+    try {
+      const res = await fetch('/api/chat/flow', { method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify({ message: msg, provider: chatProvider, skip_spelling: true }) })
+      const data = await res.json()
+      setChatMsgs(prev => [...prev, { role: 'ai', text: data.text || data.reply || data.error || 'Yanıt alınamadı', provider: data.provider || chatProvider }])
+    } catch {
+      setChatMsgs(prev => [...prev, { role: 'ai', text: 'Bağlantı hatası' }])
+    }
+    setChatLoading(false)
+  }
+
+  const aiNames = ['Gemini', 'Claude', 'GPT', 'V0', 'Together']
+
   return (
-    <div className="min-h-screen bg-[#0a0e17] text-[#f8fafc] flex flex-col">
-      {/* Header */}
-      <header className="flex items-center justify-between px-4 py-3 bg-[#0f172a] border-b border-[#1e293b]">
-        <Link href="/" className="flex items-center gap-3 hover:opacity-90">
-          <div className="relative w-9 h-9 flex-shrink-0 rounded-lg overflow-hidden">
-            <Image src="/logo.png" alt="YİSA-S" fill className="object-contain" />
+    <div className="min-h-screen" style={{ background: '#0a0e17', color: '#f8fafc' }}>
+      {/* HEADER */}
+      <header className="flex items-center justify-between px-6 py-4" style={{ borderBottom: '1px solid #1e293b' }}>
+        <div className="flex items-center gap-3">
+          <div className="w-9 h-9 rounded-lg flex items-center justify-center font-bold text-lg" style={{ background: '#f97316', color: '#fff' }}>Y</div>
+          <div>
+            <span className="font-bold">YİSA-S</span>
+            <p className="text-[10px]" style={{ color: '#94a3b8' }}>Patron Kontrol Merkezi</p>
           </div>
-          <span className="text-lg font-semibold text-[#f8fafc]">YİSA-S PATRON PANELİ</span>
-        </Link>
-        <div className="flex items-center gap-4">
-          <span className="text-sm text-[#94a3b8] font-mono">
-            🕐 {new Date().toLocaleTimeString('tr-TR', { hour12: false })}
-          </span>
-          <button className="relative p-2 rounded-lg bg-[#111827] border border-[#1e293b] hover:border-[#3b82f6]/40 transition-colors">
-            <Bell className="w-5 h-5 text-[#94a3b8]" />
-            {pendingCount > 0 && (
-              <span className="absolute -top-1 -right-1 w-5 h-5 rounded-full bg-[#ef4444] text-[10px] font-bold flex items-center justify-center text-white">
-                {pendingCount}
-              </span>
-            )}
-          </button>
-          <div className="w-9 h-9 rounded-lg bg-gradient-to-br from-[#10b981] to-[#3b82f6]" />
+        </div>
+        <div className="flex items-center gap-3">
+          <Link href="/dashboard" className="flex items-center gap-1.5 px-3 py-1.5 rounded-lg text-xs font-medium" style={{ background: '#10b98130', color: '#10b981', border: '1px solid #10b98150' }}>
+            Dashboard <ArrowRight className="w-3 h-3" />
+          </Link>
+          <div className="relative">
+            <Bell className="w-5 h-5" style={{ color: '#94a3b8' }} />
+            {pending.length > 0 && <span className="absolute -top-1 -right-1 w-4 h-4 rounded-full text-[9px] flex items-center justify-center" style={{ background: '#ef4444', color: '#fff' }}>{pending.length}</span>}
+          </div>
         </div>
       </header>
 
-      {/* BÖLÜM 1: Robotlar (üst şerit) */}
-      <section className="p-4 border-b border-[#1e293b]">
-        <div className="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-5 gap-3">
-          {ROBOTS.map((r) => {
-            const status = robotStatus
-              ? (robotStatus[r.id as keyof typeof robotStatus] ?? 'ok')
-              : 'ok'
-            const isOk = status === 'ok'
-            const isWarning = status === 'warning'
-            return (
-              <div
-                key={r.id}
-                className="rounded-xl border bg-[#111827] p-4 flex flex-col items-center gap-2 hover:shadow-lg transition-all cursor-pointer"
-                style={{
-                  borderColor: isOk ? '#1e293b' : isWarning ? '#f59e0b' : '#ef4444',
-                  boxShadow: isOk ? undefined : `0 0 12px -2px ${r.color}40`,
-                }}
-                onMouseEnter={(e) => {
-                  e.currentTarget.style.boxShadow = `0 0 20px -4px ${r.color}60`
-                }}
-                onMouseLeave={(e) => {
-                  e.currentTarget.style.boxShadow = isOk ? '' : `0 0 12px -2px ${r.color}40`
-                }}
-              >
-                <span className="text-3xl">{r.icon}</span>
-                <span className="text-sm font-bold text-[#f8fafc] text-center">{r.name}</span>
-                <span className="text-[10px] text-[#94a3b8] text-center">{r.role}</span>
-                <div className="flex items-center gap-1.5 mt-1">
-                  <span
-                    className="w-2 h-2 rounded-full"
-                    style={{
-                      backgroundColor: isOk ? '#10b981' : isWarning ? '#f59e0b' : '#ef4444',
-                    }}
-                  />
-                  <span className="text-[10px] text-[#94a3b8]">
-                    {isOk ? 'Online' : isWarning ? 'Kısmi' : 'Offline'}
-                  </span>
+      <div className="flex">
+        {/* SOL SIDEBAR */}
+        <aside className="w-56 min-h-[calc(100vh-65px)] p-4 flex flex-col gap-1" style={{ background: '#0f172a', borderRight: '1px solid #1e293b' }}>
+          {[
+            { icon: Activity, label: 'Genel Bakış', href: '/patron', active: true },
+            { icon: Bot, label: 'CELF Direktörleri', href: '/dashboard/celf-direktorlukleri' },
+            { icon: Shield, label: 'Güvenlik', href: '/dashboard/guvenlik' },
+            { icon: Target, label: 'Onay Havuzu', href: '/dashboard/onay-kuyrugu' },
+            { icon: TrendingUp, label: 'Raporlar', href: '/dashboard/raporlar' },
+            { icon: Building2, label: 'Franchise', href: '/dashboard/franchise' },
+            { icon: Users, label: 'Kullanıcılar', href: '/dashboard/kullanicilar' },
+          ].map(item => (
+            <Link key={item.label} href={item.href} className="flex items-center gap-3 px-3 py-2.5 rounded-lg text-sm transition" style={{ background: item.active ? '#10b98115' : 'transparent', color: item.active ? '#10b981' : '#94a3b8', borderLeft: item.active ? '3px solid #10b981' : '3px solid transparent' }}>
+              <item.icon className="w-4 h-4" />
+              {item.label}
+            </Link>
+          ))}
+          <div className="mt-auto pt-4 text-[10px]" style={{ color: '#94a3b8', borderTop: '1px solid #1e293b' }}>
+            <div className="flex items-center gap-1.5">
+              <div className="w-2 h-2 rounded-full" style={{ background: '#10b981' }} />
+              Sistem: {health ? `${health.ok}/${health.total} AI aktif` : 'Yükleniyor...'}
+            </div>
+          </div>
+        </aside>
+
+        {/* ANA İÇERİK */}
+        <main className="flex-1 p-6 space-y-6">
+
+          {/* ROBOT DURUM GRID */}
+          <div>
+            <div className="flex items-center gap-2 mb-3">
+              <Activity className="w-4 h-4" style={{ color: '#f97316' }} />
+              <span className="text-sm font-medium">AI Robot Durumu</span>
+              <span className="text-[10px] px-2 py-0.5 rounded-full" style={{ background: health && health.ok === health.total ? '#10b98130' : '#f9731630', color: health && health.ok === health.total ? '#10b981' : '#f97316' }}>
+                {health ? `${health.ok}/${health.total}` : '...'}
+              </span>
+            </div>
+            <div className="grid grid-cols-5 gap-2">
+              {health?.results && aiNames.map(name => {
+                const key = name.toLowerCase()
+                const match = Object.entries(health.results).find(([k]) => k.toLowerCase() === key)
+                return <RobotCard key={name} name={name} status={match ? match[1] : { ok: false, error: 'yok' }} />
+              })}
+              {!health && aiNames.map(n => <RobotCard key={n} name={n} status={{ ok: false, error: 'yükleniyor' }} />)}
+            </div>
+          </div>
+
+          {/* İKİ SÜTUN: ONAY + CHAT */}
+          <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
+
+            {/* ONAY HAVUZU */}
+            <div>
+              <div className="flex items-center justify-between mb-3">
+                <div className="flex items-center gap-2">
+                  <Target className="w-4 h-4" style={{ color: '#f97316' }} />
+                  <span className="text-sm font-medium">Onay Havuzu</span>
+                  {pending.length > 0 && <span className="text-[10px] px-2 py-0.5 rounded-full" style={{ background: '#ef444430', color: '#ef4444' }}>{pending.length} bekliyor</span>}
                 </div>
+                <button onClick={() => fetch('/api/patron/pending').then(r => r.json()).then(d => setPending(Array.isArray(d) ? d : d.items || [])).catch(() => {})} className="p-1 rounded" style={{ color: '#94a3b8' }}><RefreshCw className="w-3.5 h-3.5" /></button>
               </div>
-            )
-          })}
-        </div>
-      </section>
+              <div className="space-y-3" style={{ maxHeight: 400, overflow: 'auto' }}>
+                {pending.length === 0 && <p className="text-sm" style={{ color: '#94a3b8' }}>Bekleyen iş yok</p>}
+                {pending.map(item => (
+                  <OnayCard key={item.id} item={item} onApprove={() => handleDecision(item.id, 'approved')} onReject={() => handleDecision(item.id, 'rejected')} />
+                ))}
+              </div>
+            </div>
 
-      {/* BÖLÜM 2: Onay Havuzu */}
-      <section className="flex-1 p-4 overflow-auto">
-        <h2 className="text-sm font-semibold text-[#f8fafc] mb-3">Onay Havuzu</h2>
-        <ApprovalQueue />
-      </section>
+            {/* ASİSTAN CHAT */}
+            <div className="flex flex-col rounded-xl" style={{ background: '#111827', border: '1px solid #1e293b', height: 440 }}>
+              <div className="flex items-center justify-between px-4 py-3" style={{ borderBottom: '1px solid #1e293b' }}>
+                <div className="flex items-center gap-2">
+                  <Sparkles className="w-4 h-4" style={{ color: '#f97316' }} />
+                  <span className="text-sm font-medium">Asistan</span>
+                </div>
+                <select value={chatProvider} onChange={e => setChatProvider(e.target.value)} className="text-xs px-2 py-1 rounded" style={{ background: '#0a0e17', color: '#f8fafc', border: '1px solid #1e293b' }}>
+                  <option value="GEMINI">Gemini</option>
+                  <option value="CLAUDE">Claude</option>
+                  <option value="GPT">GPT</option>
+                  <option value="CLOUD">Together</option>
+                </select>
+              </div>
+              <div className="flex-1 overflow-auto p-4 space-y-3">
+                {chatMsgs.length === 0 && <p className="text-xs" style={{ color: '#94a3b8' }}>Merhaba Patron. Size nasıl yardımcı olabilirim?</p>}
+                {chatMsgs.map((m, i) => (
+                  <div key={i} className={`flex ${m.role === 'patron' ? 'justify-end' : 'justify-start'}`}>
+                    <div className="max-w-[80%] px-3 py-2 rounded-xl text-sm" style={{ background: m.role === 'patron' ? '#10b981' : '#1e293b', color: '#f8fafc' }}>
+                      {m.text}
+                      {m.provider && <span className="block text-[9px] mt-1" style={{ color: m.role === 'patron' ? '#fff8' : '#94a3b8' }}>{m.provider}</span>}
+                    </div>
+                  </div>
+                ))}
+                {chatLoading && <div className="flex justify-start"><div className="px-3 py-2 rounded-xl text-sm" style={{ background: '#1e293b' }}>Düşünüyor...</div></div>}
+                <div ref={chatEndRef} />
+              </div>
+              <div className="flex gap-2 p-3" style={{ borderTop: '1px solid #1e293b' }}>
+                <input value={chatInput} onChange={e => setChatInput(e.target.value)} onKeyDown={e => e.key === 'Enter' && sendChat()} placeholder="Mesaj yazın..." className="flex-1 px-3 py-2 rounded-lg text-sm outline-none" style={{ background: '#0a0e17', color: '#f8fafc', border: '1px solid #1e293b' }} />
+                <button onClick={sendChat} disabled={chatLoading} className="p-2 rounded-lg transition" style={{ background: '#10b981', color: '#fff' }}><Send className="w-4 h-4" /></button>
+              </div>
+            </div>
+          </div>
 
-      {/* BÖLÜM 3: Asistan Chat */}
-      <section className="p-4 border-t border-[#1e293b]">
-        <h2 className="text-sm font-semibold text-[#f8fafc] mb-3">Asistan Chat</h2>
-        <AssistantChat />
-      </section>
-
-      {/* Footer */}
-      <footer className="px-4 py-2 bg-[#0f172a] border-t border-[#1e293b] flex flex-wrap items-center justify-between gap-2 text-xs text-[#94a3b8]">
-        <span>© YİSA-S 2026</span>
-        <span className="flex items-center gap-2">
-          <span className="w-2 h-2 rounded-full bg-[#10b981]" />
-          Sistem: ✅ | Robotlar: 5/5 | CELF: 12 dir
-        </span>
-      </footer>
+          {/* CELF KOMUT PANELİ */}
+          <PatronCommandPanel />
+        </main>
+      </div>
     </div>
   )
 }
