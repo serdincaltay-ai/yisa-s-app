@@ -10,6 +10,7 @@ import {
 } from '@/lib/robots/celf-center'
 import { routeToDirector } from '@/lib/robots/ceo-robot'
 import { runCelfDirector } from '@/lib/ai/celf-execute'
+import { claudeDenet } from '@/lib/ai/claude-denetci'
 
 function isValidDirectorKey(key: string): key is DirectorKey {
   return key in CELF_DIRECTORATES
@@ -99,8 +100,52 @@ export async function POST(req: NextRequest) {
     }
 
     const celfResult = await runCelfDirector(directorKey, command)
-    const displayText = celfResult.text ?? (celfResult as { errorReason?: string }).errorReason ?? 'Yanıt oluşturulamadı.'
+    let displayText = celfResult.text ?? (celfResult as { errorReason?: string }).errorReason ?? 'Yanıt oluşturulamadı.'
     const usedProviders = celfResult.text ? [(celfResult as { provider: string }).provider] : []
+
+    if (celfResult.text) {
+      const denet = await claudeDenet(
+        command,
+        directorKey,
+        director?.name ?? directorKey,
+        displayText,
+        celfResult.provider ?? '—'
+      )
+      if (!denet.approved) {
+        try {
+          if (supabase && commandId) {
+            await supabase.from('patron_commands').update({
+              output_payload: {
+                processing: false,
+                director_key: directorKey,
+                director_name: director?.name,
+                ai_providers: [...usedProviders, 'CLAUDE_DENET'],
+                displayText: displayText,
+                denet_rejected: true,
+                denet_feedback: denet.feedback,
+                denet_revised: denet.revisedText,
+              },
+              status: 'rejected',
+              decision: 'denet_reject',
+              decision_at: new Date().toISOString(),
+            }).eq('id', commandId)
+          }
+        } catch (_) {}
+        return NextResponse.json({
+          ok: false,
+          command_id: commandId,
+          director_key: directorKey,
+          denet_rejected: true,
+          feedback: denet.feedback,
+          revised_suggestion: denet.revisedText,
+          error: 'Claude denetçi reddetti: ' + (denet.feedback ?? 'Belirtilmedi'),
+        }, { status: 400 })
+      }
+      if (denet.revisedText && denet.reason === 'needs_revision') {
+        displayText = denet.revisedText
+      }
+      usedProviders.push('CLAUDE_DENET')
+    }
 
     try {
       await archiveTaskResult({
@@ -125,14 +170,14 @@ export async function POST(req: NextRequest) {
             director_name: director?.name,
             ai_providers: usedProviders,
             provider: celfResult.provider,
-            displayText: celfResult.text,
+            displayText,
             assignments: [{ director: directorKey, provider_used: celfResult.provider, status: 'done', has_veto: hasVeto }],
           }
           if ('githubPreparedCommit' in celfResult && celfResult.githubPreparedCommit) {
             outputPayload.github_prepared_commit = celfResult.githubPreparedCommit
           }
           if (directorKey === 'CPO' || directorKey === 'CTO') {
-            const codeBlocks = extractCodeBlocks(celfResult.text)
+            const codeBlocks = extractCodeBlocks(displayText)
             if (codeBlocks.length > 0) outputPayload.code_files = codeBlocks
           }
           await supabase.from('patron_commands').update({ output_payload: outputPayload, status: 'pending' }).eq('id', commandId)
@@ -140,7 +185,7 @@ export async function POST(req: NextRequest) {
       } catch (_) {
         // Update hatası: sessizce devam, yine de başarılı yanıt dön
       }
-      const codeFiles = (directorKey === 'CPO' || directorKey === 'CTO') && celfResult.text ? extractCodeBlocks(celfResult.text) : undefined
+      const codeFiles = (directorKey === 'CPO' || directorKey === 'CTO') && displayText ? extractCodeBlocks(displayText) : undefined
       return NextResponse.json({
         ok: true,
         command_id: commandId,
@@ -148,7 +193,7 @@ export async function POST(req: NextRequest) {
         director_name: director?.name,
         ai_providers: usedProviders,
         provider: celfResult.provider,
-        text: celfResult.text,
+        text: displayText,
         status: 'pending',
         message: 'Is tamamlandi ve onay kuyruguna eklendi.',
         github_prepared_commit: 'githubPreparedCommit' in celfResult ? celfResult.githubPreparedCommit : undefined,
