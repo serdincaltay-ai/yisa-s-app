@@ -82,6 +82,7 @@ export async function POST(req: NextRequest) {
 
     const messageToUse = correctedMessage ?? message
     const skipSpelling = body.skip_spelling === true || body.skip_imla === true
+    const customSystemPrompt = typeof body.system_prompt === 'string' ? body.system_prompt : (typeof body.systemPrompt === 'string' ? body.systemPrompt : undefined)
 
     // ─── Rol guard: Flow (CEO/CELF/onay) sadece Patron ve üst roller tetikleyebilir ─
     const flowUser = user ?? (userId ? { user_metadata: { role: undefined } } : null)
@@ -234,7 +235,7 @@ export async function POST(req: NextRequest) {
           } catch (_) { /* sistem verisi alınamazsa normal devam */ }
         }
         const chain = assistantChain.length > 0 ? assistantChain : [assistantProvider]
-        const { text: conversationText, providers } = await callAssistantChain(chain, promptForAssistant)
+        const { text: conversationText, providers } = await callAssistantChain(chain, promptForAssistant, customSystemPrompt)
         const resultText = conversationText ?? 'Yanıt oluşturulamadı.'
         if (userId) {
           await saveChatMessage({
@@ -264,7 +265,7 @@ export async function POST(req: NextRequest) {
       } else if (skipSpelling || /^\s*(merhaba|selam|hey|hi|hello)\s*$/i.test(message.trim())) {
         // İmla atla: direkt Gemini yanıtı dön
         const chain = assistantChain.length > 0 ? assistantChain : [assistantProvider]
-        const { text: conversationText, providers } = await callAssistantChain(chain, messageToUse)
+        const { text: conversationText, providers } = await callAssistantChain(chain, messageToUse, customSystemPrompt)
         const resultText = conversationText ?? 'Yanıt oluşturulamadı.'
         if (userId) {
           await saveChatMessage({
@@ -276,7 +277,7 @@ export async function POST(req: NextRequest) {
         }
         return NextResponse.json({
           status: 'patron_conversation_done',
-          flow: `Direkt Gemini (${providers[providers.length - 1] ?? 'GEMINI'})`,
+          flow: `Direkt (${providers[providers.length - 1] ?? 'GEMINI'})`,
           text: resultText,
           ai_provider: providers[providers.length - 1],
           ai_providers: providers,

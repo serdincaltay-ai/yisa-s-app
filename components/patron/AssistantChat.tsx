@@ -4,26 +4,34 @@ import { useState, useRef, useEffect } from 'react'
 import { Send } from 'lucide-react'
 import { Button } from '@/components/ui/button'
 import { Input } from '@/components/ui/input'
+import { AI_PROVIDERS } from '@/lib/patron/ai-providers'
 
-type Message = { role: 'user' | 'assistant'; text: string; provider?: string }
+type Message = { role: 'user' | 'assistant'; text: string; provider?: string; providerColor?: string }
 
-const AI_OPTIONS = ['GPT', 'Claude', 'Gemini', 'Together', 'Otomatik'] as const
+const PROVIDER_TO_FLOW: Record<string, string> = {
+  claude: 'CLAUDE',
+  gpt: 'GPT',
+  gemini: 'GEMINI',
+  together: 'CLOUD',
+  cursor: 'CURSOR',
+  v0: 'V0',
+}
 
 export default function AssistantChat() {
   const [messages, setMessages] = useState<Message[]>([])
   const [input, setInput] = useState('')
   const [loading, setLoading] = useState(false)
-  const [selectedAI, setSelectedAI] = useState<(typeof AI_OPTIONS)[number]>('Otomatik')
-  const [healthStatus, setHealthStatus] = useState<Record<string, string>>({})
+  const [selectedAI, setSelectedAI] = useState<(typeof AI_PROVIDERS)[number]>(AI_PROVIDERS[0])
+  const [healthStatus, setHealthStatus] = useState<Record<string, boolean>>({})
   const endRef = useRef<HTMLDivElement>(null)
 
   useEffect(() => {
     fetch('/api/system/health')
       .then((r) => r.json())
       .then((d) => {
-        const map: Record<string, string> = {}
+        const map: Record<string, boolean> = {}
         for (const r of d.robots ?? []) {
-          map[r.name] = r.status === 'ok' ? 'ok' : 'error'
+          map[r.name] = r.status === 'ok'
         }
         setHealthStatus(map)
       })
@@ -43,29 +51,35 @@ export default function AssistantChat() {
     setLoading(true)
 
     try {
-      const providerMap: Record<string, string> = {
-        GPT: 'GPT',
-        Claude: 'CLAUDE',
-        Gemini: 'GEMINI',
-        Together: 'CLOUD',
-        Otomatik: 'GEMINI',
+      const flowProvider = PROVIDER_TO_FLOW[selectedAI.id] ?? 'GEMINI'
+      const body: Record<string, unknown> = {
+        message: msg,
+        skip_spelling: true,
+        assistant_provider: flowProvider,
       }
+      if (selectedAI.systemPrompt) {
+        body.system_prompt = selectedAI.systemPrompt
+      }
+
       const res = await fetch('/api/chat/flow', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({
-          message: msg,
-          skip_spelling: true,
-          assistant_provider: providerMap[selectedAI] ?? 'GEMINI',
-        }),
+        body: JSON.stringify(body),
       })
       const data = await res.json()
 
       const reply = data.text ?? data.error ?? 'Yanıt alınamadı.'
-      const prov = data.ai_provider ?? data.ai_providers?.[0] ?? selectedAI
-      setMessages((prev) => [...prev, { role: 'assistant', text: reply, provider: prov }])
+      const prov = data.ai_provider ?? data.ai_providers?.[0] ?? selectedAI.name
+      const provColor = AI_PROVIDERS.find((p) => p.name === prov || p.apiKey === prov)?.color ?? selectedAI.color
+      setMessages((prev) => [
+        ...prev,
+        { role: 'assistant', text: reply, provider: prov, providerColor: provColor },
+      ])
     } catch {
-      setMessages((prev) => [...prev, { role: 'assistant', text: 'Bağlantı hatası.', provider: undefined }])
+      setMessages((prev) => [
+        ...prev,
+        { role: 'assistant', text: 'Bağlantı hatası.', provider: undefined, providerColor: undefined },
+      ])
     } finally {
       setLoading(false)
     }
@@ -73,22 +87,35 @@ export default function AssistantChat() {
 
   return (
     <div className="rounded-xl border border-[#1e293b] bg-[#111827] overflow-hidden flex flex-col">
-      <div className="px-4 py-3 border-b border-[#1e293b] flex items-center justify-between">
+      <div className="px-4 py-3 border-b border-[#1e293b] flex items-center justify-between flex-wrap gap-2">
         <div className="flex items-center gap-2">
-          <span className="text-sm font-medium text-[#f8fafc]">🤖 AI Asistan</span>
+          <span className="text-sm font-medium text-[#f8fafc]">🤖 AI:</span>
           <select
-            value={selectedAI}
-            onChange={(e) => setSelectedAI(e.target.value as (typeof AI_OPTIONS)[number])}
-            className="text-xs bg-[#0a0e17] border border-[#1e293b] rounded px-2 py-1 text-[#f8fafc]"
+            value={selectedAI.id}
+            onChange={(e) => {
+              const p = AI_PROVIDERS.find((x) => x.id === e.target.value)
+              if (p) setSelectedAI(p)
+            }}
+            className="text-xs bg-[#0a0e17] border border-[#1e293b] rounded px-2 py-1.5 text-[#f8fafc] min-w-[120px]"
+            style={{ borderLeftColor: selectedAI.color, borderLeftWidth: 3 }}
           >
-            {AI_OPTIONS.map((opt) => (
-              <option key={opt} value={opt}>
-                {opt} {healthStatus[opt === 'Together' ? 'Together' : opt] === 'ok' ? '✅' : healthStatus[opt] === 'error' ? '❌' : ''}
-              </option>
-            ))}
+            {AI_PROVIDERS.map((p) => {
+              const health = p.apiKey === 'CLOUD' ? healthStatus['Together'] : healthStatus[p.apiKey]
+              return (
+                <option key={p.id} value={p.id}>
+                  {p.name} {health ? '✅' : health === false ? '❌' : ''}
+                </option>
+              )
+            })}
           </select>
         </div>
         <span className="text-xs text-[#10b981]">✅ Aktif</span>
+      </div>
+
+      <div className="px-4 py-2 border-b border-[#1e293b] bg-[#0a0e17]/50">
+        <p className="text-xs text-[#94a3b8]">
+          {selectedAI.name} ile sohbet ediyorsunuz — {selectedAI.role}
+        </p>
       </div>
 
       <div className="flex-1 min-h-[200px] max-h-[280px] overflow-y-auto p-4 space-y-4">
@@ -105,12 +132,25 @@ export default function AssistantChat() {
             <div
               className={`max-w-[85%] rounded-xl px-4 py-2 ${
                 m.role === 'user'
-                  ? 'bg-[#3b82f6] text-white'
-                  : 'bg-[#0a0e17] border border-[#1e293b] text-[#f8fafc]'
+                  ? 'bg-[#1e293b] text-[#f8fafc] border border-[#334155]'
+                  : 'bg-[#0a0e17] border text-[#f8fafc]'
               }`}
+              style={
+                m.role === 'assistant' && m.providerColor
+                  ? { borderLeftWidth: 4, borderLeftColor: m.providerColor }
+                  : m.role === 'assistant'
+                    ? { borderLeftWidth: 4, borderLeftColor: '#1e293b' }
+                    : undefined
+              }
             >
               {m.provider && m.role === 'assistant' && (
-                <span className="text-[10px] text-[#94a3b8] block mb-1">{m.provider}</span>
+                <div className="flex items-center gap-1.5 mb-1">
+                  <span
+                    className="w-2 h-2 rounded-full shrink-0"
+                    style={{ backgroundColor: m.providerColor ?? '#94a3b8' }}
+                  />
+                  <span className="text-[10px] text-[#94a3b8]">{m.provider}</span>
+                </div>
               )}
               <p className="text-sm whitespace-pre-wrap">{m.text}</p>
             </div>
@@ -118,7 +158,10 @@ export default function AssistantChat() {
         ))}
         {loading && (
           <div className="flex justify-start">
-            <div className="bg-[#0a0e17] border border-[#1e293b] rounded-xl px-4 py-2 text-sm text-[#94a3b8]">
+            <div
+              className="bg-[#0a0e17] border border-[#1e293b] rounded-xl px-4 py-2 text-sm text-[#94a3b8]"
+              style={{ borderLeftWidth: 4, borderLeftColor: selectedAI.color }}
+            >
               Yanıt yazılıyor…
             </div>
           </div>
@@ -140,7 +183,7 @@ export default function AssistantChat() {
           disabled={loading || !input.trim()}
           className="bg-[#10b981] hover:bg-[#059669]"
         >
-          <Send size={18} className="mr-1" /> Gönder
+          <Send size={18} className="mr-1" /> Gönder 🚀
         </Button>
       </div>
     </div>
