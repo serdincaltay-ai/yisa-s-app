@@ -117,9 +117,6 @@ export default function PatronPanel() {
                     {isOk ? 'Online' : isWarning ? 'Kısmi' : 'Offline'}
                   </span>
                 </div>
-                {r.subInfo && isOk && (
-                  <span className="text-[10px] text-[#94a3b8]">{r.subInfo}</span>
-                )}
               </div>
             )
           })}
