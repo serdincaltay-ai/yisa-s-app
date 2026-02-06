@@ -21,6 +21,7 @@ import {
   Monitor,
   Wrench,
   Cpu,
+  Zap,
 } from 'lucide-react'
 
 /** Patron paneli menüsü — sadece gerekli sayfalar */
@@ -37,6 +38,7 @@ const NAV = [
   { href: '/dashboard/kasa-defteri', label: 'Kasa Defteri', icon: Wallet },
   { href: '/dashboard/sablonlar', label: 'Şablonlar', icon: LayoutTemplate },
   { href: '/dashboard/reports', label: 'Raporlar', icon: BarChart3 },
+  { href: '/dashboard/simulasyon', label: 'Canlı Simülasyon', icon: Zap },
 ]
 
 export default function DashboardSidebar() {
