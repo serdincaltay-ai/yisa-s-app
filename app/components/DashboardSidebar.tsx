@@ -20,6 +20,7 @@ import {
   X,
   Monitor,
   Wrench,
+  Cpu,
 } from 'lucide-react'
 
 /** Patron paneli menüsü — sadece gerekli sayfalar */
@@ -30,6 +31,7 @@ const NAV = [
   { href: '/dashboard/franchise-yonetim', label: 'Franchise Yönetim', icon: Briefcase },
   { href: '/dashboard/celf', label: 'CELF Direktörlükleri', icon: Bot },
   { href: '/dashboard/directors', label: 'Direktörler (Canlı)', icon: Bot },
+  { href: '/dashboard/is-havuzu', label: 'Robot İş Havuzu', icon: Cpu },
   { href: '/dashboard/onay-kuyrugu', label: 'Patron Havuzu', icon: ClipboardCheck },
   { href: '/dashboard/franchises', label: 'Franchise / Vitrin', icon: Store },
   { href: '/dashboard/kasa-defteri', label: 'Kasa Defteri', icon: Wallet },
