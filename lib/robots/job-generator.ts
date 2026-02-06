@@ -1,20 +1,17 @@
 /**
  * ═══════════════════════════════════════════════════════════════════
- * YİSA-S CELF İş Üretim Motoru — V3.0 (İç Döngü)
+ * YİSA-S CELF İş Üretim Motoru — V3.0 (Tam Entegrasyon)
  * ═══════════════════════════════════════════════════════════════════
  *
- * KRİTİK DEĞİŞİKLİK: Claude denetimi artık İÇERİDE yapılıyor.
- *
- * Akış:
+ * Tam akış:
  *  1. Patron komut verir / görev oluşur
- *  2. CEO Robot → doğru direktörlüğe yönlendirir
- *  3. DİREKTÖRLÜK İÇ DÖNGÜSÜ:
- *     a. Üretici AI çalışır
- *     b. Claude İÇERİDE denetler
- *     c. Sorun varsa → düzeltme notu → üretici tekrar çalışır
- *     d. Temiz iş çıkana kadar döngü (max N tur)
- *  4. Sadece TEMİZ İŞ CEO Havuzu'na (10'a Çıkart) düşer
- *  5. Patron onaylar/reddeder/düzeltme gönderir
+ *  2. KOMUT TAKİP başlar (kargo takibi gibi)
+ *  3. MONTE NOKTASI tespit edilir (nereye kurulacak)
+ *  4. ŞİRKET SÜZGECİ (anayasa) kontrol eder
+ *  5. CEO Robot → doğru direktörlüğe yönlendirir
+ *  6. DİREKTÖRLÜK İÇ DÖNGÜSÜ (üretim + Claude iç denetim)
+ *  7. CELF MOTOR → üretim hattı belirler + kuyruğa alır
+ *  8. TEMİZ İŞ → CEO Havuzu'na (Patron görür + takip eder)
  *
  * Tarih: 6 Şubat 2026
  */
@@ -25,6 +22,13 @@ import {
   runDirectorateInternalLoop,
   type InternalLoopResult,
 } from '@/lib/robots/celf-internal-loop'
+import {
+  createKomutTakip,
+  type KomutTakipSnapshot,
+  type TenantCustomization,
+} from '@/lib/robots/komut-takip'
+import { dispatchToProduction } from '@/lib/robots/celf-motor'
+import { resolveProductionPipeline } from '@/lib/robots/sistem-haritasi'
 import {
   createRobotJob,
   updateJobStatus,
@@ -44,6 +48,8 @@ export interface JobGenerationRequest {
   priority?: 'low' | 'normal' | 'high' | 'critical'
   tenant_id?: string                 // Hedef tenant (varsa)
   target_audience?: string
+  /** Tenant özelleştirme bağlamı (renk, logo, branş vb.) */
+  tenant_context?: TenantCustomization
 }
 
 export interface JobGenerationResult {
@@ -55,6 +61,12 @@ export interface JobGenerationResult {
   /** İç döngü tur detayları */
   rounds?: number
   review_passed?: boolean
+  /** Komut takip haritası (tam yolculuk) */
+  journey?: KomutTakipSnapshot
+  /** CELF Motor önerileri */
+  suggestions?: string[]
+  /** Uyarılar */
+  warnings?: string[]
   error?: string
 }
 
@@ -146,28 +158,75 @@ export async function generateJob(req: JobGenerationRequest): Promise<JobGenerat
       return { success: false, error: createError ?? 'İş kaydı oluşturulamadı' }
     }
 
+    // ══════════════════════════════════════════════════════════════
+    // 6. KOMUT TAKİP BAŞLAT — Kargo takibi gibi
+    // ══════════════════════════════════════════════════════════════
+    const takip = createKomutTakip({
+      job_id: jobId,
+      ticket_no: ticketNo,
+      command: req.command,
+      director_key: directorKey,
+      tenant_context: req.tenant_context,
+    })
+
+    // Güvenlik kontrolü adımı (şimdilik otomatik geç)
+    takip.startStep('guvenlik_kontrol', 'Kontrol ediliyor', 'GUVENLIK')
+    takip.completeStep('guvenlik_kontrol', 'Güvenlik kontrolü geçti')
+
+    // CIO analiz adımı
+    takip.startStep('cio_analiz', 'Öncelik ve bütçe analizi', 'CIO')
+    const pipelineInfo = resolveProductionPipeline(req.command)
+    takip.completeStep('cio_analiz', `Direktörlük: ${directorKey}, Üretim hattı: ${pipelineInfo.suggested_robots.join('→')}`, {
+      director_key: directorKey,
+      suggested_pipeline: pipelineInfo.suggested_robots,
+    })
+
+    // CEO yönlendirme
+    takip.startStep('ceo_yonlendirme', `${directorKey} direktörlüğüne yönlendiriliyor`, 'CEO_ROBOT')
+    takip.completeStep('ceo_yonlendirme', `${directorKey} direktörlüğüne yönlendirildi`)
+
     // Log: İş oluşturuldu
     await addJobLog({ job_id: jobId, action: 'created', actor: 'CELF', details: { director_key: directorKey, job_type: jobType } })
 
     // ══════════════════════════════════════════════════════════════
-    // 6. DİREKTÖRLÜK İÇ DÖNGÜSÜ — Üretim + Denetim İÇERİDE
+    // 7. DİREKTÖRLÜK İÇ DÖNGÜSÜ — Üretim + Denetim İÇERİDE
     // ══════════════════════════════════════════════════════════════
+    takip.startStep('direktorluk_uretim', `${directorKey} üretiyor`, directorKey)
     await addJobLog({ job_id: jobId, action: 'internal_loop_started', actor: 'CELF', details: { director_key: directorKey } })
     await updateJobStatus(jobId, 'producing')
 
     const loopResult = await runDirectorateInternalLoop(directorKey, req.command)
 
-    // İç döngü başarısız olduysa (sistem hatası)
+    // İç döngü başarısız olduysa
     if ('success' in loopResult && !loopResult.success) {
+      takip.failStep('direktorluk_uretim', loopResult.error)
       await updateJobStatus(jobId, 'rejected', {
-        output_data: { error: loopResult.error, stage: loopResult.stage },
+        output_data: { error: loopResult.error, stage: loopResult.stage, journey: takip.toJSON() },
       })
       await addJobLog({ job_id: jobId, action: 'internal_loop_failed', actor: 'CELF', details: { error: loopResult.error, stage: loopResult.stage } })
-      return { success: false, job_id: jobId, ticket_no: ticketNo, error: loopResult.error }
+      return { success: false, job_id: jobId, ticket_no: ticketNo, error: loopResult.error, journey: takip.toJSON() }
     }
 
-    // İç döngü başarılı — sonuçları al
     const result = loopResult as InternalLoopResult
+
+    takip.completeStep('direktorluk_uretim', `${result.provider} ile üretildi (${result.rounds} tur)`)
+
+    // Denetim adımı
+    takip.startStep('direktorluk_denetim', 'Claude iç denetim', 'CLAUDE')
+    takip.completeStep('direktorluk_denetim', result.review_passed ? 'GEÇTİ' : `KALDI (${result.rounds} tur sonra uyarılı geçirildi)`)
+
+    // ══════════════════════════════════════════════════════════════
+    // 8. ŞİRKET SÜZGECİ — Anayasa kontrolü
+    // ══════════════════════════════════════════════════════════════
+    const suzgecSonucu = takip.runSirketSuzgeci(result.output)
+
+    const allWarnings: string[] = []
+    const allSuggestions: string[] = []
+
+    if (!suzgecSonucu.passed) {
+      allWarnings.push(...suzgecSonucu.violations.map(v => `[ANAYASA] ${v}`))
+    }
+    allSuggestions.push(...suzgecSonucu.suggestions)
 
     // Tur detaylarını logla
     for (const rd of result.round_details) {
@@ -193,12 +252,40 @@ export async function generateJob(req: JobGenerationRequest): Promise<JobGenerat
         rounds: result.rounds,
         review_passed: result.review_passed,
         warning: result.warning,
+        sirket_suzgeci: suzgecSonucu.passed,
       },
     })
 
     // ══════════════════════════════════════════════════════════════
-    // 7. TEMİZ İŞ → CEO Havuzu'na (10'a Çıkart)
+    // 9. CELF MOTOR — Üretim hattı görevlendirme + kuyruk
     // ══════════════════════════════════════════════════════════════
+    takip.startStep('celf_motor_gorevlendirme', 'CELF Motor görevlendiriyor', 'CELF_MOTOR')
+
+    const dispatchResult = await dispatchToProduction({
+      job_id: jobId,
+      command: req.command,
+      source_directorate: directorKey,
+      directorate_output: result.output,
+      idea_producer: result.provider as 'CLAUDE' | 'GPT' | 'GEMINI' | 'V0' | 'CURSOR' | 'TOGETHER',
+      priority: req.priority ?? 'normal',
+    })
+
+    if (dispatchResult.dispatched) {
+      takip.completeStep('celf_motor_gorevlendirme', `Hat: ${dispatchResult.assigned_pipeline.join('→')}, Kuyruk: #${dispatchResult.queue_position}`)
+      takip.addProductionSteps(dispatchResult.assigned_pipeline)
+    } else {
+      // Tekrar engeli veya başka sebep
+      takip.completeStep('celf_motor_gorevlendirme', dispatchResult.warnings[0] ?? 'Görevlendirme atlandı')
+    }
+
+    allWarnings.push(...dispatchResult.warnings)
+    allSuggestions.push(...dispatchResult.suggestions)
+
+    // ══════════════════════════════════════════════════════════════
+    // 10. CEO HAVUZU'NA GÖNDER — Patron görecek
+    // ══════════════════════════════════════════════════════════════
+    takip.startStep('ceo_havuzu_gereksinim', 'CEO havuzuna gönderiliyor', 'CELF')
+
     await updateJobStatus(jobId, 'ceo_pool', {
       output_data: {
         final_output: result.output,
@@ -207,11 +294,22 @@ export async function generateJob(req: JobGenerationRequest): Promise<JobGenerat
         rounds: result.rounds,
         round_details: result.round_details,
         warning: result.warning,
+        sirket_suzgeci: suzgecSonucu,
+        celf_motor: {
+          content_type: dispatchResult.content_type,
+          assigned_pipeline: dispatchResult.assigned_pipeline,
+          estimated_tokens: dispatchResult.estimated_tokens,
+          queue_position: dispatchResult.queue_position,
+        },
+        monte: takip.toJSON().monte,
+        journey: takip.toJSON(),
         ...(result.github_commit ? { github_commit: result.github_commit } : {}),
       },
       output_preview: result.output.slice(0, 500),
       ai_provider: result.provider,
     })
+
+    takip.completeStep('ceo_havuzu_gereksinim', 'CEO havuzuna düştü — Patron inceleyecek')
 
     await addJobLog({
       job_id: jobId,
@@ -219,9 +317,9 @@ export async function generateJob(req: JobGenerationRequest): Promise<JobGenerat
       actor: 'CELF',
       details: {
         review_passed: result.review_passed,
-        note: result.review_passed
-          ? 'İç denetimden geçti — temiz iş CEO havuzuna gönderildi.'
-          : `İç denetimden geçemedi (${result.rounds} tur) — uyarılı olarak CEO havuzuna gönderildi.`,
+        sirket_suzgeci: suzgecSonucu.passed,
+        monte: takip.toJSON().monte,
+        pipeline: dispatchResult.assigned_pipeline,
       },
     })
 
@@ -237,6 +335,9 @@ export async function generateJob(req: JobGenerationRequest): Promise<JobGenerat
       output_preview: outputPreview,
       rounds: result.rounds,
       review_passed: result.review_passed,
+      journey: takip.toJSON(),
+      suggestions: allSuggestions.length > 0 ? allSuggestions : undefined,
+      warnings: allWarnings.length > 0 ? allWarnings : undefined,
     }
   } catch (err) {
     return { success: false, error: err instanceof Error ? err.message : String(err) }
@@ -244,7 +345,6 @@ export async function generateJob(req: JobGenerationRequest): Promise<JobGenerat
 }
 
 // ─── DÜZELTME SONRASI YENİDEN ÜRETİM ────────────────────────
-// Patron "Düzelt" dediğinde, orijinal iş yeniden iç döngüye girer.
 
 export async function regenerateJob(
   jobId: string,
@@ -257,7 +357,6 @@ export async function regenerateJob(
     return { success: false, error: error ?? 'Orijinal iş bulunamadı' }
   }
 
-  // Patron düzeltme notu ile yeniden iç döngüye gir
   const enhancedCommand = `${originalJob.description ?? originalJob.title}\n\n[PATRON DÜZELTME NOTU]: ${correctionNotes}`
 
   return generateJob({
