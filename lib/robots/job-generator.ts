@@ -1,20 +1,30 @@
 /**
- * YİSA-S CELF İş Üretim Motoru — V3.0
+ * ═══════════════════════════════════════════════════════════════════
+ * YİSA-S CELF İş Üretim Motoru — V3.0 (İç Döngü)
+ * ═══════════════════════════════════════════════════════════════════
+ *
+ * KRİTİK DEĞİŞİKLİK: Claude denetimi artık İÇERİDE yapılıyor.
  *
  * Akış:
- *  1. CELF direktörlük iş alır (komut/görev)
- *  2. Üretici AI çalışır (GPT, Claude, Gemini, V0, vb.)
- *  3. Claude denetler (her zaman — Altın Kural #4)
- *  4. İş CEO Havuzu'na (10'a Çıkart) düşer
+ *  1. Patron komut verir / görev oluşur
+ *  2. CEO Robot → doğru direktörlüğe yönlendirir
+ *  3. DİREKTÖRLÜK İÇ DÖNGÜSÜ:
+ *     a. Üretici AI çalışır
+ *     b. Claude İÇERİDE denetler
+ *     c. Sorun varsa → düzeltme notu → üretici tekrar çalışır
+ *     d. Temiz iş çıkana kadar döngü (max N tur)
+ *  4. Sadece TEMİZ İŞ CEO Havuzu'na (10'a Çıkart) düşer
  *  5. Patron onaylar/reddeder/düzeltme gönderir
- *  6. Onay → Mağaza/Deploy | Red → CELF'e geri | Düzeltme → CELF tekrar üretir
  *
  * Tarih: 6 Şubat 2026
  */
 
 import { routeToDirector } from '@/lib/robots/ceo-robot'
-import { runCelfDirector, callClaude, type CelfResult } from '@/lib/ai/celf-execute'
 import { type DirectorKey } from '@/lib/robots/celf-center'
+import {
+  runDirectorateInternalLoop,
+  type InternalLoopResult,
+} from '@/lib/robots/celf-internal-loop'
 import {
   createRobotJob,
   updateJobStatus,
@@ -34,7 +44,6 @@ export interface JobGenerationRequest {
   priority?: 'low' | 'normal' | 'high' | 'critical'
   tenant_id?: string                 // Hedef tenant (varsa)
   target_audience?: string
-  skip_review?: boolean              // Claude denetimini atla (sadece rutin/güvenli işler)
 }
 
 export interface JobGenerationResult {
@@ -43,6 +52,9 @@ export interface JobGenerationResult {
   ticket_no?: string
   status?: string
   output_preview?: string
+  /** İç döngü tur detayları */
+  rounds?: number
+  review_passed?: boolean
   error?: string
 }
 
@@ -78,46 +90,9 @@ function detectContentType(jobType: JobType): ContentType {
   return map[jobType] ?? 'text'
 }
 
-// ─── Claude Denetim ─────────────────────────────────────────
-
-async function reviewWithClaude(
-  directorKey: string,
-  command: string,
-  output: string
-): Promise<{ passed: boolean; review: string }> {
-  const reviewPrompt = `Sen YİSA-S CELF denetçisisin (Claude). Aşağıdaki iş çıktısını denetle.
-
-Direktörlük: ${directorKey}
-Görev: ${command}
-
-Çıktı:
-${output.slice(0, 3000)}
-
-Kurallar:
-1. Çıktı, görevle uyumlu mu?
-2. Prompt sınırları aşılmış mı (başka alanla ilgili içerik var mı)?
-3. KVKK/güvenlik ihlali var mı?
-4. Kalite yeterli mi (boş/anlamsız yanıt değil mi)?
-
-Yanıtın formatı:
-DURUM: GEÇTİ veya DURUM: KALDI
-AÇIKLAMA: [kısa açıklama]`
-
-  const result = await callClaude(reviewPrompt, undefined, 'celf')
-
-  if (!result) {
-    return { passed: true, review: 'Claude denetimi yapılamadı (API hatası) — iş havuza gönderiliyor.' }
-  }
-
-  const passed = !result.toUpperCase().includes('DURUM: KALDI')
-  return { passed, review: result }
-}
-
 // ─── Görev Çakışması Kontrolü (Altın Kural #12) ─────────────
 
 async function checkDuplicateJob(command: string, directorKey: string): Promise<boolean> {
-  // Basit çakışma kontrolü — aynı komutun son 5 dk içinde gönderilmesi
-  // İleride daha gelişmiş benzerlik kontrolü eklenebilir
   const { getJobsByFilter } = await import('@/lib/db/robot-jobs')
   const { data } = await getJobsByFilter({ director_key: directorKey, limit: 5 })
   if (!data || data.length === 0) return false
@@ -134,7 +109,7 @@ async function checkDuplicateJob(command: string, directorKey: string): Promise<
 
 export async function generateJob(req: JobGenerationRequest): Promise<JobGenerationResult> {
   try {
-    // 1. Direktörlük belirle
+    // 1. Direktörlük belirle (CEO Robot yönlendirmesi)
     const directorKey = req.director_key ?? routeToDirector(req.command) ?? 'CPO'
 
     // 2. İş türü algıla
@@ -174,80 +149,102 @@ export async function generateJob(req: JobGenerationRequest): Promise<JobGenerat
     // Log: İş oluşturuldu
     await addJobLog({ job_id: jobId, action: 'created', actor: 'CELF', details: { director_key: directorKey, job_type: jobType } })
 
-    // 6. CELF Direktörlüğünde AI çalıştır
-    await addJobLog({ job_id: jobId, action: 'celf_started', actor: 'CELF', details: { director_key: directorKey } })
+    // ══════════════════════════════════════════════════════════════
+    // 6. DİREKTÖRLÜK İÇ DÖNGÜSÜ — Üretim + Denetim İÇERİDE
+    // ══════════════════════════════════════════════════════════════
+    await addJobLog({ job_id: jobId, action: 'internal_loop_started', actor: 'CELF', details: { director_key: directorKey } })
+    await updateJobStatus(jobId, 'producing')
 
-    const celfResult: CelfResult = await runCelfDirector(directorKey as DirectorKey, req.command)
+    const loopResult = await runDirectorateInternalLoop(directorKey, req.command)
 
-    if (!celfResult.text) {
+    // İç döngü başarısız olduysa (sistem hatası)
+    if ('success' in loopResult && !loopResult.success) {
       await updateJobStatus(jobId, 'rejected', {
-        output_data: { error: 'errorReason' in celfResult ? celfResult.errorReason : 'AI yanıt vermedi' },
+        output_data: { error: loopResult.error, stage: loopResult.stage },
       })
-      await addJobLog({ job_id: jobId, action: 'celf_failed', actor: 'CELF', details: { reason: 'errorReason' in celfResult ? celfResult.errorReason : 'no_output' } })
-      return { success: false, job_id: jobId, ticket_no: ticketNo, error: 'errorReason' in celfResult ? celfResult.errorReason : 'AI çıktı üretemedi' }
+      await addJobLog({ job_id: jobId, action: 'internal_loop_failed', actor: 'CELF', details: { error: loopResult.error, stage: loopResult.stage } })
+      return { success: false, job_id: jobId, ticket_no: ticketNo, error: loopResult.error }
     }
 
-    const aiProvider = 'provider' in celfResult ? celfResult.provider : 'UNKNOWN'
+    // İç döngü başarılı — sonuçları al
+    const result = loopResult as InternalLoopResult
 
-    // İş çıktısını kaydet
-    await updateJobStatus(jobId, 'celf_review', {
-      output_data: {
-        raw_output: celfResult.text,
-        provider: aiProvider,
-        ...('githubPreparedCommit' in celfResult && celfResult.githubPreparedCommit
-          ? { github_commit: celfResult.githubPreparedCommit }
-          : {}),
+    // Tur detaylarını logla
+    for (const rd of result.round_details) {
+      await addJobLog({
+        job_id: jobId,
+        action: rd.review_verdict === 'GEÇTİ' ? 'internal_review_passed' : 'internal_review_failed',
+        actor: 'CLAUDE',
+        details: {
+          round: rd.round,
+          verdict: rd.review_verdict,
+          note: rd.review_note.slice(0, 500),
+          correction: rd.correction_note?.slice(0, 500),
+        },
+      })
+    }
+
+    await addJobLog({
+      job_id: jobId,
+      action: 'internal_loop_completed',
+      actor: 'CELF',
+      details: {
+        provider: result.provider,
+        rounds: result.rounds,
+        review_passed: result.review_passed,
+        warning: result.warning,
       },
-      output_preview: celfResult.text.slice(0, 500),
-      ai_provider: aiProvider,
     })
 
-    await addJobLog({ job_id: jobId, action: 'celf_completed', actor: 'CELF', details: { provider: aiProvider } })
+    // ══════════════════════════════════════════════════════════════
+    // 7. TEMİZ İŞ → CEO Havuzu'na (10'a Çıkart)
+    // ══════════════════════════════════════════════════════════════
+    await updateJobStatus(jobId, 'ceo_pool', {
+      output_data: {
+        final_output: result.output,
+        provider: result.provider,
+        review_passed: result.review_passed,
+        rounds: result.rounds,
+        round_details: result.round_details,
+        warning: result.warning,
+        ...(result.github_commit ? { github_commit: result.github_commit } : {}),
+      },
+      output_preview: result.output.slice(0, 500),
+      ai_provider: result.provider,
+    })
 
-    // 7. Claude denetimi (Altın Kural #4: Claude her zaman denetçi)
-    if (!req.skip_review) {
-      const review = await reviewWithClaude(directorKey, req.command, celfResult.text)
-      await addJobLog({ job_id: jobId, action: 'claude_reviewed', actor: 'CLAUDE', details: { passed: review.passed, review: review.review.slice(0, 500) } })
+    await addJobLog({
+      job_id: jobId,
+      action: 'sent_to_ceo',
+      actor: 'CELF',
+      details: {
+        review_passed: result.review_passed,
+        note: result.review_passed
+          ? 'İç denetimden geçti — temiz iş CEO havuzuna gönderildi.'
+          : `İç denetimden geçemedi (${result.rounds} tur) — uyarılı olarak CEO havuzuna gönderildi.`,
+      },
+    })
 
-      if (!review.passed) {
-        // Denetimden geçemedi — yine de CEO havuzuna gönder (patron karar versin)
-        await updateJobStatus(jobId, 'ceo_pool', {
-          output_data: {
-            raw_output: celfResult.text,
-            provider: aiProvider,
-            claude_review: review.review,
-            review_passed: false,
-          },
-        })
-        await addJobLog({ job_id: jobId, action: 'sent_to_ceo', actor: 'CLAUDE', details: { note: 'Denetimden geçmedi ama patron incelemesi için havuza gönderildi' } })
-
-        return {
-          success: true,
-          job_id: jobId,
-          ticket_no: ticketNo,
-          status: 'ceo_pool',
-          output_preview: `[DENETİM UYARISI] ${review.review.slice(0, 200)}\n\n${celfResult.text.slice(0, 300)}`,
-        }
-      }
-    }
-
-    // 8. CEO Havuzu'na (10'a Çıkart) gönder
-    await updateJobStatus(jobId, 'ceo_pool')
-    await addJobLog({ job_id: jobId, action: 'sent_to_ceo', actor: 'CELF', details: { review_passed: true } })
+    const outputPreview = result.review_passed
+      ? result.output.slice(0, 500)
+      : `[İÇ DENETİM UYARISI: ${result.warning?.slice(0, 200)}]\n\n${result.output.slice(0, 300)}`
 
     return {
       success: true,
       job_id: jobId,
       ticket_no: ticketNo,
       status: 'ceo_pool',
-      output_preview: celfResult.text.slice(0, 500),
+      output_preview: outputPreview,
+      rounds: result.rounds,
+      review_passed: result.review_passed,
     }
   } catch (err) {
     return { success: false, error: err instanceof Error ? err.message : String(err) }
   }
 }
 
-// ─── DÜZELTME SONRASI YENİDEN ÜRETIM ────────────────────────
+// ─── DÜZELTME SONRASI YENİDEN ÜRETİM ────────────────────────
+// Patron "Düzelt" dediğinde, orijinal iş yeniden iç döngüye girer.
 
 export async function regenerateJob(
   jobId: string,
@@ -260,7 +257,7 @@ export async function regenerateJob(
     return { success: false, error: error ?? 'Orijinal iş bulunamadı' }
   }
 
-  // Düzeltme notu ile yeni komut oluştur
+  // Patron düzeltme notu ile yeniden iç döngüye gir
   const enhancedCommand = `${originalJob.description ?? originalJob.title}\n\n[PATRON DÜZELTME NOTU]: ${correctionNotes}`
 
   return generateJob({
