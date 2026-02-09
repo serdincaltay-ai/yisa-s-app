@@ -48,8 +48,8 @@ export const viewport = {
   themeColor: '#06b6d4',
   width: 'device-width',
   initialScale: 1,
-  maximumScale: 5,
-  userScalable: true,
+  maximumScale: 1,
+  userScalable: false,
 }
 
 export default function RootLayout({
@@ -58,7 +58,7 @@ export default function RootLayout({
   children: React.ReactNode
 }) {
   return (
-    <html lang="tr">
+    <html lang="tr" className="bg-background">
       <head>
         <link rel="apple-touch-icon" sizes="192x192" href="/icon-192.png" />
         <link rel="icon" type="image/png" sizes="192x192" href="/icon-192.png" />
