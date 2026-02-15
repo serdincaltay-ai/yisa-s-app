@@ -227,7 +227,18 @@ export default function OgrencilerPage() {
         <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-black/60">
           <div className="max-h-[90vh] overflow-y-auto w-full max-w-2xl">
             <OgrenciForm
-              initial={editStudent}
+              initial={editStudent ? {
+                ad_soyad: editStudent.ad_soyad ?? undefined,
+                tc_kimlik: editStudent.tc_kimlik ?? undefined,
+                dogum_tarihi: editStudent.dogum_tarihi ?? undefined,
+                cinsiyet: editStudent.cinsiyet ?? undefined,
+                veli_adi: editStudent.veli_adi ?? undefined,
+                veli_telefon: editStudent.veli_telefon ?? undefined,
+                veli_email: editStudent.veli_email ?? undefined,
+                brans: editStudent.brans ?? undefined,
+                grup_id: editStudent.grup_id ?? undefined,
+                saglik_notu: editStudent.saglik_notu ?? undefined,
+              } : null}
               onSubmit={handleSubmit}
               onCancel={() => { setShowForm(false); setEditStudent(null); }}
               isSubmitting={sending}
