@@ -46,6 +46,7 @@ import {
 } from "lucide-react"
 import { useRouter } from "next/navigation"
 import { supabase } from "@/lib/supabase"
+import { FranchiseIntro } from "@/components/FranchiseIntro"
 
 type Athlete = { id: string; name: string; surname?: string | null; birth_date?: string | null; gender?: string | null; branch?: string | null; level?: string | null; status?: string; created_at?: string }
 type StaffMember = {
@@ -113,6 +114,7 @@ export default function FranchiseDashboard() {
 
   return (
     <div className="flex min-h-screen bg-background">
+      <FranchiseIntro tesisAdi={tenant?.name ?? "Demo Tesis"} sahipAdi={tenant?.franchise?.contactName ?? "Sayın Yönetici"} />
       <aside className="fixed left-0 top-0 z-40 flex h-screen w-64 flex-col border-r border-sidebar-border bg-sidebar">
         <div className="flex h-16 items-center gap-2 border-b border-sidebar-border px-4">
           <div className="flex h-10 w-10 items-center justify-center rounded-xl bg-primary">

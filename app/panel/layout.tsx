@@ -2,6 +2,7 @@
 
 import React from 'react'
 import Link from 'next/link'
+import { FranchiseIntro } from '@/components/FranchiseIntro'
 import { usePathname, useRouter } from 'next/navigation'
 import { Activity, Users, ArrowLeft, ClipboardCheck, Wallet, Banknote, Calendar } from 'lucide-react'
 import { Button } from '@/components/ui/button'
@@ -22,6 +23,7 @@ export default function PanelLayout({
 
   return (
     <div className="flex min-h-screen bg-background">
+      <FranchiseIntro tesisAdi="Demo Tesis" sahipAdi="Sayın Yönetici" />
       <aside className="fixed left-0 top-0 z-40 flex h-screen w-64 flex-col border-r border-border bg-card">
         <div className="flex h-16 items-center gap-2 border-b border-border px-4">
           <div className="flex h-10 w-10 items-center justify-center rounded-xl bg-primary">
