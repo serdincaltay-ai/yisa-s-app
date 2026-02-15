@@ -3,13 +3,14 @@
 import { useEffect, useState } from 'react'
 import Link from 'next/link'
 import { usePathname, useRouter } from 'next/navigation'
-import { Activity, LayoutDashboard, ClipboardCheck, Users, LogOut } from 'lucide-react'
+import { Activity, LayoutDashboard, ClipboardCheck, Users, LogOut, Ruler } from 'lucide-react'
 import { supabase } from '@/lib/supabase'
 
 const NAV = [
   { href: '/antrenor', label: 'Dashboard', icon: LayoutDashboard },
   { href: '/antrenor/yoklama', label: 'Yoklama', icon: ClipboardCheck },
   { href: '/antrenor/sporcular', label: 'Sporcularım', icon: Users },
+  { href: '/antrenor/olcum', label: 'Ölçüm', icon: Ruler },
 ]
 
 export default function AntrenorLayout({ children }: { children: React.ReactNode }) {
@@ -71,7 +72,7 @@ export default function AntrenorLayout({ children }: { children: React.ReactNode
               key={href}
               href={href}
               className={`flex w-full items-center gap-3 rounded-lg px-3 py-2 text-sm transition-colors ${
-                pathname === href || (href !== '/antrenor' && pathname?.startsWith(href))
+                pathname === href || (href !== '/antrenor' && pathname?.startsWith(href + '/'))
                   ? 'bg-primary/20 text-primary'
                   : 'text-foreground/70 hover:bg-muted hover:text-foreground'
               }`}

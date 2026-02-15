@@ -90,6 +90,9 @@ export default function AntrenorSporcuDetayPage() {
   return (
     <div className="p-6 space-y-6">
       <div className="flex items-center gap-4">
+        <Link href={`/antrenor/sporcular/${id}/gelisim`} className="inline-flex items-center gap-2 text-sm text-primary hover:underline">
+          Gelişim grafiği
+        </Link>
         <Link
           href="/antrenor/sporcular"
           className="inline-flex items-center gap-2 text-sm text-muted-foreground hover:text-foreground"
