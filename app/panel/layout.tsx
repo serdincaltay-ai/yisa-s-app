@@ -100,6 +100,7 @@ function PanelLayoutInner({ children }: { children: React.ReactNode }) {
             </>
           )}
           {isOwner && (
+            <>
             <Link
               href="/magaza"
               className={`flex w-full items-center gap-3 rounded-lg px-3 py-2 text-sm transition-colors ${
@@ -111,6 +112,18 @@ function PanelLayoutInner({ children }: { children: React.ReactNode }) {
               <ShoppingCart className="h-5 w-5" />
               Mağaza
             </Link>
+            <Link
+              href="/personel"
+              className={`flex w-full items-center gap-3 rounded-lg px-3 py-2 text-sm transition-colors ${
+                pathname === '/personel'
+                  ? 'bg-accent/30 text-accent-foreground'
+                  : 'text-foreground/70 hover:bg-accent/20 hover:text-foreground'
+              }`}
+            >
+              <Users className="h-5 w-5" />
+              Personel
+            </Link>
+            </>
           )}
           <Link
             href="/panel/program"
