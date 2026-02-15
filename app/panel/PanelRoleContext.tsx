@@ -4,23 +4,32 @@ import React, { createContext, useContext, useEffect, useState } from 'react'
 
 export type PanelRole = 'owner' | 'coach' | 'parent'
 
-const PanelRoleContext = createContext<PanelRole>('owner')
+type PanelRoleState = { role: PanelRole; canAccessKasa: boolean }
+
+const PanelRoleContext = createContext<PanelRoleState>({ role: 'owner', canAccessKasa: true })
 
 export function PanelRoleProvider({ children }: { children: React.ReactNode }) {
-  const [role, setRole] = useState<PanelRole>('owner')
+  const [state, setState] = useState<PanelRoleState>({ role: 'owner', canAccessKasa: true })
   useEffect(() => {
     fetch('/api/franchise/role')
       .then((r) => r.json())
-      .then((d) => { if (d?.role) setRole(d.role) })
+      .then((d) => {
+        if (d?.role) setState({ role: d.role, canAccessKasa: d.canAccessKasa !== false })
+      })
       .catch(() => {})
   }, [])
   return (
-    <PanelRoleContext.Provider value={role}>
+    <PanelRoleContext.Provider value={state}>
       {children}
     </PanelRoleContext.Provider>
   )
 }
 
-export function usePanelRole() {
+export function usePanelRole(): PanelRole {
+  const { role } = useContext(PanelRoleContext)
+  return role
+}
+
+export function usePanelRoleState() {
   return useContext(PanelRoleContext)
 }

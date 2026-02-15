@@ -158,6 +158,22 @@ export async function POST(req: NextRequest) {
       .single()
 
     if (error) return NextResponse.json({ error: error.message }, { status: 500 })
+    if (status === 'paid' && data?.id) {
+      const odemeYontemi = paymentMethod === 'kart' ? 'kart' : paymentMethod === 'havale' || paymentMethod === 'eft' ? 'havale' : 'nakit'
+      const kategori = paymentType === 'kayit' ? 'aidat' : paymentType === 'ekstra' ? 'ders_ucreti' : 'aidat'
+      try {
+        await service.from('cash_register').insert({
+          tenant_id: tenantId,
+          tarih: paidDate || new Date().toISOString().slice(0, 10),
+          tur: 'gelir',
+          kategori,
+          aciklama: `Ödeme #${data.id}`,
+          tutar: amount,
+          odeme_yontemi: odemeYontemi,
+          kaydeden_id: user.id,
+        })
+      } catch { /* kasa kaydı opsiyonel */ }
+    }
     return NextResponse.json({ ok: true, payment: data })
   } catch (e) {
     console.error('[franchise/payments POST]', e)
@@ -195,8 +211,31 @@ export async function PATCH(req: NextRequest) {
 
     if (Object.keys(updates).length === 0) return NextResponse.json({ error: 'Güncellenecek alan yok' }, { status: 400 })
 
+    const { data: prev } = await service.from('payments').select('status, amount, payment_type, payment_method').eq('id', id).eq('tenant_id', tenantId).single()
     const { data, error } = await service.from('payments').update(updates).eq('id', id).eq('tenant_id', tenantId).select('id, status, paid_date').single()
     if (error) return NextResponse.json({ error: error.message }, { status: 500 })
+    if (status === 'paid' && prev?.status !== 'paid' && data?.id) {
+      const tutar = Number(prev?.amount) || 0
+      if (tutar > 0) {
+        const pm = prev?.payment_method
+        const odemeYontemi = pm === 'kart' ? 'kart' : pm === 'havale' || pm === 'eft' ? 'havale' : 'nakit'
+        const pt = prev?.payment_type
+        const kategori = pt === 'kayit' ? 'aidat' : pt === 'ekstra' ? 'ders_ucreti' : 'aidat'
+        const tarih = (updates.paid_date as string) || new Date().toISOString().slice(0, 10)
+        try {
+          await service.from('cash_register').insert({
+            tenant_id: tenantId,
+            tarih,
+            tur: 'gelir',
+            kategori,
+            aciklama: `Ödeme #${data.id}`,
+            tutar,
+            odeme_yontemi: odemeYontemi,
+            kaydeden_id: user.id,
+          })
+        } catch { /* kasa kaydı opsiyonel */ }
+      }
+    }
     return NextResponse.json({ ok: true, payment: data })
   } catch (e) {
     console.error('[franchise/payments PATCH]', e)

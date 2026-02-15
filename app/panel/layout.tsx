@@ -3,16 +3,16 @@
 import React, { useEffect } from 'react'
 import Link from 'next/link'
 import { FranchiseIntro } from '@/components/FranchiseIntro'
-import { PanelRoleProvider, usePanelRole } from './PanelRoleContext'
+import { PanelRoleProvider, usePanelRole, usePanelRoleState } from './PanelRoleContext'
 import { usePathname, useRouter } from 'next/navigation'
-import { Activity, Users, ArrowLeft, ClipboardCheck, Wallet, Banknote, Calendar, ShoppingCart, Dumbbell } from 'lucide-react'
+import { Activity, Users, ArrowLeft, ClipboardCheck, Wallet, Banknote, Calendar, ShoppingCart, Dumbbell, DollarSign } from 'lucide-react'
 import { Button } from '@/components/ui/button'
 import { supabase } from '@/lib/supabase'
 
 function PanelLayoutInner({ children }: { children: React.ReactNode }) {
   const pathname = usePathname()
   const router = useRouter()
-  const role = usePanelRole()
+  const { role, canAccessKasa } = usePanelRoleState()
   const isOwner = role === 'owner'
   const isCoach = role === 'coach'
 
@@ -86,6 +86,19 @@ function PanelLayoutInner({ children }: { children: React.ReactNode }) {
             <ClipboardCheck className="h-5 w-5" style={{ color: pathname?.startsWith('/panel/yoklama') ? undefined : '#00d4ff' }} />
             Yoklama
           </Link>
+          {canAccessKasa && (
+            <Link
+              href="/kasa"
+              className={`flex w-full items-center gap-3 rounded-lg px-3 py-2 text-sm transition-colors ${
+                pathname?.startsWith('/kasa')
+                  ? 'bg-accent/30 text-accent-foreground'
+                  : 'text-foreground/70 hover:bg-accent/20 hover:text-foreground'
+              }`}
+            >
+              <DollarSign className="h-5 w-5" />
+              Kasa
+            </Link>
+          )}
           {isOwner && (
             <>
               <Link

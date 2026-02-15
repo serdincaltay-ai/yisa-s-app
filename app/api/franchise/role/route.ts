@@ -21,7 +21,7 @@ export async function GET() {
 
     const url = process.env.NEXT_PUBLIC_SUPABASE_URL ?? process.env.SUPABASE_URL
     const key = process.env.SUPABASE_SERVICE_ROLE_KEY ?? process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY
-    if (!url || !key) return NextResponse.json({ role: 'owner' })
+    if (!url || !key) return NextResponse.json({ role: 'owner', canAccessKasa: true })
 
     const service = createServiceClient(url, key)
 
@@ -32,9 +32,9 @@ export async function GET() {
       .eq('owner_id', user.id)
       .limit(1)
       .maybeSingle()
-    if (t) return NextResponse.json({ role: 'owner' as PanelRole })
+    if (t) return NextResponse.json({ role: 'owner' as PanelRole, canAccessKasa: true })
 
-    // user_tenants.role → owner/admin/manager = owner, trainer = coach
+    // user_tenants.role → owner/admin/manager = owner, trainer = coach, kasa/tesis_muduru = kasa erişimi
     const { data: ut } = await service
       .from('user_tenants')
       .select('role')
@@ -43,20 +43,22 @@ export async function GET() {
       .maybeSingle()
     if (ut?.role) {
       const r = String(ut.role).toLowerCase()
-      if (['owner', 'admin', 'manager'].includes(r)) return NextResponse.json({ role: 'owner' as PanelRole })
-      if (r === 'trainer') return NextResponse.json({ role: 'coach' as PanelRole })
+      const canAccessKasa = ['owner', 'admin', 'manager', 'kasa', 'tesis_muduru'].includes(r)
+      if (['owner', 'admin', 'manager'].includes(r)) return NextResponse.json({ role: 'owner' as PanelRole, canAccessKasa })
+      if (r === 'trainer') return NextResponse.json({ role: 'coach' as PanelRole, canAccessKasa: false })
+      if (['kasa', 'tesis_muduru'].includes(r)) return NextResponse.json({ role: 'owner' as PanelRole, canAccessKasa: true })
     }
 
     // app_metadata veya user_metadata
     const metaRole = (user.app_metadata?.role ?? user.user_metadata?.role) as string | undefined
     if (metaRole) {
       const r = String(metaRole).toLowerCase()
-      if (['owner', 'admin'].includes(r)) return NextResponse.json({ role: 'owner' as PanelRole })
-      if (['coach', 'trainer', 'antrenor'].includes(r)) return NextResponse.json({ role: 'coach' as PanelRole })
-      if (r === 'parent' || r === 'veli') return NextResponse.json({ role: 'parent' as PanelRole })
+      if (['owner', 'admin'].includes(r)) return NextResponse.json({ role: 'owner' as PanelRole, canAccessKasa: true })
+      if (['coach', 'trainer', 'antrenor'].includes(r)) return NextResponse.json({ role: 'coach' as PanelRole, canAccessKasa: false })
+      if (r === 'parent' || r === 'veli') return NextResponse.json({ role: 'parent' as PanelRole, canAccessKasa: false })
     }
 
-    return NextResponse.json({ role: 'owner' })
+    return NextResponse.json({ role: 'owner', canAccessKasa: true })
   } catch {
     return NextResponse.json({ role: 'owner' })
   }
