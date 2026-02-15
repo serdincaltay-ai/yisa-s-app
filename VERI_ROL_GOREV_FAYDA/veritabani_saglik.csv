@@ -1,0 +1,6 @@
+tablo,aciklama,erisim
+athlete_health_records,Sporcu sağlık geçmişi (record_type notes recorded_at),CSPO readOnly; veliye ham veri açılmaz
+athletes,Sporcu temel bilgileri (parent_email doğum tarihi),Tenant bazlı RLS
+evaluations,Değerlendirme kayıtları (10 perspektif),Eksik - migration gerekli
+ceo_templates Saglik Tarama,CSPO sağlık tarama formu,CSPO direktörü
+ceo_templates Tesis Acilis Checklist,COO temizlik malzeme personel güvenlik,COO direktörü

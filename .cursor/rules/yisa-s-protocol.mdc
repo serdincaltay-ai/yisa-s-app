@@ -1,0 +1,45 @@
+---
+description: YiSA-S ana iş planı ve klasör/domain eşleştirme — hedefi şaşırma protokolü
+alwaysApply: true
+---
+
+# YiSA-S Protokol — Şaşırma Kuralı
+
+Bu workspace hangi klasörse, sadece o sitedeki görevlere göre hareket et. Diğer klasörlere veya domain’lere karışma.
+
+## 1. Üç site, üç klasör, tek veritabanı
+
+| Klasör (workspace) | Site | Domain | GitHub Repo | Görevler |
+|--------------------|------|--------|------------|----------|
+| **yisa-s.com** | Patron Paneli | app.yisa-s.com | v0-futuristic-dashboard-ng | Görev 2, 3, 4, 5, 6 |
+| **yisa-s-website** | Vitrin | yisa-s.com / www.yisa-s.com | yisa-s-website | Görev 7, 8 |
+| **yisa-s-app** | Franchise | *.yisa-s.com | yisa-s-app | Görev 9, 10 |
+
+- **Tek Supabase:** Tüm projeler `https://bgtuqdkfppcjmtrdsldl.supabase.co` (YiSA-S projesi) kullanır.
+- **GITHUB_REPO** `.env` / Vercel’de klasöre göre farklı: yisa-s.com → `v0-futuristic-dashboard-ng`, yisa-s-website → `yisa-s-website`, yisa-s-app → `yisa-s-app`.
+
+## 2. Hangi klasördeyim, ne yapacağım?
+
+- **Şu an workspace `yisa-s.com` ise:** Sadece Patron Paneli (Görev 2–6). Vitrin veya Franchise kodu/route’u yazma veya o projelere referans verme.
+- **Workspace `yisa-s-website` ise:** Sadece Vitrin (Görev 7–8). Patron/Franchise işine dokunma.
+- **Workspace `yisa-s-app` ise:** Sadece Franchise (Görev 9–10). Patron/Vitrin işine dokunma.
+
+## 3. Görev–klasör eşlemesi (referans)
+
+- **Görev 2:** Supabase bağlantısı, tablolar — **yisa-s.com**
+- **Görev 3:** Onay Kuyruğu UI — **yisa-s.com**
+- **Görev 4:** Onay → Tenant zinciri — **yisa-s.com**
+- **Görev 5:** Beyin Takımı — **yisa-s.com**
+- **Görev 6:** CELF + Direktörlükler UI — **yisa-s.com**
+- **Görev 7–8:** Vitrin sayfası, demo formu — **yisa-s-website**
+- **Görev 9–10:** Öğrenci CRUD, yoklama, aidat — **yisa-s-app**
+
+## 4. Yapma
+
+- Bu workspace’te başka bir klasörün (yisa-s.com / yisa-s-website) dosyasını düzenlemek veya oraya deploy/Vercel talimatı vermek.
+- Supabase URL’yi değiştirmek veya başka bir Supabase projesine yönlendirmek.
+- Bu klasörde GITHUB_REPO’yu yanlış vermek (yisa-s-app → `yisa-s-app`).
+
+## 5. Tam referans
+
+Detaylı plan ve doğrulama: patron el kitabı “YİSA-S ANA İŞ PLANI” ve “YİSA-S SİSTEM DOĞRULAMA RAPORU” dokümanları. Kafan karışırsa kullanıcıdan bu dokümanları göstermesini iste; oradan klasör/site/görev eşlemesini al.

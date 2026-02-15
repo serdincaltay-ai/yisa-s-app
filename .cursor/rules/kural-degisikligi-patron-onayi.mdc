@@ -1,0 +1,29 @@
+---
+description: CELF/COO kural değişiklikleri sadece Patron onayı ile; rutine bağlanamaz, bana sorularak yapılır.
+alwaysApply: true
+---
+
+# YİSA-S — Kural Değişikliği (Sadece Patron Onayı)
+
+## Kural (Patron talebi)
+
+**CELF görevlendirme kuralları (şu alan → şu API'ler) ve COO kuralları dinamiktir: geliştirilebilir, güncellenebilir, artırılabilir — ancak sadece Patron onayı sonrası.**
+
+- Bu iş **rutine bağlanamaz**; otomatik veya rutin görev ile kural değişikliği yapılmaz.
+- **Sadece Patron ile ilgilidir;** kural güncellemesi "bana sorularak" yapılır.
+- Değişiklik **sistemin zarar vermeyecek şekilde** yapılır (onay süreci, gerekirse audit).
+
+## Ne yapılır
+
+- CELF `director_rules` veya COO kuralları güncellenirken: Patron onayı kontrolü (API veya iş akışında); onay yoksa yazma yapılmaz.
+- Dokümantasyon: `CELF_COO_KURALLARI_DINAMIK.md` referans alınır.
+
+## Ne yapılmaz
+
+- Kural değişikliğini rutin görev veya otomatik işlemle yapmak.
+- Patron onayı olmadan `director_rules` / COO kurallarını değiştirmek.
+
+## Referans
+
+- `CELF_COO_KURALLARI_DINAMIK.md`
+- `PATRON_ASISTAN_VIZYON_SEMA.md` Bölüm 8–9

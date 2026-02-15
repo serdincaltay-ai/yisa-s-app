@@ -1,0 +1,52 @@
+rol_kodu,sira,gorev,nerede
+-,1,Giriş → Dashboard,/dashboard
+-,2,Chat (komut gönder),/dashboard
+-,3,Direktörler (ne üretiyor),/dashboard/directors
+-,4,CELF,/dashboard/celf
+-,5,Onay Kuyruğu (10'a Çıkart),/dashboard/onay-kuyrugu
+-,6,Franchise / Vitrin,/dashboard/franchises
+-,7,Kasa Defteri,/dashboard/kasa-defteri
+-,8,Şablonlar,/dashboard/sablonlar
+-,9,Raporlar,/dashboard/reports
+ROL-1,1,Genel Bakış,/franchise
+ROL-1,2,Öğrenciler (sporcu ekle/düzenle),/franchise
+ROL-1,3,Antrenörler / Personel,/franchise
+ROL-1,4,Ders Programı,/franchise
+ROL-1,5,Aidat Takibi,/franchise
+ROL-1,6,Yoklama,/franchise
+ROL-1,7,COO Mağazası,/franchise
+ROL-1,8,Ayarlar,/franchise
+ROL-2,1,Tesis özeti (günlük yoklama),/tesis
+ROL-2,2,Yoklama girişi,/tesis
+ROL-2,3,Personel listesi,/tesis
+ROL-2,4,Ders programı (görüntüleme),/tesis
+ROL-4,1,Sporcu listesi (seviye branş),/franchise
+ROL-4,2,Kazanım/bel görünümü,/franchise
+ROL-4,3,CSPO antrenman önerileri,/franchise
+ROL-4,4,Seviye atama,/franchise
+ROL-5,1,Bugünkü derslerim,/antrenor
+ROL-5,2,Yoklama girişi,/antrenor
+ROL-5,3,Sporcu notları (ölçüm gelişim),/antrenor
+ROL-5,4,CSPO antrenman önerisi,/antrenor
+ROL-6,1,Derslerim,/antrenor
+ROL-6,2,Yoklama,/antrenor
+ROL-6,3,Sporcu notu (kısa),/antrenor
+ROL-7,1,Yoklama (mevcut/yardımcı),/antrenor
+ROL-7,2,Basit not (tek satır),/antrenor
+ROL-8,1,Yeni kayıt formu,/franchise
+ROL-8,2,Aidat listesi,/franchise
+ROL-8,3,Ödeme girişi,/franchise
+ROL-9,1,Günlük temizlik checklist,/franchise
+ROL-9,2,Tamamlandı işaretle,/franchise
+ROL-9,3,Sorun bildir,/franchise
+ROL-10,1,Çocuklarım listesi,/veli
+ROL-10,2,Çocuk seç → Gelişim grafikleri,/veli
+ROL-10,3,Ödeme / Aidat,/veli
+ROL-10,4,Sağlık özeti (ham veri yok),/veli
+ROL-11,1,Gelişim grafiğim,/veli
+ROL-11,2,Seviye / kazanım,/veli
+ROL-11,3,Son antrenmanlar (özet),/veli
+Demo,1,Paket seç (web logo şablon tesis),/vitrin
+Demo,2,Form doldur,/vitrin
+Demo,3,Demo Talep Et,/vitrin
+Demo,4,Sınırlı demo paneli,/vitrin

@@ -1,0 +1,27 @@
+---
+description: Asistan ve sistem tanımları sabittir; Master Doküman v2.1 referans alınır, değiştirilmez.
+alwaysApply: true
+---
+
+# YİSA-S — Asistan ve Sistem Tanımları Sabittir
+
+## Kural (Patron talebi)
+
+**Asistanın çalışma prensibi, yerleşkesi (yapı), görev tanımları ve OA (organizasyon/asistan) tanımları değiştirilmeyecektir.**
+
+- Tüm asistan ve robot tanımları **YISA-S-MASTER-DOKUMAN-v2.1-TASLAK.md** (ve onaylanmış nihai Master Doküman) dosyasına göre sabittir.
+- Bu dosyadaki Bölüm 2 (Robot Hiyerarşisi), Patron Asistanı görevleri, API hiyerarşisi, kırmızı çizgiler ve çekirdek kurallar **referans alınır**; kod veya doküman güncellenirken bu tanımlarla uyum korunur.
+- Patron Asistanı sistem prompt'u veya davranışı değiştirilirken Master Doküman Bölüm 2.3 (Patron Asistanı Robotu) ile uyum kontrol edilir; çelişki oluşturulmaz.
+- Çekirdek kurallar (Bölüm 4), deploy/commit kuralları (sadece Patron onayı), .env/API key erişim yasağı **değiştirilmez**.
+
+## Ne yapılır
+
+- Yeni özellik veya kod eklerken Master Doküman'daki rol, yetki ve hiyerarşi tanımları ihlal edilmez.
+- `/api/chat` veya asistan davranışı güncellenirken Bölüm 2.3 (görevler, kırmızı çizgiler, API hiyerarşisi) referans alınır.
+- Belirsizlik durumunda **Master Doküman v2.1** karar verici referanstır.
+
+## Ne yapılmaz
+
+- Asistan çalışma prensibini, görev tanımlarını veya yerleşkeyi (OA/robot yapısı) Master Doküman dışında yeniden tanımlamak.
+- Patron Asistanı sistem prompt'unu Master Doküman ile çelişecek şekilde değiştirmek.
+- Çekirdek kuralları veya deploy/commit/API key kurallarını gevşetmek veya kaldırmak.

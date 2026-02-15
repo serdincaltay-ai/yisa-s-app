@@ -1,0 +1,14 @@
+rol_kodu,rol_adi,hiyerarsi,panel_yolu
+-,Patron,0,/dashboard
+ROL-1,Alt Admin (Franchise Sahibi),1,/franchise
+ROL-2,Tesis Müdürü,2,/tesis
+ROL-3,Bölge Müdürü,3,/franchise
+ROL-4,Sportif Direktör,4,/franchise
+ROL-5,Uzman Antrenör,5,/antrenor
+ROL-6,Antrenör,6,/antrenor
+ROL-7,Yardımcı/Stajyer,7,/antrenor
+ROL-8,Kayıt Personeli,8,/franchise
+ROL-9,Temizlik Personeli,9,/franchise
+ROL-10,Veli,10,/veli
+ROL-11,Sporcu,11,/veli
+ROL-12,Misafir Sporcu,12,sınırlı

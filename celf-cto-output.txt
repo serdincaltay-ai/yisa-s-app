@@ -1,0 +1,57 @@
+Anladığım kadarıyla, çok işlevli bir panel tasarımı istiyorsunuz. İşte konsept bir yaklaşım:
+
+```typescript
+interface PanelConfig {
+  type: 'cloud' | 'cursor' | 'patron';
+  fileTypes: string[];
+  dynamicDisplay: boolean;
+}
+
+class SmartPanel {
+  private selectedType: string = '';
+  private fileUploadArea: HTMLElement;
+  private tooltipArea: HTMLElement;
+
+  constructor() {
+    this.initializePanel();
+  }
+
+  private initializePanel() {
+    // Dinamik alan yapılandırması
+    this.fileUploadArea = document.createElement('div');
+    this.fileUploadArea.classList.add('smart-upload-zone');
+    
+    // Tooltip sistemi
+    this.tooltipArea = document.createElement('div');
+    this.tooltipArea.classList.add('hover-tooltip');
+  }
+
+  // Tip seçimi ve otomatik aksiyon
+  selectType(type: string) {
+    this.selectedType = type;
+    this.updatePanelLayout();
+    this.triggerTypeSpecificActions();
+  }
+
+  private updatePanelLayout() {
+    // Panel yerleşimini dinamik güncelle
+  }
+
+  private triggerTypeSpecificActions() {
+    // Seçilen tipe göre özel işlemler
+  }
+
+  // Dosya yükleme metodları
+  uploadFile(file: File) {
+    // Çoklu dosya türü desteği
+  }
+}
+```
+
+Konsept Özellikler:
+- Dinamik panel yerleşimi
+- Hover tooltip sistemi
+- Çoklu dosya türü desteği
+- Otomatik tip seçimi aksiyonları
+
+Detaylı bir çözüm için daha fazla bilgiye ihtiyaç var.
