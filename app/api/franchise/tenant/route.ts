@@ -53,7 +53,7 @@ export async function GET() {
 
     const { data: tenant, error: tenantError } = await service
       .from('tenants')
-      .select('id, ad, name, slug, durum, package_type')
+      .select('id, ad, name, slug, durum, package_type, token_balance')
       .eq('id', tenantId)
       .single()
 
@@ -75,6 +75,7 @@ export async function GET() {
         slug: tenant.slug,
         status: tenant.durum,
         packageType: tenant.package_type,
+        tokenBalance: tenant.token_balance ?? 0,
         franchise: franchise ? {
           businessName: franchise.isletme_adi,
           contactName: `${franchise.yetkili_ad ?? ''} ${franchise.yetkili_soyad ?? ''}`.trim(),

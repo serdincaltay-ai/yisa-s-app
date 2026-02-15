@@ -29,6 +29,7 @@ import {
   Coins,
   Bot,
   ShoppingBag,
+  ShoppingCart,
   Calendar,
   FileText,
   Heart,
@@ -53,7 +54,7 @@ type StaffMember = {
   id: string; name: string; surname?: string | null; email?: string | null; phone?: string | null; role?: string; branch?: string | null; is_active?: boolean; created_at?: string;
   birth_date?: string | null; address?: string | null; city?: string | null; district?: string | null; previous_work?: string | null; chronic_condition?: string | null; has_driving_license?: boolean | null; languages?: string | null;
 }
-type TenantInfo = { id: string; name: string; slug?: string; status?: string; packageType?: string; franchise?: { businessName?: string; contactName?: string; memberCount?: number; staffCount?: number; monthlyRevenue?: number } }
+type TenantInfo = { id: string; name: string; slug?: string; status?: string; packageType?: string; tokenBalance?: number; franchise?: { businessName?: string; contactName?: string; memberCount?: number; staffCount?: number; monthlyRevenue?: number } }
 
 const mockStudents = [
   { id: 1, name: "Elif Yilmaz", age: 8, branch: "Artistik Cimnastik", level: "Baslangic", health: "normal", tokens: 45 },
@@ -138,6 +139,7 @@ export default function FranchiseDashboard() {
           <SidebarItem icon={Megaphone} label="Pazarlama" active={activeTab === "marketing"} onClick={() => setActiveTab("marketing")} />
           <SidebarItem icon={UserPlus} label="Personel (IK)" active={activeTab === "personel"} onClick={() => setActiveTab("personel")} />
           <SidebarItem icon={FileText} label="Raporlar" active={activeTab === "reports"} onClick={() => setActiveTab("reports")} />
+          <SidebarItem icon={ShoppingCart} label="Magaza" active={activeTab === "magaza"} onClick={() => router.push("/magaza")} />
           <SidebarItem icon={Settings} label="Ayarlar" active={activeTab === "settings"} onClick={() => setActiveTab("settings")} />
         </nav>
 
@@ -256,7 +258,7 @@ function OverviewTab({ tenant, athletes, staff, onRefresh }: { tenant: TenantInf
         <StatCard title="Toplam Ogrenci" value={String(memberCount)} change={`${athletes.length} kayitli`} icon={Users} color="primary" />
         <StatCard title="Aktif Antrenor" value={String(staffCount)} change="Personel" icon={Dumbbell} color="success" />
         <StatCard title="Aylik Gelir" value={revenue > 0 ? `${revenue.toLocaleString("tr-TR")} TL` : "—"} change={revenue > 0 ? "Tahmini" : "Henuz veri yok"} icon={TrendingUp} color="accent" />
-        <StatCard title="Token Havuzu" value="—" change="COO Magazasi" icon={Coins} color="info" />
+        <StatCard title="Token Havuzu" value={String(tenant?.tokenBalance ?? 0)} change="Magaza" icon={Coins} color="info" />
       </div>
       <div className="grid gap-6 lg:grid-cols-2">
         <Card>
