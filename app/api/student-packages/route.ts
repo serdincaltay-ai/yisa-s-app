@@ -1,19 +1,9 @@
 import { NextRequest, NextResponse } from 'next/server'
 import { createClient } from '@/lib/supabase/server'
 import { createClient as createServiceClient } from '@supabase/supabase-js'
+import { getTenantIdWithFallback } from '@/lib/franchise-tenant'
 
 export const dynamic = 'force-dynamic'
-
-async function getTenantId(userId: string): Promise<string | null> {
-  const url = process.env.NEXT_PUBLIC_SUPABASE_URL ?? process.env.SUPABASE_URL
-  const key = process.env.SUPABASE_SERVICE_ROLE_KEY ?? process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY
-  if (!url || !key) return null
-  const service = createServiceClient(url, key)
-  const { data: ut } = await service.from('user_tenants').select('tenant_id').eq('user_id', userId).limit(1).maybeSingle()
-  if (ut?.tenant_id) return ut.tenant_id
-  const { data: t } = await service.from('tenants').select('id').eq('owner_id', userId).limit(1).maybeSingle()
-  return t?.id ?? null
-}
 
 export async function GET(req: NextRequest) {
   try {
@@ -21,11 +11,11 @@ export async function GET(req: NextRequest) {
     const { data: { user } } = await supabase.auth.getUser()
     if (!user) return NextResponse.json({ error: 'Giriş gerekli' }, { status: 401 })
 
-    const tenantId = await getTenantId(user.id)
+    const tenantId = await getTenantIdWithFallback(user.id, req)
     if (!tenantId) return NextResponse.json({ items: [] })
 
     const { searchParams } = new URL(req.url)
-    const studentId = searchParams.get('student_id')
+    const athleteId = searchParams.get('athlete_id')
 
     const url = process.env.NEXT_PUBLIC_SUPABASE_URL ?? process.env.SUPABASE_URL
     const key = process.env.SUPABASE_SERVICE_ROLE_KEY ?? process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY
@@ -36,7 +26,7 @@ export async function GET(req: NextRequest) {
       .from('student_packages')
       .select(`
         id,
-        student_id,
+        athlete_id,
         package_id,
         toplam_seans,
         kalan_seans,
@@ -44,14 +34,15 @@ export async function GET(req: NextRequest) {
         bitis_tarihi,
         status,
         created_at,
-        students(ad_soyad),
+        athletes(name, surname),
         seans_packages(name, seans_count, price)
       `)
       .eq('tenant_id', tenantId)
       .eq('status', 'aktif')
       .order('created_at', { ascending: false })
+      .not('athlete_id', 'is', null)
 
-    if (studentId) query = query.eq('student_id', studentId)
+    if (athleteId) query = query.eq('athlete_id', athleteId)
 
     const { data, error } = await query
 
@@ -69,19 +60,19 @@ export async function POST(req: NextRequest) {
     const { data: { user } } = await supabase.auth.getUser()
     if (!user) return NextResponse.json({ error: 'Giriş gerekli' }, { status: 401 })
 
-    const tenantId = await getTenantId(user.id)
+    const tenantId = await getTenantIdWithFallback(user.id, req)
     if (!tenantId) return NextResponse.json({ error: 'Tenant atanmamış' }, { status: 403 })
 
     const body = await req.json()
-    const studentId = body.student_id
+    const athleteId = body.athlete_id ?? body.student_id
     const packageId = body.package_id
     const taksitSayisi = Math.min(12, Math.max(1, parseInt(String(body.taksit_sayisi ?? 1), 10)))
     const baslangicTarihi = typeof body.baslangic_tarihi === 'string' && /^\d{4}-\d{2}-\d{2}$/.test(body.baslangic_tarihi)
       ? body.baslangic_tarihi
       : new Date().toISOString().slice(0, 10)
 
-    if (!studentId || !packageId) {
-      return NextResponse.json({ error: 'student_id ve package_id zorunludur' }, { status: 400 })
+    if (!athleteId || !packageId) {
+      return NextResponse.json({ error: 'athlete_id ve package_id zorunludur' }, { status: 400 })
     }
 
     const url = process.env.NEXT_PUBLIC_SUPABASE_URL ?? process.env.SUPABASE_URL
@@ -107,7 +98,7 @@ export async function POST(req: NextRequest) {
       .from('student_packages')
       .insert({
         tenant_id: tenantId,
-        student_id: studentId,
+        athlete_id: athleteId,
         package_id: packageId,
         toplam_seans: toplamSeans,
         kalan_seans: toplamSeans,
@@ -122,7 +113,7 @@ export async function POST(req: NextRequest) {
 
     const payments: Array<{
       tenant_id: string
-      student_id: string
+      athlete_id: string
       student_package_id: string
       amount: number
       due_date: string
@@ -137,7 +128,7 @@ export async function POST(req: NextRequest) {
       const dueStr = due.toISOString().slice(0, 10)
       payments.push({
         tenant_id: tenantId,
-        student_id: studentId,
+        athlete_id: athleteId,
         student_package_id: studentPackageId,
         amount: i === taksitSayisi - 1 ? toplamTutar - taksitTutari * (taksitSayisi - 1) : taksitTutari,
         due_date: dueStr,

@@ -11,13 +11,13 @@ export const dynamic = 'force-dynamic'
 
 const GUNLER = ['Pazartesi', 'Sali', 'Carsamba', 'Persembe', 'Cuma', 'Cumartesi', 'Pazar'] as const
 
-export async function GET() {
+export async function GET(req: NextRequest) {
   try {
     const supabase = await createClient()
     const { data: { user } } = await supabase.auth.getUser()
     if (!user) return NextResponse.json({ error: 'Giriş gerekli' }, { status: 401 })
 
-    const tenantId = await getTenantIdWithFallback(user.id)
+    const tenantId = await getTenantIdWithFallback(user.id, req)
     if (!tenantId) return NextResponse.json({ items: [] })
 
     const url = process.env.NEXT_PUBLIC_SUPABASE_URL ?? process.env.SUPABASE_URL
@@ -45,7 +45,7 @@ export async function POST(req: NextRequest) {
     const { data: { user } } = await supabase.auth.getUser()
     if (!user) return NextResponse.json({ error: 'Giriş gerekli' }, { status: 401 })
 
-    const tenantId = await getTenantIdWithFallback(user.id)
+    const tenantId = await getTenantIdWithFallback(user.id, req)
     if (!tenantId) return NextResponse.json({ error: 'Tesis atanmamış' }, { status: 403 })
 
     const body = await req.json()
@@ -83,7 +83,7 @@ export async function DELETE(req: NextRequest) {
     const { data: { user } } = await supabase.auth.getUser()
     if (!user) return NextResponse.json({ error: 'Giriş gerekli' }, { status: 401 })
 
-    const tenantId = await getTenantIdWithFallback(user.id)
+    const tenantId = await getTenantIdWithFallback(user.id, req)
     if (!tenantId) return NextResponse.json({ error: 'Tesis atanmamış' }, { status: 403 })
 
     const id = req.nextUrl.searchParams.get('id')

@@ -2,6 +2,7 @@ import { createServerClient } from '@supabase/ssr'
 import { NextResponse, type NextRequest } from 'next/server'
 import { getPanelFromHost, getFranchiseSlugFromHost, PANEL_DEFAULT_PATH } from '@/lib/subdomain'
 import { getFranchiseSubdomains } from '@/lib/db/franchise-subdomains'
+import { getTenantIdFromSubdomain } from '@/lib/tenant-from-subdomain'
 
 const APP_DOMAIN = 'app.yisa-s.com'
 const WWW_DOMAIN = 'www.yisa-s.com'
@@ -42,7 +43,30 @@ export async function updateSession(request: NextRequest) {
     return NextResponse.redirect(url)
   }
 
+  // franchise_site: subdomain'den tenant_id çöz
+  let tenantId: string | null = null
+  if (panel === 'franchise_site') {
+    const slug = getFranchiseSlugFromHost(host, subdomains)
+    if (slug) {
+      tenantId = await getTenantIdFromSubdomain(slug)
+    }
+    if (!tenantId && isLocal) {
+      const demo = process.env.NEXT_PUBLIC_DEMO_TENANT_ID?.trim()
+      if (demo && /^[0-9a-f-]{36}$/i.test(demo)) tenantId = demo
+    }
+    if (!tenantId) {
+      return new NextResponse('Franchise bulunamadı', { status: 404 })
+    }
+  }
+
   let supabaseResponse = NextResponse.next({ request })
+  if (tenantId) {
+    const reqHeaders = new Headers(request.headers)
+    reqHeaders.set('x-tenant-id', tenantId)
+    supabaseResponse = NextResponse.next({
+      request: { headers: reqHeaders },
+    })
+  }
 
   const supabaseUrl = process.env.NEXT_PUBLIC_SUPABASE_URL ?? ''
   const supabaseAnonKey = process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY ?? ''
@@ -98,11 +122,11 @@ export async function updateSession(request: NextRequest) {
 
   supabaseResponse.headers.set('x-yisa-panel', panel)
 
-  const protectedPaths = ['/patron', '/franchise', '/tesis', '/antrenor', '/veli', '/dashboard']
+  const protectedPaths = ['/patron', '/franchise', '/tesis', '/antrenor', '/veli', '/dashboard', '/panel']
   const isProtected = protectedPaths.some((p) => request.nextUrl.pathname.startsWith(p))
   if (isProtected && !user) {
     const url = request.nextUrl.clone()
-    url.pathname = '/auth/login'
+    url.pathname = request.nextUrl.pathname.startsWith('/veli') ? '/veli/giris' : '/auth/login'
     url.searchParams.set('from', panel)
     const redirectRes = NextResponse.redirect(url)
     supabaseResponse.cookies.getAll().forEach((c) => {

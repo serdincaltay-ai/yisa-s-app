@@ -1,19 +1,9 @@
 import { NextRequest, NextResponse } from 'next/server'
 import { createClient } from '@/lib/supabase/server'
 import { createClient as createServiceClient } from '@supabase/supabase-js'
+import { getTenantIdWithFallback } from '@/lib/franchise-tenant'
 
 export const dynamic = 'force-dynamic'
-
-async function getTenantId(userId: string): Promise<string | null> {
-  const url = process.env.NEXT_PUBLIC_SUPABASE_URL ?? process.env.SUPABASE_URL
-  const key = process.env.SUPABASE_SERVICE_ROLE_KEY ?? process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY
-  if (!url || !key) return null
-  const service = createServiceClient(url, key)
-  const { data: ut } = await service.from('user_tenants').select('tenant_id').eq('user_id', userId).limit(1).maybeSingle()
-  if (ut?.tenant_id) return ut.tenant_id
-  const { data: t } = await service.from('tenants').select('id').eq('owner_id', userId).limit(1).maybeSingle()
-  return t?.id ?? null
-}
 
 export async function GET(req: NextRequest) {
   try {
@@ -21,12 +11,12 @@ export async function GET(req: NextRequest) {
     const { data: { user } } = await supabase.auth.getUser()
     if (!user) return NextResponse.json({ error: 'Giriş gerekli' }, { status: 401 })
 
-    const tenantId = await getTenantId(user.id)
+    const tenantId = await getTenantIdWithFallback(user.id, req)
     if (!tenantId) return NextResponse.json({ items: [] })
 
     const { searchParams } = new URL(req.url)
     const status = searchParams.get('status')
-    const studentId = searchParams.get('student_id')
+    const athleteId = searchParams.get('athlete_id')
 
     const url = process.env.NEXT_PUBLIC_SUPABASE_URL ?? process.env.SUPABASE_URL
     const key = process.env.SUPABASE_SERVICE_ROLE_KEY ?? process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY
@@ -37,6 +27,7 @@ export async function GET(req: NextRequest) {
       .from('package_payments')
       .select(`
         id,
+        athlete_id,
         student_id,
         student_package_id,
         amount,
@@ -50,7 +41,7 @@ export async function GET(req: NextRequest) {
         description,
         receipt_no,
         created_at,
-        students(ad_soyad),
+        athletes(name, surname),
         student_packages(kalan_seans, seans_packages(name))
       `)
       .eq('tenant_id', tenantId)
@@ -59,7 +50,7 @@ export async function GET(req: NextRequest) {
     if (status && ['bekliyor', 'odendi', 'gecikmis'].includes(status)) {
       query = query.eq('status', status)
     }
-    if (studentId) query = query.eq('student_id', studentId)
+    if (athleteId) query = query.eq('athlete_id', athleteId)
 
     const { data, error } = await query
 
@@ -71,12 +62,14 @@ export async function GET(req: NextRequest) {
       const due = r.due_date as string
       let effectiveStatus = s
       if (s === 'bekliyor' && due < today) effectiveStatus = 'gecikmis'
-      const st = r.students as Record<string, unknown> | null
+      const ath = r.athletes as { name?: string; surname?: string } | null
       const sp = r.student_packages as { kalan_seans?: number; seans_packages?: { name?: string } } | null
+      const adSoyad = ath ? [ath.name, ath.surname].filter(Boolean).join(' ').trim() || null : null
       return {
         ...r,
+        student_id: r.athlete_id ?? r.student_id,
         effective_status: effectiveStatus,
-        ad_soyad: st?.ad_soyad ?? null,
+        ad_soyad: adSoyad,
         kalan_seans: sp?.kalan_seans ?? null,
         paket_adi: sp?.seans_packages?.name ?? null,
       }
@@ -95,11 +88,11 @@ export async function POST(req: NextRequest) {
     const { data: { user } } = await supabase.auth.getUser()
     if (!user) return NextResponse.json({ error: 'Giriş gerekli' }, { status: 401 })
 
-    const tenantId = await getTenantId(user.id)
+    const tenantId = await getTenantIdWithFallback(user.id, req)
     if (!tenantId) return NextResponse.json({ error: 'Tenant atanmamış' }, { status: 403 })
 
     const body = await req.json()
-    const studentId = body.student_id
+    const athleteId = body.athlete_id ?? body.student_id
     const studentPackageId = body.student_package_id || null
     const amount = parseFloat(String(body.amount ?? 0))
     const paymentDate = typeof body.payment_date === 'string' && body.payment_date
@@ -135,8 +128,8 @@ export async function POST(req: NextRequest) {
       return NextResponse.json({ ok: true, payment: updated })
     }
 
-    if (!studentId || amount <= 0) {
-      return NextResponse.json({ error: 'student_id ve amount zorunludur' }, { status: 400 })
+    if (!athleteId || amount <= 0) {
+      return NextResponse.json({ error: 'athlete_id ve amount zorunludur' }, { status: 400 })
     }
 
     const dueDate = typeof body.due_date === 'string' && body.due_date
@@ -152,7 +145,7 @@ export async function POST(req: NextRequest) {
       .from('package_payments')
       .insert({
         tenant_id: tenantId,
-        student_id: studentId,
+        athlete_id: athleteId,
         student_package_id: studentPackageId,
         amount: Number(amount.toFixed(2)),
         currency: 'TRY',

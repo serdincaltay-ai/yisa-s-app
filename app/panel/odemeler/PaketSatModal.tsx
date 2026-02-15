@@ -6,19 +6,19 @@ import { Input } from '@/components/ui/input'
 import { Label } from '@/components/ui/label'
 import { Loader2 } from 'lucide-react'
 
-type Student = { id: string; ad_soyad: string | null }
+type Athlete = { id: string; name: string | null; surname: string | null }
 type Package = { id: string; name: string; seans_count: number; price: number; max_taksit: number }
 
 type PaketSatModalProps = {
   open: boolean
   onClose: () => void
   onSuccess: () => void
-  students: Student[]
+  athletes: Athlete[]
   packages: Package[]
 }
 
-export function PaketSatModal({ open, onClose, onSuccess, students, packages }: PaketSatModalProps) {
-  const [studentId, setStudentId] = useState('')
+export function PaketSatModal({ open, onClose, onSuccess, athletes, packages }: PaketSatModalProps) {
+  const [athleteId, setAthleteId] = useState('')
   const [packageId, setPackageId] = useState('')
   const [taksitSayisi, setTaksitSayisi] = useState(1)
   const [baslangicTarihi, setBaslangicTarihi] = useState(() => new Date().toISOString().slice(0, 10))
@@ -30,7 +30,7 @@ export function PaketSatModal({ open, onClose, onSuccess, students, packages }: 
 
   useEffect(() => {
     if (open) {
-      setStudentId('')
+      setAthleteId('')
       setPackageId('')
       setTaksitSayisi(1)
       setBaslangicTarihi(new Date().toISOString().slice(0, 10))
@@ -47,7 +47,7 @@ export function PaketSatModal({ open, onClose, onSuccess, students, packages }: 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault()
     setError(null)
-    if (!studentId || !packageId) {
+    if (!athleteId || !packageId) {
       setError('Öğrenci ve paket seçiniz')
       return
     }
@@ -57,7 +57,7 @@ export function PaketSatModal({ open, onClose, onSuccess, students, packages }: 
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({
-          student_id: studentId,
+          athlete_id: athleteId,
           package_id: packageId,
           taksit_sayisi: taksitSayisi,
           baslangic_tarihi: baslangicTarihi,
@@ -88,13 +88,13 @@ export function PaketSatModal({ open, onClose, onSuccess, students, packages }: 
             <Label>Öğrenci *</Label>
             <select
               className="flex h-10 w-full rounded-md border border-input bg-background px-3 py-2 text-sm mt-1"
-              value={studentId}
-              onChange={(e) => setStudentId(e.target.value)}
+              value={athleteId}
+              onChange={(e) => setAthleteId(e.target.value)}
               required
             >
               <option value="">Seçiniz</option>
-              {students.map((s) => (
-                <option key={s.id} value={s.id}>{s.ad_soyad ?? '—'}</option>
+              {athletes.map((a) => (
+                <option key={a.id} value={a.id}>{[a.name, a.surname].filter(Boolean).join(' ').trim() || '—'}</option>
               ))}
             </select>
           </div>

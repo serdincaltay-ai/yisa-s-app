@@ -52,8 +52,8 @@ function durumBadge(status: string | null) {
 
 type OgrenciTableProps = {
   students: AthleteRow[]
-  onEdit: (s: AthleteRow) => void
-  onDelete: (s: AthleteRow) => void
+  onEdit?: (s: AthleteRow) => void
+  onDelete?: (s: AthleteRow) => void
   isMobile?: boolean
 }
 
@@ -84,12 +84,16 @@ export function OgrenciTable({ students, onEdit, onDelete, isMobile }: OgrenciTa
                       <Eye className="h-4 w-4" />
                     </Link>
                   </Button>
-                  <Button variant="outline" size="icon" onClick={() => onEdit(s)}>
-                    <Pencil className="h-4 w-4" />
-                  </Button>
-                  <Button variant="outline" size="icon" onClick={() => onDelete(s)}>
-                    <Trash2 className="h-4 w-4" />
-                  </Button>
+                  {onEdit && (
+                    <Button variant="outline" size="icon" onClick={() => onEdit(s)}>
+                      <Pencil className="h-4 w-4" />
+                    </Button>
+                  )}
+                  {onDelete && (
+                    <Button variant="outline" size="icon" onClick={() => onDelete(s)}>
+                      <Trash2 className="h-4 w-4" />
+                    </Button>
+                  )}
                 </div>
               </div>
             </CardContent>
@@ -135,12 +139,16 @@ export function OgrenciTable({ students, onEdit, onDelete, isMobile }: OgrenciTa
                       <Eye className="h-4 w-4" />
                     </Link>
                   </Button>
-                  <Button variant="outline" size="icon" onClick={() => onEdit(s)}>
-                    <Pencil className="h-4 w-4" />
-                  </Button>
-                  <Button variant="outline" size="icon" onClick={() => onDelete(s)}>
-                    <Trash2 className="h-4 w-4" />
-                  </Button>
+                  {onEdit && (
+                    <Button variant="outline" size="icon" onClick={() => onEdit(s)}>
+                      <Pencil className="h-4 w-4" />
+                    </Button>
+                  )}
+                  {onDelete && (
+                    <Button variant="outline" size="icon" onClick={() => onDelete(s)}>
+                      <Trash2 className="h-4 w-4" />
+                    </Button>
+                  )}
                 </div>
               </TableCell>
             </TableRow>

@@ -7,12 +7,12 @@ import { OdemeTable, type OdemeRow } from './OdemeTable'
 import { PaketSatModal } from './PaketSatModal'
 import { OdemeAlModal } from './OdemeAlModal'
 
-type Student = { id: string; ad_soyad: string | null }
+type Athlete = { id: string; name: string | null; surname: string | null }
 type Package = { id: string; name: string; seans_count: number; price: number; max_taksit: number }
 
 export default function OdemelerPage() {
   const [payments, setPayments] = useState<OdemeRow[]>([])
-  const [students, setStudents] = useState<Student[]>([])
+  const [athletes, setAthletes] = useState<Athlete[]>([])
   const [packages, setPackages] = useState<Package[]>([])
   const [loading, setLoading] = useState(true)
   const [statusFilter, setStatusFilter] = useState('')
@@ -24,21 +24,21 @@ export default function OdemelerPage() {
   const fetchData = useCallback(async () => {
     setLoading(true)
     try {
-      const [studentsRes, paymentsRes, packagesRes] = await Promise.all([
-        fetch('/api/students?status=aktif&perPage=500'),
+      const [athletesRes, paymentsRes, packagesRes] = await Promise.all([
+        fetch('/api/franchise/athletes?status=active'),
         fetch(`/api/payments${statusFilter ? `?status=${statusFilter}` : ''}`),
         fetch('/api/packages'),
       ])
-      const studentsData = await studentsRes.json()
+      const athletesData = await athletesRes.json()
       const paymentsData = await paymentsRes.json()
       const packagesData = await packagesRes.json()
 
-      setStudents(Array.isArray(studentsData.items) ? studentsData.items : [])
+      setAthletes(Array.isArray(athletesData.items) ? athletesData.items : [])
       setPayments(Array.isArray(paymentsData.items) ? paymentsData.items : [])
       setPackages(Array.isArray(packagesData.items) ? packagesData.items : [])
     } catch {
       setPayments([])
-      setStudents([])
+      setAthletes([])
       setPackages([])
       setToast({ message: 'Veriler yüklenemedi', type: 'error' })
     } finally {
@@ -111,7 +111,7 @@ export default function OdemelerPage() {
         open={showPaketSat}
         onClose={() => setShowPaketSat(false)}
         onSuccess={() => { fetchData(); setToast({ message: 'Paket satışı kaydedildi', type: 'success' }); }}
-        students={students}
+        athletes={athletes}
         packages={packages}
       />
 

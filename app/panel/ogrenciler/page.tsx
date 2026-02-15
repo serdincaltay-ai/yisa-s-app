@@ -6,8 +6,11 @@ import { Input } from '@/components/ui/input'
 import { Plus, Search, Loader2 } from 'lucide-react'
 import { OgrenciForm, type OgrenciFormData } from './OgrenciForm'
 import { OgrenciTable, type AthleteRow } from './OgrenciTable'
+import { usePanelRole } from '../PanelRoleContext'
 
 export default function OgrencilerPage() {
+  const role = usePanelRole()
+  const isReadOnly = role === 'coach'
   const [items, setItems] = useState<AthleteRow[]>([])
   const [loading, setLoading] = useState(true)
   const [q, setQ] = useState('')
@@ -136,10 +139,12 @@ export default function OgrencilerPage() {
           <h1 className="text-2xl font-bold text-foreground">Öğrenciler</h1>
           <p className="text-muted-foreground">Öğrenci kayıtlarını yönetin</p>
         </div>
-        <Button onClick={() => { setEditStudent(null); setShowForm(true); }}>
-          <Plus className="h-4 w-4 mr-2" />
-          Yeni Öğrenci Ekle
-        </Button>
+        {!isReadOnly && (
+          <Button onClick={() => { setEditStudent(null); setShowForm(true); }}>
+            <Plus className="h-4 w-4 mr-2" />
+            Yeni Öğrenci Ekle
+          </Button>
+        )}
       </header>
 
       <div className="flex flex-col gap-4 sm:flex-row sm:items-center flex-wrap">
@@ -187,8 +192,8 @@ export default function OgrencilerPage() {
         <>
           <OgrenciTable
             students={items}
-            onEdit={(s) => { setEditStudent(s); setShowForm(true); }}
-            onDelete={(s) => setDeleteTarget(s)}
+            onEdit={isReadOnly ? undefined : (s) => { setEditStudent(s); setShowForm(true); }}
+            onDelete={isReadOnly ? undefined : (s) => setDeleteTarget(s)}
             isMobile={isMobile}
           />
           {items.length > 0 && (

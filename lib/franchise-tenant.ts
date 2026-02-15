@@ -1,7 +1,16 @@
 import { createClient } from '@supabase/supabase-js'
 
-/** Franchise tenant_id: auth'tan veya demo fallback (tenant_id şimdilik hardcoded) */
-export async function getTenantIdWithFallback(userId: string | null): Promise<string | null> {
+/** Franchise tenant_id: x-tenant-id (middleware) → auth → demo fallback */
+export async function getTenantIdWithFallback(
+  userId: string | null,
+  request?: { headers: Headers | { get: (name: string) => string | null } } | null
+): Promise<string | null> {
+  // 1) Middleware'den gelen x-tenant-id (subdomain çözümü)
+  if (request?.headers) {
+    const tid = typeof request.headers.get === 'function' ? request.headers.get('x-tenant-id') : null
+    if (tid && /^[0-9a-f-]{36}$/i.test(String(tid).trim())) return String(tid).trim()
+  }
+
   const url = process.env.NEXT_PUBLIC_SUPABASE_URL ?? process.env.SUPABASE_URL
   const key = process.env.SUPABASE_SERVICE_ROLE_KEY ?? process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY
   if (!url || !key) return null

@@ -3,18 +3,18 @@
 import React from 'react'
 import Link from 'next/link'
 import { FranchiseIntro } from '@/components/FranchiseIntro'
+import { PanelRoleProvider, usePanelRole } from './PanelRoleContext'
 import { usePathname, useRouter } from 'next/navigation'
 import { Activity, Users, ArrowLeft, ClipboardCheck, Wallet, Banknote, Calendar } from 'lucide-react'
 import { Button } from '@/components/ui/button'
 import { supabase } from '@/lib/supabase'
 
-export default function PanelLayout({
-  children,
-}: {
-  children: React.ReactNode
-}) {
+function PanelLayoutInner({ children }: { children: React.ReactNode }) {
   const pathname = usePathname()
   const router = useRouter()
+  const role = usePanelRole()
+  const isOwner = role === 'owner'
+  const isCoach = role === 'coach'
 
   const handleLogout = async () => {
     await supabase.auth.signOut()
@@ -51,7 +51,7 @@ export default function PanelLayout({
             }`}
           >
             <Users className="h-5 w-5" />
-            Öğrenciler
+            Öğrenciler {isCoach && '(okunur)'}
           </Link>
           <Link
             href="/panel/yoklama"
@@ -64,28 +64,32 @@ export default function PanelLayout({
             <ClipboardCheck className="h-5 w-5" style={{ color: pathname?.startsWith('/panel/yoklama') ? undefined : '#00d4ff' }} />
             Yoklama
           </Link>
-          <Link
-            href="/panel/odemeler"
-            className={`flex w-full items-center gap-3 rounded-lg px-3 py-2 text-sm transition-colors ${
-              pathname?.startsWith('/panel/odemeler')
-                ? 'bg-accent/30 text-accent-foreground'
-                : 'text-foreground/70 hover:bg-accent/20 hover:text-foreground'
-            }`}
-          >
-            <Wallet className="h-5 w-5" style={{ color: pathname?.startsWith('/panel/odemeler') ? undefined : '#00d4ff' }} />
-            Ödemeler
-          </Link>
-          <Link
-            href="/panel/aidat"
-            className={`flex w-full items-center gap-3 rounded-lg px-3 py-2 text-sm transition-colors ${
-              pathname?.startsWith('/panel/aidat')
-                ? 'bg-accent/30 text-accent-foreground'
-                : 'text-foreground/70 hover:bg-accent/20 hover:text-foreground'
-            }`}
-          >
-            <Banknote className="h-5 w-5" style={{ color: pathname?.startsWith('/panel/aidat') ? undefined : '#00d4ff' }} />
-            Aidat
-          </Link>
+          {isOwner && (
+            <>
+              <Link
+                href="/panel/odemeler"
+                className={`flex w-full items-center gap-3 rounded-lg px-3 py-2 text-sm transition-colors ${
+                  pathname?.startsWith('/panel/odemeler')
+                    ? 'bg-accent/30 text-accent-foreground'
+                    : 'text-foreground/70 hover:bg-accent/20 hover:text-foreground'
+                }`}
+              >
+                <Wallet className="h-5 w-5" style={{ color: pathname?.startsWith('/panel/odemeler') ? undefined : '#00d4ff' }} />
+                Ödemeler
+              </Link>
+              <Link
+                href="/panel/aidat"
+                className={`flex w-full items-center gap-3 rounded-lg px-3 py-2 text-sm transition-colors ${
+                  pathname?.startsWith('/panel/aidat')
+                    ? 'bg-accent/30 text-accent-foreground'
+                    : 'text-foreground/70 hover:bg-accent/20 hover:text-foreground'
+                }`}
+              >
+                <Banknote className="h-5 w-5" style={{ color: pathname?.startsWith('/panel/aidat') ? undefined : '#00d4ff' }} />
+                Aidat
+              </Link>
+            </>
+          )}
           <Link
             href="/panel/program"
             className={`flex w-full items-center gap-3 rounded-lg px-3 py-2 text-sm transition-colors ${
@@ -108,5 +112,13 @@ export default function PanelLayout({
         {children}
       </main>
     </div>
+  )
+}
+
+export default function PanelLayout({ children }: { children: React.ReactNode }) {
+  return (
+    <PanelRoleProvider>
+      <PanelLayoutInner>{children}</PanelLayoutInner>
+    </PanelRoleProvider>
   )
 }
