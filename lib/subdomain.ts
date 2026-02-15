@@ -16,21 +16,25 @@ export type FranchiseSubdomain = (typeof FRANCHISE_SUBDOMAINS_DEFAULT)[number]
 export function getPanelFromHost(host: string | null, subdomains?: string[]): PanelType {
   if (!host) return 'www'
   const h = host.split(':')[0].toLowerCase()
-  if (h.startsWith('app.')) return 'patron'
-  if (h.startsWith('franchise.')) return 'franchise'
-  if (h.startsWith('veli.')) return 'veli'
+  const base = h.split('.')[0]
+  if (base === 'app') return 'patron'
+  if (base === 'franchise') return 'franchise'
+  if (base === 'veli') return 'veli'
+  if (base === 'www' || base === '' || h === 'yisa-s.com') return 'www'
+  if (h.endsWith('.yisa-s.com') && base.length > 0) return 'franchise_site'
   const list = subdomains ?? [...FRANCHISE_SUBDOMAINS_DEFAULT]
   if (list.some((s) => h.startsWith(s + '.'))) return 'franchise_site'
   return 'www'
 }
 
-/** Subdomain'den franchise slug */
-export function getFranchiseSlugFromHost(host: string | null, subdomains?: string[]): string | null {
+/** Subdomain'den franchise slug — tüm franchise subdomain'leri için base döner */
+export function getFranchiseSlugFromHost(host: string | null, _subdomains?: string[]): string | null {
   if (!host) return null
   const h = host.split(':')[0].toLowerCase()
   const base = h.split('.')[0]
-  const list = subdomains ?? [...FRANCHISE_SUBDOMAINS_DEFAULT]
-  return list.includes(base) ? base : null
+  if (base === 'app' || base === 'www' || base === 'franchise' || base === 'veli' || base === '') return null
+  if (h.endsWith('.yisa-s.com') && base.length > 0) return base
+  return null
 }
 
 /** Panel için varsayılan path */

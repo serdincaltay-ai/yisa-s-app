@@ -1,15 +1,17 @@
 import { createServerClient } from '@supabase/ssr'
 import { NextResponse, type NextRequest } from 'next/server'
-import { getPanelFromHost, getFranchiseSlugFromHost, PANEL_DEFAULT_PATH, FRANCHISE_SUBDOMAINS_DEFAULT } from '@/lib/subdomain'
+import { getPanelFromHost, getFranchiseSlugFromHost, PANEL_DEFAULT_PATH } from '@/lib/subdomain'
 import { getFranchiseSubdomains } from '@/lib/db/franchise-subdomains'
 
 const APP_DOMAIN = 'app.yisa-s.com'
 const WWW_DOMAIN = 'www.yisa-s.com'
 
-function getValidSubdomains(subdomains: string[]) {
-  return ['app.', 'franchise.', 'veli.', ...subdomains.map((s) => s + '.')]
-}
 const ROOT_SITE_DOMAINS = ['yisa-s.com', 'www.yisa-s.com']
+const YISA_BASE = 'yisa-s.com'
+
+function isYisaDomain(hostname: string): boolean {
+  return hostname === YISA_BASE || hostname.endsWith('.' + YISA_BASE)
+}
 
 export async function updateSession(request: NextRequest) {
   const host = request.headers.get('host') ?? ''
@@ -18,11 +20,11 @@ export async function updateSession(request: NextRequest) {
   // yisa-s.com ve www.yisa-s.com → Bu sitede kal (tanıtım/landing). app/franchise/veli subdomain'leri → aynı proje.
   // Diğer domainler (vercel.app vb.) → app.yisa-s.com'a yönlendir
   const subdomains = await getFranchiseSubdomains()
-  const validSubdomains = getValidSubdomains(subdomains)
   const isLocal = hostname.includes('localhost') || hostname.includes('127.0.0.1')
   const isRootSite = ROOT_SITE_DOMAINS.includes(hostname)
-  const hasValidSubdomain = validSubdomains.some((s) => hostname.startsWith(s))
-  if (!isLocal && !isRootSite && !hasValidSubdomain) {
+  const isYisa = isYisaDomain(hostname)
+  const hasValidSubdomain = isLocal || isRootSite || isYisa
+  if (!hasValidSubdomain) {
     const url = request.nextUrl.clone()
     url.protocol = 'https:'
     url.host = APP_DOMAIN
