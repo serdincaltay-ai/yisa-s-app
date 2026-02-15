@@ -5,7 +5,7 @@ import Link from 'next/link'
 import { FranchiseIntro } from '@/components/FranchiseIntro'
 import { PanelRoleProvider, usePanelRole } from './PanelRoleContext'
 import { usePathname, useRouter } from 'next/navigation'
-import { Activity, Users, ArrowLeft, ClipboardCheck, Wallet, Banknote, Calendar, ShoppingCart } from 'lucide-react'
+import { Activity, Users, ArrowLeft, ClipboardCheck, Wallet, Banknote, Calendar, ShoppingCart, Dumbbell } from 'lucide-react'
 import { Button } from '@/components/ui/button'
 import { supabase } from '@/lib/supabase'
 
@@ -51,6 +51,19 @@ function PanelLayoutInner({ children }: { children: React.ReactNode }) {
             <ArrowLeft className="h-5 w-5" />
             Panelye Dön
           </Link>
+          {isCoach && (
+            <Link
+              href="/antrenor"
+              className={`flex w-full items-center gap-3 rounded-lg px-3 py-2 text-sm transition-colors ${
+                pathname?.startsWith('/antrenor')
+                  ? 'bg-accent/30 text-accent-foreground'
+                  : 'text-foreground/70 hover:bg-accent/20 hover:text-foreground'
+              }`}
+            >
+              <Dumbbell className="h-5 w-5" />
+              Antrenör Paneli
+            </Link>
+          )}
           <Link
             href="/panel/ogrenciler"
             className={`flex w-full items-center gap-3 rounded-lg px-3 py-2 text-sm transition-colors ${
