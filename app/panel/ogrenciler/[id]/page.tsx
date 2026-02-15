@@ -8,19 +8,20 @@ import { Button } from '@/components/ui/button'
 import { Card, CardContent, CardHeader, CardTitle, CardDescription } from '@/components/ui/card'
 import { Badge } from '@/components/ui/badge'
 
-type StudentDetail = {
+type AthleteDetail = {
   id: string
-  ad_soyad: string | null
-  tc_kimlik: string | null
-  dogum_tarihi: string | null
-  cinsiyet: string | null
-  veli_adi: string | null
-  veli_telefon: string | null
-  veli_email: string | null
-  brans: string | null
-  grup_id: string | null
-  saglik_notu: string | null
+  name: string | null
+  surname: string | null
+  birth_date: string | null
+  gender: string | null
+  branch: string | null
+  level: string | null
+  group: string | null
   status: string | null
+  parent_name: string | null
+  parent_phone: string | null
+  parent_email: string | null
+  notes: string | null
   created_at: string | null
   updated_at: string | null
 }
@@ -40,10 +41,14 @@ function yasHesapla(dogumTarihi: string | null): number | null {
   return Math.floor(diff / (365.25 * 24 * 60 * 60 * 1000))
 }
 
+function adSoyad(a: AthleteDetail): string {
+  return [a.name, a.surname].filter(Boolean).join(' ').trim() || '—'
+}
+
 export default function OgrenciDetayPage() {
   const params = useParams()
   const id = params?.id as string | undefined
-  const [student, setStudent] = useState<StudentDetail | null>(null)
+  const [student, setStudent] = useState<AthleteDetail | null>(null)
   const [loading, setLoading] = useState(true)
   const [error, setError] = useState<string | null>(null)
 
@@ -52,7 +57,7 @@ export default function OgrenciDetayPage() {
     let cancelled = false
     setLoading(true)
     setError(null)
-    fetch(`/api/students/${id}`)
+    fetch(`/api/franchise/athletes/${id}`)
       .then((res) => res.json())
       .then((data) => {
         if (cancelled) return
@@ -77,7 +82,7 @@ export default function OgrenciDetayPage() {
 
   if (loading) {
     return (
-      <div className="flex items-center justify-center py-24">
+      <div className="flex justify-center py-24">
         <Loader2 className="h-10 w-10 animate-spin text-muted-foreground" />
       </div>
     )
@@ -97,6 +102,14 @@ export default function OgrenciDetayPage() {
     )
   }
 
+  const statusBadge = () => {
+    const s = student.status ?? 'active'
+    if (s === 'active') return <Badge variant="default">Aktif</Badge>
+    if (s === 'inactive') return <Badge variant="secondary">Pasif</Badge>
+    if (s === 'trial') return <Badge variant="outline">Deneme</Badge>
+    return <Badge variant="secondary">{s}</Badge>
+  }
+
   return (
     <div className="p-6 space-y-6">
       <div className="flex items-center gap-4">
@@ -112,14 +125,12 @@ export default function OgrenciDetayPage() {
         <CardHeader>
           <div className="flex items-center justify-between">
             <div>
-              <CardTitle>{student.ad_soyad ?? '—'}</CardTitle>
+              <CardTitle>{adSoyad(student)}</CardTitle>
               <CardDescription>
-                TC: {student.tc_kimlik ?? '—'} · {yasHesapla(student.dogum_tarihi) ?? '?'} yaş
+                {yasHesapla(student.birth_date) ?? '?'} yaş
               </CardDescription>
             </div>
-            <Badge variant={student.status === 'aktif' ? 'default' : 'secondary'}>
-              {student.status ?? 'aktif'}
-            </Badge>
+            {statusBadge()}
           </div>
         </CardHeader>
         <CardContent className="space-y-6">
@@ -128,17 +139,17 @@ export default function OgrenciDetayPage() {
             <ul className="space-y-1 text-sm">
               <li className="flex items-center gap-2">
                 <User className="h-4 w-4 text-muted-foreground" />
-                Doğum Tarihi: {formatDate(student.dogum_tarihi)}
+                Doğum Tarihi: {formatDate(student.birth_date)}
               </li>
               <li className="flex items-center gap-2">
-                Cinsiyet: {student.cinsiyet === 'E' ? 'Erkek' : student.cinsiyet === 'K' ? 'Kız' : student.cinsiyet ?? '—'}
+                Cinsiyet: {student.gender === 'E' ? 'Erkek' : student.gender === 'K' ? 'Kız' : student.gender ?? '—'}
               </li>
             </ul>
           </div>
 
           <div>
             <h3 className="text-sm font-medium text-muted-foreground mb-2">Branş ve Grup</h3>
-            <p>{student.brans ?? '—'}</p>
+            <p>{student.branch ?? '—'} {student.level ? `· ${student.level}` : ''} {student.group ? `· ${student.group}` : ''}</p>
           </div>
 
           <div>
@@ -146,23 +157,23 @@ export default function OgrenciDetayPage() {
             <ul className="space-y-1 text-sm">
               <li className="flex items-center gap-2">
                 <User className="h-4 w-4 text-muted-foreground" />
-                {student.veli_adi ?? '—'}
+                {student.parent_name ?? '—'}
               </li>
               <li className="flex items-center gap-2">
                 <Phone className="h-4 w-4 text-muted-foreground" />
-                {student.veli_telefon ?? '—'}
+                {student.parent_phone ?? '—'}
               </li>
               <li className="flex items-center gap-2">
                 <Mail className="h-4 w-4 text-muted-foreground" />
-                {student.veli_email ?? '—'}
+                {student.parent_email ?? '—'}
               </li>
             </ul>
           </div>
 
-          {student.saglik_notu && (
+          {student.notes && (
             <div>
               <h3 className="text-sm font-medium text-muted-foreground mb-2">Sağlık Notu</h3>
-              <p className="text-sm">{student.saglik_notu}</p>
+              <p className="text-sm">{student.notes}</p>
             </div>
           )}
 

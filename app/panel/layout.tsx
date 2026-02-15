@@ -3,7 +3,7 @@
 import React from 'react'
 import Link from 'next/link'
 import { usePathname, useRouter } from 'next/navigation'
-import { Activity, Users, ArrowLeft, ClipboardCheck, Wallet } from 'lucide-react'
+import { Activity, Users, ArrowLeft, ClipboardCheck, Wallet, Banknote, Calendar } from 'lucide-react'
 import { Button } from '@/components/ui/button'
 import { supabase } from '@/lib/supabase'
 
@@ -72,6 +72,28 @@ export default function PanelLayout({
           >
             <Wallet className="h-5 w-5" style={{ color: pathname?.startsWith('/panel/odemeler') ? undefined : '#00d4ff' }} />
             Ödemeler
+          </Link>
+          <Link
+            href="/panel/aidat"
+            className={`flex w-full items-center gap-3 rounded-lg px-3 py-2 text-sm transition-colors ${
+              pathname?.startsWith('/panel/aidat')
+                ? 'bg-accent/30 text-accent-foreground'
+                : 'text-foreground/70 hover:bg-accent/20 hover:text-foreground'
+            }`}
+          >
+            <Banknote className="h-5 w-5" style={{ color: pathname?.startsWith('/panel/aidat') ? undefined : '#00d4ff' }} />
+            Aidat
+          </Link>
+          <Link
+            href="/panel/program"
+            className={`flex w-full items-center gap-3 rounded-lg px-3 py-2 text-sm transition-colors ${
+              pathname?.startsWith('/panel/program')
+                ? 'bg-accent/30 text-accent-foreground'
+                : 'text-foreground/70 hover:bg-accent/20 hover:text-foreground'
+            }`}
+          >
+            <Calendar className="h-5 w-5" style={{ color: pathname?.startsWith('/panel/program') ? undefined : '#00d4ff' }} />
+            Ders Programı
           </Link>
         </nav>
         <div className="border-t border-border p-4">

@@ -1,51 +1,40 @@
 import { NextRequest, NextResponse } from 'next/server'
 import { createClient } from '@/lib/supabase/server'
 import { createClient as createServiceClient } from '@supabase/supabase-js'
+import { getTenantIdWithFallback } from '@/lib/franchise-tenant'
 
 export const dynamic = 'force-dynamic'
 
-async function getTenantId(userId: string): Promise<string | null> {
-  const url = process.env.NEXT_PUBLIC_SUPABASE_URL ?? process.env.SUPABASE_URL
-  const key = process.env.SUPABASE_SERVICE_ROLE_KEY ?? process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY
-  if (!url || !key) return null
-  const service = createServiceClient(url, key)
-
-  const { data: ut } = await service
-    .from('user_tenants')
-    .select('tenant_id')
-    .eq('user_id', userId)
-    .limit(1)
-    .maybeSingle()
-  if (ut?.tenant_id) return ut.tenant_id
-
-  const { data: t } = await service
-    .from('tenants')
-    .select('id')
-    .eq('owner_id', userId)
-    .limit(1)
-    .maybeSingle()
-  return t?.id ?? null
-}
-
-export async function GET() {
+export async function GET(req: NextRequest) {
   try {
     const supabase = await createClient()
     const { data: { user } } = await supabase.auth.getUser()
     if (!user) return NextResponse.json({ error: 'Giriş gerekli' }, { status: 401 })
 
-    const tenantId = await getTenantId(user.id)
+    const tenantId = await getTenantIdWithFallback(user.id)
     if (!tenantId) return NextResponse.json({ items: [], message: 'Tenant atanmamış' })
+
+    const { searchParams } = new URL(req.url)
+    const q = searchParams.get('q')?.trim()
+    const status = searchParams.get('status')?.trim()
+    const branch = searchParams.get('branch')?.trim()
 
     const url = process.env.NEXT_PUBLIC_SUPABASE_URL ?? process.env.SUPABASE_URL
     const key = process.env.SUPABASE_SERVICE_ROLE_KEY ?? process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY
     if (!url || !key) return NextResponse.json({ items: [] })
 
     const service = createServiceClient(url, key)
-    const { data, error } = await service
+    let query = service
       .from('athletes')
-      .select('id, name, surname, birth_date, gender, branch, level, status, created_at')
+      .select('id, name, surname, birth_date, gender, branch, level, "group", status, parent_name, parent_phone, parent_email, notes, created_at')
       .eq('tenant_id', tenantId)
-      .order('created_at', { ascending: false })
+
+    if (status && ['active', 'inactive', 'trial'].includes(status)) query = query.eq('status', status)
+    if (branch) query = query.eq('branch', branch)
+    if (q) {
+      query = query.or(`name.ilike.%${q}%,surname.ilike.%${q}%`)
+    }
+    const { data, error } = await query.order('created_at', { ascending: false })
 
     if (error) return NextResponse.json({ items: [], error: error.message })
     return NextResponse.json({ items: data ?? [] })
@@ -61,7 +50,7 @@ export async function POST(req: NextRequest) {
     const { data: { user } } = await supabase.auth.getUser()
     if (!user) return NextResponse.json({ error: 'Giriş gerekli' }, { status: 401 })
 
-    const tenantId = await getTenantId(user.id)
+    const tenantId = await getTenantIdWithFallback(user.id)
     if (!tenantId) return NextResponse.json({ error: 'Tenant atanmamış' }, { status: 403 })
 
     const body = await req.json()
@@ -71,7 +60,11 @@ export async function POST(req: NextRequest) {
     const gender = typeof body.gender === 'string' && ['E', 'K', 'diger'].includes(body.gender) ? body.gender : null
     const branch = typeof body.branch === 'string' ? body.branch.trim() : null
     const level = typeof body.level === 'string' ? body.level.trim() : null
+    const group = typeof body.group === 'string' ? body.group.trim() : null
+    const parentName = typeof body.parent_name === 'string' ? body.parent_name.trim() : null
+    const parentPhone = typeof body.parent_phone === 'string' ? body.parent_phone.trim() : null
     const parentEmail = typeof body.parent_email === 'string' ? body.parent_email.trim() : null
+    const notes = typeof body.notes === 'string' ? body.notes.trim() : null
 
     if (!name) return NextResponse.json({ error: 'Ad zorunludur' }, { status: 400 })
 
@@ -100,9 +93,13 @@ export async function POST(req: NextRequest) {
         gender,
         branch: branch || null,
         level: level || null,
+        group: group || null,
         status: 'active',
+        parent_name: parentName || null,
+        parent_phone: parentPhone || null,
         parent_email: parentEmail || null,
         parent_user_id: parentUserId,
+        notes: notes || null,
       } as Record<string, unknown>)
       .select('id, name, surname, created_at')
       .single()

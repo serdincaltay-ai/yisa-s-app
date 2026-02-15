@@ -9,15 +9,16 @@ import { Card, CardContent, CardHeader, CardTitle, CardDescription } from '@/com
 import { Loader2 } from 'lucide-react'
 
 export type OgrenciFormData = {
-  ad_soyad: string
-  tc_kimlik: string
+  ad: string
+  soyad: string
   dogum_tarihi: string
   cinsiyet: string
-  veli_adi: string
+  brans: string
+  seviye: string
+  grup: string
+  veli_ad: string
   veli_telefon: string
   veli_email: string
-  brans: string
-  grup_id: string
   saglik_notu: string
 }
 
@@ -31,15 +32,16 @@ const BRANSLAR = [
 ]
 
 const emptyForm: OgrenciFormData = {
-  ad_soyad: '',
-  tc_kimlik: '',
+  ad: '',
+  soyad: '',
   dogum_tarihi: '',
   cinsiyet: '',
-  veli_adi: '',
+  brans: '',
+  seviye: '',
+  grup: '',
+  veli_ad: '',
   veli_telefon: '',
   veli_email: '',
-  brans: '',
-  grup_id: '',
   saglik_notu: '',
 }
 
@@ -56,15 +58,16 @@ export function OgrenciForm({ initial, onSubmit, onCancel, isSubmitting }: Ogren
   useEffect(() => {
     if (initial) {
       setForm({
-        ad_soyad: initial.ad_soyad ?? '',
-        tc_kimlik: initial.tc_kimlik ?? '',
+        ad: initial.ad ?? '',
+        soyad: initial.soyad ?? '',
         dogum_tarihi: initial.dogum_tarihi ?? '',
         cinsiyet: initial.cinsiyet ?? '',
-        veli_adi: initial.veli_adi ?? '',
+        brans: initial.brans ?? '',
+        seviye: initial.seviye ?? '',
+        grup: initial.grup ?? '',
+        veli_ad: initial.veli_ad ?? '',
         veli_telefon: initial.veli_telefon ?? '',
         veli_email: initial.veli_email ?? '',
-        brans: initial.brans ?? '',
-        grup_id: initial.grup_id ?? '',
         saglik_notu: initial.saglik_notu ?? '',
       })
     } else {
@@ -77,55 +80,43 @@ export function OgrenciForm({ initial, onSubmit, onCancel, isSubmitting }: Ogren
     await onSubmit(form)
   }
 
-  const handleTcChange = (v: string) => {
-    const digits = v.replace(/\D/g, '').slice(0, 11)
-    setForm((f) => ({ ...f, tc_kimlik: digits }))
-  }
-
   return (
     <Card>
       <CardHeader>
         <CardTitle>{initial ? 'Öğrenci Düzenle' : 'Yeni Öğrenci'}</CardTitle>
         <CardDescription>
-          {initial ? 'Bilgileri güncelleyin' : 'Ad Soyad, TC, doğum tarihi zorunludur'}
+          {initial ? 'Bilgileri güncelleyin' : 'Ad ve soyad zorunludur'}
         </CardDescription>
       </CardHeader>
       <CardContent>
         <form onSubmit={handleSubmit} className="space-y-4">
           <div className="grid gap-4 md:grid-cols-2">
             <div>
-              <Label htmlFor="ad_soyad">Ad Soyad *</Label>
+              <Label htmlFor="ad">Ad *</Label>
               <Input
-                id="ad_soyad"
-                value={form.ad_soyad}
-                onChange={(e) => setForm((f) => ({ ...f, ad_soyad: e.target.value }))}
-                placeholder="Ad Soyad"
+                id="ad"
+                value={form.ad}
+                onChange={(e) => setForm((f) => ({ ...f, ad: e.target.value }))}
+                placeholder="Ad"
                 required
               />
             </div>
             <div>
-              <Label htmlFor="tc_kimlik">TC Kimlik No (11 hane) *</Label>
+              <Label htmlFor="soyad">Soyad</Label>
               <Input
-                id="tc_kimlik"
-                value={form.tc_kimlik}
-                onChange={(e) => handleTcChange(e.target.value)}
-                placeholder="12345678901"
-                maxLength={11}
-                required
-                disabled={!!initial}
+                id="soyad"
+                value={form.soyad}
+                onChange={(e) => setForm((f) => ({ ...f, soyad: e.target.value }))}
+                placeholder="Soyad"
               />
-              {initial && (
-                <p className="text-xs text-muted-foreground mt-1">TC Kimlik No düzenlenemez</p>
-              )}
             </div>
             <div>
-              <Label htmlFor="dogum_tarihi">Doğum Tarihi *</Label>
+              <Label htmlFor="dogum_tarihi">Doğum Tarihi</Label>
               <Input
                 id="dogum_tarihi"
                 type="date"
                 value={form.dogum_tarihi}
                 onChange={(e) => setForm((f) => ({ ...f, dogum_tarihi: e.target.value }))}
-                required
               />
             </div>
             <div>
@@ -143,11 +134,43 @@ export function OgrenciForm({ initial, onSubmit, onCancel, isSubmitting }: Ogren
               </select>
             </div>
             <div>
-              <Label htmlFor="veli_adi">Veli Adı</Label>
+              <Label htmlFor="brans">Branş</Label>
+              <select
+                id="brans"
+                className="flex h-10 w-full rounded-md border border-input bg-background px-3 py-2 text-sm"
+                value={form.brans}
+                onChange={(e) => setForm((f) => ({ ...f, brans: e.target.value }))}
+              >
+                <option value="">Seçiniz</option>
+                {BRANSLAR.map((b) => (
+                  <option key={b} value={b}>{b}</option>
+                ))}
+              </select>
+            </div>
+            <div>
+              <Label htmlFor="seviye">Seviye</Label>
               <Input
-                id="veli_adi"
-                value={form.veli_adi}
-                onChange={(e) => setForm((f) => ({ ...f, veli_adi: e.target.value }))}
+                id="seviye"
+                value={form.seviye}
+                onChange={(e) => setForm((f) => ({ ...f, seviye: e.target.value }))}
+                placeholder="Örn: Başlangıç"
+              />
+            </div>
+            <div>
+              <Label htmlFor="grup">Grup</Label>
+              <Input
+                id="grup"
+                value={form.grup}
+                onChange={(e) => setForm((f) => ({ ...f, grup: e.target.value }))}
+                placeholder="Grup adı"
+              />
+            </div>
+            <div>
+              <Label htmlFor="veli_ad">Veli Adı</Label>
+              <Input
+                id="veli_ad"
+                value={form.veli_ad}
+                onChange={(e) => setForm((f) => ({ ...f, veli_ad: e.target.value }))}
                 placeholder="Veli adı soyadı"
               />
             </div>
@@ -161,7 +184,7 @@ export function OgrenciForm({ initial, onSubmit, onCancel, isSubmitting }: Ogren
                 placeholder="05XX XXX XX XX"
               />
             </div>
-            <div>
+            <div className="md:col-span-2">
               <Label htmlFor="veli_email">Veli E-posta</Label>
               <Input
                 id="veli_email"
@@ -170,20 +193,6 @@ export function OgrenciForm({ initial, onSubmit, onCancel, isSubmitting }: Ogren
                 onChange={(e) => setForm((f) => ({ ...f, veli_email: e.target.value }))}
                 placeholder="ornek@email.com"
               />
-            </div>
-            <div>
-              <Label htmlFor="brans">Branş</Label>
-              <select
-                id="brans"
-                className="flex h-10 w-full rounded-md border border-input bg-background px-3 py-2 text-sm"
-                value={form.brans}
-                onChange={(e) => setForm((f) => ({ ...f, brans: e.target.value }))}
-              >
-                <option value="">Seçiniz</option>
-                {BRANSLAR.map((b) => (
-                  <option key={b} value={b}>{b}</option>
-                ))}
-              </select>
             </div>
           </div>
           <div>

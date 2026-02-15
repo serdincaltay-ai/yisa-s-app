@@ -3,7 +3,7 @@
 import React, { useEffect, useState, useCallback } from 'react'
 import { Button } from '@/components/ui/button'
 import { Loader2 } from 'lucide-react'
-import { YoklamaList, type YoklamaItem } from './YoklamaList'
+import { YoklamaList, YoklamaOzet, type YoklamaItem, type YoklamaStatus } from './YoklamaList'
 
 const BRANSLAR = [
   '',
@@ -20,11 +20,23 @@ function bugunISO() {
   return d.toISOString().slice(0, 10)
 }
 
+function son7GunRange() {
+  const end = new Date()
+  const start = new Date()
+  start.setDate(start.getDate() - 6)
+  return {
+    from: start.toISOString().slice(0, 10),
+    to: end.toISOString().slice(0, 10),
+  }
+}
+
 export default function YoklamaPage() {
   const [date, setDate] = useState(bugunISO)
   const [bransFilter, setBransFilter] = useState('')
   const [items, setItems] = useState<YoklamaItem[]>([])
+  const [summary, setSummary] = useState<Array<{ tarih: string; geldi: number; gelmedi: number; izinli: number; hasta: number }>>([])
   const [loading, setLoading] = useState(true)
+  const [summaryLoading, setSummaryLoading] = useState(true)
   const [saving, setSaving] = useState(false)
   const [toast, setToast] = useState<{ message: string; type: 'success' | 'error' } | null>(null)
   const [isMobile, setIsMobile] = useState(false)
@@ -32,11 +44,30 @@ export default function YoklamaPage() {
   const fetchData = useCallback(async () => {
     setLoading(true)
     try {
-      const params = new URLSearchParams({ date })
-      if (bransFilter) params.set('brans', bransFilter)
-      const res = await fetch(`/api/attendance?${params}`)
-      const data = await res.json()
-      setItems(Array.isArray(data.items) ? data.items : [])
+      const [athletesRes, attendanceRes] = await Promise.all([
+        fetch(`/api/franchise/athletes?${bransFilter ? `branch=${encodeURIComponent(bransFilter)}` : ''}`),
+        fetch(`/api/franchise/attendance?date=${date}`),
+      ])
+      const athletesData = await athletesRes.json()
+      const attendanceData = await attendanceRes.json()
+      const athletes = Array.isArray(athletesData.items) ? athletesData.items : []
+      const attendance = Array.isArray(attendanceData.items) ? attendanceData.items : []
+      const attMap = new Map(attendance.map((a: { athlete_id: string; status: string }) => [a.athlete_id, a]))
+      const merged: YoklamaItem[] = athletes
+        .filter((a: { status: string }) => a.status === 'active')
+        .map((a: { id: string; name: string | null; surname: string | null; branch: string | null }) => {
+          const att = attMap.get(a.id) as { id: string; status: string } | undefined
+          const status = (att?.status ?? 'absent') as YoklamaStatus
+          const validStatus: YoklamaStatus[] = ['present', 'absent', 'excused', 'late']
+          return {
+            athlete_id: a.id,
+            ad_soyad: [a.name, a.surname].filter(Boolean).join(' ').trim() || null,
+            brans: a.branch,
+            attendance_id: att?.id,
+            status: validStatus.includes(status) ? status : 'absent',
+          }
+        })
+      setItems(merged)
     } catch {
       setItems([])
       setToast({ message: 'Yoklama yüklenemedi', type: 'error' })
@@ -45,9 +76,27 @@ export default function YoklamaPage() {
     }
   }, [date, bransFilter])
 
+  const fetchSummary = useCallback(async () => {
+    setSummaryLoading(true)
+    try {
+      const { from, to } = son7GunRange()
+      const res = await fetch(`/api/franchise/attendance?from=${from}&to=${to}`)
+      const data = await res.json()
+      setSummary(Array.isArray(data.summary) ? data.summary : [])
+    } catch {
+      setSummary([])
+    } finally {
+      setSummaryLoading(false)
+    }
+  }, [])
+
   useEffect(() => {
     fetchData()
   }, [fetchData])
+
+  useEffect(() => {
+    fetchSummary()
+  }, [fetchSummary])
 
   useEffect(() => {
     const mq = window.matchMedia('(max-width: 640px)')
@@ -57,9 +106,9 @@ export default function YoklamaPage() {
     return () => mq.removeEventListener('change', h)
   }, [])
 
-  const handleStatusChange = (studentId: string, status: YoklamaItem['status']) => {
+  const handleStatusChange = (athleteId: string, status: YoklamaStatus) => {
     setItems((prev) =>
-      prev.map((i) => (i.student_id === studentId ? { ...i, status } : i))
+      prev.map((i) => (i.athlete_id === athleteId ? { ...i, status } : i))
     )
   }
 
@@ -67,12 +116,11 @@ export default function YoklamaPage() {
     setSaving(true)
     try {
       const records = items.map((i) => ({
-        student_id: i.student_id,
-        date,
+        athlete_id: i.athlete_id,
+        lesson_date: date,
         status: i.status,
-        seans_dustu: i.status === 'katildi',
       }))
-      const res = await fetch('/api/attendance', {
+      const res = await fetch('/api/franchise/attendance', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({ records }),
@@ -81,6 +129,7 @@ export default function YoklamaPage() {
       if (res.ok && data.ok) {
         setToast({ message: 'Yoklama kaydedildi', type: 'success' })
         fetchData()
+        fetchSummary()
       } else {
         setToast({ message: data.error ?? 'Kayıt başarısız', type: 'error' })
       }
@@ -104,7 +153,7 @@ export default function YoklamaPage() {
         <p className="text-muted-foreground">Günlük devam takibi</p>
       </header>
 
-      <div className="flex flex-col gap-4 sm:flex-row sm:items-center">
+      <div className="flex flex-col gap-4 sm:flex-row sm:items-center flex-wrap">
         <div>
           <label htmlFor="yoklama-date" className="block text-sm font-medium mb-1">
             Tarih
@@ -119,7 +168,7 @@ export default function YoklamaPage() {
         </div>
         <div>
           <label htmlFor="yoklama-brans" className="block text-sm font-medium mb-1">
-            Branş
+            Branş / Grup
           </label>
           <select
             id="yoklama-brans"
@@ -150,11 +199,21 @@ export default function YoklamaPage() {
               className="min-h-[44px] w-full sm:w-auto"
             >
               {saving && <Loader2 className="h-4 w-4 animate-spin" />}
-              Toplu Kaydet
+              Kaydet
             </Button>
           )}
         </>
       )}
+
+      <div className="mt-8">
+        {summaryLoading ? (
+          <div className="flex justify-center py-4">
+            <Loader2 className="h-5 w-5 animate-spin text-muted-foreground" />
+          </div>
+        ) : (
+          <YoklamaOzet rows={summary} />
+        )}
+      </div>
 
       {toast && (
         <div

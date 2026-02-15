@@ -1,19 +1,9 @@
 import { NextRequest, NextResponse } from 'next/server'
 import { createClient } from '@/lib/supabase/server'
 import { createClient as createServiceClient } from '@supabase/supabase-js'
+import { getTenantIdWithFallback } from '@/lib/franchise-tenant'
 
 export const dynamic = 'force-dynamic'
-
-async function getTenantId(userId: string): Promise<string | null> {
-  const url = process.env.NEXT_PUBLIC_SUPABASE_URL ?? process.env.SUPABASE_URL
-  const key = process.env.SUPABASE_SERVICE_ROLE_KEY ?? process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY
-  if (!url || !key) return null
-  const service = createServiceClient(url, key)
-  const { data: ut } = await service.from('user_tenants').select('tenant_id').eq('user_id', userId).limit(1).maybeSingle()
-  if (ut?.tenant_id) return ut.tenant_id
-  const { data: t } = await service.from('tenants').select('id').eq('owner_id', userId).limit(1).maybeSingle()
-  return t?.id ?? null
-}
 
 export async function GET(req: NextRequest) {
   try {
@@ -21,11 +11,13 @@ export async function GET(req: NextRequest) {
     const { data: { user } } = await supabase.auth.getUser()
     if (!user) return NextResponse.json({ error: 'Giriş gerekli' }, { status: 401 })
 
-    const tenantId = await getTenantId(user.id)
+    const tenantId = await getTenantIdWithFallback(user.id)
     if (!tenantId) return NextResponse.json({ items: [], message: 'Tenant atanmamış' })
 
     const { searchParams } = new URL(req.url)
     const status = searchParams.get('status')
+    const periodMonth = searchParams.get('period_month')
+    const periodYear = searchParams.get('period_year')
     const url = process.env.NEXT_PUBLIC_SUPABASE_URL ?? process.env.SUPABASE_URL
     const key = process.env.SUPABASE_SERVICE_ROLE_KEY ?? process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY
     if (!url || !key) return NextResponse.json({ items: [] })
@@ -40,6 +32,14 @@ export async function GET(req: NextRequest) {
 
     if (status && ['pending', 'paid', 'overdue', 'cancelled'].includes(status)) {
       q = q.eq('status', status)
+    }
+    if (periodMonth) {
+      const m = parseInt(periodMonth, 10)
+      if (m >= 1 && m <= 12) q = q.eq('period_month', m)
+    }
+    if (periodYear) {
+      const y = parseInt(periodYear, 10)
+      if (y >= 2020 && y <= 2030) q = q.eq('period_year', y)
     }
 
     const { data, error } = await q
@@ -76,7 +76,7 @@ export async function POST(req: NextRequest) {
     const { data: { user } } = await supabase.auth.getUser()
     if (!user) return NextResponse.json({ error: 'Giriş gerekli' }, { status: 401 })
 
-    const tenantId = await getTenantId(user.id)
+    const tenantId = await getTenantIdWithFallback(user.id)
     if (!tenantId) return NextResponse.json({ error: 'Tenant atanmamış' }, { status: 403 })
 
     const body = await req.json()
@@ -171,7 +171,7 @@ export async function PATCH(req: NextRequest) {
     const { data: { user } } = await supabase.auth.getUser()
     if (!user) return NextResponse.json({ error: 'Giriş gerekli' }, { status: 401 })
 
-    const tenantId = await getTenantId(user.id)
+    const tenantId = await getTenantIdWithFallback(user.id)
     if (!tenantId) return NextResponse.json({ error: 'Tenant atanmamış' }, { status: 403 })
 
     const body = await req.json()
