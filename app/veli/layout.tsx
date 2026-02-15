@@ -1,8 +1,7 @@
 'use client'
 
 import { useEffect, useState } from 'react'
-import { useRouter } from 'next/navigation'
-import { supabase } from '@/lib/supabase'
+import { useRouter, usePathname } from 'next/navigation'
 
 export default function VeliLayout({
   children,
@@ -10,24 +9,32 @@ export default function VeliLayout({
   children: React.ReactNode
 }) {
   const router = useRouter()
+  const pathname = usePathname()
   const [loading, setLoading] = useState(true)
 
   useEffect(() => {
-    const check = async () => {
-      const { data: { user } } = await supabase.auth.getUser()
-      if (!user) {
-        router.push('/auth/login?redirect=/veli&panel=veli')
-        return
-      }
+    if (!pathname) return
+    const isGiris = pathname === '/veli/giris'
+    const isDemoLoggedIn = typeof window !== 'undefined' && sessionStorage.getItem('veli-demo-logged-in')
+    if (isGiris) {
       setLoading(false)
+      return
     }
-    check()
-  }, [router])
+    if (!isDemoLoggedIn) {
+      router.replace('/veli/giris')
+      return
+    }
+    if (pathname === '/veli') {
+      router.replace('/veli/dashboard')
+      return
+    }
+    setLoading(false)
+  }, [pathname, router])
 
-  if (loading) {
+  if (loading && pathname !== '/veli/giris') {
     return (
-      <div className="min-h-screen flex items-center justify-center bg-background">
-        <div className="text-muted-foreground">Yükleniyor...</div>
+      <div className="min-h-screen flex items-center justify-center bg-white">
+        <div className="text-gray-500">Yükleniyor...</div>
       </div>
     )
   }
