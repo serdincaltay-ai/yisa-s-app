@@ -1,7 +1,7 @@
 'use client'
 
 import { useEffect, useState } from 'react'
-import { useRouter } from 'next/navigation'
+import { useRouter, usePathname } from 'next/navigation'
 import { supabase } from '@/lib/supabase'
 
 export default function FranchiseLayout({
@@ -10,6 +10,7 @@ export default function FranchiseLayout({
   children: React.ReactNode
 }) {
   const router = useRouter()
+  const pathname = usePathname()
   const [loading, setLoading] = useState(true)
 
   useEffect(() => {
@@ -19,10 +20,18 @@ export default function FranchiseLayout({
         router.push('/auth/login?redirect=/franchise&from=franchise')
         return
       }
+      if (pathname !== '/kurulum') {
+        const res = await fetch('/api/franchise/kurulum')
+        const data = await res.json()
+        if (data?.needsSetup && data?.isOwner) {
+          router.replace('/kurulum')
+          return
+        }
+      }
       setLoading(false)
     }
     check()
-  }, [router])
+  }, [router, pathname])
 
   if (loading) {
     return (

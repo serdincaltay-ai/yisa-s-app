@@ -1,6 +1,6 @@
 'use client'
 
-import React from 'react'
+import React, { useEffect } from 'react'
 import Link from 'next/link'
 import { FranchiseIntro } from '@/components/FranchiseIntro'
 import { PanelRoleProvider, usePanelRole } from './PanelRoleContext'
@@ -15,6 +15,15 @@ function PanelLayoutInner({ children }: { children: React.ReactNode }) {
   const role = usePanelRole()
   const isOwner = role === 'owner'
   const isCoach = role === 'coach'
+
+  useEffect(() => {
+    fetch('/api/franchise/kurulum')
+      .then((r) => r.json())
+      .then((d) => {
+        if (d?.needsSetup && d?.isOwner) router.replace('/kurulum')
+      })
+      .catch(() => {})
+  }, [router])
 
   const handleLogout = async () => {
     await supabase.auth.signOut()
