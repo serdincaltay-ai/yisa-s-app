@@ -31,7 +31,7 @@ export async function GET() {
 
     const { data, error } = await service
       .from('athletes')
-      .select('id, name, surname, birth_date, gender, branch, level, status, tenant_id, created_at')
+      .select('id, name, surname, birth_date, gender, branch, level, status, tenant_id, created_at, ders_kredisi, toplam_kredi')
       .eq('parent_user_id', user.id)
       .order('created_at', { ascending: false })
 

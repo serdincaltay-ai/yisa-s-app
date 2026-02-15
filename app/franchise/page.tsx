@@ -235,6 +235,10 @@ function SidebarItem({ icon: Icon, label, active, onClick, badge }: {
 }
 
 function OverviewTab({ tenant, athletes, staff, onRefresh }: { tenant: TenantInfo | null; athletes: Athlete[]; staff: StaffMember[]; onRefresh: () => void }) {
+  const [krediOzet, setKrediOzet] = useState<{ toplamAktifKredi: number; bitenKrediler: Array<{ id: string; name: string; surname?: string }> } | null>(null)
+  useEffect(() => {
+    fetch("/api/franchise/kredi-ozet").then((r) => r.json()).then(setKrediOzet).catch(() => setKrediOzet(null))
+  }, [])
   const memberCount = tenant?.franchise?.memberCount ?? athletes.length
   const noTenant = !tenant?.id
   const staffCount = tenant?.franchise?.staffCount ?? staff.length
@@ -259,7 +263,23 @@ function OverviewTab({ tenant, athletes, staff, onRefresh }: { tenant: TenantInf
         <StatCard title="Aktif Antrenor" value={String(staffCount)} change="Personel" icon={Dumbbell} color="success" />
         <StatCard title="Aylik Gelir" value={revenue > 0 ? `${revenue.toLocaleString("tr-TR")} TL` : "—"} change={revenue > 0 ? "Tahmini" : "Henuz veri yok"} icon={TrendingUp} color="accent" />
         <StatCard title="Token Havuzu" value={String(tenant?.tokenBalance ?? 0)} change="Magaza" icon={Coins} color="info" />
+        <StatCard title="Toplam Aktif Kredi" value={String(krediOzet?.toplamAktifKredi ?? 0)} change="Ders hakki" icon={Coins} color="info" />
       </div>
+      {krediOzet && krediOzet.bitenKrediler.length > 0 && (
+        <Card>
+          <CardHeader>
+            <CardTitle>Kredi Biten Sporcular</CardTitle>
+            <CardDescription>Yeni paket alinmasi gerekiyor</CardDescription>
+          </CardHeader>
+          <CardContent>
+            <ul className="space-y-1 text-sm">
+              {krediOzet.bitenKrediler.map((b) => (
+                <li key={b.id}>{b.name} {b.surname ?? ""}</li>
+              ))}
+            </ul>
+          </CardContent>
+        </Card>
+      )}
       <div className="grid gap-6 lg:grid-cols-2">
         <Card>
           <CardHeader className="flex flex-row items-center justify-between">
@@ -1398,6 +1418,7 @@ function SettingsTab({ tenant, hasTenant }: { tenant: TenantInfo | null; hasTena
     aidat_25: 500,
     aidat_45: 700,
     aidat_60: 900,
+    kredi_paketleri: [] as Array<{ isim: string; saat: number; fiyat: number }>,
   })
   const [loaded, setLoaded] = useState(false)
 
@@ -1409,6 +1430,7 @@ function SettingsTab({ tenant, hasTenant }: { tenant: TenantInfo | null; hasTena
         const t = d?.tenant
         if (t) {
           const tiers = t.aidat_tiers ?? {}
+          const pkts = Array.isArray(t.kredi_paketleri) ? t.kredi_paketleri : []
           setSettings({
             antrenor_hedef: t.antrenor_hedef ?? 0,
             temizlik_hedef: t.temizlik_hedef ?? 0,
@@ -1416,6 +1438,11 @@ function SettingsTab({ tenant, hasTenant }: { tenant: TenantInfo | null; hasTena
             aidat_25: Number(tiers["25"]) || 500,
             aidat_45: Number(tiers["45"]) || 700,
             aidat_60: Number(tiers["60"]) || 900,
+            kredi_paketleri: pkts.map((p: unknown) => ({
+              isim: (p as { isim?: string })?.isim ?? "",
+              saat: Number((p as { saat?: number })?.saat) || 0,
+              fiyat: Number((p as { fiyat?: number })?.fiyat) || 0,
+            })),
           })
         }
         setLoaded(true)
@@ -1435,6 +1462,7 @@ function SettingsTab({ tenant, hasTenant }: { tenant: TenantInfo | null; hasTena
           temizlik_hedef: settings.temizlik_hedef,
           mudur_hedef: settings.mudur_hedef,
           aidat_tiers: { "25": settings.aidat_25, "45": settings.aidat_45, "60": settings.aidat_60 },
+          kredi_paketleri: settings.kredi_paketleri,
         }),
       })
       const data = await res.json()
@@ -1545,6 +1573,28 @@ function SettingsTab({ tenant, hasTenant }: { tenant: TenantInfo | null; hasTena
                 />
               </div>
             </div>
+            <Button onClick={handleSave} disabled={saving || !loaded}>
+              {saving ? "Kaydediliyor…" : "Kaydet"}
+            </Button>
+          </CardContent>
+        </Card>
+      )}
+      {hasTenant && (
+        <Card>
+          <CardHeader>
+            <CardTitle>Kredi Paketleri</CardTitle>
+            <CardDescription>Veli kredi satin alma icin paketler (isim, ders sayisi, fiyat)</CardDescription>
+          </CardHeader>
+          <CardContent className="space-y-4">
+            {settings.kredi_paketleri.map((p, i) => (
+              <div key={i} className="flex gap-2 items-center">
+                <Input placeholder="Isim (orn. Hafta 2)" value={p.isim} onChange={(e) => setSettings((s) => ({ ...s, kredi_paketleri: s.kredi_paketleri.map((x, j) => j === i ? { ...x, isim: e.target.value } : x) }))} className="flex-1" />
+                <Input type="number" placeholder="Ders" value={p.saat || ""} onChange={(e) => setSettings((s) => ({ ...s, kredi_paketleri: s.kredi_paketleri.map((x, j) => j === i ? { ...x, saat: parseInt(e.target.value, 10) || 0 } : x) }))} className="w-20" />
+                <Input type="number" placeholder="Fiyat TL" value={p.fiyat || ""} onChange={(e) => setSettings((s) => ({ ...s, kredi_paketleri: s.kredi_paketleri.map((x, j) => j === i ? { ...x, fiyat: parseInt(e.target.value, 10) || 0 } : x) }))} className="w-24" />
+                <Button variant="ghost" size="sm" onClick={() => setSettings((s) => ({ ...s, kredi_paketleri: s.kredi_paketleri.filter((_, j) => j !== i) }))}>Sil</Button>
+              </div>
+            ))}
+            <Button variant="outline" size="sm" onClick={() => setSettings((s) => ({ ...s, kredi_paketleri: [...s.kredi_paketleri, { isim: "", saat: 0, fiyat: 0 }] }))}>Paket Ekle</Button>
             <Button onClick={handleSave} disabled={saving || !loaded}>
               {saving ? "Kaydediliyor…" : "Kaydet"}
             </Button>

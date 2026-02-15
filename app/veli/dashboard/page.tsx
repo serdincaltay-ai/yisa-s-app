@@ -4,7 +4,7 @@ import React, { useEffect, useState, useCallback } from 'react'
 import Link from 'next/link'
 import { Card, CardContent } from '@/components/ui/card'
 import { VeliIntro } from '@/components/VeliIntro'
-import { Activity, Users, Calendar, Loader2 } from 'lucide-react'
+import { Activity, Users, Calendar, Loader2, Coins } from 'lucide-react'
 
 type Child = {
   id: string
@@ -13,6 +13,7 @@ type Child = {
   birth_date?: string | null
   branch?: string | null
   level?: string | null
+  ders_kredisi?: number | null
 }
 
 export default function VeliDashboardPage() {
@@ -107,6 +108,9 @@ export default function VeliDashboardPage() {
                               <span className={`font-medium ${att && att.rate >= 80 ? 'text-green-600' : att && att.rate > 0 ? 'text-amber-600' : 'text-gray-500'}`}>
                                 Devam: %{att?.rate ?? 0}
                               </span>
+                              <span className="font-medium text-[#2563eb]">
+                                Kalan ders: {(c.ders_kredisi ?? 0)}
+                              </span>
                             </div>
                           </div>
                           <Calendar className="h-5 w-5 shrink-0 text-gray-400" />
@@ -130,6 +134,10 @@ export default function VeliDashboardPage() {
           <Link href="/veli/dashboard" className="flex flex-col items-center gap-1 px-4 py-2 text-gray-500 hover:text-gray-700">
             <Users className="h-5 w-5" />
             <span className="text-xs">Çocuklarım</span>
+          </Link>
+          <Link href="/veli/kredi" className="flex flex-col items-center gap-1 px-4 py-2 text-gray-500 hover:text-gray-700">
+            <Coins className="h-5 w-5" />
+            <span className="text-xs">Kredi</span>
           </Link>
           <Link href="/veli/duyurular" className="flex flex-col items-center gap-1 px-4 py-2 text-gray-500 hover:text-gray-700">
             <Calendar className="h-5 w-5" />

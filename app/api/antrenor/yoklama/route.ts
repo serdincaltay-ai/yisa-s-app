@@ -88,11 +88,24 @@ export async function POST(req: NextRequest) {
         marked_by: user.id,
       }))
 
+    const athleteIds = [...new Set(rows.map((r) => r.athlete_id))]
+    const { data: mevcut } = await service.from('attendance').select('athlete_id, status').eq('tenant_id', tenantId).eq('lesson_date', bugun).in('athlete_id', athleteIds)
+    const oncekiPresent = new Set((mevcut ?? []).filter((m: { status: string }) => m.status === 'present').map((m: { athlete_id: string }) => m.athlete_id))
+
     const { error } = await service
       .from('attendance')
       .upsert(rows, { onConflict: 'tenant_id,athlete_id,lesson_date' })
 
     if (error) return NextResponse.json({ error: error.message }, { status: 500 })
+
+    for (const r of rows) {
+      if (r.status === 'present' && !oncekiPresent.has(r.athlete_id)) {
+        const { data: a } = await service.from('athletes').select('ders_kredisi').eq('id', r.athlete_id).single()
+        const kredi = Math.max(0, (Number(a?.ders_kredisi) ?? 0) - 1)
+        await service.from('athletes').update({ ders_kredisi: kredi }).eq('id', r.athlete_id)
+      }
+    }
+
     return NextResponse.json({ ok: true })
   } catch (e) {
     console.error('[antrenor/yoklama POST]', e)

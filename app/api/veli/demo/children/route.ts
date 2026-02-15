@@ -18,7 +18,7 @@ export async function GET() {
 
     let query = service
       .from('athletes')
-      .select('id, name, surname, birth_date, gender, branch, level, status, tenant_id, created_at')
+      .select('id, name, surname, birth_date, gender, branch, level, status, tenant_id, created_at, ders_kredisi, toplam_kredi')
       .ilike('parent_email', DEMO_VELI_EMAIL)
       .eq('status', 'active')
       .order('created_at', { ascending: false })

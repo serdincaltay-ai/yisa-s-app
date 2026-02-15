@@ -35,7 +35,7 @@ export async function GET() {
 
     const { data: tenant, error } = await service
       .from('tenants')
-      .select('id, name, slug, package_type, antrenor_hedef, temizlik_hedef, mudur_hedef, aidat_tiers')
+      .select('id, name, slug, package_type, antrenor_hedef, temizlik_hedef, mudur_hedef, aidat_tiers, kredi_paketleri')
       .eq('id', tenantId)
       .single()
 
@@ -67,6 +67,7 @@ export async function PATCH(req: NextRequest) {
     if (typeof body.temizlik_hedef === 'number') update.temizlik_hedef = body.temizlik_hedef
     if (typeof body.mudur_hedef === 'number') update.mudur_hedef = body.mudur_hedef
     if (body.aidat_tiers != null && typeof body.aidat_tiers === 'object') update.aidat_tiers = body.aidat_tiers
+    if (Array.isArray(body.kredi_paketleri)) update.kredi_paketleri = body.kredi_paketleri
 
     if (Object.keys(update).length === 0) return NextResponse.json({ error: 'Güncellenecek alan yok' }, { status: 400 })
 
