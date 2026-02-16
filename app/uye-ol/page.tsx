@@ -2,6 +2,7 @@
 
 import React, { useEffect, useState } from 'react'
 import { useRouter } from 'next/navigation'
+import { supabase } from '@/lib/supabase'
 import { Button } from '@/components/ui/button'
 import { Input } from '@/components/ui/input'
 import { Label } from '@/components/ui/label'
@@ -101,6 +102,11 @@ export default function UyeOlPage() {
       })
       const d = await res.json()
       if (d?.ok) {
+        const { error: signErr } = await supabase.auth.signInWithPassword({ email: veli.email, password: veli.sifre })
+        if (!signErr) {
+          router.push('/sozlesme/veli')
+          return
+        }
         setDone(true)
       } else {
         alert(d?.error ?? 'Kayıt başarısız')

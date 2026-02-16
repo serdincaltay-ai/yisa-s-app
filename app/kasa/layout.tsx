@@ -25,6 +25,12 @@ export default function KasaLayout({ children }: { children: React.ReactNode }) 
         router.replace('/panel')
         return
       }
+      const onayRes = await fetch('/api/sozlesme/onay')
+      const onayData = await onayRes.json()
+      if (onayData?.needsPersonel) {
+        router.replace('/sozlesme/personel')
+        return
+      }
       setAllowed(true)
       setLoading(false)
     }

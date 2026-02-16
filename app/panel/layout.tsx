@@ -17,12 +17,22 @@ function PanelLayoutInner({ children }: { children: React.ReactNode }) {
   const isCoach = role === 'coach'
 
   useEffect(() => {
-    fetch('/api/franchise/kurulum')
-      .then((r) => r.json())
-      .then((d) => {
-        if (d?.needsSetup && d?.isOwner) router.replace('/kurulum')
-      })
-      .catch(() => {})
+    const run = async () => {
+      try {
+        const kurulumRes = await fetch('/api/franchise/kurulum')
+        const kurulum = await kurulumRes.json()
+        if (kurulum?.needsSetup && kurulum?.isOwner) {
+          router.replace('/kurulum')
+          return
+        }
+        const onayRes = await fetch('/api/sozlesme/onay')
+        const onay = await onayRes.json()
+        if (onay?.needsPersonel) router.replace('/sozlesme/personel')
+      } catch {
+        // ignore
+      }
+    }
+    run()
   }, [router])
 
   const handleLogout = async () => {

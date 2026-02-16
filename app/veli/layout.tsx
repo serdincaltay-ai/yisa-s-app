@@ -2,6 +2,7 @@
 
 import { useEffect, useState } from 'react'
 import { useRouter, usePathname } from 'next/navigation'
+import { supabase } from '@/lib/supabase'
 
 export default function VeliLayout({
   children,
@@ -20,15 +21,26 @@ export default function VeliLayout({
       setLoading(false)
       return
     }
-    if (!isDemoLoggedIn) {
-      router.replace('/veli/giris')
-      return
+    const check = async () => {
+      const { data: { user } } = await supabase.auth.getUser()
+      if (user) {
+        const res = await fetch('/api/sozlesme/onay')
+        const data = await res.json()
+        if (data?.needsVeli) {
+          router.replace('/sozlesme/veli')
+          return
+        }
+      } else if (!isDemoLoggedIn) {
+        router.replace('/veli/giris')
+        return
+      }
+      if (pathname === '/veli') {
+        router.replace('/veli/dashboard')
+        return
+      }
+      setLoading(false)
     }
-    if (pathname === '/veli') {
-      router.replace('/veli/dashboard')
-      return
-    }
-    setLoading(false)
+    check()
   }, [pathname, router])
 
   if (loading && pathname !== '/veli/giris') {

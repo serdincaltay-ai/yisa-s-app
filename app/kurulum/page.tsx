@@ -144,7 +144,7 @@ export default function KurulumPage() {
       })
       const data = await res.json()
       if (data?.ok) {
-        router.replace('/franchise')
+        router.replace('/sozlesme/franchise')
       } else {
         alert(data?.error ?? 'Kayıt başarısız')
       }

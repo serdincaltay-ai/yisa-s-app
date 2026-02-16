@@ -27,6 +27,12 @@ export default function FranchiseLayout({
           router.replace('/kurulum')
           return
         }
+        const onayRes = await fetch('/api/sozlesme/onay')
+        const onayData = await onayRes.json()
+        if (onayData?.needsFranchise) {
+          router.replace('/sozlesme/franchise')
+          return
+        }
       }
       setLoading(false)
     }
