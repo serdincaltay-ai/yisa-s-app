@@ -132,9 +132,11 @@ export default function FranchiseDashboard() {
           <SidebarItem icon={Users} label="Ogrenciler" active={activeTab === "students"} onClick={() => router.push("/panel/ogrenciler")} />
           <SidebarItem icon={Dumbbell} label="Antrenorler" active={activeTab === "trainers"} onClick={() => setActiveTab("trainers")} />
           <SidebarItem icon={Calendar} label="Ders Programi" active={activeTab === "schedule"} onClick={() => setActiveTab("schedule")} />
-          <SidebarItem icon={Wallet} label="Odemeler" active={activeTab === "aidat"} onClick={() => router.push("/panel/odemeler")} />
-          <SidebarItem icon={ClipboardCheck} label="Yoklama" active={activeTab === "yoklama"} onClick={() => router.push("/panel/yoklama")} />
+          <SidebarItem icon={Wallet} label="Odemeler" active={activeTab === "aidat"} onClick={() => router.push("/franchise/aidatlar")} />
+          <SidebarItem icon={ClipboardCheck} label="Yoklama" active={activeTab === "yoklama"} onClick={() => router.push("/franchise/yoklama")} />
           <SidebarItem icon={Heart} label="Saglik Takibi" active={activeTab === "health"} onClick={() => setActiveTab("health")} />
+          <SidebarItem icon={Megaphone} label="Iletisim" active={activeTab === "iletisim"} onClick={() => router.push("/franchise/iletisim")} />
+          <SidebarItem icon={FileText} label="Belgeler" active={activeTab === "belgeler"} onClick={() => router.push("/franchise/belgeler")} />
           <SidebarItem icon={ShoppingBag} label="COO Magazasi" active={activeTab === "coo"} onClick={() => setActiveTab("coo")} badge="Yeni" />
           <SidebarItem icon={Megaphone} label="Pazarlama" active={activeTab === "marketing"} onClick={() => setActiveTab("marketing")} />
           <SidebarItem icon={UserPlus} label="Personel (IK)" active={activeTab === "personel"} onClick={() => router.push("/personel")} />

@@ -55,7 +55,7 @@ export function YoklamaList({ items, onChange, isMobile }: YoklamaListProps) {
         className={item.status === 'excused' ? `${btnIzinli} ring-2 ring-amber-500` : btnIzinli}
         onClick={() => onChange(item.athlete_id, 'excused')}
       >
-        İzinli
+        MUAF
       </button>
       <button
         type="button"
@@ -120,7 +120,7 @@ export function YoklamaOzet({ rows }: { rows: Array<{ tarih: string; geldi: numb
             <th className="h-10 px-4 text-left font-medium">Tarih</th>
             <th className="h-10 px-4 text-right font-medium">Geldi</th>
             <th className="h-10 px-4 text-right font-medium">Gelmedi</th>
-            <th className="h-10 px-4 text-right font-medium">İzinli</th>
+            <th className="h-10 px-4 text-right font-medium">MUAF</th>
             <th className="h-10 px-4 text-right font-medium">Hasta</th>
           </tr>
         </thead>

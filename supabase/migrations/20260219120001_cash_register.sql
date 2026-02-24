@@ -19,6 +19,7 @@ CREATE INDEX IF NOT EXISTS idx_cash_register_tur ON cash_register(tur);
 ALTER TABLE cash_register ENABLE ROW LEVEL SECURITY;
 
 DROP POLICY IF EXISTS "Tenant users manage cash_register" ON cash_register;
+DROP POLICY IF EXISTS "cash_register_select" ON cash_register;
 CREATE POLICY "cash_register_select" ON cash_register FOR SELECT USING (
   auth.role() = 'authenticated' AND (
     tenant_id IN (SELECT tenant_id FROM user_tenants WHERE user_id = auth.uid())
@@ -26,6 +27,7 @@ CREATE POLICY "cash_register_select" ON cash_register FOR SELECT USING (
   )
 );
 
+DROP POLICY IF EXISTS "cash_register_insert" ON cash_register;
 CREATE POLICY "cash_register_insert" ON cash_register FOR INSERT WITH CHECK (
   auth.role() = 'authenticated' AND (
     tenant_id IN (SELECT tenant_id FROM user_tenants WHERE user_id = auth.uid())
@@ -33,6 +35,7 @@ CREATE POLICY "cash_register_insert" ON cash_register FOR INSERT WITH CHECK (
   )
 );
 
+DROP POLICY IF EXISTS "cash_register_update" ON cash_register;
 CREATE POLICY "cash_register_update" ON cash_register FOR UPDATE USING (
   auth.role() = 'authenticated' AND (
     tenant_id IN (SELECT tenant_id FROM user_tenants WHERE user_id = auth.uid())
@@ -40,6 +43,7 @@ CREATE POLICY "cash_register_update" ON cash_register FOR UPDATE USING (
   )
 );
 
+DROP POLICY IF EXISTS "cash_register_delete" ON cash_register;
 CREATE POLICY "cash_register_delete" ON cash_register FOR DELETE USING (
   auth.role() = 'authenticated' AND (
     tenant_id IN (SELECT tenant_id FROM user_tenants WHERE user_id = auth.uid())

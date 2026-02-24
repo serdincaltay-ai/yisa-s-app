@@ -23,6 +23,8 @@ BEGIN
     ALTER TABLE tenant_purchases ENABLE ROW LEVEL SECURITY;
     DROP POLICY IF EXISTS "tenant_purchases_select_own" ON tenant_purchases;
     DROP POLICY IF EXISTS "tenant_purchases_deny_write" ON tenant_purchases;
+    DROP POLICY IF EXISTS "tenant_purchases_deny_update" ON tenant_purchases;
+    DROP POLICY IF EXISTS "tenant_purchases_deny_delete" ON tenant_purchases;
     CREATE POLICY "tenant_purchases_select_own" ON tenant_purchases
       FOR SELECT USING (
         tenant_id IN (SELECT tenant_id FROM user_tenants WHERE user_id = auth.uid())

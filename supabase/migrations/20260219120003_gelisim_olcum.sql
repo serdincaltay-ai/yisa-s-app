@@ -57,6 +57,7 @@ END $$;
 
 ALTER TABLE athlete_measurements ENABLE ROW LEVEL SECURITY;
 
+DROP POLICY IF EXISTS "athlete_measurements_select" ON athlete_measurements;
 CREATE POLICY "athlete_measurements_select" ON athlete_measurements FOR SELECT USING (
   auth.role() = 'authenticated' AND (
     tenant_id IN (SELECT tenant_id FROM user_tenants WHERE user_id = auth.uid())
@@ -65,6 +66,7 @@ CREATE POLICY "athlete_measurements_select" ON athlete_measurements FOR SELECT U
   )
 );
 
+DROP POLICY IF EXISTS "athlete_measurements_insert" ON athlete_measurements;
 CREATE POLICY "athlete_measurements_insert" ON athlete_measurements FOR INSERT WITH CHECK (
   auth.role() = 'authenticated' AND (
     tenant_id IN (SELECT tenant_id FROM user_tenants WHERE user_id = auth.uid())

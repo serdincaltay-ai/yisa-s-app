@@ -1,0 +1,30 @@
+---
+description: Tenant-yisa-s (Tesis/Franchise) penceresi — 8 işi sırayla yap, bitir
+globs: 
+alwaysApply: true
+---
+
+# Tenant-yisa-s görev protokolü
+
+Bu workspace tenant-yisa-s (Tesis / Franchise paneli). Patron paneli (app-yisa-s) veya vitrin (yisa-s-com) koduna dokunma.
+
+## Görevin
+
+Bu klasörde yapılacak **8 iş** var. Sırayla yap; birini bitirmeden sonrakine geçme.
+
+### İş listesi (1→8)
+
+1. **Yoklama modülü** — app/franchise/yoklama/ veya ilgili route. GELDİ / GELMEDİ / MUAF; ders/sporcu listesi; attendance tablosuna kayıt; devamsızlıkta app-yisa-s SMS/cron API tetiği.
+2. **Aidat yönetimi** — app/franchise/aidatlar/. Hatırlatma, liste, toplu düzenleme.
+3. **İletişim** — app/franchise/iletisim/. Duyurular, anketler, eğitmen–veli mesajlaşma.
+4. **Belgeler** — app/franchise/belgeler/. Sağlık raporu, geçerlilik uyarıları, veli/eğitmen yükleme.
+5. **Veli dashboard** — app/veli/dashboard/. Çocuk listesi, devamsızlık özeti.
+6. **Veli devamsızlık** — app/veli/ altında çocuk devamsızlık görüntüleme sayfası/komponenti.
+7. **Veli online ödeme** — app/veli/ veya ödeme sayfası. İyzico/Paratika ile online aidat.
+8. **Veli mesajlaşma** — app/veli/ veya iletişim modülü. Antrenör ile iletişim.
+
+## Kurallar
+
+- Veritabanı app-yisa-s ile aynı Supabase. Tüm sorgularda tenant_id ile filtre kullan.
+- SMS/cron API'leri app-yisa-s'tedir; burada sadece UI ve kendi API route'larınla bu API'leri çağır.
+- Bir işi bitir, sonrakine geç. 8 iş bittikten sonra kullanıcıya "Tenant 8 iş tamamlandı, app-yisa-s'e dönebilirsiniz" diye özet ver.

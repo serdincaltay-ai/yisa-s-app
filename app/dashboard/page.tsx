@@ -7,6 +7,7 @@ import { QUALITY_FLOW } from '@/lib/ai-router'
 import { checkPatronLock } from '@/lib/security/patron-lock'
 import { isPatron } from '@/lib/auth/roles'
 import { PatronApprovalUI } from '@/app/components/PatronApproval'
+import { BrainTeamChat } from '@/components/patron/BrainTeamChat'
 import {
   Send,
   Bot,
@@ -28,6 +29,7 @@ import {
   Loader2,
   Copy,
   Terminal,
+  Eye,
 } from 'lucide-react'
 import Image from 'next/image'
 import { Button } from '@/components/ui/button'
@@ -932,9 +934,11 @@ export default function DashboardPage() {
                           <button
                             type="button"
                             onClick={() => content && setPreviewItem({ id: item.id, title: item.title, displayText: content, status: item.status })}
-                            className="px-3 py-1.5 rounded-lg text-xs border border-gray-600 text-gray-300 hover:bg-gray-700"
+                            className="px-3 py-1.5 rounded-lg text-xs border border-gray-600 text-gray-300 hover:bg-gray-700 flex items-center gap-1"
+                            title="Önizleme"
                           >
-                            İçeriği Gör
+                            <Eye size={12} />
+                            Gör
                           </button>
                           <button
                             type="button"
@@ -1317,40 +1321,42 @@ export default function DashboardPage() {
               </div>
             )}
             <CardFooter className="border-t border-border p-4 flex flex-col gap-3">
-              <div className="flex items-center gap-2 flex-wrap">
-                <label className="flex items-center gap-2 text-sm text-muted-foreground cursor-pointer">
-                  <input
-                    type="checkbox"
-                    checked={asRoutine}
-                    onChange={(e) => setAsRoutine(e.target.checked)}
-                    className="rounded border-input bg-background text-primary focus:ring-ring"
-                  />
-                  <span>Rutin olarak yapılsın</span>
-                </label>
+              <BrainTeamChat
+                chatInput={chatInput}
+                setChatInput={setChatInput}
+                onSent={() => {
+                  setChatMessages((prev) => [
+                    ...prev,
+                    { role: 'assistant', text: '✅ Patron Havuzu\'na eklendi. Soldaki listeden görüntüleyebilirsiniz.', aiProviders: [] },
+                  ])
+                }}
+                targetDirector={targetDirector}
+                setTargetDirector={setTargetDirector}
+                asRoutine={asRoutine}
+                setAsRoutine={setAsRoutine}
+                fetchApprovalQueue={fetchApprovalQueue}
+              />
+              <div className="flex items-center gap-2 flex-wrap pt-2 border-t border-border">
+                <span className="text-xs text-muted-foreground">CEO zinciri:</span>
                 <Button
                   type="button"
                   variant="outline"
                   size="sm"
                   onClick={handleSendAsCommand}
                   disabled={chatSending || (!chatInput.trim() && !chatMessages.some((m) => m.role === 'user'))}
-                  title="Son mesajı veya yazdığınızı CEO'ya komut olarak gönderir"
+                  title="İmla → Şirket/Özel → CEO → CELF → Onay kuyruğu"
                 >
                   CEO&apos;ya Gönder
                 </Button>
-              </div>
-              <div className="flex gap-2">
-                <input
-                  type="text"
-                  value={chatInput}
-                  onChange={(e) => setChatInput(e.target.value)}
-                  onKeyDown={(e) => e.key === 'Enter' && !e.shiftKey && handleSendChat()}
-                  placeholder="Örn: v0'a tasarım yaptır, CFO'ya rapor hazırla, Onaylıyorum"
-                  className="flex-1 bg-background border border-input rounded-md px-4 py-3 text-foreground placeholder-muted-foreground focus:outline-none focus:ring-2 focus:ring-ring focus:border-ring"
-                  disabled={chatSending}
-                />
-                <Button onClick={handleSendChat} disabled={chatSending || !chatInput.trim()} className="px-5">
-                  <Send size={18} className="mr-2" />
-                  Gönder
+                <Button
+                  type="button"
+                  variant="ghost"
+                  size="sm"
+                  onClick={handleSendChat}
+                  disabled={chatSending || !chatInput.trim()}
+                  title="Konuşma (imla düzeltme dahil)"
+                >
+                  Gönder (Konuş)
                 </Button>
               </div>
             </CardFooter>

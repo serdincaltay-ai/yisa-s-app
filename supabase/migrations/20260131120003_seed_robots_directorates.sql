@@ -81,11 +81,7 @@ VALUES
   (5, 'KURAL-5', 'Token Limiti', 'Günlük token limiti aşılamaz, otomatik durdurma', 'maliyet', true),
   (6, 'KURAL-6', 'Yasak Bölgeler', 'AI .env, API_KEY, şifre alanlarına erişemez', 'guvenlik', true),
   (7, 'KURAL-7', 'Franchise Veri İzolasyonu', 'Franchise birbirinin verisine erişemez', 'veri', true)
-ON CONFLICT (kural_kodu) DO UPDATE SET
-  baslik = EXCLUDED.baslik,
-  aciklama = EXCLUDED.aciklama,
-  kategori = EXCLUDED.kategori,
-  zorunlu = EXCLUDED.zorunlu;
+ON CONFLICT (kural_kodu) DO NOTHING;
 
 -- DOĞRULAMA
 SELECT 'ROBOTLAR:' AS kontrol, COUNT(*) AS sayi FROM robots WHERE durum = 'aktif';
