@@ -196,6 +196,20 @@ export async function PATCH(req: NextRequest) {
     const paidDate = body.paid_date as string | undefined
     const paymentMethod = body.payment_method as string | undefined
 
+    if (body.bulk === true && Array.isArray(body.ids) && body.ids.length > 0) {
+      const ids = body.ids.filter((x: unknown) => typeof x === 'string') as string[]
+      const bulkStatus = body.status && ['pending', 'paid', 'overdue', 'cancelled'].includes(body.status) ? body.status : 'paid'
+      const url = process.env.NEXT_PUBLIC_SUPABASE_URL ?? process.env.SUPABASE_URL
+      const key = process.env.SUPABASE_SERVICE_ROLE_KEY ?? process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY
+      if (!url || !key) return NextResponse.json({ error: 'Sunucu hatası' }, { status: 500 })
+      const service = createServiceClient(url, key)
+      const updates: Record<string, unknown> = { status: bulkStatus }
+      if (bulkStatus === 'paid') updates.paid_date = new Date().toISOString().slice(0, 10)
+      const { data: updated, error } = await service.from('payments').update(updates).eq('tenant_id', tenantId).in('id', ids).select('id')
+      if (error) return NextResponse.json({ error: error.message }, { status: 500 })
+      return NextResponse.json({ ok: true, count: updated?.length ?? 0, message: `${updated?.length ?? 0} kayıt güncellendi` })
+    }
+
     if (!id) return NextResponse.json({ error: 'id zorunludur' }, { status: 400 })
 
     const url = process.env.NEXT_PUBLIC_SUPABASE_URL ?? process.env.SUPABASE_URL

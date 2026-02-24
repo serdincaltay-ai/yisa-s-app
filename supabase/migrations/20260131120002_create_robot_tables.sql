@@ -65,3 +65,20 @@ CREATE INDEX IF NOT EXISTS idx_core_rules_kural_kodu ON core_rules(kural_kodu);
 ALTER TABLE core_rules ENABLE ROW LEVEL SECURITY;
 DROP POLICY IF EXISTS "Service can manage core_rules" ON core_rules;
 CREATE POLICY "Service can manage core_rules" ON core_rules FOR ALL USING (true);
+
+-- Eski migration'lardan gelen tablolarda eksik kolonlar
+-- (CREATE TABLE IF NOT EXISTS atlandığında şema güncellenmez; ALTER ile tamamlama)
+-- robots: ai_model (seed INSERT kullanıyor)
+ALTER TABLE robots ADD COLUMN IF NOT EXISTS ai_model VARCHAR(50);
+-- celf_directorates: seed ve add_cspo kullanıyor
+ALTER TABLE celf_directorates ADD COLUMN IF NOT EXISTS tam_isim VARCHAR(255);
+ALTER TABLE celf_directorates ADD COLUMN IF NOT EXISTS aciklama TEXT;
+ALTER TABLE celf_directorates ADD COLUMN IF NOT EXISTS sorumluluk_alanlari JSONB DEFAULT '[]'::jsonb;
+ALTER TABLE celf_directorates ADD COLUMN IF NOT EXISTS sira INTEGER NOT NULL DEFAULT 0;
+ALTER TABLE celf_directorates ADD COLUMN IF NOT EXISTS ana_robot_id UUID REFERENCES robots(id) ON DELETE SET NULL;
+-- role_permissions: aciklama (seed INSERT kullanıyor)
+ALTER TABLE role_permissions ADD COLUMN IF NOT EXISTS aciklama TEXT;
+-- core_rules: aciklama, kategori, zorunlu (seed INSERT kullanıyor)
+ALTER TABLE core_rules ADD COLUMN IF NOT EXISTS aciklama TEXT;
+ALTER TABLE core_rules ADD COLUMN IF NOT EXISTS kategori VARCHAR(50);
+ALTER TABLE core_rules ADD COLUMN IF NOT EXISTS zorunlu BOOLEAN DEFAULT true;

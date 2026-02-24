@@ -114,6 +114,31 @@ export async function POST(req: NextRequest) {
       .select('id')
 
     if (error) return NextResponse.json({ error: error.message }, { status: 500 })
+
+    // Devamsızlık durumunda app-yisa-s SMS / aidat-reminder API tetiği
+    const absentRecords = rows.filter((r) => r.status === 'absent')
+    const appYisaUrl = process.env.APP_YISA_S_API_URL ?? process.env.NEXT_PUBLIC_APP_YISA_S_API_URL
+    const reminderPath = process.env.APP_YISA_S_REMINDER_PATH ?? '/api/reminder/devamsizlik'
+    if (appYisaUrl && absentRecords.length > 0) {
+      try {
+        const base = appYisaUrl.replace(/\/$/, '')
+        const path = reminderPath.startsWith('/') ? reminderPath : `/${reminderPath}`
+        await fetch(`${base}${path}`, {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({
+            tenant_id: tenantId,
+            records: absentRecords.map((r) => ({
+              athlete_id: r.athlete_id,
+              lesson_date: r.lesson_date,
+            })),
+          }),
+        })
+      } catch (e) {
+        console.warn('[franchise/attendance] Devamsızlık tetik (app-yisa-s SMS/aidat-reminder) hatası:', e)
+      }
+    }
+
     return NextResponse.json({ ok: true, count: data?.length ?? 0 })
   } catch (e) {
     console.error('[franchise/attendance POST]', e)

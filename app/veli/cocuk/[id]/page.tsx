@@ -103,7 +103,8 @@ export default function VeliCocukPage() {
       <main className="p-4 space-y-6">
         <Card className="border-gray-200">
           <CardHeader className="pb-2">
-            <CardTitle className="text-base">Yoklama Takvimi (Son 30 Gün)</CardTitle>
+            <CardTitle className="text-base">Devamsızlık görüntüleme — Yoklama takvimi (Son 30 gün)</CardTitle>
+            <p className="text-xs text-gray-500 mt-1">Günlük durum: Geldi / Gelmedi / İzinli</p>
           </CardHeader>
           <CardContent>
             <div className="grid grid-cols-5 sm:grid-cols-10 gap-1">

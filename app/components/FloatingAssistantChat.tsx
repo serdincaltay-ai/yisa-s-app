@@ -130,7 +130,7 @@ export default function FloatingAssistantChat() {
           ref={fileInputRef}
           type="file"
           multiple
-          accept="audio/*,video/*,image/*,.pdf,.doc,.docx"
+          accept="audio/*,video/*,image/*,.pdf,.doc,"
           onChange={onFileChange}
           className="hidden"
         />

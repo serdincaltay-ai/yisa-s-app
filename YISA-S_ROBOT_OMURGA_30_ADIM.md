@@ -103,12 +103,12 @@ supabase/
 
 | # | Adım | Açıklama | Kaynak | Tahmini |
 |---|------|----------|--------|---------|
-| 7 | Patron Asistanı (giriş noktası) | Patron komutlarını alan, analiz eden, CIO’ya ileten katman | yisa-s-ai-orkestrasyon.md, ai-protokol-sistemi.md | 2 saat |
-| 8 | CIO mantığı | Komut yorumlama, direktörlük seçimi, önceliklendirme | yisa-s-komut-zinciri-protokol.md | 2 saat |
-| 9 | CEO mantığı | Görev dağıtımı, CELF’e yönlendirme, sonuç toplama | yisa-s-birimler-arasi-protokol.md | 2 saat |
+| 7 | Patron Asistanı (giriş noktası) | Patron komutlarını alan, analiz eden, CIO’ya ileten katman | yisa-s-ai-orkestrasyon.md, ai-protokol-sistemi| 2 saat |
+| 8 | CIO mantığı | Komut yorumlama, direktörlük seçimi, önceliklendirme | yisa-s-komut-zinciri-protokol| 2 saat |
+| 9 | CEO mantığı | Görev dağıtımı, CELF’e yönlendirme, sonuç toplama | yisa-s-birimler-arasi-protokol| 2 saat |
 | 10 | CELF pool (12 direktörlük) | director_key → doğru AI’a yönlendirme (CFO→Claude, CMO→GPT, vb.) | YISA-S_ROBOT_GOREVLENDIRME_ILK_ISLER.md, ai-orkestrasyon | 2 saat |
 | 11 | COO (Vitrin) mantığı | Onaylanan içerikleri vitrinde gösterme, franchise’lara sunma | komut-zinciri-protokol | 1 saat |
-| 12 | Message Queue / Bağımlılık zinciri | Birimler arası iletişim CEO üzerinden, bağımlılık yönetimi | yisa-s-birimler-arasi-protokol.md (KURAL 1–4) | 2 saat |
+| 12 | Message Queue / Bağımlılık zinciri | Birimler arası iletişim CEO üzerinden, bağımlılık yönetimi | yisa-s-birimler-arasi-protokol(KURAL 1–4) | 2 saat |
 
 ---
 
@@ -118,7 +118,7 @@ supabase/
 |---|------|----------|--------|---------|
 | 13 | Patron komut → patron_commands tablosu | Her komut kaydı, durum akışı (beklemede→islemde→tamamlandi) | patron_commands, ceo_tasks | 1 saat |
 | 14 | ceo_tasks tablosu ve akış | CEO’nun CELF’e dağıttığı görevlerin takibi | ceo_tasks_rows.sql | 1 saat |
-| 15 | Onay kuyruğu (approval_queue) | Patron onayı gereken işlerin listesi ve işlenmesi | yisa-s-ai-protokol-sistemi.md | 1.5 saat |
+| 15 | Onay kuyruğu (approval_queue) | Patron onayı gereken işlerin listesi ve işlenmesi | yisa-s-ai-protokol-sistemi| 1.5 saat |
 | 16 | İş durumu akışı | RECEIVED → PLANNED → IN_PROGRESS → PRODUCED → READY_FOR_REVIEW → APPROVED/REVISION/CANCELLED | ai-protokol-sistemi (Bölüm 3.2) | 1 saat |
 | 17 | Rutin vs yeni iş ayrımı | Rutin işlerde auto-approve, yeni işlerde patron onayı | ai-protokol-sistemi (Bölüm 5) | 1 saat |
 | 18 | Audit log entegrasyonu | Tüm kritik işlemlerin audit_logs’a yazılması (KURAL 5) | 05_kritik_sistem, core_rules | 1 saat |
@@ -142,7 +142,7 @@ supabase/
 
 | # | Adım | Açıklama | Kaynak | Tahmini |
 |---|------|----------|--------|---------|
-| 25 | AI Router (görev → AI seçimi) | Karar/analiz→Claude, içerik→GPT, hızlı→Gemini, batch→Together | yisa-s-ai-orkestrasyon.md | 2 saat |
+| 25 | AI Router (görev → AI seçimi) | Karar/analiz→Claude, içerik→GPT, hızlı→Gemini, batch→Together | yisa-s-ai-orkestrasyon| 2 saat |
 | 26 | Token ekonomisi | Günlük limitler, direktörlük bütçeleri, franchise token | ai-protokol-sistemi Bölüm 7 | 1.5 saat |
 | 27 | Tenant izolasyonu | RLS, tenant_id filtreleme, veri katmanları (Global/Agregatif/Tenant/Patron) | komut-zinciri Bölüm 5 | 1 saat |
 | 28 | Güvenlik robotu (Siber) | 3 Duvar sistemi, log tarama, bypass önleme (KURAL 6) | ROBOT_GOREVLENDIRME 2.9 | 1.5 saat |

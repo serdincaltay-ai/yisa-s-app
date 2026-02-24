@@ -83,6 +83,7 @@ export default function VeliDashboardPage() {
         ) : (
           <div className="space-y-4">
             <h2 className="text-lg font-semibold text-gray-900">Çocuklarım</h2>
+            <p className="text-sm text-gray-600">Her kartta devamsızlık özeti (son yoklama, devam %, kalan ders) görünür; detay için karta tıklayın.</p>
             <div className="grid gap-4 sm:grid-cols-2">
               {children.map((c) => {
                 const att = attendanceMap[c.id]

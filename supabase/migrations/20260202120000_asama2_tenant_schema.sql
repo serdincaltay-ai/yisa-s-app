@@ -90,12 +90,30 @@ CREATE TABLE IF NOT EXISTS packages (
   created_at TIMESTAMPTZ DEFAULT NOW()
 );
 
--- Seed paketler
-INSERT INTO packages (name, slug, price, features, robot_quota, max_members, max_branches) VALUES
-  ('Starter', 'starter', 499, '["50 üye","1 şube","Temel robotlar","Veli paneli"]'::jsonb, 500, 50, 1),
-  ('Pro', 'pro', 999, '["200 üye","3 şube","Tüm robotlar","WhatsApp","Öncelikli destek"]'::jsonb, 2000, 200, 3),
-  ('Enterprise', 'enterprise', 0, '["Sınırsız","Çoklu şube","Özelleştirme","API erişimi"]'::jsonb, 10000, 9999, 99)
+-- Eski migration'dan gelen packages'ta eksik kolonlar (uzak DB: kod, isim, name, slug vb.)
+ALTER TABLE packages ADD COLUMN IF NOT EXISTS kod TEXT;
+ALTER TABLE packages ADD COLUMN IF NOT EXISTS isim TEXT;
+ALTER TABLE packages ADD COLUMN IF NOT EXISTS aylik_ucret DECIMAL(10,2);
+ALTER TABLE packages ADD COLUMN IF NOT EXISTS name TEXT;
+ALTER TABLE packages ADD COLUMN IF NOT EXISTS slug TEXT;
+ALTER TABLE packages ADD COLUMN IF NOT EXISTS price DECIMAL(10,2);
+ALTER TABLE packages ADD COLUMN IF NOT EXISTS features JSONB DEFAULT '[]'::jsonb;
+ALTER TABLE packages ADD COLUMN IF NOT EXISTS robot_quota INTEGER DEFAULT 1000;
+ALTER TABLE packages ADD COLUMN IF NOT EXISTS max_members INTEGER DEFAULT 50;
+ALTER TABLE packages ADD COLUMN IF NOT EXISTS max_branches INTEGER DEFAULT 1;
+
+-- ON CONFLICT (slug) için unique index gerekli
+CREATE UNIQUE INDEX IF NOT EXISTS idx_packages_slug ON packages(slug);
+
+-- Seed paketler (uzak packages: kod, isim, aylik_ucret NOT NULL)
+INSERT INTO packages (kod, isim, aylik_ucret, name, slug, price, features, robot_quota, max_members, max_branches) VALUES
+  ('starter', 'Starter', 499, 'Starter', 'starter', 499, '["50 üye","1 şube","Temel robotlar","Veli paneli"]'::jsonb, 500, 50, 1),
+  ('pro', 'Pro', 999, 'Pro', 'pro', 999, '["200 üye","3 şube","Tüm robotlar","WhatsApp","Öncelikli destek"]'::jsonb, 2000, 200, 3),
+  ('enterprise', 'Enterprise', 0, 'Enterprise', 'enterprise', 0, '["Sınırsız","Çoklu şube","Özelleştirme","API erişimi"]'::jsonb, 10000, 9999, 99)
 ON CONFLICT (slug) DO UPDATE SET
+  kod = EXCLUDED.kod,
+  isim = EXCLUDED.isim,
+  aylik_ucret = EXCLUDED.aylik_ucret,
   name = EXCLUDED.name,
   price = EXCLUDED.price,
   features = EXCLUDED.features,

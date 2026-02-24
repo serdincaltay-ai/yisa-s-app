@@ -6,6 +6,10 @@
 ALTER TABLE athletes ENABLE ROW LEVEL SECURITY;
 DROP POLICY IF EXISTS "Users see own tenant athletes" ON athletes;
 DROP POLICY IF EXISTS "Users manage own tenant athletes" ON athletes;
+DROP POLICY IF EXISTS "athletes_select" ON athletes;
+DROP POLICY IF EXISTS "athletes_insert" ON athletes;
+DROP POLICY IF EXISTS "athletes_update" ON athletes;
+DROP POLICY IF EXISTS "athletes_delete" ON athletes;
 
 CREATE POLICY "athletes_select" ON athletes FOR SELECT USING (
   auth.role() = 'authenticated' AND (
@@ -45,6 +49,10 @@ ALTER TABLE attendance ENABLE ROW LEVEL SECURITY;
 DROP POLICY IF EXISTS "Tenant users manage attendance" ON attendance;
 DROP POLICY IF EXISTS "Parent view attendance" ON attendance;
 DROP POLICY IF EXISTS "Service can manage attendance" ON attendance;
+DROP POLICY IF EXISTS "attendance_select" ON attendance;
+DROP POLICY IF EXISTS "attendance_insert" ON attendance;
+DROP POLICY IF EXISTS "attendance_update" ON attendance;
+DROP POLICY IF EXISTS "attendance_delete" ON attendance;
 
 CREATE POLICY "attendance_select" ON attendance FOR SELECT USING (
   auth.role() = 'authenticated' AND (
@@ -83,6 +91,10 @@ ALTER TABLE payments ENABLE ROW LEVEL SECURITY;
 DROP POLICY IF EXISTS "Tenant users manage payments" ON payments;
 DROP POLICY IF EXISTS "Parent view payments" ON payments;
 DROP POLICY IF EXISTS "Service can manage payments" ON payments;
+DROP POLICY IF EXISTS "payments_select" ON payments;
+DROP POLICY IF EXISTS "payments_insert" ON payments;
+DROP POLICY IF EXISTS "payments_update" ON payments;
+DROP POLICY IF EXISTS "payments_delete" ON payments;
 
 CREATE POLICY "payments_select" ON payments FOR SELECT USING (
   auth.role() = 'authenticated' AND (

@@ -18,7 +18,7 @@
 
 ### Okunamayan / ikili
 
-- `.docx`, `.pdf`, `.xlsx`, `.zip` — doğrudan metin çıkarılamadı.
+- ``, `.pdf`, `.xlsx`, `.zip` — doğrudan metin çıkarılamadı.
 
 ---
 

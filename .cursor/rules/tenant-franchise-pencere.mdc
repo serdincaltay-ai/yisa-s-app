@@ -1,0 +1,36 @@
+---
+description: tenant-yisa-s penceresi — Sadece Franchise paneli (Görev 9–10). Patron/Vitrin'e dokunma.
+alwaysApply: true
+---
+
+# Tenant-YİSA-S Protokol — Franchise Penceresi
+
+Bu workspace **tenant-yisa-s** klasörüyse, sadece Franchise paneli (*.yisa-s.com) işlerine göre hareket et.
+
+## 1. Bu klasörün görevi
+
+| Klasör | Site | Domain | Yapılacaklar |
+|--------|------|--------|---------------|
+| **tenant-yisa-s** | Franchise Paneli | *.yisa-s.com (örn. feneratasehir.yisa-s.com) | Yoklama, aidat, iletişim, belgeler, veli paneli |
+
+- **Supabase:** Aynı proje (bgtuqdkfppcjmtrdsldl). Veriyi `tenant_id` ve RLS ile filtrele.
+- **GitHub / Vercel:** Repo ve proje adı `tenant-yisa-s`.
+
+## 2. Sadece bu klasörde yap
+
+- `app/franchise/yoklama/` — Yoklama: GELDİ/GELMEDİ/MUAF, devamsızlık SMS tetiği
+- `app/franchise/aidatlar/` — Aidat yönetimi
+- `app/franchise/iletisim/` — Duyurular, anketler, eğitmen–veli mesajlaşma
+- `app/franchise/belgeler/` — Belge yönetimi (sağlık raporu, geçerlilik uyarıları)
+- `app/veli/dashboard/` — Veli dashboard, devamsızlık, online ödeme, mesajlaşma
+
+## 3. Yapma
+
+- Patron paneli (app-yisa-s) veya Vitrin (yisa-s-com) koduna dokunma.
+- Bu workspace'te app.yisa-s.com veya yisa-s.com route'u yazma.
+- Supabase URL'yi değiştirme (tek proje kullanılıyor).
+
+## 4. Referans
+
+- Görev listesi: **`docs/TENANT_PENCEREDE_YAPILACAKLAR.md`** — Cursor ile sırayla yapılacak işler (1–8: yoklama, aidat, iletişim, belgeler, veli dashboard, devamsızlık, online ödeme, mesajlaşma). Görev 27–34 eşlemesi orada.
+- API: SMS/cron vb. app-yisa-s'te; tenant sadece kendi UI ve tenant_id'li veri erişimi.
