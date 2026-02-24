@@ -1,6 +1,6 @@
 # YiSA-S Kapsamli Proje Dokumantasyonu
 
-> **Tarih:** 24 Subat 2026
+> **Tarih:** 24 Subat 2026 (Guncelleme: 24 Subat 2026 - Son commit taramasi)
 > **Repolar:** `app-yisa-s`, `tenant-yisa-s`, `yisa-s-com`
 > **Ortak Altyapi:** Supabase (PostgreSQL + Auth + RLS) | Vercel (Deploy) | Next.js
 
@@ -36,7 +36,7 @@ graph TB
     end
 
     subgraph "Supabase (Ortak Veritabani)"
-        DB[("PostgreSQL<br/>60+ Tablo<br/>RLS Aktif")]
+        DB[("PostgreSQL<br/>70+ Tablo<br/>47 Migration<br/>RLS Aktif")]
         AUTH["Supabase Auth<br/>JWT + Session"]
         RLS["Row Level Security<br/>anon / authenticated"]
     end
@@ -216,6 +216,8 @@ graph LR
 | 46 | `gelisim_olcum` | Gelisim olcum kayitlari |
 | 47 | `sozlesme_onaylari` | Sozlesme onaylari |
 | 48 | `cio_analysis_logs` | CIO analiz loglari |
+| 49 | `tenant_announcements` | Tenant duyurulari (baslik, icerik, tip, yayinlanma tarihi) |
+| 50 | `tenant_surveys` | Tenant anketleri (baslik, sorular JSONB, durum) |
 
 ### 4.2 yisa-s-com Tablolari (Vitrin Semasi)
 
@@ -249,6 +251,8 @@ graph LR
 | 9 | `child_development_tables` | Cocuk gelisim tablolari |
 | 10 | `audit_log` | Denetim kayitlari |
 | 11 | `expenses` | Gider tablolari |
+| 12 | `reference_values` | Sporcu referans degerleri (yas, cinsiyet, olcum tipi) |
+| 13 | `audit_log` | Sistem denetim kayitlari |
 
 ### 4.4 Onemli View'lar
 
@@ -292,9 +296,9 @@ graph LR
 | `direktorlukler/config.ts` | Direktorluk konfigurasyonu |
 | `emails/resend.ts` | Resend email entegrasyonu |
 | `middleware/rate-limit.ts` | Rate limiting |
-| `types/index.ts` | Tip tanimlari |
+| `types/index.ts` | Tip tanimlari (DemoRequest, CeoTask vb.) |
 | `utils/slug.ts` | Slug yardimcilari |
-| `utils.ts` | Genel yardimcilar |
+| `utils.ts` | Genel yardimcilar (cn, formatDate) |
 
 ### 5.2 tenant-yisa-s/lib/
 
@@ -389,9 +393,10 @@ graph LR
 |-------------|----------|
 | **ui/** (14 dosya) | Temel UI bilesenleri: accordion, avatar, badge, button, card, dropdown-menu, input, label, progress, table, tabs, textarea, tooltip |
 | **patron/** | |
-| `ApprovalQueue.tsx` | Onay kuyrugu bileşeni |
+| `ApprovalQueue.tsx` | Onay kuyrugu bileseni |
 | `AssistantChat.tsx` | Asistan sohbet paneli |
-| `RobotStatusGrid.tsx` | Robot durum izgarası |
+| `RobotStatusGrid.tsx` | Robot durum izgarasi |
+| `BrainTeamChat.tsx` | **[YENI]** Beyin takimi sohbet bileseni |
 | **franchise-panel/** | |
 | `dashboard-header.tsx` | Franchise dashboard baslik |
 | `stats-overview.tsx` | Istatistik ozeti |
@@ -645,70 +650,175 @@ graph LR
 
 ## 11. Sayfa/Route Yapisi
 
-### 11.1 app-yisa-s Sayfalari
+### 11.1 app-yisa-s Sayfalari (v0 Futuristic Dashboard - Detayli)
 
-| Route | Aciklama |
-|-------|----------|
-| `/` | Ana sayfa |
-| `/patron/dashboard` | Patron dashboard (demo talepleri dahil) |
-| `/patron/beyin-takimi` | Beyin takimi (AI sohbet + karar tablosu) |
-| `/patron/celf` | CELF motor paneli |
-| `/patron/direktorlukler` | Direktorlukler listesi |
-| `/patron/direktorlukler/[slug]` | Direktorluk detay |
-| `/patron/komut-merkezi` | Komut merkezi |
-| `/patron/onay-kuyrugu` | Onay kuyrugu |
-| `/patron/tasks` | Gorev kanban panosu |
-| `/patron/tasks/[id]` | Gorev detay |
-| `/patron/tenants` | Tenant yonetimi |
-| `/patron/tenants/[id]` | Tenant detay |
-| `/patron/status` | Sistem durum |
-| `/dashboard/beyin-takimi` | Dashboard beyin takimi |
-| `/dashboard/gorev-panosu` | Gorev panosu |
-| `/dashboard/kasa-defteri` | Kasa defteri |
-| `/dashboard/komut-merkezi` | Komut merkezi |
-| `/vitrin` | Vitrin sayfasi |
+#### Patron Paneli Sayfalari
 
-### 11.2 tenant-yisa-s Sayfalari
+| Route | Aciklama | Icerik & Bilesenler |
+|-------|----------|--------------------|
+| `/` | Ana sayfa | Patron paneline yonlendirme |
+| `/patron/dashboard` | **Patron Dashboard** | 4 ozet kart (bekleyen basvuru, onay bekleyen odeme, toplam gider, demo talepleri) + DemoRequestsSection (demo_requests tablosu) |
+| `/patron/beyin-takimi` | **Beyin Takimi** | 4 robot (CELF/Claude, Veri/Gemini, Guvenlik/GPT-4o, YiSA-S/Together) + 4 mod (Tekli, Coklu, Zincir, Hepsi) + RobotList + ChatPanel + ModeSelector |
+| `/patron/celf` | **CELF Organizasyon Paneli** | Epik listesi (celf2/epics API) + Son gorevler (celf2/board API) + Direktorluk kuyrugu + Komut merkezine yonlendirme |
+| `/patron/direktorlukler` | **12 Direktorluk Listesi** | DirectorCard grid: Hukuk, Muhasebe, Teknik, Tasarim, Pazarlama, IK, AR-GE, Guvenlik, Veri, Operasyon, Musteri, Strateji — her biri neon renkli ikon + aciklama |
+| `/patron/direktorlukler/[slug]` | **Direktorluk Detay** | KomutPanel (komut gonderme) + Gorev gecmisi listesi (/api/motor endpoint) + status badge (beklemede/islendi) |
+| `/patron/komut-merkezi` | **C2 Komut Merkezi** (Ana) | 4 tab: Komut Merkezi, Gorev Panosu, Patron Havuzu, Merkez Kasa. 12 direktorluk kolonlu Kanban (CTO/CFO/CMO/CPO/CLO/CISO/CDO/CSPO/CSO/CHRO/CCO/CRDO). Komut Ver + Brain Team ile Gonder + Parcala. Target renkleri (website/template_pool/franchise_app/central_finance/patron_internal). LedgerForm (gelir/gider girisi) |
+| `/patron/onay-kuyrugu` | **10'a Cikart — Patron Havuzu** | PatronHavuzu bileseni — patron komutlari ve demo taleplerini inceleme, onaylama, reddetme |
+| `/patron/tasks` | **Gorev Yonetimi Kanban** | TasksKanban (ceo_tasks tablosu) + tenant listesi + status filtreleme |
+| `/patron/tasks/[id]` | Gorev Detay | Tekil gorev detayi |
+| `/patron/tenants` | **Tenant Izleme** | TenantsList + ozet (toplam tenant, aktif, toplam sporcu, toplam gelir) + sporcu/personel/gelir detaylari her tenant icin |
+| `/patron/tenants/[id]` | **Tenant Detay** | TenantDetail: sporcu sayisi, son 5 sporcu, personel, kasa (bu ay gelir/gider), toplam gelir, yoklama sayisi, kredi ozeti, sehir/ilce/telefon |
+| `/patron/status` | **Sistem Durumu** | StatusClient: 6 tablo sayaci (tenants, athletes, attendance, payments, ceo_tasks, celf_logs) + son 5 gorev + son 5 CELF logu |
 
+#### Dashboard Sayfalari
+
+| Route | Aciklama | Icerik & Bilesenler |
+|-------|----------|--------------------|
+| `/dashboard/beyin-takimi` | **Beyin Takimi (Dashboard)** | Model secici (Claude/GPT-4/Gemini) + Gorev gonderme (prompt + context) + Yanit alani + Gorev gecmisi |
+| `/dashboard/gorev-panosu` | **Gorev Panosu** | 12 direktorluk kolonlu Kanban + Epic filtre + Ilerleme cubugu + Gorev detay modal (Uygula/Reddet) + output_result onizleme |
+| `/dashboard/kasa-defteri` | **Kasa Defteri** | 3 ozet kart (toplam gider, onay bekleyen, kayit sayisi) + gider tablosu (tarih, kategori, tutar) |
+| `/dashboard/komut-merkezi` | **Komut Merkezi** | Patron komutu textarea + Analiz Et + Tumunu Dagit (sira ile execute) + Onayla + Uygula (tumu) + renk kodlu durum kartlari (queued/running/completed/failed/needs_review) |
+
+#### Diger
+
+| Route | Aciklama | Icerik & Bilesenler |
+|-------|----------|--------------------|
+| `/vitrin` | **Franchise Vitrin Sayfasi** | Hero animasyonu (kayan yazi) + 5 panel carousel (Franchise, Antrenor, Tesis Muduru, Franchise Sahibi, Tesis Ana Sayfa) + VitrinPackagePrice (canli fiyat hesaplama: web/logo/sablon/tesis/robot) + referans deger tablosu (aidat, ogrenci, gelir, gider, kar) |
+
+#### app-yisa-s Ozel Bilesenler
+
+| Bilesen | Aciklama |
+|---------|----------|
+| `DashboardWidgetStrip` | 5 widget: Token/Maliyet, Robot Durum, Onay Sayisi, Baslangic Gorevleri, API Maliyet — siralama ve gorunurluk ayarlanabilir (localStorage) |
+| `TokenMaliyetWidget` | Token maliyet takibi widget'i |
+| `WidgetlerConfigPanel` | Widget konfigurasyonu (drag & drop siralama, gorunurluk toggle) |
+
+#### app-yisa-s API Envanteri (Tam Liste)
+
+| API Grubu | Endpointler | Aciklama |
+|-----------|-------------|----------|
+| **CELF v1** | `/api/celf/approve`, `/api/celf/execute`, `/api/celf/parse`, `/api/celf/task` | CELF motor islemleri |
+| **CELF v1 Tasks** | `/api/celf/tasks/command`, `/api/celf/tasks/board`, `/api/celf/tasks/execute/[taskId]`, `/api/celf/tasks/apply/[taskId]`, `/api/celf/tasks/test-providers` | CELF gorev yonetimi |
+| **CELF v2** | `/api/celf2/command`, `/api/celf2/plan`, `/api/celf2/board`, `/api/celf2/epics`, `/api/celf2/lock`, `/api/celf2/complete`, `/api/celf2/approve`, `/api/celf2/renew-lease`, `/api/celf2/central-ledger` | CELF v2 gelismis gorev yonetimi |
+| **Brain Team** | `/api/brain-team/parse-epic`, `/api/brain-team/distribute-tasks` | Beyin takimi epic parse ve gorev dagitimi |
+| **Brain** | `/api/brain`, `/api/brain-responses` | AI beyin sorgu/yanit |
+| **CEO Tasks** | `/api/ceo-tasks`, `/api/ceo-tasks/[id]` | CEO gorev CRUD |
+| **Child Development** | `/api/child-development/assessment`, `/api/child-development/athlete`, `/api/child-development/baseline`, `/api/child-development/program`, `/api/child-development/report/[athleteId]`, `/api/child-development/score/[athleteId]`, `/api/child-development/session` | Cocuk gelisim modulu (7 endpoint) |
+| **Patron** | `/api/patron/tenants`, `/api/patron/tenants/[id]`, `/api/patron-havuzu` | Patron tenant yonetimi |
+| **Diger** | `/api/ai-chat`, `/api/approve-demo`, `/api/reject-demo`, `/api/demo-requests/*`, `/api/expenses`, `/api/files`, `/api/kasa/approve/[paymentId]`, `/api/messages`, `/api/motor`, `/api/robot-stats`, `/api/robot-status`, `/api/token-costs`, `/api/vitrin/calculate-price`, `/api/templates`, `/api/tenants`, `/api/sim-updates`, `/api/supabase-check`, `/api/task-assignments`, `/api/auth`, `/api/api-status`, `/api/constitution`, `/api/decisions`, `/api/decision-items`, `/api/cron/aidat-reminder` | Genel API endpointleri |
+
+### 11.2 tenant-yisa-s Sayfalari (Tam Liste — 60+ sayfa)
+
+#### Auth & Giris
 | Route | Aciklama |
 |-------|----------|
 | `/` | Ana sayfa (subdomain'e gore yonlendirme) |
 | `/auth/login` | Giris |
-| `/patron` | Patron giris |
-| `/dashboard/*` | Patron dashboard (15+ alt sayfa) |
-| `/franchise` | Franchise paneli |
-| `/panel/*` | Franchise isletme paneli (ogrenciler, odemeler, yoklama, program, aidat) |
-| `/antrenor/*` | Antrenor paneli (sporcular, yoklama, olcum) |
-| `/veli/*` | Veli paneli (cocuk, gelisim, kredi, duyurular) |
+| `/auth/reset-password` | Sifre sifirlama |
+| `/patron/login` | Patron giris |
+| `/uye-ol` | Uye kayit |
+
+#### Patron Dashboard (15+ alt sayfa)
+| Route | Aciklama |
+|-------|----------|
+| `/patron` | Patron ana sayfa |
+| `/dashboard` | Ana dashboard |
+| `/dashboard/celf` | CELF paneli |
+| `/dashboard/directors` | Direktorler |
+| `/dashboard/facilities` | Tesisler |
+| `/dashboard/franchise-yonetim` | Franchise yonetimi |
+| `/dashboard/franchises` | Franchise listesi |
+| `/dashboard/franchises/[id]` | Franchise detay |
+| `/dashboard/genis-ekran` | Genis ekran gorunumu |
+| `/dashboard/kasa-defteri` | Kasa defteri |
+| `/dashboard/messages` | Mesajlar |
+| `/dashboard/onay-kuyrugu` | Onay kuyrugu |
+| `/dashboard/ozel-araclar` | Ozel araclar |
+| `/dashboard/reports` | Raporlar |
+| `/dashboard/robots` | Robot yonetimi |
+| `/dashboard/sablonlar` | Sablonlar |
+| `/dashboard/settings` | Ayarlar |
+| `/dashboard/users` | Kullanici yonetimi |
+
+#### Franchise Paneli
+| Route | Aciklama |
+|-------|----------|
+| `/franchise` | Franchise ana sayfa |
+| `/franchise/aidatlar` | **[YENI]** Aidat yonetimi |
+| `/franchise/belgeler` | **[YENI]** Belge yonetimi |
+| `/franchise/iletisim` | **[YENI]** Iletisim |
+| `/franchise/yoklama` | **[YENI]** Yoklama kaydi |
+
+#### Panel (Isletme Yonetimi)
+| Route | Aciklama |
+|-------|----------|
+| `/panel/ogrenciler` | Ogrenci listesi |
+| `/panel/ogrenciler/[id]` | Ogrenci detay |
+| `/panel/odemeler` | Odemeler |
+| `/panel/yoklama` | Yoklama |
+| `/panel/program` | Ders programi |
+| `/panel/aidat` | Aidat yonetimi |
+
+#### Antrenor Paneli
+| Route | Aciklama |
+|-------|----------|
+| `/antrenor` | Antrenor ana sayfa |
+| `/antrenor/sporcular` | Sporcu listesi |
+| `/antrenor/sporcular/[id]` | Sporcu detay |
+| `/antrenor/sporcular/[id]/gelisim` | Sporcu gelisim takibi |
+| `/antrenor/yoklama` | Yoklama |
+| `/antrenor/olcum` | Olcum kaydi |
+
+#### Veli Paneli
+| Route | Aciklama |
+|-------|----------|
+| `/veli` | Veli ana sayfa |
+| `/veli/giris` | Veli giris |
+| `/veli/dashboard` | Veli dashboard |
+| `/veli/cocuk/[id]` | Cocuk detay |
+| `/veli/gelisim` | Gelisim takibi |
+| `/veli/kredi` | Dijital kredi |
+| `/veli/duyurular` | Duyurular |
+| `/veli/mesajlar` | **[YENI]** Veli mesajlari |
+| `/veli/odeme` | **[YENI]** Veli odeme |
+
+#### Diger Sayfalar
+| Route | Aciklama |
+|-------|----------|
 | `/vitrin` | Vitrin |
-| `/kasa/*` | Kasa defteri + rapor |
-| `/sozlesme/*` | Sozlesme (franchise, personel, veli) |
+| `/kasa` | Kasa defteri |
+| `/kasa/rapor` | Kasa rapor |
+| `/sozlesme/franchise` | Franchise sozlesmesi |
+| `/sozlesme/personel` | Personel sozlesmesi |
+| `/sozlesme/veli` | Veli sozlesmesi |
 | `/demo` | Demo sayfasi |
 | `/fiyatlar` | Fiyatlandirma |
 | `/kurulum` | Kurulum |
 | `/magaza` | Token magazasi |
 | `/personel` | Personel yonetimi |
 | `/tesis` | Tesis yonetimi |
-| `/uye-ol` | Uye kayit |
 
-### 11.3 yisa-s-com Sayfalari
+### 11.3 yisa-s-com Sayfalari (Tam Liste — 17 sayfa)
 
-| Route | Aciklama |
-|-------|----------|
-| `/` | Landing page (hero, features, pricing vb.) |
-| `/demo` | Demo talep formu |
-| `/franchise` | Franchise tanitim + basvuru |
-| `/fiyatlandirma` | Fiyatlandirma |
-| `/ozellikler` | Ozellikler |
-| `/hakkimizda` | Hakkimizda |
-| `/blog` | Blog |
-| `/fuar` | Fuar sayfasi |
-| `/robot` | NeebChat robot tanitim |
-| `/sablonlar` | Sablon galeri |
-| `/akular` | Aku (motor) durum sayfasi |
-| `/giris` | Giris |
-| `/auth/login` | Auth login |
-| `/panel/*` | Admin panel (demo-listesi, bayilik-listesi) |
+| Route | Aciklama | Icerik |
+|-------|----------|--------|
+| `/` | Landing page | HeroSection + FeaturesSection + BranslarSection + HizmetlerSection + PricingPreview + StatsSection + CTASection + DemoVideoSection + PHVSection + AIEnginesSection + RobotFaceSection + FuarBanner |
+| `/demo` | Demo talep formu | Demo basvuru formu + Supabase'e kayit |
+| `/franchise` | Franchise tanitim + basvuru | Franchise basvuru formu |
+| `/fiyatlandirma` | Fiyatlandirma | Paket fiyatlari |
+| `/ozellikler` | Ozellikler | Platform ozellikleri |
+| `/hakkimizda` | Hakkimizda | Sirket bilgileri |
+| `/blog` | Blog | Blog yazilari |
+| `/fuar` | **[YENI]** Fuar Hesaplama | Tesis potansiyeli hesaplayici (m2, kira, personel, ogrenci, aidat → gelir/gider/kar tahmini + YiSA-S tasarruf yuzdesi) |
+| `/fuar/tour` | **[YENI]** 90 sn Fuar Turu | 6 adimli otomatik tur (15 sn/adim): YiSA-S Nedir, 900 Alan Degerlendirme, 6 AI Motoru, PHV Takibi, Veli&Egitmen Paneli, Demo Talep + QR kod gosterimi |
+| `/robot` | NeebChat robot tanitim | Robot tanitim sayfasi |
+| `/sablonlar` | Sablon galeri | Sablon kutuphanesi |
+| `/akular` | Aku (motor) durum sayfasi | Entegrasyon durumlari |
+| `/giris` | Giris | Kullanici giris |
+| `/auth/login` | Auth login | Supabase auth giris |
+| `/panel` | Admin panel | Panel ana sayfa |
+| `/panel/demo-listesi` | Demo listesi | Demo talepleri yonetimi |
+| `/panel/bayilik-listesi` | Bayilik listesi | Franchise basvuru yonetimi |
 
 ---
 
@@ -759,35 +869,53 @@ graph LR
 ```
 YiSA-S Ekosistemi
 |
-|-- yisa-s-com (Vitrin)
-|   |-- Landing page, Demo form, Franchise basvuru
+|-- yisa-s-com (Vitrin) — 17 sayfa
+|   |-- Landing page (12+ bilesen: Hero, Features, Branslar, Hizmetler, Pricing, Stats, CTA, DemoVideo, PHV, AI Engines, RobotFace, FuarBanner)
+|   |-- Demo form, Franchise basvuru
 |   |-- NeebChat robot (Claude varsayilan)
 |   |-- CRM sistemi (lead stages: C/E/O/J-A-O)
+|   |-- [YENI] Fuar hesaplama + 90 sn QR turlu fuar demo modu
 |   |-- Admin panel (demo listesi, bayilik listesi)
 |   |-- Deploy: Vercel + Railway (alternatif)
 |
-|-- tenant-yisa-s (Ana Yonetici)
-|   |-- Patron Dashboard (15+ sayfa)
-|   |-- Franchise Paneli (ogrenci, odeme, yoklama, program)
-|   |-- Veli Paneli (cocuk, gelisim, kredi)
-|   |-- Antrenor Paneli (sporcular, yoklama, olcum)
+|-- tenant-yisa-s (Ana Yonetici) — 60+ sayfa, 90+ API, 47 migration
+|   |-- Patron Dashboard (18 alt sayfa: celf, directors, facilities, franchises, kasa, messages, onay-kuyrugu, ozel-araclar, reports, robots, sablonlar, settings, users, genis-ekran, franchise-yonetim)
+|   |-- Franchise Paneli (ogrenci, odeme, yoklama, program, [YENI] aidatlar, belgeler, iletisim)
+|   |-- Veli Paneli (cocuk, gelisim, kredi, duyurular, [YENI] mesajlar, odeme)
+|   |-- Antrenor Paneli (sporcular, sporcu detay, sporcu gelisim, yoklama, olcum)
 |   |-- Robot Sistemi (9 katman hiyerarsi)
 |   |-- CELF Merkez (13 direktorluk)
 |   |-- AI Motor Entegrasyonu (7 AI + 4 aksiyon provider)
+|   |-- [YENI] Patron direct-ai endpoint
+|   |-- [YENI] Franchise duyurular, anketler, saglik kayitlari, aidat hatirlatma
 |   |-- Subdomain Yonetimi (franchise bazli)
 |   |-- Vercel Cron (COO gorevler: gunluk 02:00 UTC)
 |   |-- Deploy: Vercel + Railway (alternatif)
 |
-|-- app-yisa-s (Patron Uygulama)
-|   |-- Patron ozel dashboard
-|   |-- Beyin Takimi (AI multi-provider chat)
-|   |-- CELF v2 gorev panosu (kanban)
-|   |-- Cocuk gelisim modulu
+|-- app-yisa-s (Patron Uygulama) — 18 sayfa, 60+ API, v0 futuristic UI
+|   |-- Patron Dashboard (4 ozet kart + demo talepleri)
+|   |-- Beyin Takimi (4 robot: CELF/Veri/Guvenlik/YiSA-S + 4 mod: Tekli/Coklu/Zincir/Hepsi)
+|   |-- C2 Komut Merkezi (4 tab: Komut/Gorev Panosu/Patron Havuzu/Merkez Kasa + 12 direktorluk kanban)
+|   |-- CELF Organizasyon Paneli (Epikler + Gorevler)
+|   |-- 12 Direktorluk sayfasi (Hukuk/Muhasebe/Teknik/Tasarim/Pazarlama/IK/AR-GE/Guvenlik/Veri/Operasyon/Musteri/Strateji)
+|   |-- Tenant Izleme (sporcu/personel/gelir detayli)
+|   |-- Gorev Kanban (ceo_tasks)
+|   |-- Sistem Durumu (6 tablo sayaci + son loglar)
+|   |-- Dashboard: Gorev Panosu (12 kolonlu kanban + epic filtre + ilerleme cubugu)
+|   |-- Dashboard: Komut Merkezi (Analiz Et + Tumunu Dagit + Onayla + Uygula)
+|   |-- Dashboard: Kasa Defteri (gider takibi)
+|   |-- Dashboard: Beyin Takimi (Claude/GPT-4/Gemini model secici + gorev gecmisi)
+|   |-- Vitrin (5 panel carousel + canli fiyat hesaplama + referans degerler tablosu)
+|   |-- Cocuk gelisim modulu (7 API endpoint: assessment, athlete, baseline, program, report, score, session)
 |   |-- CORS: yisa-s.com'dan API erisimi
+|   |-- 5 Dashboard Widget (Token/Maliyet, Robot Durum, Onay Sayisi, Gorevler, API Maliyet — siralama/gorunurluk ayarlanabilir)
 |   |-- Deploy: Vercel
 |
 |-- Supabase (Ortak)
-    |-- 60+ tablo, 6+ view
+    |-- 70+ tablo (47 migration dosyasi + app-yisa-s ek migrasyonlari), 6+ view
+    |-- [YENI] tenant_announcements + tenant_surveys tablolari
+    |-- [YENI] reference_values + audit_log (app-yisa-s) tablolari
+    |-- Migration isimleri yeniden adlandirildi (timestamp formatina: YYYYMMDDHHMMSS)
     |-- RLS (Row Level Security) aktif
     |-- Auth (JWT + session)
     |-- Roller: 13 seviye (Patron → Misafir Sporcu)

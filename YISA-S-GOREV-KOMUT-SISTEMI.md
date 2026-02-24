@@ -1,6 +1,6 @@
 # YiSA-S GOREV KOMUT SISTEMI
 
-**Tarih:** 24 Subat 2026
+**Tarih:** 24 Subat 2026 (Guncelleme: 24 Subat 2026 - Tutarlilik kontrolu)
 **Sistem:** Patron Robot Orchestrator (PLAN → BUILD → CHECK → PREFLIGHT → RELEASE)
 **Modlar:** LIVE (canli) | DEMO (simulasyon)
 **Asamalar:** STAGING → CANARY → PROD
@@ -542,21 +542,23 @@ stateDiagram-v2
 
 ## 5. CELF DIREKTORLUK ESLESMESI
 
-| Direktorluk | Sorumluluk | Ilgili Araclar |
-|-------------|-----------|----------------|
-| CSPO (Chief Sport Product Officer) | Spor urunu gelistirme | Devin, Cursor, V0 |
-| CTO | Teknik altyapi | Devin, Cursor, GitHub |
-| CMO | Pazarlama | ManyChat, Meta, Canva |
-| CFO | Finans | - (Excel/Supabase) |
-| COO | Operasyon | Devin, ManyChat |
-| CIO | Strateji | Claude, GPT |
-| CDO | Veri | Gemini, Supabase |
-| CLO | Hukuk/KVKK | Claude |
-| CHRO | Insan kaynaklari | - |
-| CXO | Musteri deneyimi | V0, ManyChat |
-| CSO | Guvenlik | Claude (denetci) |
-| CCO | Icerik | Claude, Canva, CapCut |
-| CRO | Gelir | Meta, ManyChat, Stripe |
+| Direktorluk | Slug (config.ts) | AI Provider | Sorumluluk | Ilgili Araclar |
+|-------------|-----------------|-------------|-----------|----------------|
+| **CTO** | teknik | Claude | Teknik altyapi, kod, API, deployment | Devin, Cursor, GitHub |
+| **CFO** | muhasebe | Together | Butce, maliyet, fiyatlama, token takibi | - (Excel/Supabase) |
+| **CMO** | pazarlama | GPT | Pazarlama, icerik, reklam, iletisim | ManyChat, Meta, Canva, Fal AI |
+| **CPO** | tasarim | GPT | UI/UX tasarim, sayfa yapisi, kullanici akisi | V0, Fal AI, Vercel |
+| **COO** | operasyon | Claude | Operasyon, is kuyrugu, surec, kaynak dagitimi | Devin, ManyChat |
+| **CHRO** | ik | GPT | Personel, egitim, performans | - |
+| **CLO** | hukuk | Claude | Hukuk, KVKK, sozlesme, mevzuat uyumu | Claude |
+| **CSPO** | - | Gemini | Spor bilim, cocuk gelisim, antrenman sablonlari | Fal AI |
+| **CCO** | musteri | GPT | Musteri iliskileri, veli iletisimi, destek | V0, ManyChat |
+| **CISO** | guvenlik | Claude | Siber guvenlik, 3 Duvar, erisim kontrolu, audit | GitHub |
+| **CDO** | veri | Together | Veri yonetimi, analitik, raporlama | GitHub, Gemini |
+| **CSO** | strateji | Gemini | Vizyon, buyume stratejisi, rekabet analizi | Claude, GPT |
+
+> **Not:** Direktorluk slug'lari `app-yisa-s/lib/direktorlukler/config.ts` dosyasinda tanimlidir.
+> AI provider eslesmesi `app-yisa-s/lib/celf-directorate-config.ts` dosyasindaki `DIRECTORATE_AI_MAP`'ten alinmistir.
 
 ---
 
