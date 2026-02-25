@@ -1,6 +1,7 @@
 import { NextRequest, NextResponse } from 'next/server'
 import { createClient } from '@supabase/supabase-js'
 import { requirePatronOrFlow } from '@/lib/auth/api-auth'
+import { provisionTenant, rejectDemoRequest } from '@/lib/services/tenant-provisioning'
 
 export const dynamic = 'force-dynamic'
 
@@ -9,13 +10,6 @@ function getSupabase() {
   const key = process.env.SUPABASE_SERVICE_ROLE_KEY ?? process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY
   if (!url || !key) return null
   return createClient(url, key)
-}
-
-function slugify(s: string): string {
-  return s
-    .toLowerCase()
-    .replace(/[^a-z0-9]+/g, '-')
-    .replace(/^-|-$/g, '') || 'tesis'
 }
 
 /** Patron paneli: Demo taleplerini listele */
@@ -52,136 +46,32 @@ export async function POST(req: NextRequest) {
       if (!id || !['approve', 'reject'].includes(decision)) {
         return NextResponse.json({ error: 'id ve decision (approve|reject) gerekli.' }, { status: 400 })
       }
-      const supabase = getSupabase()
-      if (!supabase) return NextResponse.json({ error: 'Sunucu yapılandırma hatası.' }, { status: 500 })
-
-      const { data: row } = await supabase.from('demo_requests').select('*').eq('id', id).single()
-      if (!row) return NextResponse.json({ error: 'Talep bulunamadı.' }, { status: 404 })
-      if (row.status !== 'new') {
-        return NextResponse.json({ error: 'Bu talep zaten işlendi.' }, { status: 400 })
-      }
 
       if (decision === 'reject') {
-        await supabase.from('demo_requests').update({ status: 'rejected' }).eq('id', id)
-        return NextResponse.json({ ok: true, message: 'Talep reddedildi.' })
+        const reason = typeof body.reason === 'string' ? body.reason.trim() : undefined
+        const result = await rejectDemoRequest(id, reason)
+        if (!result.ok) {
+          return NextResponse.json({ error: result.message }, { status: 400 })
+        }
+        return NextResponse.json(result)
       }
 
-      // approve: tenant oluştur (Vitrin veya demo)
-      const isVitrin = row.source === 'vitrin'
-      const baseName = row.name?.trim() || row.facility_type || 'Yeni Tesis'
-      const cityPart = row.city ? ` ${row.city}` : ''
-      const tenantName = `${baseName}${cityPart}`.trim() || 'Yeni Tesis'
-      const baseSlug = slugify(tenantName)
-      const slug = `${baseSlug}-${String(row.id).slice(0, 8)}`
-
-      const { data: newTenant, error: insertErr } = await supabase
-        .from('tenants')
-        .insert({
-          ad: tenantName,
-          name: tenantName,
-          slug,
-          durum: 'aktif',
-          owner_id: null,
-          package_type: 'starter',
-        } as Record<string, unknown>)
-        .select('id')
-        .single()
-
-      if (insertErr) {
-        console.error('[demo-requests] Tenant insert:', insertErr)
-        return NextResponse.json({ error: 'Tenant oluşturulamadı: ' + insertErr.message }, { status: 500 })
+      // approve: Full tenant provisioning chain
+      // Steps: tenant create -> user setup -> franchise record -> subdomain -> seed data -> status update
+      const result = await provisionTenant(id)
+      if (!result.ok) {
+        const status = result.error_step === 'validation' ? 400
+          : result.error_step === 'fetch' ? 404
+          : 500
+        return NextResponse.json({
+          error: result.message,
+          steps_completed: result.steps_completed,
+          error_step: result.error_step,
+          error_detail: result.error_detail,
+        }, { status })
       }
 
-      const tenantId = newTenant?.id
-
-      // E-posta ile kullanıcı var mı? Yoksa oluştur; varsa user_tenants'a ata
-      const reqEmail = (row.email ?? '').trim().toLowerCase()
-      let tempPassword: string | undefined
-      if (reqEmail && tenantId) {
-        try {
-          const { data: listData } = await supabase.auth.admin.listUsers({ perPage: 1000 })
-          const existingUser = listData?.users?.find((u) => (u.email ?? '').toLowerCase() === reqEmail)
-          if (existingUser) {
-            await supabase.from('tenants').update({ owner_id: existingUser.id }).eq('id', tenantId)
-            await supabase.from('user_tenants').upsert(
-              { user_id: existingUser.id, tenant_id: tenantId, role: 'owner' },
-              { onConflict: 'user_id,tenant_id' }
-            )
-          } else {
-            // Kullanıcı yok — otomatik oluştur (geçici şifre)
-            const chars = 'abcdefghjkmnpqrstuvwxyz23456789'
-            tempPassword = Array.from({ length: 12 }, () => chars[Math.floor(Math.random() * chars.length)]).join('')
-            const { data: newUser, error: createErr } = await supabase.auth.admin.createUser({
-              email: reqEmail,
-              password: tempPassword,
-              email_confirm: true,
-              user_metadata: { role: 'franchise', tenant_slug: slug },
-            })
-            if (!createErr && newUser?.user) {
-              await supabase.from('tenants').update({ owner_id: newUser.user.id }).eq('id', tenantId)
-              await supabase.from('user_tenants').upsert(
-                { user_id: newUser.user.id, tenant_id: tenantId, role: 'owner' },
-                { onConflict: 'user_id,tenant_id' }
-              )
-            } else {
-              tempPassword = undefined
-            }
-          }
-        } catch (_) {
-          tempPassword = undefined
-        }
-      }
-
-      // Vitrin: franchise kaydı + tenant_purchases (seçilen paketler)
-      if (isVitrin && tenantId) {
-        let notesObj: { sablonId?: string; tesisSablonId?: string; toplamTek?: number; aylik?: number } = {}
-        try {
-          notesObj = typeof row.notes === 'string' ? JSON.parse(row.notes) : {}
-        } catch {
-          /* notes parse edilemezse boş */
-        }
-        const nameParts = baseName.trim().split(/\s+/)
-        const yetkiliAd = nameParts[0] || 'Tesis'
-        const yetkiliSoyad = nameParts.slice(1).join(' ') || 'Sahibi'
-        try {
-          await supabase.from('franchises').insert({
-            tenant_id: tenantId,
-            isletme_adi: baseName,
-            yetkili_ad: yetkiliAd,
-            yetkili_soyad: yetkiliSoyad,
-            durum: 'aktif',
-            il: row.city ?? null,
-          } as Record<string, unknown>)
-        } catch (_) {
-          /* franchises tablosu yoksa veya hata varsa devam et */
-        }
-        try {
-          await supabase.from('tenant_purchases').insert({
-            tenant_id: tenantId,
-            product_key: `vitrin_${notesObj.sablonId ?? 'modern'}_${notesObj.tesisSablonId ?? 'temel'}`,
-            product_name: `Vitrin paket: ${notesObj.sablonId ?? 'modern'} + ${notesObj.tesisSablonId ?? 'temel'}`,
-            amount: notesObj.toplamTek ?? 0,
-            para_birimi: 'TRY',
-            odeme_onaylandi: true,
-            approved_at: new Date().toISOString(),
-          })
-        } catch (_) {
-          /* tenant_purchases hatası */
-        }
-      }
-
-      await supabase.from('demo_requests').update({ status: 'converted' }).eq('id', id)
-      return NextResponse.json({
-        ok: true,
-        message: tempPassword
-          ? `Talep onaylandı. Tenant oluşturuldu. Firma sahibi hesabı açıldı. Giriş: ${reqEmail} / Geçici şifre: ${tempPassword} — İlk girişte değiştirsin.`
-          : 'Talep onaylandı, tenant oluşturuldu.',
-        tenant_id: tenantId,
-        slug,
-        temp_password: tempPassword,
-        login_email: tempPassword ? reqEmail : undefined,
-        franchise_created: isVitrin,
-      })
+      return NextResponse.json(result)
     }
 
     // Ödeme kaydı — Patron: "Merve ödedi" → bu talep için ödeme alındı işaretle
