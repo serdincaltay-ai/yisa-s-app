@@ -1,5 +1,5 @@
-// YİSA-S Service Worker v2.0
-const CACHE_NAME = 'yisa-s-v4'
+// YİSA-S Service Worker v3.0 — Inter font + scroll-snap PWA
+const CACHE_NAME = 'yisa-s-v5'
 const OFFLINE_URL = '/offline.html'
 
 // Önbelleğe alınacak statik dosyalar
@@ -12,6 +12,9 @@ const STATIC_ASSETS = [
   '/icon.svg',
   '/manifest.json'
 ]
+
+// Google Fonts (Inter) önbellek adı
+const FONT_CACHE_NAME = 'yisa-s-fonts-v1'
 
 // Service Worker kurulumu
 self.addEventListener('install', (event) => {
@@ -70,11 +73,30 @@ self.addEventListener('fetch', (event) => {
     return
   }
 
+  // Google Fonts (Inter) için uzun süreli önbellek
+  if (url.hostname === 'fonts.googleapis.com' || url.hostname === 'fonts.gstatic.com') {
+    event.respondWith(
+      caches.open(FONT_CACHE_NAME).then((cache) => {
+        return cache.match(request).then((cached) => {
+          if (cached) return cached
+          return fetch(request).then((response) => {
+            if (response.status === 200) {
+              cache.put(request, response.clone())
+            }
+            return response
+          })
+        })
+      })
+    )
+    return
+  }
+
   // Statik dosyalar için cache-first
   if (
     request.destination === 'image' ||
     request.destination === 'style' ||
     request.destination === 'script' ||
+    request.destination === 'font' ||
     url.pathname.match(/\.(png|jpg|jpeg|svg|gif|webp|css|js|woff2?)$/)
   ) {
     event.respondWith(
