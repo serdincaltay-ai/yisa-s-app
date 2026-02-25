@@ -120,7 +120,7 @@
 | | > Gorevler               |  | +----------------------------+||
 | | > Sistem Durumu          |  | | Mesaj yaz...               |||
 | |                          |  | | [Gonder] [ATA] [HERKESE]   |||
-| | TENANTLAR:               |  | | [CEO'ya Gonder]            |||
+| | TENANTLAR:               |  | | [CELF'e Gonder]            |||
 | | BJK Tuzla, Demo Salon   |  | | Dosya surukle-birak        |||
 | | + maliyet kartlari      |  | +----------------------------+||
 | +--------------------------+  +--------------------------------+|
@@ -510,9 +510,9 @@
 |                                                                 |
 | SAYAC KARTLARI (grid):                                         |
 | [Tenants: 5] [Athletes: 120] [Attendance: 2300]               |
-| [Payments: 450] [CEO Tasks: 85] [CELF Logs: 340]              |
+| [Payments: 450] [CELF Gorevler: 85] [CELF Logs: 340]          |
 |                                                                 |
-| SON CEO GOREVLERI (tablo):                                     |
+| SON CELF GOREVLERI (tablo):                                    |
 | id | baslik | durum | tarih                                    |
 |                                                                 |
 | SON CELF LOGLARI (tablo):                                      |
@@ -525,7 +525,7 @@
 +================================================================+
 ```
 
-**API:** Supabase direct — tenants, athletes, attendance, payments, ceo_tasks, celf_logs
+**API:** Supabase direct — tenants, athletes, attendance, payments, ceo_tasks (CELF gorevler), celf_logs
 
 ---
 
@@ -640,7 +640,7 @@
 
 **Kilitlenmis Mimari (Degistirme):**
 - 4 Robot: CELF (Claude), Veri (Gemini), Guvenlik (GPT-4o), YiSA-S (GPT-4o-mini)
-- CIO/CEO/COO kullanilmaz — sadece 4 robot
+- CIO/CEO/COO ayri robot olarak kullanilmaz — sadece 4 robot: CELF Robotu, Veri Robotu, Guvenlik Robotu, YiSA-S Robotu
 - sim_updates: status "beklemede"/"islendi", payload kolonu YOK
 - target_direktorluk (Turkce parametre adi)
 - Tum tenant verilerinde tenant_id zorunlu
@@ -803,46 +803,46 @@ Mevcut tasarimlar kullanilabilir ama asagidaki gelistirmeler yapilmalidir:
 
 ### E1. PATRON PANELI SAYFALARI
 
-| # | Sayfa | Gorev | Arac | Oncelik | Sure |
-|---|-------|-------|------|---------|------|
-| 1 | Login + Intro (`/`) | Video intro optimizasyonu + PWA install prompt | **V0** | P1 | 2 saat |
-| 2 | Ana Dashboard (`dashboard.tsx`) | Widget surukle-birak + robot detay guclendir | **Cursor** | P1 | 4 saat |
-| 3 | Beyin Takimi (`/patron/beyin-takimi`) | Gercek AI API entegrasyonu (simule degil, canli) | **Devin** | P0 | 8 saat |
-| 4 | C2 Komut Merkezi (`/patron/komut-merkezi`) | Kanban DnD + real-time gorev takip | **Cursor** | P0 | 6 saat |
-| 5 | CELF Panel (`/patron/celf`) | Canli direktorluk kuyrugu + ilerleme gorseli | **Cursor** | P1 | 3 saat |
-| 6 | 12 Direktorluk (`/patron/direktorlukler`) | Her direktorluk icin ozel prompt + cikti render | **Devin** | P1 | 6 saat |
-| 7 | Onay Kuyrugu (`/patron/onay-kuyrugu`) | Tam onay→tenant zinciri + compensating transaction | **Devin** | P0 | 4 saat |
-| 8 | Patron Dashboard (`/patron/dashboard`) | Gercek veri widget'lari + trend grafik | **V0** | P2 | 3 saat |
-| 9 | Tenant Izleme (`/patron/tenants`) | Detay sayfa + rol yonetimi + token izleme | **Cursor** | P1 | 5 saat |
-| 10 | Gorev Yonetimi (`/patron/tasks`) | Kanban DnD + gorev atama + filtre | **Cursor** | P1 | 4 saat |
-| 11 | Sistem Durumu (`/patron/status`) | Canli health check + uptime grafik | **V0** | P2 | 2 saat |
-| 12 | Vitrin (`/vitrin`) | Demo formu validasyonu + zod + canli fiyat API | **V0** | P1 | 3 saat |
+| # | Sayfa | Gorev | Arac | Repo | Oncelik | Sure |
+|---|-------|-------|------|------|---------|------|
+| 1 | Login + Intro (`/`) | Video intro optimizasyonu + PWA install prompt | **V0** | app-yisa-s | P1 | 2 saat |
+| 2 | Ana Dashboard (`dashboard.tsx`) | Widget surukle-birak + robot detay guclendir | **Cursor** | app-yisa-s | P1 | 4 saat |
+| 3 | Beyin Takimi (`/patron/beyin-takimi`) | Gercek AI API entegrasyonu (simule degil, canli) | **Devin** | app-yisa-s | P0 | 8 saat |
+| 4 | C2 Komut Merkezi (`/patron/komut-merkezi`) | Kanban DnD + real-time gorev takip | **Cursor** | app-yisa-s | P0 | 6 saat |
+| 5 | CELF Panel (`/patron/celf`) | Canli direktorluk kuyrugu + ilerleme gorseli | **Cursor** | app-yisa-s | P1 | 3 saat |
+| 6 | 12 Direktorluk (`/patron/direktorlukler`) | Her direktorluk icin ozel prompt + cikti render | **Devin** | app-yisa-s | P1 | 6 saat |
+| 7 | Onay Kuyrugu (`/patron/onay-kuyrugu`) | Tam onay→tenant zinciri + compensating transaction | **Devin** | tenant-yisa-s | P0 | 4 saat |
+| 8 | Patron Dashboard (`/patron/dashboard`) | Gercek veri widget'lari + trend grafik | **V0** | app-yisa-s | P2 | 3 saat |
+| 9 | Tenant Izleme (`/patron/tenants`) | Detay sayfa + rol yonetimi + token izleme | **Cursor** | app-yisa-s | P1 | 5 saat |
+| 10 | Gorev Yonetimi (`/patron/tasks`) | Kanban DnD + gorev atama + filtre | **Cursor** | app-yisa-s | P1 | 4 saat |
+| 11 | Sistem Durumu (`/patron/status`) | Canli health check + uptime grafik | **V0** | app-yisa-s | P2 | 2 saat |
+| 12 | Vitrin (`/vitrin`) | Demo formu validasyonu + zod + canli fiyat API | **V0** | app-yisa-s | P1 | 3 saat |
 
 ### E2. FRANCHISE PANEL SAYFALARI
 
-| # | Sayfa/Modul | Gorev | Arac | Oncelik | Sure |
-|---|-------------|-------|------|---------|------|
-| 13 | Sporcu CRUD | Tam CRUD + arama + filtre + pagination | **Cursor** | P0 | 6 saat |
-| 14 | Yoklama sistemi | QR yoklama + takvim gorunumu + rapor | **Devin** | P0 | 8 saat |
-| 15 | Aidat yonetimi | Otomatik faturalama + hatirlatma + odeme takip | **Devin** | P0 | 8 saat |
-| 16 | Ders programi | Haftalik/aylik takvim + surukle-birak + catisma kontrolu | **Cursor** | P1 | 6 saat |
-| 17 | Veli paneli | Cocuk bilgi + gelisim grafik + aidat durum + mesajlasma | **V0** | P1 | 6 saat |
-| 18 | Cocuk gelisim | Olcum kaydi + referans deger karsilastirma + grafik | **Devin** | P1 | 6 saat |
-| 19 | Raporlama | Gelir-gider raporu + PDF export + trend analiz | **Cursor** | P2 | 5 saat |
-| 20 | Duyuru sistemi | Toplu SMS/push + sablon + zamanlama | **Devin** | P2 | 4 saat |
+| # | Sayfa/Modul | Gorev | Arac | Repo | Oncelik | Sure |
+|---|-------------|-------|------|------|---------|------|
+| 13 | Sporcu CRUD | Tam CRUD + arama + filtre + pagination | **Cursor** | tenant-yisa-s | P0 | 6 saat |
+| 14 | Yoklama sistemi | QR yoklama + takvim gorunumu + rapor | **Devin** | tenant-yisa-s | P0 | 8 saat |
+| 15 | Aidat yonetimi | Otomatik faturalama + hatirlatma + odeme takip | **Devin** | tenant-yisa-s | P0 | 8 saat |
+| 16 | Ders programi | Haftalik/aylik takvim + surukle-birak + catisma kontrolu | **Cursor** | tenant-yisa-s | P1 | 6 saat |
+| 17 | Veli paneli | Cocuk bilgi + gelisim grafik + aidat durum + mesajlasma | **V0** | tenant-yisa-s | P1 | 6 saat |
+| 18 | Cocuk gelisim | Olcum kaydi + referans deger karsilastirma + grafik | **Devin** | tenant-yisa-s | P1 | 6 saat |
+| 19 | Raporlama | Gelir-gider raporu + PDF export + trend analiz | **Cursor** | tenant-yisa-s | P2 | 5 saat |
+| 20 | Duyuru sistemi | Toplu SMS/push + sablon + zamanlama | **Devin** | tenant-yisa-s | P2 | 4 saat |
 
 ### E3. ALTYAPI GOREVLERI
 
-| # | Gorev | Arac | Oncelik | Sure |
-|---|-------|------|---------|------|
-| 21 | PWA gelismis cache + push notification | **Devin** | P0 | 6 saat |
-| 22 | Supabase RLS politikalari tamamla | **Devin** | P0 | 4 saat |
-| 23 | CI/CD pipeline (GitHub Actions) | **Devin** | P1 | 3 saat |
-| 24 | Stripe/PayTR odeme entegrasyonu | **Devin** | P1 | 8 saat |
-| 25 | Twilio/Netgsm SMS entegrasyonu | **Devin** | P1 | 4 saat |
-| 26 | Test altyapisi (Vitest + Playwright) | **Devin** | P2 | 6 saat |
-| 27 | i18n (Turkce/Ingilizce) | **Cursor** | P3 | 8 saat |
-| 28 | Monitoring (Sentry + uptime) | **Devin** | P2 | 3 saat |
+| # | Gorev | Arac | Repo | Oncelik | Sure |
+|---|-------|------|------|---------|------|
+| 21 | PWA gelismis cache + push notification | **Devin** | tenant-yisa-s | P0 | 6 saat |
+| 22 | Supabase RLS politikalari tamamla | **Devin** | tenant-yisa-s | P0 | 4 saat |
+| 23 | CI/CD pipeline (GitHub Actions) | **Devin** | tenant-yisa-s + app-yisa-s | P1 | 3 saat |
+| 24 | Stripe/PayTR odeme entegrasyonu | **Devin** | tenant-yisa-s | P1 | 8 saat |
+| 25 | Twilio/Netgsm SMS entegrasyonu | **Devin** | tenant-yisa-s | P1 | 4 saat |
+| 26 | Test altyapisi (Vitest + Playwright) | **Devin** | tenant-yisa-s + app-yisa-s | P2 | 6 saat |
+| 27 | i18n (Turkce/Ingilizce) | **Cursor** | tenant-yisa-s + app-yisa-s | P3 | 8 saat |
+| 28 | Monitoring (Sentry + uptime) | **Devin** | tenant-yisa-s + app-yisa-s | P2 | 3 saat |
 
 ### E4. ONCELIK OZETI
 

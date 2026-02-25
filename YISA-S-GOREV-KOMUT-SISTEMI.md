@@ -27,7 +27,7 @@
 
 ### 1.3 Oncelik ve Onay
 - **P0 (Acil):** Patron dogrudan onaylar, aninda calistirilir
-- **P1-P2:** CEO gorev kuyrugundan gecebilir, onay bekleyebilir
+- **P1-P2:** CELF gorev kuyrugundan gecebilir, onay bekleyebilir
 - **P3-P4:** Planlamaya alinir, rutin gorev olarak zamanlanabilir
 - Patron `patron_commands` tablosuna kaydedilir (status: pending → approved/rejected)
 - Onaylanan gorevler `ceo_tasks` tablosuna aktarilir
@@ -548,7 +548,7 @@ stateDiagram-v2
 | **CFO** | muhasebe | Together | Butce, maliyet, fiyatlama, token takibi | - (Excel/Supabase) |
 | **CMO** | pazarlama | GPT | Pazarlama, icerik, reklam, iletisim | ManyChat, Meta, Canva, Fal AI |
 | **CPO** | tasarim | GPT | UI/UX tasarim, sayfa yapisi, kullanici akisi | V0, Fal AI, Vercel |
-| **COO** | operasyon | Claude | Operasyon, is kuyrugu, surec, kaynak dagitimi | Devin, ManyChat |
+| **COO** | operasyon | Claude | Operasyon, is kuyrugu, surec, kaynak dagitimi (CELF altinda direktorluk) | Devin, ManyChat |
 | **CHRO** | ik | GPT | Personel, egitim, performans | - |
 | **CLO** | hukuk | Claude | Hukuk, KVKK, sozlesme, mevzuat uyumu | Claude |
 | **CSPO** | - | Gemini | Spor bilim, cocuk gelisim, antrenman sablonlari | Fal AI |

@@ -26,7 +26,7 @@ graph TB
     subgraph "tenant-yisa-s (Ana Yonetici Repo)"
         TENANT_FE["app.yisa-s.com<br/>Patron Dashboard<br/>Franchise Panel<br/>Veli/Antrenor Panel<br/>Next.js 16"]
         TENANT_API["API Routes<br/>/api/patron/*, /api/ceo/*<br/>/api/celf/*, /api/franchise/*<br/>/api/chat, /api/veli/*<br/>/api/coo/run-due (Cron)"]
-        ROBOT_SYS["Robot Sistemi<br/>CEO, CELF Merkez<br/>CIO, COO, Siber Guvenlik<br/>Veri Arsivleme"]
+        ROBOT_SYS["Robot Sistemi<br/>4 Robot: CELF, Veri,<br/>Guvenlik, YiSA-S<br/>+ 12 Direktorluk"]
         AI_ENGINE["AI Motorlari<br/>Claude + GPT + Gemini<br/>Together + Cursor + V0"]
     end
 
@@ -109,7 +109,7 @@ sequenceDiagram
     V->>DB: CRM contact/activity olustur
 
     T->>DB: Patron komutlari (patron_commands)
-    T->>DB: CEO gorevleri (ceo_tasks)
+    T->>DB: CELF gorevleri (ceo_tasks)
     T->>DB: CELF loglari (celf_logs)
     T->>DB: Franchise yonetimi (franchises, tenants)
     T->>AI: Komut isleme (Claude/GPT/Gemini)
@@ -156,21 +156,21 @@ graph LR
 
 | # | Tablo | Aciklama | Onemli Kolonlar |
 |---|-------|----------|-----------------|
-| **BOLUM 1: Patron / Chat / CEO** | | | |
+| **BOLUM 1: Patron / Chat / CELF** | | | |
 | 1 | `chat_messages` | Patron-AI sohbet mesajlari | user_id, message, response, ai_providers[] |
 | 2 | `patron_commands` | Patron komutlari ve onay durumu | command, status (pending/approved/rejected/modified), decision, ceo_task_id |
-| 3 | `ceo_tasks` | CEO'nun yonettigi gorevler | task_description, task_type, director_key, status, result_payload, idempotency_key |
+| 3 | `ceo_tasks` | CELF'in yonettigi gorevler (tablo adi legacy) | task_description, task_type, director_key, status, result_payload, idempotency_key |
 | 4 | `celf_logs` | CELF motor islem loglari | ceo_task_id (FK), director_key, action, input/output_summary, payload |
 | 5 | `audit_log` | Sistem denetim kayitlari | action, entity_type, entity_id, user_id, payload |
-| **BOLUM 2: CELF Ic Denetim + CEO Merkez** | | | |
+| **BOLUM 2: CELF Ic Denetim + CELF Merkez** | | | |
 | 6 | `patron_private_tasks` | Patron'un ozel gorevleri | patron_id, command, result, is_private |
 | 7 | `celf_audit_logs` | CELF ic denetim kayitlari | check_type (data_access/protection/approval/veto), check_result |
 | 8 | `director_rules` | Direktorluk kurallari | director_key (UNIQUE), data_access[], protected_data[], has_veto, ai_providers[] |
-| 9 | `ceo_routines` | CEO zamanlanmis rutinler | routine_type (rapor/kontrol/bildirim/sync), schedule (daily/weekly/monthly), next_run |
-| 10 | `ceo_rules` | CEO is kurallari | rule_type (validation/automation/restriction/notification), condition, action (JSONB) |
-| 11 | `ceo_templates` | CEO sablonlari | template_type (rapor/dashboard/ui/email/bildirim), content (JSONB), is_approved |
-| 12 | `ceo_approved_tasks` | Onaylanmis gorevler arsivi | task_id, director_key, data_used[], data_changed[], can_become_routine |
-| 13 | `ceo_franchise_data` | Franchise'lardan gelen veriler | franchise_id, data_type, data_value (JSONB), period |
+| 9 | `ceo_routines` | CELF zamanlanmis rutinler (tablo adi legacy) | routine_type (rapor/kontrol/bildirim/sync), schedule (daily/weekly/monthly), next_run |
+| 10 | `ceo_rules` | CELF is kurallari (tablo adi legacy) | rule_type (validation/automation/restriction/notification), condition, action (JSONB) |
+| 11 | `ceo_templates` | CELF sablonlari (tablo adi legacy) | template_type (rapor/dashboard/ui/email/bildirim), content (JSONB), is_approved |
+| 12 | `ceo_approved_tasks` | CELF onaylanmis gorevler arsivi (tablo adi legacy) | task_id, director_key, data_used[], data_changed[], can_become_routine |
+| 13 | `ceo_franchise_data` | CELF franchise verileri (tablo adi legacy) | franchise_id, data_type, data_value (JSONB), period |
 | **BOLUM 3: Robot Sistemi** | | | |
 | 14 | `routine_tasks` | Zamanlanmis rutin gorevler | task_type, director_key, schedule, next_run, is_active |
 | 15 | `task_results` | Gorev sonuclari | routine_task_id (FK), ai_providers[], input_command, output_result, status |
@@ -187,8 +187,8 @@ graph LR
 | **BOLUM 5: Maliyet + Satis** | | | |
 | 25 | `celf_cost_reports` | CELF maliyet raporlari | report_type, cost_breakdown (JSONB), director_key |
 | 26 | `patron_sales_prices` | Patron satis fiyatlari | product_key (UNIQUE), sales_price_amount, effective_from/to |
-| **BOLUM 6: COO Kurallari** | | | |
-| 27 | `coo_rules` | COO operasyon kurallari | operation_type, label, keywords[], director_mapping (JSONB), approved_by |
+| **BOLUM 6: CELF Operasyon Kurallari** | | | |
+| 27 | `coo_rules` | CELF operasyon kurallari (tablo adi legacy) | operation_type, label, keywords[], director_mapping (JSONB), approved_by |
 | **BOLUM 7: Roller** | | | |
 | 28 | `role_permissions` | Kullanici rolleri ve yetkileri | role_code (ROL-0..12, PATRON), can_trigger_flow, panel_route, priority |
 
@@ -215,7 +215,7 @@ graph LR
 | 45 | `dijital_kredi` | Dijital kredi sistemi |
 | 46 | `gelisim_olcum` | Gelisim olcum kayitlari |
 | 47 | `sozlesme_onaylari` | Sozlesme onaylari |
-| 48 | `cio_analysis_logs` | CIO analiz loglari |
+| 48 | `cio_analysis_logs` | CELF analiz loglari (tablo adi legacy) |
 | 49 | `tenant_announcements` | Tenant duyurulari (baslik, icerik, tip, yayinlanma tarihi) |
 | 50 | `tenant_surveys` | Tenant anketleri (baslik, sorular JSONB, durum) |
 
@@ -336,16 +336,16 @@ graph LR
 | `auth/api-auth.ts` | API kimlik dogrulama |
 | **db/** | 20+ veritabani erisim modulu |
 | `db/celf-audit.ts` | CELF denetim |
-| `db/ceo-celf.ts` | CEO-CELF islemleri |
+| `db/ceo-celf.ts` | CELF gorev islemleri (legacy dosya adi) |
 | `db/chat-messages.ts` | Chat mesaj islemleri |
 | `db/franchise-subdomains.ts` | Franchise subdomain DB islemleri |
 | `db/sales-prices.ts` | Satis fiyat islemleri |
 | `db/security-logs.ts` | Guvenlik log islemleri |
 | **robots/** | |
-| `robots/hierarchy.ts` | **Robot hiyerarsisi** (9 katman: Patron → COO) |
-| `robots/ceo-robot.ts` | CEO robotu |
-| `robots/coo-robot.ts` | COO robotu |
-| `robots/cio-robot.ts` | CIO robotu |
+| `robots/hierarchy.ts` | **Robot hiyerarsisi** (4 robot: CELF, Veri, Guvenlik, YiSA-S) |
+| `robots/ceo-robot.ts` | CELF robotu (legacy dosya adi) |
+| `robots/coo-robot.ts` | CELF operasyon robotu (legacy dosya adi) |
+| `robots/cio-robot.ts` | CELF analiz robotu (legacy dosya adi) |
 | `robots/celf-center.ts` | CELF merkez |
 | `robots/data-robot.ts` | Veri robotu |
 | `robots/security-robot.ts` | Guvenlik robotu |
@@ -534,7 +534,7 @@ graph LR
 }
 ```
 
-- **Cron Job:** Her gun saat 02:00 UTC'de `/api/coo/run-due` cagirilir (COO zamanlanmis gorevler)
+- **Cron Job:** Her gun saat 02:00 UTC'de `/api/coo/run-due` cagirilir (CELF zamanlanmis gorevler — endpoint adi legacy)
 
 ### 8.2 yisa-s-com/vercel.json
 
@@ -572,25 +572,49 @@ graph LR
 
 ```mermaid
 graph TB
-    L0["Katman 0: PATRON<br/>Serdinc Altay - Tek Yetkili"]
-    L1["Katman 1: PATRON ASISTAN<br/>Claude + GPT + Gemini + Together + V0 + Cursor"]
-    L2["Katman 2: CIO<br/>Strateji Beyin - Komut yorumlama"]
-    L3["Katman 3: SIBER GUVENLIK<br/>3 Duvar sistemi"]
-    L4["Katman 4: VERI ARSIVLEME<br/>Yedekleme, sablon kutuphanesi"]
-    L5["Katman 5: CEO ORGANIZATOR<br/>Kural tabanli, AI yok - Gorev dagitimi"]
-    L6["Katman 6: YISA-S CELF MERKEZ<br/>13 Direktorluk (CSPO dahil)"]
-    L7["Katman 7: COO YARDIMCI<br/>Operasyon koordinasyonu"]
-    L8["Katman 8: YISA-S VITRIN<br/>Franchise hizmetleri"]
+    L0["PATRON<br/>Serdinc Altay - Tek Yetkili"]
 
-    L0 --> L1
-    L1 --> L2
-    L2 --> L3
-    L3 --> L4
-    L4 --> L5
-    L5 --> L6
-    L6 --> L7
-    L7 --> L8
+    subgraph "4 Robot Sistemi"
+        R1["CELF ROBOTU<br/>Claude Sonnet<br/>#e94560 kirmizi<br/>12 Direktorluk orkestrasyonu"]
+        R2["VERI ROBOTU<br/>Gemini<br/>#00d4ff cyan<br/>Veri yonetimi, arsivleme"]
+        R3["GUVENLIK ROBOTU<br/>GPT-4o<br/>#ffa500 turuncu<br/>3 Duvar sistemi, siber guvenlik"]
+        R4["YISA-S ROBOTU<br/>GPT-4o-mini<br/>#7b68ee mor<br/>Franchise hizmetleri, vitrin"]
+    end
+
+    subgraph "12 Direktorluk (CELF Altinda)"
+        D1["CTO - Teknik"]
+        D2["CFO - Muhasebe"]
+        D3["CMO - Pazarlama"]
+        D4["CPO - Tasarim"]
+        D5["COO - Operasyon"]
+        D6["CHRO - IK"]
+        D7["CLO - Hukuk"]
+        D8["CSPO - Spor Bilim"]
+        D9["CCO - Musteri"]
+        D10["CISO - Guvenlik"]
+        D11["CDO - Veri"]
+        D12["CSO - Strateji"]
+    end
+
+    L0 --> R1
+    L0 --> R2
+    L0 --> R3
+    L0 --> R4
+    R1 --> D1
+    R1 --> D2
+    R1 --> D3
+    R1 --> D4
+    R1 --> D5
+    R1 --> D6
+    R1 --> D7
+    R1 --> D8
+    R1 --> D9
+    R1 --> D10
+    R1 --> D11
+    R1 --> D12
 ```
+
+> **NOT:** Eski 9 katmanli hiyerarsi (CEO, CIO, COO ayri robotlar) kaldirildi. Yeni sistem 4 robot ile calisir. Tablo adlari (`ceo_tasks`, `coo_rules`, `cio_analysis_logs`) legacy olarak kalmaya devam eder.
 
 > **Gorsel:** ![Robot Hiyerarsisi](docs/diagrams/04-robot-hiyerarsisi.png)
 
@@ -637,7 +661,7 @@ graph LR
 
 > **Gorsel:** ![Rol ve Erisim Matrisi](docs/diagrams/05-rol-erisim.png)
 
-| Rol | Flow Tetikleme | CELF/CEO | Max Bekleyen Is | Oncelik |
+| Rol | Flow Tetikleme | CELF | Max Bekleyen Is | Oncelik |
 |-----|---------------|----------|----------------|---------|
 | Patron | Evet | Evet | 99 | 1 (en yuksek) |
 | Franchise Sahibi | Hayir | Hayir | 1 | 7 |
@@ -702,7 +726,7 @@ graph LR
 | **CELF v2** | `/api/celf2/command`, `/api/celf2/plan`, `/api/celf2/board`, `/api/celf2/epics`, `/api/celf2/lock`, `/api/celf2/complete`, `/api/celf2/approve`, `/api/celf2/renew-lease`, `/api/celf2/central-ledger` | CELF v2 gelismis gorev yonetimi |
 | **Brain Team** | `/api/brain-team/parse-epic`, `/api/brain-team/distribute-tasks` | Beyin takimi epic parse ve gorev dagitimi |
 | **Brain** | `/api/brain`, `/api/brain-responses` | AI beyin sorgu/yanit |
-| **CEO Tasks** | `/api/ceo-tasks`, `/api/ceo-tasks/[id]` | CEO gorev CRUD |
+| **CELF Gorevler** | `/api/ceo-tasks`, `/api/ceo-tasks/[id]` | CELF gorev CRUD (endpoint adi legacy) |
 | **Child Development** | `/api/child-development/assessment`, `/api/child-development/athlete`, `/api/child-development/baseline`, `/api/child-development/program`, `/api/child-development/report/[athleteId]`, `/api/child-development/score/[athleteId]`, `/api/child-development/session` | Cocuk gelisim modulu (7 endpoint) |
 | **Patron** | `/api/patron/tenants`, `/api/patron/tenants/[id]`, `/api/patron-havuzu` | Patron tenant yonetimi |
 | **Diger** | `/api/ai-chat`, `/api/approve-demo`, `/api/reject-demo`, `/api/demo-requests/*`, `/api/expenses`, `/api/files`, `/api/kasa/approve/[paymentId]`, `/api/messages`, `/api/motor`, `/api/robot-stats`, `/api/robot-status`, `/api/token-costs`, `/api/vitrin/calculate-price`, `/api/templates`, `/api/tenants`, `/api/sim-updates`, `/api/supabase-check`, `/api/task-assignments`, `/api/auth`, `/api/api-status`, `/api/constitution`, `/api/decisions`, `/api/decision-items`, `/api/cron/aidat-reminder` | Genel API endpointleri |
@@ -889,7 +913,7 @@ YiSA-S Ekosistemi
 |   |-- [YENI] Patron direct-ai endpoint
 |   |-- [YENI] Franchise duyurular, anketler, saglik kayitlari, aidat hatirlatma
 |   |-- Subdomain Yonetimi (franchise bazli)
-|   |-- Vercel Cron (COO gorevler: gunluk 02:00 UTC)
+|   |-- Vercel Cron (CELF zamanlanmis gorevler: gunluk 02:00 UTC)
 |   |-- Deploy: Vercel + Railway (alternatif)
 |
 |-- app-yisa-s (Patron Uygulama) — 18 sayfa, 60+ API, v0 futuristic UI
@@ -899,7 +923,7 @@ YiSA-S Ekosistemi
 |   |-- CELF Organizasyon Paneli (Epikler + Gorevler)
 |   |-- 12 Direktorluk sayfasi (Hukuk/Muhasebe/Teknik/Tasarim/Pazarlama/IK/AR-GE/Guvenlik/Veri/Operasyon/Musteri/Strateji)
 |   |-- Tenant Izleme (sporcu/personel/gelir detayli)
-|   |-- Gorev Kanban (ceo_tasks)
+|   |-- Gorev Kanban (CELF gorevler / ceo_tasks)
 |   |-- Sistem Durumu (6 tablo sayaci + son loglar)
 |   |-- Dashboard: Gorev Panosu (12 kolonlu kanban + epic filtre + ilerleme cubugu)
 |   |-- Dashboard: Komut Merkezi (Analiz Et + Tumunu Dagit + Onayla + Uygula)
