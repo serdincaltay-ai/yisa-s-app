@@ -20,13 +20,13 @@
 - Patron komut sistemi (patron_commands tablosu + UI)
 - Onay kuyrugu (approval_queue + UI)
 - CELF motor sistemi (13 direktorluk)
-- CEO gorev yonetimi (ceo_tasks)
+- CELF gorev yonetimi (ceo_tasks — tablo adi legacy)
 - Beyin takimi (AI multi-provider chat)
-- Robot hiyerarsisi (9 katman tanimli)
+- Robot hiyerarsisi (4 robot: CELF, Veri, Guvenlik, YiSA-S)
 - Denetim kayitlari (audit_log, celf_audit_logs)
 - Director kurallari (director_rules)
-- COO kurallari ve zamanlanmis gorevler (coo_rules, ceo_routines)
-- Vercel Cron: `/api/coo/run-due` (gunluk 02:00 UTC)
+- CELF operasyon kurallari ve zamanlanmis gorevler (coo_rules, ceo_routines — tablo adlari legacy)
+- Vercel Cron: `/api/coo/run-due` (CELF zamanlanmis gorevler — endpoint adi legacy, gunluk 02:00 UTC)
 
 ### A3. AI Entegrasyonu (TAMAMLANDI)
 - Claude (Anthropic) - derin analiz, denetci, NeebChat varsayilan
@@ -76,7 +76,7 @@
 
 ### A7. app-yisa-s v0 Futuristic Dashboard (BUYUK OLCUDE TAMAMLANDI)
 - 18 sayfa (11 patron + 4 dashboard + 1 vitrin + ana sayfa + tasks detay)
-- 60+ API endpoint (CELF v1+v2, Brain Team, Child Development, CEO Tasks vb.)
+- 60+ API endpoint (CELF v1+v2, Brain Team, Child Development, CELF Gorevler vb.)
 - 5 Dashboard Widget (Token/Maliyet, Robot Durum, Onay Sayisi, Gorevler, API Maliyet)
 - C2 Komut Merkezi (4 tab: Komut/Gorev Panosu/Patron Havuzu/Merkez Kasa)
 - 12 Direktorluk sayfalari (neon renkli, her biri komut paneli + gorev gecmisi)
@@ -297,11 +297,11 @@
 | **Franchise Paneli** | Ana sayfa + [YENI] aidatlar, belgeler, iletisim, yoklama |
 | **Veli Paneli** | Ana sayfa, giris, dashboard, cocuk detay, gelisim, kredi, duyurular, [YENI] mesajlar, [YENI] odeme |
 | **Antrenor Paneli** | Ana sayfa, sporcular, sporcu detay, sporcu gelisim, yoklama, olcum |
-| **Robot Sistemi** | 9 katman (Patron → COO), 11 ajan (claude, gemini, gpt, cursor, github, supabase, v0, vercel, together, llamaOnPrem + orchestrator) |
-| **CELF Merkez** | 13 direktorluk (CSPO dahil), CEO gorev yonetimi, rutin gorevler |
+| **Robot Sistemi** | 4 robot (CELF, Veri, Guvenlik, YiSA-S), 11 ajan (claude, gemini, gpt, cursor, github, supabase, v0, vercel, together, llamaOnPrem + orchestrator) |
+| **CELF Merkez** | 13 direktorluk (CSPO dahil), CELF gorev yonetimi, rutin gorevler |
 | **AI Entegrasyon** | 7 AI motor (Claude, GPT, Gemini, Together, V0, Cursor, Fal AI) + 4 aksiyon provider (Vercel, GitHub, ManyChat, Railway) |
 | **Guvenlik** | 3 duvar siber guvenlik, yasak bolgeler, patron kilidi, RLS, RBAC |
-| **Cron** | `/api/coo/run-due` (gunluk 02:00 UTC) |
+| **Cron** | `/api/coo/run-due` (CELF zamanlanmis gorevler — endpoint adi legacy, gunluk 02:00 UTC) |
 | **[YENI] Eklenenler** | Franchise duyurular/anketler API, saglik kayitlari, aidat hatirlatma, patron direct-ai, veli mesajlar, BrainTeamChat bileseni |
 
 #### app-yisa-s — Patron Uygulama (v0 Futuristic Dashboard)
