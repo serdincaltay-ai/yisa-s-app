@@ -2,6 +2,30 @@
 @tailwind components;
 @tailwind utilities;
 
+/* ═══════════════════════════════════════════════════════════════
+   YiSA-S Scroll-Snap Sistemi
+   Her section 100vh, smooth kaydirma, sneaker tarzi gecis
+   ═══════════════════════════════════════════════════════════════ */
+html {
+  scroll-behavior: smooth;
+}
+
+.snap-container {
+  height: 100vh;
+  overflow-y: auto;
+  scroll-snap-type: y mandatory;
+  -webkit-overflow-scrolling: touch;
+}
+
+.snap-section {
+  min-height: 100vh;
+  scroll-snap-align: start;
+  scroll-snap-stop: always;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
+
 /* YİSA-S — Renkli şık PWA palet (cyan/amber/emerald gradient vurgular) */
 :root {
   --background: 222 47% 6%;
@@ -58,6 +82,15 @@
   .animate-fade-in {
     animation: fadeIn 0.5s ease;
   }
+  .snap-y-mandatory {
+    scroll-snap-type: y mandatory;
+  }
+  .snap-start {
+    scroll-snap-align: start;
+  }
+  .snap-always {
+    scroll-snap-stop: always;
+  }
 }
 
 @keyframes shimmer {
@@ -87,6 +120,34 @@
 
 .animate-shimmer {
   animation: shimmer 8s ease-in-out infinite;
+}
+
+/* Scroll-snap animasyonlari */
+@keyframes slideUp {
+  from { opacity: 0; transform: translateY(40px); }
+  to { opacity: 1; transform: translateY(0); }
+}
+
+@keyframes glowPulse {
+  0%, 100% { box-shadow: 0 0 20px -4px hsl(187 85% 50% / 0.3); }
+  50% { box-shadow: 0 0 40px -4px hsl(187 85% 50% / 0.6); }
+}
+
+@keyframes chevronBounce {
+  0%, 100% { transform: translateY(0); }
+  50% { transform: translateY(8px); }
+}
+
+@layer utilities {
+  .animate-slide-up {
+    animation: slideUp 0.6s ease-out;
+  }
+  .animate-glow-pulse {
+    animation: glowPulse 2s ease-in-out infinite;
+  }
+  .animate-chevron-bounce {
+    animation: chevronBounce 1.5s ease-in-out infinite;
+  }
 }
 
 /* PWA / Mobil — Renkli şık yardımcı sınıflar */
