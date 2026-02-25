@@ -1,9 +1,17 @@
 import './globals.css'
+import { Inter } from 'next/font/google'
 import { SpeedInsights } from '@vercel/speed-insights/next'
 import Script from 'next/script'
 import { headers } from 'next/headers'
 import { getPanelFromHost } from '@/lib/subdomain'
 import { getFranchiseSubdomains } from '@/lib/db/franchise-subdomains'
+
+const inter = Inter({
+  subsets: ['latin', 'latin-ext'],
+  display: 'swap',
+  variable: '--font-inter',
+  weight: ['400', '500', '600', '700'],
+})
 
 export async function generateMetadata() {
   const headersList = await headers()
@@ -58,7 +66,7 @@ export default function RootLayout({
   children: React.ReactNode
 }) {
   return (
-    <html lang="tr">
+    <html lang="tr" className={inter.variable}>
       <head>
         <link rel="apple-touch-icon" sizes="192x192" href="/icon-192.png" />
         <link rel="icon" type="image/png" sizes="192x192" href="/icon-192.png" />
@@ -72,7 +80,7 @@ export default function RootLayout({
         <meta name="msapplication-TileColor" content="#06b6d4" />
         <meta name="msapplication-TileImage" content="/icon-192.png" />
       </head>
-      <body className="text-white min-h-screen bg-[#0a0e17]">
+      <body className={`${inter.className} text-white min-h-screen bg-[#0a0e17]`}>
         {children}
         <SpeedInsights />
         <Script id="sw-register" strategy="afterInteractive">
