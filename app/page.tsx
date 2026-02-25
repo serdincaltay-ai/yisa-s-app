@@ -26,6 +26,12 @@ import {
   Mail,
   MapPin,
   Check,
+  Brain,
+  Database,
+  Shield,
+  Dumbbell,
+  Waves,
+  Target,
 } from "lucide-react"
 import Link from "next/link"
 import { YisaLogoInline } from "@/components/YisaLogo"
@@ -235,8 +241,134 @@ export default function Home() {
           </div>
         </section>
 
-        {/* Social Proof — Renkli referans kartları */}
+        {/* Branslar — 6 spor dalı */}
         <section className="max-w-6xl mx-auto px-6 py-24 border-t border-gray-800 bg-gray-900/50">
+          <h2 className="text-3xl font-bold text-center mb-4 text-white">
+            Spor Branşları
+          </h2>
+          <p className="text-center text-gray-400 mb-16 max-w-2xl mx-auto">
+            6 farklı branşta profesyonel eğitim ve takip sistemi.
+          </p>
+          <div className="grid grid-cols-2 md:grid-cols-3 gap-6">
+            {[
+              { name: "Cimnastik", icon: Target, color: "text-pink-400", bg: "bg-pink-500/10", border: "border-pink-500/30" },
+              { name: "Yüzme", icon: Waves, color: "text-blue-400", bg: "bg-blue-500/10", border: "border-blue-500/30" },
+              { name: "Basketbol", icon: Dumbbell, color: "text-amber-400", bg: "bg-amber-500/10", border: "border-amber-500/30" },
+              { name: "Voleybol", icon: Dumbbell, color: "text-emerald-400", bg: "bg-emerald-500/10", border: "border-emerald-500/30" },
+              { name: "Futbol", icon: Dumbbell, color: "text-purple-400", bg: "bg-purple-500/10", border: "border-purple-500/30" },
+              { name: "Tenis", icon: Target, color: "text-cyan-400", bg: "bg-cyan-500/10", border: "border-cyan-500/30" },
+            ].map((b) => {
+              const Icon = b.icon
+              return (
+                <Card key={b.name} className={`bg-gray-900 border ${b.border} rounded-2xl hover:shadow-lg transition-all text-center`}>
+                  <CardContent className="p-6">
+                    <div className={`h-14 w-14 mx-auto rounded-2xl ${b.bg} flex items-center justify-center mb-4`}>
+                      <Icon className={`h-7 w-7 ${b.color}`} strokeWidth={1.5} />
+                    </div>
+                    <p className="text-lg font-semibold text-white">{b.name}</p>
+                    <p className="text-xs text-gray-400 mt-1">Ders programı, yoklama, ölçüm</p>
+                  </CardContent>
+                </Card>
+              )
+            })}
+          </div>
+        </section>
+
+        {/* Paneller — Veli / Sporcu / Antrenör */}
+        <section className="max-w-6xl mx-auto px-6 py-24 border-t border-gray-800">
+          <h2 className="text-3xl font-bold text-center mb-4 text-white">
+            3 Panel, Tek Sistem
+          </h2>
+          <p className="text-center text-gray-400 mb-16 max-w-2xl mx-auto">
+            Veli, sporcu ve antrenör panelleri aynı veritabanına bağlı çalışır.
+          </p>
+          <div className="grid grid-cols-1 md:grid-cols-3 gap-8">
+            {[
+              {
+                title: "Veli Paneli",
+                desc: "Çocuk gelişimi, ödeme takibi, antrenman takvimi, mesajlaşma.",
+                icon: User,
+                color: "text-pink-400",
+                bg: "bg-pink-500/10",
+                border: "border-pink-500/30",
+              },
+              {
+                title: "Sporcu Paneli",
+                desc: "Antrenman programı, ölçüm sonuçları, gelişim grafikleri.",
+                icon: Dumbbell,
+                color: "text-cyan-400",
+                bg: "bg-cyan-500/10",
+                border: "border-cyan-500/30",
+              },
+              {
+                title: "Antrenör Paneli",
+                desc: "Yoklama, sınıf yönetimi, sporcu ölçümleri, haftalık plan.",
+                icon: Users,
+                color: "text-emerald-400",
+                bg: "bg-emerald-500/10",
+                border: "border-emerald-500/30",
+              },
+            ].map((panel) => {
+              const Icon = panel.icon
+              return (
+                <Card key={panel.title} className={`bg-gray-900 border ${panel.border} rounded-2xl hover:shadow-lg transition-all`}>
+                  <CardHeader className="text-center">
+                    <div className={`h-16 w-16 mx-auto rounded-2xl ${panel.bg} flex items-center justify-center mb-2`}>
+                      <Icon className={`h-8 w-8 ${panel.color}`} strokeWidth={1.5} />
+                    </div>
+                    <CardTitle className="text-xl text-white">{panel.title}</CardTitle>
+                  </CardHeader>
+                  <CardContent>
+                    <p className="text-sm text-gray-400 text-center">{panel.desc}</p>
+                  </CardContent>
+                </Card>
+              )
+            })}
+          </div>
+        </section>
+
+        {/* AI Robotları */}
+        <section className="max-w-6xl mx-auto px-6 py-24 border-t border-gray-800 bg-gray-900/50">
+          <h2 className="text-3xl font-bold text-center mb-4 text-white">
+            4 AI Robot
+          </h2>
+          <p className="text-center text-gray-400 mb-16 max-w-2xl mx-auto">
+            Tesisinizi 7/24 yöneten yapay zeka robotları.
+          </p>
+          <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-6">
+            {[
+              { name: "CELF Robotu", desc: "Merkezi karar motoru, görev dağıtımı, onay süreçleri.", icon: Brain, color: "text-cyan-400", bg: "bg-cyan-500/10", border: "border-cyan-500/30" },
+              { name: "Veri Robotu", desc: "Veritabanı izleme, performans metrikleri, raporlama.", icon: Database, color: "text-emerald-400", bg: "bg-emerald-500/10", border: "border-emerald-500/30" },
+              { name: "Güvenlik Robotu", desc: "Siber güvenlik, erişim kontrolü, 4 seviye alarm.", icon: Shield, color: "text-orange-400", bg: "bg-orange-500/10", border: "border-orange-500/30" },
+              { name: "YİSA-S Robotu", desc: "Sistem durumu, PWA izleme, deployment kontrolü.", icon: Bot, color: "text-purple-400", bg: "bg-purple-500/10", border: "border-purple-500/30" },
+            ].map((robot) => {
+              const Icon = robot.icon
+              return (
+                <Card key={robot.name} className={`bg-gray-900 border ${robot.border} rounded-2xl hover:shadow-lg transition-all`}>
+                  <CardHeader>
+                    <div className={`h-12 w-12 rounded-xl ${robot.bg} flex items-center justify-center mb-2`}>
+                      <Icon className={`h-6 w-6 ${robot.color}`} strokeWidth={1.5} />
+                    </div>
+                    <CardTitle className="text-lg text-white">{robot.name}</CardTitle>
+                  </CardHeader>
+                  <CardContent>
+                    <p className="text-sm text-gray-400">{robot.desc}</p>
+                  </CardContent>
+                </Card>
+              )
+            })}
+          </div>
+          <div className="mt-10 text-center">
+            <Link href="/robot">
+              <Button variant="outline" className="rounded-xl border-cyan-500/40 text-cyan-300 hover:bg-cyan-500/20 px-6 h-11">
+                Robot Komuta Merkezi
+              </Button>
+            </Link>
+          </div>
+        </section>
+
+        {/* Social Proof — Pilot Tesis */}
+        <section className="max-w-6xl mx-auto px-6 py-24 border-t border-gray-800">
           <h2 className="text-3xl font-bold text-center mb-4 text-white">
             İlk Pilot Tesisimiz
           </h2>
