@@ -157,7 +157,7 @@ export function BrainTeamChat({
               const r = new FileReader()
               r.onload = () => {
                 const b = (r.result as string)?.split(',')[1]
-                if (b) setChatInput((prev) => `${prev}\n[Ek: ${f.name}]`.trim())
+                if (b) setChatInput(`${chatInput}\n[Ek: ${f.name}]`.trim())
               }
               r.readAsDataURL(f)
             }
