@@ -50,10 +50,11 @@ export async function GET(req: NextRequest) {
 
     const cutoff = new Date()
     cutoff.setDate(cutoff.getDate() - VALID_DAYS)
-    const warnings = items.filter((r: { recorded_at: string | null }) => {
-      const d = r.recorded_at ? new Date(r.recorded_at) : null
+    const warnings = items.filter((r) => {
+      const ra = r.recorded_at as string | null
+      const d = ra ? new Date(ra) : null
       return !d || d < cutoff
-    }).map((r: { athlete_id: string; athlete_name: string; recorded_at: string | null }) => ({
+    }).map((r) => ({
       athlete_id: r.athlete_id,
       athlete_name: r.athlete_name,
       recorded_at: r.recorded_at,

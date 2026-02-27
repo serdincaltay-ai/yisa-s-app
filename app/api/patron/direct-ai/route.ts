@@ -45,7 +45,7 @@ export async function POST(req: NextRequest) {
       : providersRaw
           .filter((p: unknown) => typeof p === 'string' && VALID_PROVIDERS.includes(p.toUpperCase() as AssistantProvider))
           .map((p: string) => p.toUpperCase() as AssistantProvider)
-          .filter((p, i, arr) => arr.indexOf(p) === i)
+          .filter((p: AssistantProvider, i: number, arr: AssistantProvider[]) => arr.indexOf(p) === i)
           .slice(0, 7)
 
     if (providers.length === 0) {
