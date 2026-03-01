@@ -85,6 +85,7 @@ export default function ChatWidget() {
   const [input, setInput] = useState("")
   const [responseIdx, setResponseIdx] = useState(0)
   const responseIdxRef = useRef(0)
+  const autoReplyTimerRef = useRef<ReturnType<typeof setTimeout> | null>(null)
   const messagesEndRef = useRef<HTMLDivElement>(null)
 
   useEffect(() => {
@@ -125,7 +126,7 @@ export default function ChatWidget() {
     setInput("")
 
     // Auto-reply based on userType
-    setTimeout(() => {
+    autoReplyTimerRef.current = setTimeout(() => {
       const pool = RESPONSES[userType || "franchise"] || RESPONSES.franchise
       const currentIdx = responseIdxRef.current
       const reply = pool[currentIdx % pool.length]
@@ -142,6 +143,10 @@ export default function ChatWidget() {
   }
 
   function handleReset() {
+    if (autoReplyTimerRef.current) {
+      clearTimeout(autoReplyTimerRef.current)
+      autoReplyTimerRef.current = null
+    }
     setUserType(null)
     setMessages([WELCOME_MSG])
     setResponseIdx(0)
