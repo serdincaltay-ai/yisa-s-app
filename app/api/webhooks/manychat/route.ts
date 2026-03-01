@@ -44,6 +44,37 @@ function parseLead(body: unknown): { name: string; email: string; phone?: string
   return { name: name || 'ManyChat Lead', email: email || 'manychat@lead.local', phone, city, notes }
 }
 
+/** GET — Webhook sağlık kontrolü ve test endpoint'i */
+export async function GET() {
+  const supabase = getSupabase()
+  if (!supabase) {
+    return NextResponse.json({ status: 'error', message: 'Supabase bağlantısı yapılandırılmamış.' }, { status: 500 })
+  }
+
+  // Son 10 ManyChat kaydını getir
+  const { data, error } = await supabase
+    .from('demo_requests')
+    .select('id, name, email, phone, city, created_at')
+    .eq('source', 'manychat')
+    .order('created_at', { ascending: false })
+    .limit(10)
+
+  if (error) {
+    return NextResponse.json({ status: 'error', message: 'Veri alınamadı.', detail: error.message }, { status: 500 })
+  }
+
+  return NextResponse.json({
+    status: 'ok',
+    webhook: '/api/webhooks/manychat',
+    method: 'POST',
+    description: 'ManyChat lead webhook — demo_requests tablosuna yazar',
+    requiredFields: ['first_name veya name', 'email'],
+    optionalFields: ['last_name', 'phone', 'city', 'notes'],
+    recentLeads: data ?? [],
+    totalRecent: data?.length ?? 0,
+  })
+}
+
 export async function POST(req: NextRequest) {
   try {
     const rawBody = await req.text()

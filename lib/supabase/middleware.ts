@@ -55,7 +55,20 @@ export async function updateSession(request: NextRequest) {
       if (demo && /^[0-9a-f-]{36}$/i.test(demo)) tenantId = demo
     }
     if (!tenantId) {
-      return new NextResponse('Franchise bulunamadı', { status: 404 })
+      // tenant_id bulunamadıysa bile franchise vitrin sayfasını göster
+      // Slug'ı header olarak geçir, sayfa buna göre statik içerik gösterebilir
+      const reqHeaders = new Headers(request.headers)
+      reqHeaders.set('x-franchise-slug', slug ?? '')
+      reqHeaders.set('x-franchise-pending', 'true')
+      reqHeaders.set('x-yisa-panel', 'franchise_site')
+
+      // Kök path'i tenant-site'a yönlendir (public vitrin sayfası)
+      if (pathname === '/' || pathname === '') {
+        const url = request.nextUrl.clone()
+        url.pathname = '/tenant-site'
+        return NextResponse.rewrite(url, { request: { headers: reqHeaders } })
+      }
+      return NextResponse.next({ request: { headers: reqHeaders } })
     }
   }
 
