@@ -49,7 +49,7 @@ import { useRouter } from "next/navigation"
 import { supabase } from "@/lib/supabase"
 import { FranchiseIntro } from "@/components/FranchiseIntro"
 
-type Athlete = { id: string; name: string; surname?: string | null; birth_date?: string | null; gender?: string | null; branch?: string | null; level?: string | null; status?: string; created_at?: string }
+type Athlete = { id: string; name: string; surname?: string | null; birth_date?: string | null; gender?: string | null; branch?: string | null; level?: string | null; status?: string; created_at?: string; parent_email?: string | null; trainer_id?: string | null }
 type StaffMember = {
   id: string; name: string; surname?: string | null; email?: string | null; phone?: string | null; role?: string; branch?: string | null; is_active?: boolean; created_at?: string;
   birth_date?: string | null; address?: string | null; city?: string | null; district?: string | null; previous_work?: string | null; chronic_condition?: string | null; has_driving_license?: boolean | null; languages?: string | null;
@@ -428,10 +428,14 @@ function StudentsTab({ athletes, staff, onRefresh, hasTenant }: { athletes: Athl
     try {
       const url = editingId ? `/api/franchise/athletes/${editingId}` : "/api/franchise/athletes"
       const method = editingId ? "PATCH" : "POST"
+      // Filter out empty strings on PATCH to avoid overwriting existing values with null
+      const payload = editingId
+        ? Object.fromEntries(Object.entries(form).filter(([, v]) => v !== ""))
+        : form
       const res = await fetch(url, {
         method,
         headers: { "Content-Type": "application/json" },
-        body: JSON.stringify(form),
+        body: JSON.stringify(payload),
       })
       const data = await res.json()
       if (data?.ok) {
@@ -459,13 +463,13 @@ function StudentsTab({ athletes, staff, onRefresh, hasTenant }: { athletes: Athl
     setEditingId(a.id)
     setForm({
       name: a.name ?? "",
-      surname: (a as Record<string, string>).surname ?? "",
+      surname: a.surname ?? "",
       birth_date: a.birth_date ?? "",
       gender: a.gender ?? "",
       branch: a.branch ?? "",
       level: a.level ?? "",
-      parent_email: "",
-      trainer_id: "",
+      parent_email: a.parent_email ?? "",
+      trainer_id: a.trainer_id ?? "",
     })
     setShowForm(true)
   }
