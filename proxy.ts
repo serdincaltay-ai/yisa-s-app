@@ -42,6 +42,7 @@ export async function proxy(request: NextRequest) {
   }
 
   // Custom domain detection (CNAME)
+  // updateSession'i ATLA — cunku updateSession non-yisa-s.com domainleri redirect eder
   if (
     !cleanHost.endsWith(`.${BASE_DOMAIN}`) &&
     cleanHost !== BASE_DOMAIN &&
@@ -49,7 +50,7 @@ export async function proxy(request: NextRequest) {
     !cleanHost.startsWith("127.") &&
     !cleanHost.startsWith("192.168.")
   ) {
-    const response = await updateSession(request)
+    const response = NextResponse.next()
     response.headers.set("x-tenant-domain", cleanHost)
     response.headers.set("x-tenant-type", "custom")
     return response

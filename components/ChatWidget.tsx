@@ -1,6 +1,7 @@
 "use client"
 
 import { useState, useRef, useEffect } from "react"
+import { usePathname } from "next/navigation"
 import {
   MessageCircle,
   X,
@@ -77,12 +78,19 @@ const RESPONSES: Record<string, string[]> = {
 }
 
 export default function ChatWidget() {
+  const pathname = usePathname()
   const [isOpen, setIsOpen] = useState(false)
   const [userType, setUserType] = useState<UserType>(null)
   const [messages, setMessages] = useState<ChatMessage[]>([WELCOME_MSG])
   const [input, setInput] = useState("")
   const [responseIdx, setResponseIdx] = useState(0)
+  const responseIdxRef = useRef(0)
   const messagesEndRef = useRef<HTMLDivElement>(null)
+
+  // Embed sayfalarinda widget gosterme
+  if (pathname?.startsWith("/embed")) {
+    return null
+  }
 
   useEffect(() => {
     messagesEndRef.current?.scrollIntoView({ behavior: "smooth" })
@@ -119,7 +127,8 @@ export default function ChatWidget() {
     // Auto-reply based on userType
     setTimeout(() => {
       const pool = RESPONSES[userType || "franchise"] || RESPONSES.franchise
-      const reply = pool[responseIdx % pool.length]
+      const currentIdx = responseIdxRef.current
+      const reply = pool[currentIdx % pool.length]
       const botMsg: ChatMessage = {
         id: `bot-${Date.now()}`,
         role: "bot",
@@ -127,7 +136,8 @@ export default function ChatWidget() {
         ts: Date.now(),
       }
       setMessages((prev) => [...prev, botMsg])
-      setResponseIdx((prev) => prev + 1)
+      responseIdxRef.current = currentIdx + 1
+      setResponseIdx(currentIdx + 1)
     }, 600)
   }
 
