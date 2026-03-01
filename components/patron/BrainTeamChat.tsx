@@ -55,6 +55,8 @@ export function BrainTeamChat({
   const [sending, setSending] = useState(false)
   const [lastMode, setLastMode] = useState<'send' | 'ata' | 'all' | null>(null)
   const fileInputRef = useRef<HTMLInputElement>(null)
+  const chatInputRef = useRef(chatInput)
+  chatInputRef.current = chatInput
 
   const toggleAI = (id: AIProvider) => {
     setSelectedAI((prev) => {
@@ -157,7 +159,7 @@ export function BrainTeamChat({
               const r = new FileReader()
               r.onload = () => {
                 const b = (r.result as string)?.split(',')[1]
-                if (b) setChatInput(`${chatInput}\n[Ek: ${f.name}]`.trim())
+                if (b) setChatInput(`${chatInputRef.current}\n[Ek: ${f.name}]`.trim())
               }
               r.readAsDataURL(f)
             }

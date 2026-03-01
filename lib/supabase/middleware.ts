@@ -62,6 +62,16 @@ export async function updateSession(request: NextRequest) {
       reqHeaders.set('x-franchise-pending', 'true')
       reqHeaders.set('x-yisa-panel', 'franchise_site')
 
+      // Korumalı path'ler — tenant_id olmadan erişilemez
+      const protectedPrefixes = ['/patron', '/franchise', '/tesis', '/antrenor', '/veli', '/dashboard', '/panel', '/kurulum', '/magaza', '/personel', '/sozlesme']
+      const isProtectedPath = protectedPrefixes.some((p) => pathname.startsWith(p))
+      if (isProtectedPath) {
+        const url = request.nextUrl.clone()
+        url.pathname = '/auth/login'
+        url.searchParams.set('from', 'franchise_site')
+        return NextResponse.redirect(url)
+      }
+
       // Kök path'i tenant-site'a yönlendir (public vitrin sayfası)
       if (pathname === '/' || pathname === '') {
         const url = request.nextUrl.clone()
