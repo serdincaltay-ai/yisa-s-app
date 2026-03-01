@@ -468,7 +468,7 @@ function SectionDers() {
         </table>
       </div>
       <div className="mt-6 md:mt-8">
-        <Link href="/veli/kayit">
+        <Link href="/kayit">
           <Button className="rounded-xl bg-cyan-500 hover:bg-cyan-600 text-white px-6 h-10 md:h-11 text-sm md:text-base">
             Deneme Dersi Al
           </Button>
