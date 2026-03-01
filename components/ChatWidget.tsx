@@ -87,14 +87,14 @@ export default function ChatWidget() {
   const responseIdxRef = useRef(0)
   const messagesEndRef = useRef<HTMLDivElement>(null)
 
-  // Embed sayfalarinda widget gosterme
-  if (pathname?.startsWith("/embed")) {
-    return null
-  }
-
   useEffect(() => {
     messagesEndRef.current?.scrollIntoView({ behavior: "smooth" })
   }, [messages])
+
+  // Embed sayfalarinda widget gosterme — tum hook'lardan SONRA
+  if (pathname?.startsWith("/embed")) {
+    return null
+  }
 
   function selectUserType(type: UserType) {
     setUserType(type)
@@ -145,6 +145,7 @@ export default function ChatWidget() {
     setUserType(null)
     setMessages([WELCOME_MSG])
     setResponseIdx(0)
+    responseIdxRef.current = 0
   }
 
   return (
