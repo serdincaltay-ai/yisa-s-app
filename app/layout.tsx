@@ -6,6 +6,7 @@ import { headers } from 'next/headers'
 import { getPanelFromHost } from '@/lib/subdomain'
 import { getFranchiseSubdomains } from '@/lib/db/franchise-subdomains'
 import ChatWidget from '@/components/ChatWidget'
+import Footer from '@/components/Footer'
 
 const inter = Inter({
   subsets: ['latin', 'latin-ext'],
@@ -104,6 +105,7 @@ export default function RootLayout({
       </head>
       <body className={`${inter.className} text-white min-h-screen bg-zinc-950`}>
         {children}
+        <Footer />
         <ChatWidget />
         <SpeedInsights />
         <Script id="sw-register" strategy="afterInteractive">
