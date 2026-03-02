@@ -8,6 +8,7 @@ export async function POST(req: NextRequest) {
   try {
     const supabase = await createClient()
     const { data: { user } } = await supabase.auth.getUser()
+    if (!user) return NextResponse.json({ error: 'Giris gerekli' }, { status: 401 })
 
     const body = await req.json()
     const title = typeof body.title === 'string' ? body.title.trim() : ''
@@ -27,24 +28,28 @@ export async function POST(req: NextRequest) {
 
     const service = createServiceClient(url, key)
 
-    // Find or create default epic for manual tasks
+    // Find or create default epic for manual tasks (upsert ile race condition onlenir)
     let epicId: string | null = null
-    const { data: existingEpic } = await service
+    const { data: epic } = await service
       .from('celf_epics')
+      .upsert(
+        { name: 'Manuel Gorevler', description: 'Chat widget ve manuel olusturulan gorevler' },
+        { onConflict: 'name', ignoreDuplicates: true }
+      )
       .select('id')
-      .eq('name', 'Manuel Gorevler')
-      .limit(1)
-      .maybeSingle()
+      .single()
 
-    if (existingEpic) {
-      epicId = existingEpic.id
+    if (epic) {
+      epicId = epic.id
     } else {
-      const { data: newEpic } = await service
+      // Upsert ignoreDuplicates donus vermeyebilir, tekrar sorgula
+      const { data: existing } = await service
         .from('celf_epics')
-        .insert({ name: 'Manuel Gorevler', description: 'Chat widget ve manuel olusturulan gorevler' })
         .select('id')
-        .single()
-      epicId = newEpic?.id ?? null
+        .eq('name', 'Manuel Gorevler')
+        .limit(1)
+        .maybeSingle()
+      epicId = existing?.id ?? null
     }
 
     const insertData: Record<string, unknown> = {
@@ -53,7 +58,7 @@ export async function POST(req: NextRequest) {
       priority,
       status: 'queued',
       source,
-      created_by: user?.id ?? null,
+      created_by: user.id,
     }
     if (epicId) insertData.epic_id = epicId
 
