@@ -156,7 +156,7 @@ const ROBOTLAR = [
 export default function HomePage() {
   const [activeSection, setActiveSection] = useState<SectionId>("hero")
   const [showForm, setShowForm] = useState(false)
-  const [formData, setFormData] = useState({ ad: "", email: "", telefon: "", tesis_turu: "", sehir: "" })
+  const [formData, setFormData] = useState({ ad: "", email: "", telefon: "", tesis_turu: "", sehir: "", brans: "" })
   const [formSending, setFormSending] = useState(false)
   const [formDone, setFormDone] = useState(false)
   const [mobileMore, setMobileMore] = useState(false)
@@ -180,13 +180,14 @@ export default function HomePage() {
           phone: formData.telefon || null,
           facility_type: formData.tesis_turu || null,
           city: formData.sehir || null,
+          branch: formData.brans || null,
           source: "www",
         }),
       })
       const data = await res.json()
       if (data?.ok) {
         setFormDone(true)
-        setFormData({ ad: "", email: "", telefon: "", tesis_turu: "", sehir: "" })
+        setFormData({ ad: "", email: "", telefon: "", tesis_turu: "", sehir: "", brans: "" })
         setTimeout(() => {
           setShowForm(false)
           setFormDone(false)
@@ -339,6 +340,8 @@ export default function HomePage() {
         </nav>
       </div>
 
+      <FloatingWhatsApp />
+
       {/* Demo Form Modal */}
       {showForm && (
         <div
@@ -363,6 +366,16 @@ export default function HomePage() {
                   <Input placeholder="Telefon" value={formData.telefon} onChange={(e) => setFormData({ ...formData, telefon: e.target.value })} className="bg-gray-800 border-gray-700 h-12 rounded-xl text-white placeholder:text-gray-500" />
                   <Input placeholder="Tesis turu (orn. Cimnastik)" value={formData.tesis_turu} onChange={(e) => setFormData({ ...formData, tesis_turu: e.target.value })} className="bg-gray-800 border-gray-700 h-12 rounded-xl text-white placeholder:text-gray-500" />
                   <Input placeholder="Sehir" value={formData.sehir} onChange={(e) => setFormData({ ...formData, sehir: e.target.value })} className="bg-gray-800 border-gray-700 h-12 rounded-xl text-white placeholder:text-gray-500" required />
+                  <select value={formData.brans} onChange={(e) => setFormData({ ...formData, brans: e.target.value })} className="flex h-12 w-full rounded-xl border border-gray-700 bg-gray-800 px-3 py-2 text-sm text-white">
+                    <option value="">Brans Seciniz (opsiyonel)</option>
+                    <option value="Cimnastik">Cimnastik</option>
+                    <option value="Yuzme">Yuzme</option>
+                    <option value="Basketbol">Basketbol</option>
+                    <option value="Voleybol">Voleybol</option>
+                    <option value="Futbol">Futbol</option>
+                    <option value="Tenis">Tenis</option>
+                    <option value="Diger">Diger</option>
+                  </select>
                   <Button type="submit" disabled={formSending} className="w-full rounded-xl bg-pink-500 text-white hover:bg-pink-600 h-12 font-medium">
                     {formSending ? "Gonderiliyor..." : "Gonder"}
                   </Button>
@@ -748,7 +761,27 @@ function SectionIletisim({ onDemo }: { onDemo: () => void }) {
           </a>
         </div>
       </div>
-      <p className="text-center text-gray-500 text-xs md:text-sm mt-8 md:mt-10">YiSA-S - Robot yonetimli spor tesisi franchise</p>
+      <p className="text-center text-gray-500 text-xs md:text-sm mt-8 md:mt-10">&copy; 2026 YiSA-S — Tum haklari saklidir.</p>
+      <div className="flex items-center justify-center gap-4 mt-4">
+        <a href="https://instagram.com/yisas" target="_blank" rel="noopener noreferrer" className="text-gray-500 hover:text-pink-400 transition-colors text-sm">Instagram</a>
+        <a href="https://facebook.com/yisas" target="_blank" rel="noopener noreferrer" className="text-gray-500 hover:text-blue-400 transition-colors text-sm">Facebook</a>
+      </div>
     </div>
+  )
+}
+
+/* Floating WhatsApp Button — tum sectionlarda gorunur */
+function FloatingWhatsApp() {
+  return (
+    <a
+      href="https://wa.me/905332491903"
+      target="_blank"
+      rel="noopener noreferrer"
+      className="fixed bottom-20 md:bottom-6 left-6 z-40 flex items-center gap-2 px-4 py-3 rounded-full bg-green-600 hover:bg-green-500 text-white shadow-lg shadow-green-600/30 transition-all hover:scale-105"
+      aria-label="WhatsApp ile iletisime gecin"
+    >
+      <MessageCircle className="h-5 w-5" />
+      <span className="hidden sm:inline text-sm font-medium">WhatsApp</span>
+    </a>
   )
 }
