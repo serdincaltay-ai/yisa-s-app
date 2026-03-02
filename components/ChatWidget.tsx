@@ -11,6 +11,7 @@ import {
   Building2,
   Users,
   Dumbbell,
+  ClipboardList,
 } from "lucide-react"
 
 /* ================================================================
@@ -125,6 +126,18 @@ export default function ChatWidget() {
     setMessages((prev) => [...prev, userMsg])
     setInput("")
 
+    // Check if user wants to create a CELF task
+    const lowerText = input.trim().toLowerCase()
+    const isTaskRequest = lowerText.startsWith("gorev:") || lowerText.startsWith("görev:") || lowerText.startsWith("task:")
+
+    if (isTaskRequest) {
+      const taskTitle = input.trim().replace(/^(gorev:|görev:|task:)\s*/i, '').trim()
+      if (taskTitle) {
+        createCelfTask(taskTitle)
+        return
+      }
+    }
+
     // Auto-reply based on userType
     autoReplyTimerRef.current = setTimeout(() => {
       const pool = RESPONSES[userType || "franchise"] || RESPONSES.franchise
@@ -140,6 +153,42 @@ export default function ChatWidget() {
       responseIdxRef.current = currentIdx + 1
       setResponseIdx(currentIdx + 1)
     }, 600)
+  }
+
+  async function createCelfTask(title: string) {
+    const pendingMsg: ChatMessage = {
+      id: `bot-pending-${Date.now()}`,
+      role: "bot",
+      text: `CELF gorev olusturuluyor: "${title}"...`,
+      ts: Date.now(),
+    }
+    setMessages((prev) => [...prev, pendingMsg])
+
+    try {
+      const res = await fetch("/api/celf/tasks", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ title, source: "chat-widget", priority: "medium" }),
+      })
+      const data = await res.json()
+      const resultMsg: ChatMessage = {
+        id: `bot-result-${Date.now()}`,
+        role: "bot",
+        text: data?.ok
+          ? `CELF gorevi olusturuldu! Baslik: "${title}". Gorev kuyruguna eklendi.`
+          : `Gorev olusturulamadi: ${data?.error ?? "Bilinmeyen hata"}`,
+        ts: Date.now(),
+      }
+      setMessages((prev) => [...prev, resultMsg])
+    } catch {
+      const errMsg: ChatMessage = {
+        id: `bot-err-${Date.now()}`,
+        role: "bot",
+        text: "Baglanti hatasi. Gorev olusturulamadi.",
+        ts: Date.now(),
+      }
+      setMessages((prev) => [...prev, errMsg])
+    }
   }
 
   function handleReset() {
@@ -251,6 +300,16 @@ export default function ChatWidget() {
             ))}
             <div ref={messagesEndRef} />
           </div>
+
+          {/* CELF Task Shortcut */}
+          {userType && (
+            <div className="px-4 py-1.5 bg-zinc-900/50 border-t border-zinc-800/50">
+              <p className="text-[10px] text-zinc-600 flex items-center gap-1">
+                <ClipboardList className="w-3 h-3" />
+                <span>CELF gorev olusturmak icin: <code className="text-cyan-500">gorev: baslik</code></span>
+              </p>
+            </div>
+          )}
 
           {/* Input */}
           <div className="flex items-center gap-2 px-4 py-3 bg-zinc-900 border-t border-zinc-800">
