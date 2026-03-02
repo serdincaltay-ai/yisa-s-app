@@ -19,6 +19,16 @@ export async function GET(req: NextRequest) {
     if (!url || !key) return NextResponse.json({ items: [] })
 
     const service = createServiceClient(url, key)
+
+    // Veli sahiplik kontrolu — sadece kendi cocugunun verisini gorebilir
+    const { data: athlete } = await service
+      .from('athletes')
+      .select('id')
+      .eq('id', athleteId)
+      .eq('parent_user_id', user.id)
+      .maybeSingle()
+    if (!athlete) return NextResponse.json({ items: [] })
+
     const { data, error } = await service
       .from('class_schedules')
       .select('id, day_of_week, start_time, end_time, class_type, branch')

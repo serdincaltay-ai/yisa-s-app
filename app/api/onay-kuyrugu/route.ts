@@ -21,6 +21,16 @@ export async function GET() {
 
     const service = createServiceClient(url, key)
 
+    // Patron/owner rol kontrolu — sadece yetkili kullanicilar erisebilir
+    const { data: userRole } = await service
+      .from('user_tenants')
+      .select('role')
+      .eq('user_id', user.id)
+      .in('role', ['owner', 'patron'])
+      .limit(1)
+      .maybeSingle()
+    if (!userRole) return NextResponse.json({ error: 'Yetki yok' }, { status: 403 })
+
     // Demo talep istatistikleri
     const { data: requests } = await service
       .from('demo_requests')

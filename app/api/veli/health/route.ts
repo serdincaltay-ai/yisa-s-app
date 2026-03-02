@@ -28,6 +28,16 @@ export async function GET(req: NextRequest) {
     if (!url || !key) return NextResponse.json({ data: DEFAULT_HEALTH })
 
     const service = createServiceClient(url, key)
+
+    // Veli sahiplik kontrolu — sadece kendi cocugunun verisini gorebilir
+    const { data: athlete } = await service
+      .from('athletes')
+      .select('id')
+      .eq('id', athleteId)
+      .eq('parent_user_id', user.id)
+      .maybeSingle()
+    if (!athlete) return NextResponse.json({ data: DEFAULT_HEALTH })
+
     const { data, error } = await service
       .from('athlete_health')
       .select('*')
