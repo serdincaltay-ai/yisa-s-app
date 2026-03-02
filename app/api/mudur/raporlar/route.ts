@@ -16,13 +16,23 @@ export async function GET(req: NextRequest) {
     if (!user) return NextResponse.json({ error: 'Giris gerekli' }, { status: 401 })
 
     const tenantId = await getTenantIdWithFallback(user.id, req)
-    if (!tenantId) return NextResponse.json({ error: 'Tesis atanmamis' })
+    if (!tenantId) return NextResponse.json({ error: 'Tesis atanmamis' }, { status: 400 })
 
     const url = process.env.NEXT_PUBLIC_SUPABASE_URL ?? process.env.SUPABASE_URL
     const key = process.env.SUPABASE_SERVICE_ROLE_KEY ?? process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY
-    if (!url || !key) return NextResponse.json({ error: 'Sunucu hatasi' })
+    if (!url || !key) return NextResponse.json({ error: 'Sunucu hatasi' }, { status: 500 })
 
     const service = createServiceClient(url, key)
+
+    // Mudur/owner rol kontrolu — sadece yetkili kullanicilar erisebilir
+    const { data: userRole } = await service
+      .from('user_tenants')
+      .select('role')
+      .eq('user_id', user.id)
+      .in('role', ['owner', 'manager'])
+      .limit(1)
+      .maybeSingle()
+    if (!userRole) return NextResponse.json({ error: 'Yetki yok' }, { status: 403 })
 
     // Brans bazli sporcu dagilimi
     const { data: athletes } = await service
@@ -85,6 +95,6 @@ export async function GET(req: NextRequest) {
     })
   } catch (e) {
     console.error('[mudur/raporlar]', e)
-    return NextResponse.json({ error: 'Sunucu hatasi' })
+    return NextResponse.json({ error: 'Sunucu hatasi' }, { status: 500 })
   }
 }
