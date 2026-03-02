@@ -26,7 +26,7 @@ export async function GET(req: NextRequest) {
     const service = createServiceClient(url, key)
     let query = service
       .from('athletes')
-      .select('id, name, surname, birth_date, gender, branch, level, "group", status, parent_name, parent_phone, parent_email, notes, created_at')
+      .select('id, name, surname, birth_date, gender, branch, level, "group", status, parent_name, parent_phone, parent_email, notes, trainer_id, created_at')
       .eq('tenant_id', tenantId)
 
     if (status && ['active', 'inactive', 'trial'].includes(status)) query = query.eq('status', status)

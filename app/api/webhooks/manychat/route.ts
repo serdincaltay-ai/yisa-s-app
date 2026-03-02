@@ -44,23 +44,21 @@ function parseLead(body: unknown): { name: string; email: string; phone?: string
   return { name: name || 'ManyChat Lead', email: email || 'manychat@lead.local', phone, city, notes }
 }
 
-/** GET — Webhook sağlık kontrolü ve test endpoint'i */
+/** GET — Webhook sağlık kontrolü (PII göstermez, sadece sayı döner) */
 export async function GET() {
   const supabase = getSupabase()
   if (!supabase) {
     return NextResponse.json({ status: 'error', message: 'Supabase bağlantısı yapılandırılmamış.' }, { status: 500 })
   }
 
-  // Son 10 ManyChat kaydını getir
-  const { data, error } = await supabase
+  // Sadece toplam sayıyı getir — PII ifşa etme
+  const { count, error } = await supabase
     .from('demo_requests')
-    .select('id, name, email, phone, city, created_at')
+    .select('id', { count: 'exact', head: true })
     .eq('source', 'manychat')
-    .order('created_at', { ascending: false })
-    .limit(10)
 
   if (error) {
-    return NextResponse.json({ status: 'error', message: 'Veri alınamadı.', detail: error.message }, { status: 500 })
+    return NextResponse.json({ status: 'error', message: 'Veri alınamadı.' }, { status: 500 })
   }
 
   return NextResponse.json({
@@ -70,8 +68,7 @@ export async function GET() {
     description: 'ManyChat lead webhook — demo_requests tablosuna yazar',
     requiredFields: ['first_name veya name', 'email'],
     optionalFields: ['last_name', 'phone', 'city', 'notes'],
-    recentLeads: data ?? [],
-    totalRecent: data?.length ?? 0,
+    totalLeads: count ?? 0,
   })
 }
 

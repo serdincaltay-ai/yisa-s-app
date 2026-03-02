@@ -49,7 +49,7 @@ import { useRouter } from "next/navigation"
 import { supabase } from "@/lib/supabase"
 import { FranchiseIntro } from "@/components/FranchiseIntro"
 
-type Athlete = { id: string; name: string; surname?: string | null; birth_date?: string | null; gender?: string | null; branch?: string | null; level?: string | null; status?: string; created_at?: string }
+type Athlete = { id: string; name: string; surname?: string | null; birth_date?: string | null; gender?: string | null; branch?: string | null; level?: string | null; status?: string; created_at?: string; parent_email?: string | null; trainer_id?: string | null }
 type StaffMember = {
   id: string; name: string; surname?: string | null; email?: string | null; phone?: string | null; role?: string; branch?: string | null; is_active?: boolean; created_at?: string;
   birth_date?: string | null; address?: string | null; city?: string | null; district?: string | null; previous_work?: string | null; chronic_condition?: string | null; has_driving_license?: boolean | null; languages?: string | null;
@@ -190,7 +190,7 @@ export default function FranchiseDashboard() {
           ) : (
             <>
               {activeTab === "overview" && <OverviewTab tenant={tenant} athletes={athletes} staff={staff} onRefresh={() => { fetchAthletes(); fetchStaff(); fetchTenant(); }} />}
-              {activeTab === "students" && <StudentsTab athletes={athletes} onRefresh={fetchAthletes} hasTenant={!!tenant?.id} />}
+              {activeTab === "students" && <StudentsTab athletes={athletes} staff={staff} onRefresh={fetchAthletes} hasTenant={!!tenant?.id} />}
               {activeTab === "trainers" && <TrainersTab staff={staff} onRefresh={fetchStaff} />}
               {activeTab === "schedule" && <ScheduleTab staff={staff} hasTenant={!!tenant?.id} />}
               {activeTab === "aidat" && <AidatTab athletes={athletes} hasTenant={!!tenant?.id} />}
@@ -410,25 +410,38 @@ function ScheduleItem({ time, title, trainer, students }: { time: string; title:
   )
 }
 
-function StudentsTab({ athletes, onRefresh, hasTenant }: { athletes: Athlete[]; onRefresh: () => void; hasTenant: boolean }) {
+function StudentsTab({ athletes, staff, onRefresh, hasTenant }: { athletes: Athlete[]; staff: StaffMember[]; onRefresh: () => void; hasTenant: boolean }) {
+  const router = useRouter()
   const [showForm, setShowForm] = useState(false)
   const [sending, setSending] = useState(false)
-  const [form, setForm] = useState({ name: "", surname: "", birth_date: "", gender: "", branch: "", level: "", parent_email: "" })
+  const [form, setForm] = useState({ name: "", surname: "", birth_date: "", gender: "", branch: "", level: "", parent_email: "", trainer_id: "" })
+  const [editingId, setEditingId] = useState<string | null>(null)
+  const [deleting, setDeleting] = useState<string | null>(null)
+  const [assigningTrainer, setAssigningTrainer] = useState<string | null>(null)
+  const [selectedTrainer, setSelectedTrainer] = useState<string>("")
+  const trainers = staff.filter(s => s.role === "trainer" || s.role === "manager")
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault()
     if (sending || !form.name.trim()) return
     setSending(true)
     try {
-      const res = await fetch("/api/franchise/athletes", {
-        method: "POST",
+      const url = editingId ? `/api/franchise/athletes/${editingId}` : "/api/franchise/athletes"
+      const method = editingId ? "PATCH" : "POST"
+      // Filter out empty strings on PATCH to avoid overwriting existing values with null
+      const payload = editingId
+        ? Object.fromEntries(Object.entries(form).filter(([, v]) => v !== ""))
+        : form
+      const res = await fetch(url, {
+        method,
         headers: { "Content-Type": "application/json" },
-        body: JSON.stringify(form),
+        body: JSON.stringify(payload),
       })
       const data = await res.json()
       if (data?.ok) {
-        setForm({ name: "", surname: "", birth_date: "", gender: "", branch: "", level: "", parent_email: "" })
+        setForm({ name: "", surname: "", birth_date: "", gender: "", branch: "", level: "", parent_email: "", trainer_id: "" })
         setShowForm(false)
+        setEditingId(null)
         onRefresh()
       } else {
         alert(data?.error ?? "Kayit basarisiz")
@@ -446,6 +459,57 @@ function StudentsTab({ athletes, onRefresh, hasTenant }: { athletes: Athlete[]; 
     return Math.floor(diff / (365.25 * 24 * 60 * 60 * 1000))
   }
 
+  const handleEdit = (a: Athlete) => {
+    setEditingId(a.id)
+    setForm({
+      name: a.name ?? "",
+      surname: a.surname ?? "",
+      birth_date: a.birth_date ?? "",
+      gender: a.gender ?? "",
+      branch: a.branch ?? "",
+      level: a.level ?? "",
+      parent_email: a.parent_email ?? "",
+      trainer_id: a.trainer_id ?? "",
+    })
+    setShowForm(true)
+  }
+
+  const handleDelete = async (id: string) => {
+    if (!confirm("Bu ogrenciyi pasife almak istiyor musunuz?")) return
+    setDeleting(id)
+    try {
+      const res = await fetch(`/api/franchise/athletes/${id}`, { method: "DELETE" })
+      const data = await res.json()
+      if (data?.ok) onRefresh()
+      else alert(data?.error ?? "Islem basarisiz")
+    } catch {
+      alert("Baglanti hatasi")
+    } finally {
+      setDeleting(null)
+    }
+  }
+
+  const handleAssignTrainer = async (athleteId: string) => {
+    if (!selectedTrainer) return
+    try {
+      const res = await fetch(`/api/franchise/athletes/${athleteId}`, {
+        method: "PATCH",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ trainer_id: selectedTrainer }),
+      })
+      const data = await res.json()
+      if (data?.ok) {
+        setAssigningTrainer(null)
+        setSelectedTrainer("")
+        onRefresh()
+      } else {
+        alert(data?.error ?? "Atama basarisiz")
+      }
+    } catch {
+      alert("Baglanti hatasi")
+    }
+  }
+
   return (
     <div className="space-y-6">
       <div className="flex items-center justify-between">
@@ -453,7 +517,7 @@ function StudentsTab({ athletes, onRefresh, hasTenant }: { athletes: Athlete[]; 
           <h2 className="text-2xl font-bold text-foreground">Ogrenciler</h2>
           <p className="text-muted-foreground">Tum ogrencileri goruntule ve yonet</p>
         </div>
-        <Button onClick={() => setShowForm(true)} disabled={!hasTenant} title={!hasTenant ? "Tesis atanmasini bekleyin" : ""}><Plus className="mr-2 h-4 w-4" />Yeni Ogrenci</Button>
+        <Button onClick={() => { setEditingId(null); setForm({ name: "", surname: "", birth_date: "", gender: "", branch: "", level: "", parent_email: "", trainer_id: "" }); setShowForm(true); }} disabled={!hasTenant} title={!hasTenant ? "Tesis atanmasini bekleyin" : ""}><Plus className="mr-2 h-4 w-4" />Yeni Ogrenci</Button>
       </div>
 
       {!hasTenant && (
@@ -510,9 +574,13 @@ function StudentsTab({ athletes, onRefresh, hasTenant }: { athletes: Athlete[]; 
                       </div>
                     </div>
                   </div>
-                  <div className="flex items-center gap-4">
-                    <Button variant="outline" size="sm"><Eye className="mr-2 h-4 w-4" />Profil</Button>
-                    <Button size="sm"><Brain className="mr-2 h-4 w-4" />AI Analiz</Button>
+                  <div className="flex items-center gap-2 flex-wrap">
+                    <Button variant="outline" size="sm" onClick={() => router.push(`/panel/ogrenciler/${a.id}`)}><Eye className="mr-1 h-4 w-4" />Profil</Button>
+                    <Button variant="outline" size="sm" onClick={() => handleEdit(a)}><Star className="mr-1 h-4 w-4" />Duzenle</Button>
+                    <Button variant="outline" size="sm" onClick={() => { setAssigningTrainer(a.id); setSelectedTrainer(""); }}><Dumbbell className="mr-1 h-4 w-4" />Egitmen Ata</Button>
+                    <Button variant="destructive" size="sm" onClick={() => handleDelete(a.id)} disabled={deleting === a.id}>
+                      {deleting === a.id ? <Loader2 className="h-4 w-4 animate-spin" /> : "Sil"}
+                    </Button>
                   </div>
                 </div>
               </CardContent>
@@ -520,12 +588,61 @@ function StudentsTab({ athletes, onRefresh, hasTenant }: { athletes: Athlete[]; 
           ))
         )}
       </div>
+
+      {assigningTrainer && (
+        <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/50">
+          <Card className="w-full max-w-md">
+            <CardHeader>
+              <CardTitle>Egitmen Ata</CardTitle>
+              <CardDescription>Ogrenciye bir antrenor atayin</CardDescription>
+            </CardHeader>
+            <CardContent className="space-y-4">
+              <select
+                className="flex h-10 w-full rounded-md border border-input bg-background px-3 py-2 text-sm"
+                value={selectedTrainer}
+                onChange={e => setSelectedTrainer(e.target.value)}
+              >
+                <option value="">Antrenor seciniz</option>
+                {trainers.map(t => (
+                  <option key={t.id} value={t.id}>{t.name} {t.surname ?? ""} — {t.branch ?? t.role ?? ""}</option>
+                ))}
+              </select>
+              <div className="flex gap-2">
+                <Button onClick={() => handleAssignTrainer(assigningTrainer)} disabled={!selectedTrainer}>Ata</Button>
+                <Button variant="outline" onClick={() => { setAssigningTrainer(null); setSelectedTrainer(""); }}>Iptal</Button>
+              </div>
+            </CardContent>
+          </Card>
+        </div>
+      )}
     </div>
   )
 }
 
 function TrainersTab({ staff, onRefresh }: { staff: StaffMember[]; onRefresh: () => void }) {
+  const router = useRouter()
   const trainers = staff.filter(s => s.role === "trainer" || s.role === "manager")
+  const [deactivating, setDeactivating] = useState<string | null>(null)
+
+  const handleDeactivate = async (id: string) => {
+    if (!confirm("Bu personeli pasife almak istiyor musunuz?")) return
+    setDeactivating(id)
+    try {
+      const res = await fetch(`/api/franchise/staff/${id}`, {
+        method: "PATCH",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ is_active: false }),
+      })
+      const data = await res.json()
+      if (data?.ok) onRefresh()
+      else alert(data?.error ?? "Islem basarisiz")
+    } catch {
+      alert("Baglanti hatasi")
+    } finally {
+      setDeactivating(null)
+    }
+  }
+
   return (
     <div className="space-y-6">
       <div className="flex items-center justify-between">
@@ -533,7 +650,7 @@ function TrainersTab({ staff, onRefresh }: { staff: StaffMember[]; onRefresh: ()
           <h2 className="text-2xl font-bold text-foreground">Antrenorler</h2>
           <p className="text-muted-foreground">Antrenor kadrosu — Personel sekmesinden ekleyin</p>
         </div>
-        <Button onClick={() => {}}><Plus className="mr-2 h-4 w-4" />Personel sekmesinden ekle</Button>
+        <Button onClick={() => router.push("/personel")}><Plus className="mr-2 h-4 w-4" />Personel Ekle</Button>
       </div>
       <div className="grid gap-4 md:grid-cols-2 lg:grid-cols-3">
         {trainers.length === 0 ? (
@@ -549,15 +666,25 @@ function TrainersTab({ staff, onRefresh }: { staff: StaffMember[]; onRefresh: ()
                   <div>
                     <h3 className="font-semibold text-foreground">{t.name} {t.surname ?? ""}</h3>
                     <p className="text-sm text-muted-foreground">{t.branch ?? t.role ?? "—"}</p>
+                    {t.email && <p className="text-xs text-muted-foreground">{t.email}</p>}
+                    {t.phone && <p className="text-xs text-muted-foreground">{t.phone}</p>}
                   </div>
                 </div>
                 <div className="mt-4 flex items-center justify-between">
+                  <Badge variant={t.is_active !== false ? "default" : "secondary"}>
+                    {t.is_active !== false ? "Aktif" : "Pasif"}
+                  </Badge>
                   <div className="flex items-center gap-1 text-sm">
                     <Users className="h-4 w-4 text-muted-foreground" />
                     <span className="text-foreground">{t.role}</span>
                   </div>
                 </div>
-                <Button variant="outline" className="mt-4 w-full bg-transparent" size="sm">Detaylar</Button>
+                <div className="mt-4 flex gap-2">
+                  <Button variant="outline" className="flex-1 bg-transparent" size="sm" onClick={() => router.push("/personel")}>Duzenle</Button>
+                  <Button variant="destructive" className="flex-1" size="sm" onClick={() => handleDeactivate(t.id)} disabled={deactivating === t.id}>
+                    {deactivating === t.id ? <Loader2 className="h-4 w-4 animate-spin" /> : "Pasife Al"}
+                  </Button>
+                </div>
               </CardContent>
             </Card>
           ))
