@@ -175,3 +175,108 @@ html {
     background: linear-gradient(135deg, hsl(187 85% 45%), hsl(160 84% 40%));
   }
 }
+
+/* ===============================================================
+   TV-Buton Layout — Fixed sidebar + slide content
+   =============================================================== */
+.tv-layout {
+  width: 100vw;
+  height: 100vh;
+  overflow: hidden;
+  background: hsl(222 47% 6%);
+}
+
+/* Sol sidebar — 60px genislik, dikey icon+label butonlar */
+.tv-sidebar {
+  width: 60px;
+  min-width: 60px;
+  height: 100vh;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  padding: 12px 4px;
+  background: hsl(222 40% 8%);
+  border-right: 1px solid hsl(222 25% 16%);
+  overflow: hidden;
+  flex-shrink: 0;
+}
+
+.tv-sidebar-btn {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  width: 48px;
+  min-height: 48px;
+  padding: 6px 2px;
+  border-radius: 10px;
+  color: hsl(215 20% 55%);
+  background: transparent;
+  border: none;
+  cursor: pointer;
+  transition: all 0.2s ease;
+}
+.tv-sidebar-btn:hover {
+  color: hsl(0 0% 95%);
+  background: hsl(222 25% 14%);
+}
+
+.tv-sidebar-btn-active {
+  color: hsl(187 85% 55%) !important;
+  background: hsl(187 85% 50% / 0.12) !important;
+  box-shadow: inset 2px 0 0 hsl(187 85% 50%);
+}
+
+/* Sag content — slide animasyonu 0.4s */
+@keyframes tvSlideIn {
+  from {
+    opacity: 0;
+    transform: translateX(24px);
+  }
+  to {
+    opacity: 1;
+    transform: translateX(0);
+  }
+}
+
+.tv-content-slide {
+  width: 100%;
+  height: 100%;
+  animation: tvSlideIn 0.4s ease-out;
+}
+
+/* Mobile alt tab bar */
+.tv-mobile-tabbar {
+  display: flex;
+  align-items: center;
+  justify-content: space-around;
+  height: 56px;
+  min-height: 56px;
+  background: hsl(222 40% 8%);
+  border-top: 1px solid hsl(222 25% 16%);
+  padding: 0 4px;
+  flex-shrink: 0;
+}
+
+.tv-mobile-tab {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  padding: 4px 8px;
+  border-radius: 8px;
+  color: hsl(215 20% 55%);
+  background: transparent;
+  border: none;
+  cursor: pointer;
+  transition: all 0.2s ease;
+  min-width: 44px;
+}
+.tv-mobile-tab:hover {
+  color: hsl(0 0% 95%);
+}
+
+.tv-mobile-tab-active {
+  color: hsl(187 85% 55%) !important;
+  background: hsl(187 85% 50% / 0.12) !important;
+}
