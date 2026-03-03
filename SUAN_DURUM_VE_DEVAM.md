@@ -48,7 +48,7 @@ Proje klasöründeyken: `Remove-Item .git\index.lock -Force -ErrorAction Silentl
 
 ```
 [Yerel] git push origin main
-    → GitHub (serdincaltay-ai/yisa-s-app)
+    → GitHub (serdincaltay-ai/tenant-yisa-s)
         → Vercel otomatik deploy (app.yisa-s.com)
             → Canlı site Supabase'e istek atar (Auth + tablolar)
 ```
@@ -57,7 +57,7 @@ Proje klasöründeyken: `Remove-Item .git\index.lock -Force -ErrorAction Silentl
 
 | Servis | Bu projede (yisa-s-app) kullanımı | Kurulu mu? | Not |
 |--------|-----------------------------------|------------|-----|
-| **GitHub** | Repo: kaynak kodu, push = tetikleyici | ✅ Evet | origin → serdincaltay-ai/yisa-s-app |
+| **GitHub** | Repo: kaynak kodu, push = tetikleyici | ✅ Evet | origin → serdincaltay-ai/tenant-yisa-s |
 | **Vercel** | Frontend + API (Next.js) deploy, domain app.yisa-s.com | ✅ Evet | vercel.json var; proje Vercel’e bağlı olmalı |
 | **Supabase** | Auth (giriş) + veritabanı (tablolar) | ✅ Evet | 8 tablo kuruldu; .env.local’de URL + key gerekli |
 | **Railway** | Bu projede **yok** | ❌ Bu repo’da yok | Patron paneli backend’i Next.js API (Vercel’de); Railway ayrı projede kullanılabilir |

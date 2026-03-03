@@ -19,7 +19,7 @@ Bu belge: **Mobil/PWA güncellemesi**, **hangi projede ne var**, **Supabase’de
 | Ortam | Proje / Konum | Açıklama |
 |-------|----------------|----------|
 | **Kod (ana proje)** | `C:\Users\info\OneDrive\Desktop\YISA_S_APP\yisa-s-app` | Next.js uygulaması; tüm değişiklikler burada. |
-| **GitHub** | `serdincaltay-ai/yisa-s-app` | Repo; push edilen branch genelde `main`. |
+| **GitHub** | `serdincaltay-ai/tenant-yisa-s` | Repo; push edilen branch genelde `main`. |
 | **Vercel** | Aynı repo bağlı proje | `main`’e push → Vercel otomatik build + deploy. |
 | **Supabase** | Tek Supabase projesi (Dashboard’da seçtiğiniz) | Tablolar, Auth, SQL; `.env` içindeki `NEXT_PUBLIC_SUPABASE_URL` / `SUPABASE_SERVICE_ROLE_KEY` bu projeyi gösterir. |
 
@@ -54,7 +54,7 @@ Bu belge: **Mobil/PWA güncellemesi**, **hangi projede ne var**, **Supabase’de
 
 ## 4. Vercel — Hangi proje, hangi dosyalar?
 
-**Proje:** GitHub repo’su `serdincaltay-ai/yisa-s-app` ile bağlı **Vercel projesi**. Branch: genelde `main`.
+**Proje:** GitHub repo'su `serdincaltay-ai/tenant-yisa-s` ile bağlı **Vercel projesi**. Branch: genelde `main`.
 
 **Deploy edilen:** Tüm `yisa-s-app` klasörü (repo root). Vercel:
 
@@ -120,7 +120,7 @@ Proje içinde **referans / “kitap”** gibi kullandığınız dokümanlar:
 |--------|------------------|
 | **Mobil / PWA** | Aynı Next.js uygulaması; Vercel’e deploy = mobilde de güncel. Ayrı mobil proje yok. |
 | **Supabase** | Tek proje; YENI_MIGRASYONLAR, ceo_templates, SABLONLAR, patron_commands, VITRIN SQL dosyaları + yukarıdaki tablolar. |
-| **Vercel** | `serdincaltay-ai/yisa-s-app` repo’su; tüm `yisa-s-app` kaynak kodu (app, lib, components, vercel.json). |
+| **Vercel** | `serdincaltay-ai/tenant-yisa-s` repo’su; tüm `yisa-s-app` kaynak kodu (app, lib, components, vercel.json). |
 | **Proje (kod)** | `yisa-s-app` içindeki app/, lib/, components/, supabase/; aktif sayfa ve API’ler yukarıda listelendi. |
 | **Kitap / doküman** | Yukarıdaki .md dosyaları; test senaryosu, hiyerarşi, giriş sayfaları, SQL sırası. |
 
