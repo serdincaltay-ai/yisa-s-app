@@ -6,6 +6,7 @@ import { headers } from 'next/headers'
 import { getPanelFromHost } from '@/lib/subdomain'
 import { getFranchiseSubdomains } from '@/lib/db/franchise-subdomains'
 import ChatWidget from '@/components/ChatWidget'
+import FooterWrapper from '@/components/FooterWrapper'
 
 const inter = Inter({
   subsets: ['latin', 'latin-ext'],
@@ -21,22 +22,43 @@ export async function generateMetadata() {
   const panel = getPanelFromHost(host, subdomains)
   const title =
     panel === 'patron'
-      ? 'YİSA-S Patron Paneli'
+      ? 'YiSA-S Patron Paneli'
       : panel === 'franchise' || panel === 'franchise_site'
-        ? 'YİSA-S Franchise Paneli'
+        ? 'YiSA-S Franchise Paneli'
         : panel === 'veli'
-          ? 'YİSA-S Veli Paneli'
-          : 'YİSA-S'
+          ? 'YiSA-S Veli Paneli'
+          : 'YiSA-S'
+  const description =
+    panel === 'patron'
+      ? 'Patron Komuta Merkezi — Robotlar, onay kuyrugu, franchise yonetimi'
+      : panel === 'franchise' || panel === 'franchise_site'
+        ? 'Franchise Paneli — Ogrenci yonetimi, yoklama, aidat takibi'
+        : panel === 'veli'
+          ? 'Veli Paneli — Cocuk gelisim takibi, odeme, ders programi'
+          : 'YiSA-S — Robot yonetimli spor tesisi franchise sistemi. Cimnastik, basketbol, yuzme ve daha fazlasi.'
   return {
-    title: `${title} — Yönetici İşletmeci Sporcu Antrenör Sistemi`,
-    description:
-      panel === 'patron'
-        ? 'Patron Komuta Merkezi — Robotlar, onay, franchise'
-        : panel === 'franchise' || panel === 'franchise_site'
-          ? 'Franchise Paneli — Tesisinizi yönetin'
-          : panel === 'veli'
-            ? 'Veli Paneli — Çocuk takibi, ödeme'
-            : 'YİSA-S Spor Tesisi Yönetim Sistemi',
+    title: `${title} — Yonetici Isletmeci Sporcu Antrenor Sistemi`,
+    description,
+    keywords: ['YiSA-S', 'spor tesisi yonetimi', 'cimnastik', 'franchise', 'sporcu takip', 'yoklama sistemi', 'veli paneli', 'antrenor paneli'],
+    authors: [{ name: 'YiSA-S' }],
+    creator: 'YiSA-S',
+    publisher: 'YiSA-S',
+    openGraph: {
+      title: `${title} — Yonetici Isletmeci Sporcu Antrenor Sistemi`,
+      description,
+      siteName: 'YiSA-S',
+      locale: 'tr_TR',
+      type: 'website',
+    },
+    twitter: {
+      card: 'summary_large_image',
+      title: `${title} — Spor Tesisi Yonetim Sistemi`,
+      description,
+    },
+    robots: {
+      index: true,
+      follow: true,
+    },
     manifest: '/manifest.json',
     appleWebApp: {
       capable: true,
@@ -83,6 +105,7 @@ export default function RootLayout({
       </head>
       <body className={`${inter.className} text-white min-h-screen bg-zinc-950`}>
         {children}
+        <FooterWrapper />
         <ChatWidget />
         <SpeedInsights />
         <Script id="sw-register" strategy="afterInteractive">

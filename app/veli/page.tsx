@@ -37,56 +37,36 @@ import {
 
 type Child = { id: string; name: string; surname?: string | null; birth_date?: string | null; gender?: string | null; branch?: string | null; level?: string | null; status?: string }
 
-const mockChild = {
-  id: 1,
-  name: "Elif Yilmaz",
-  age: 8,
-  branch: "Artistik Cimnastik",
-  level: "Baslangic",
-  trainer: "Ayse Celik",
-  tokens: 45,
-  height: 128,
-  weight: 26,
-  healthStatus: "Saglikli",
-  nextClass: "Yarin 14:00",
-  attendance: 92,
-  progress: 68
+type ScheduleItem = { day: string; time: string; type: string }
+type Movement = { name: string; status: string; date?: string; progress?: number }
+type HealthData = {
+  sleep: { average: number; target: number };
+  nutrition: { score: number; target: number };
+  posture: { status: string; lastCheck: string };
+  flexibility: { score: number; change: string };
+  strength: { score: number; change: string };
+  speed: { score: number; change: string };
 }
+type AIInsight = { type: string; title: string; description: string; confidence: number }
 
-const mockSchedule = [
-  { day: "Pazartesi", time: "14:00 - 15:30", type: "Grup Dersi" },
-  { day: "Carsamba", time: "14:00 - 15:30", type: "Grup Dersi" },
-  { day: "Cuma", time: "16:00 - 17:00", type: "Bireysel Calisma" },
-]
-
-const mockMovements = [
-  { name: "On Takla", status: "learned", date: "15 Ocak" },
-  { name: "Kopru", status: "learned", date: "20 Ocak" },
-  { name: "Amistand", status: "learning", progress: 70 },
-  { name: "Arka Takla", status: "upcoming" },
-  { name: "Rondat", status: "upcoming" },
-]
-
-const mockHealthData = {
-  sleep: { average: 9.2, target: 9, unit: "saat" },
-  nutrition: { score: 85, target: 80, unit: "puan" },
-  posture: { status: "Normal", lastCheck: "25 Ocak" },
-  flexibility: { score: 78, change: "+5" },
-  strength: { score: 65, change: "+8" },
-  speed: { score: 72, change: "+3" }
+const DEFAULT_HEALTH: HealthData = {
+  sleep: { average: 0, target: 9 },
+  nutrition: { score: 0, target: 80 },
+  posture: { status: "Veri yok", lastCheck: "—" },
+  flexibility: { score: 0, change: "—" },
+  strength: { score: 0, change: "—" },
+  speed: { score: 0, change: "—" },
 }
-
-const mockAIInsights = [
-  { type: "sport", title: "Yuzme Potansiyeli", description: "Elif'in vucud oranlari ve esneklik degerleri yuzme icin cok uygun.", confidence: 85 },
-  { type: "health", title: "Boy Gelisimi", description: "Mevcut buyume hizi normalin uzerinde. Tahmini yetiskin boyu: 168-172 cm", confidence: 78 },
-  { type: "training", title: "Antrenman Onerisi", description: "Patlayici kuvvet calismalarini artirmak faydali olacak.", confidence: 92 }
-]
 
 export default function VeliDashboard() {
   const [activeTab, setActiveTab] = useState("overview")
   const [children, setChildren] = useState<Child[]>([])
   const [selectedChild, setSelectedChild] = useState<Child | null>(null)
   const [loading, setLoading] = useState(true)
+  const [schedule, setSchedule] = useState<ScheduleItem[]>([])
+  const [movements, setMovements] = useState<Movement[]>([])
+  const [healthData, setHealthData] = useState<HealthData>(DEFAULT_HEALTH)
+  const [aiInsights, setAiInsights] = useState<AIInsight[]>([])
 
   const fetchChildren = useCallback(async () => {
     const res = await fetch("/api/veli/children")
@@ -100,9 +80,45 @@ export default function VeliDashboard() {
     })
   }, [])
 
+  const fetchChildData = useCallback(async (childId: string) => {
+    try {
+      const [schedRes, movRes, healthRes, aiRes] = await Promise.all([
+        fetch(`/api/veli/schedule?athlete_id=${childId}`).catch(() => null),
+        fetch(`/api/veli/movements?athlete_id=${childId}`).catch(() => null),
+        fetch(`/api/veli/health?athlete_id=${childId}`).catch(() => null),
+        fetch(`/api/veli/ai-insights?athlete_id=${childId}`).catch(() => null),
+      ])
+      if (schedRes?.ok) {
+        const d = await schedRes.json()
+        setSchedule(Array.isArray(d?.items) ? d.items : [])
+      } else { setSchedule([]) }
+      if (movRes?.ok) {
+        const d = await movRes.json()
+        setMovements(Array.isArray(d?.items) ? d.items : [])
+      } else { setMovements([]) }
+      if (healthRes?.ok) {
+        const d = await healthRes.json()
+        setHealthData(d?.data ?? DEFAULT_HEALTH)
+      } else { setHealthData(DEFAULT_HEALTH) }
+      if (aiRes?.ok) {
+        const d = await aiRes.json()
+        setAiInsights(Array.isArray(d?.items) ? d.items : [])
+      } else { setAiInsights([]) }
+    } catch {
+      setSchedule([])
+      setMovements([])
+      setHealthData(DEFAULT_HEALTH)
+      setAiInsights([])
+    }
+  }, [])
+
   useEffect(() => {
     fetchChildren().finally(() => setLoading(false))
   }, [fetchChildren])
+
+  useEffect(() => {
+    if (selectedChild?.id) fetchChildData(selectedChild.id)
+  }, [selectedChild, fetchChildData])
 
   const child = selectedChild ?? (children[0] ?? null)
   const ageFromBirth = (d: string | null | undefined) => {
@@ -199,13 +215,13 @@ export default function VeliDashboard() {
               <>
                 <BildirimlerCard />
                 <DevamsizlikCard athleteId={child.id} />
-                <OverviewTab child={child} schedule={mockSchedule} />
+                <OverviewTab child={child} schedule={schedule} />
               </>
             )}
-            {activeTab === "health" && <HealthTab data={mockHealthData} />}
-            {activeTab === "training" && child && <TrainingTab movements={mockMovements} child={child} />}
+            {activeTab === "health" && <HealthTab data={healthData} />}
+            {activeTab === "training" && child && <TrainingTab movements={movements} child={child} />}
             {activeTab === "aidat" && <AidatTab child={child} />}
-            {activeTab === "ai" && child && <AITab insights={mockAIInsights} child={child} />}
+            {activeTab === "ai" && child && <AITab insights={aiInsights} child={child} />}
           </main>
 
           <nav className="sticky bottom-0 border-t border-border bg-card">
@@ -287,7 +303,7 @@ function NavItem({ icon: Icon, label, active, onClick }: { icon: React.ElementTy
   )
 }
 
-function OverviewTab({ child, schedule }: { child: Child; schedule: typeof mockSchedule }) {
+function OverviewTab({ child, schedule }: { child: Child; schedule: ScheduleItem[] }) {
   return (
     <div className="space-y-4">
       <Card className="border-primary/50 bg-primary/5">
@@ -374,7 +390,7 @@ function OverviewTab({ child, schedule }: { child: Child; schedule: typeof mockS
   )
 }
 
-function HealthTab({ data }: { data: typeof mockHealthData }) {
+function HealthTab({ data }: { data: HealthData }) {
   return (
     <div className="space-y-4">
       <Card>
@@ -536,7 +552,7 @@ function AidatTab({ child }: { child: Child | null }) {
   )
 }
 
-function TrainingTab({ movements, child }: { movements: typeof mockMovements; child: Child }) {
+function TrainingTab({ movements, child }: { movements: Movement[]; child: Child }) {
   return (
     <div className="space-y-4">
       <Card className="border-primary/50 bg-primary/5">
@@ -621,7 +637,7 @@ function TrainingTab({ movements, child }: { movements: typeof mockMovements; ch
   )
 }
 
-function AITab({ insights, child }: { insights: typeof mockAIInsights; child: Child }) {
+function AITab({ insights, child }: { insights: AIInsight[]; child: Child }) {
   return (
     <div className="space-y-4">
       <Card className="border-primary/50 bg-primary/5">

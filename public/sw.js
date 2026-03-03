@@ -1,5 +1,5 @@
-// YİSA-S Service Worker v3.0 — Inter font + scroll-snap PWA
-const CACHE_NAME = 'yisa-s-v5'
+// YiSA-S Service Worker v4.0 — Inter font + scroll-snap PWA + panel offline
+const CACHE_NAME = 'yisa-s-v6'
 const OFFLINE_URL = '/offline.html'
 
 // Önbelleğe alınacak statik dosyalar
@@ -7,6 +7,11 @@ const STATIC_ASSETS = [
   '/',
   '/dashboard',
   '/auth/login',
+  '/franchise',
+  '/veli',
+  '/antrenor',
+  '/fiyatlar',
+  '/kayit',
   '/icon-192.png',
   '/icon-512.png',
   '/icon.svg',
@@ -29,15 +34,16 @@ self.addEventListener('install', (event) => {
   self.skipWaiting()
 })
 
-// Service Worker aktivasyonu
+// Service Worker aktivasyonu — eski cache temizligi
 self.addEventListener('activate', (event) => {
+  const KEEP = [CACHE_NAME, FONT_CACHE_NAME]
   event.waitUntil(
     caches.keys().then((cacheNames) => {
       return Promise.all(
         cacheNames
-          .filter((name) => name !== CACHE_NAME)
+          .filter((name) => !KEEP.includes(name))
           .map((name) => {
-            console.log('[SW] Eski önbellek siliniyor:', name)
+            console.log('[SW] Eski onbellek siliniyor:', name)
             return caches.delete(name)
           })
       )
