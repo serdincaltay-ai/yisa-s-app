@@ -30,11 +30,12 @@ export async function GET(req: NextRequest) {
       .maybeSingle()
     if (!userRole) return NextResponse.json({ error: 'Yetki yok' }, { status: 403 })
 
-    // Kullanicinin erisebilecegi tenant'lari bul
+    // Kullanicinin manager/owner oldugu tenant'lari bul (sadece yetkili tenant'lar)
     const { data: userTenants } = await service
       .from('user_tenants')
       .select('tenant_id')
       .eq('user_id', user.id)
+      .in('role', ['owner', 'manager'])
 
     const { data: ownedTenants } = await service
       .from('tenants')

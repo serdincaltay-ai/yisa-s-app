@@ -10,6 +10,21 @@ export async function POST(req: NextRequest) {
     const { data: { user } } = await supabase.auth.getUser()
     if (!user) return NextResponse.json({ error: 'Giris gerekli' }, { status: 401 })
 
+    // Rol kontrolu — sadece owner, manager veya coach gorev olusturabilir
+    const url0 = process.env.NEXT_PUBLIC_SUPABASE_URL ?? process.env.SUPABASE_URL
+    const key0 = process.env.SUPABASE_SERVICE_ROLE_KEY ?? process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY
+    if (url0 && key0) {
+      const svc = createServiceClient(url0, key0)
+      const { data: userRole } = await svc
+        .from('user_tenants')
+        .select('role')
+        .eq('user_id', user.id)
+        .in('role', ['owner', 'manager', 'coach'])
+        .limit(1)
+        .maybeSingle()
+      if (!userRole) return NextResponse.json({ error: 'Gorev olusturma yetkiniz yok' }, { status: 403 })
+    }
+
     const body = await req.json()
     const title = typeof body.title === 'string' ? body.title.trim() : ''
     const description = typeof body.description === 'string' ? body.description.trim() : null

@@ -29,6 +29,7 @@ export async function GET(req: NextRequest) {
       .from('user_tenants')
       .select('role')
       .eq('user_id', user.id)
+      .eq('tenant_id', tenantId)
       .in('role', ['owner', 'manager'])
       .limit(1)
       .maybeSingle()
