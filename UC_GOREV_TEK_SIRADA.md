@@ -11,7 +11,7 @@
 - `gh` CLI yüklü değil; PR merge için GitHub web arayüzü kullanılacak.
 
 ### Adımlar
-1. **GitHub** → https://github.com/serdincaltay-ai/yisa-s-app → **Pull requests**
+1. **GitHub** → https://github.com/serdincaltay-ai/tenant-yisa-s → **Pull requests**
 2. **Open** filtresi
 3. Dependabot PR'larını bulun (başlık: `Bump ... from X to Y` veya `chore(deps): ...`)
 4. Her PR için:
@@ -59,7 +59,7 @@
 
 1. **Railway Dashboard** → **New Project**
 2. **Deploy from GitHub repo** seçin
-3. Repo: `serdincaltay-ai/yisa-s-app`
+3. Repo: `serdincaltay-ai/tenant-yisa-s`
 4. Root directory: `/` (repo kökü)
 5. Build ayarları: `nixpacks.toml` zaten projede var
 

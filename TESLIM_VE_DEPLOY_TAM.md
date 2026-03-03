@@ -12,7 +12,7 @@
 ✅ Push: origin main (87719a3)
 ```
 
-**Repo:** https://github.com/serdincaltay-ai/yisa-s-app
+**Repo:** https://github.com/serdincaltay-ai/tenant-yisa-s
 
 ---
 
@@ -58,7 +58,7 @@ Vercel → Proje → Settings → Environment Variables:
 
 1. https://railway.app → Login (GitHub ile)
 2. **New Project** → **Deploy from GitHub repo**
-3. `serdincaltay-ai/yisa-s-app` seçin
+3. `serdincaltay-ai/tenant-yisa-s` seçin
 4. Root directory: `yisa-s-app` (monorepo ise)
 5. Build: `npm install && npm run build`
 6. Start: `npm run start`
