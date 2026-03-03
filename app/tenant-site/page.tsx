@@ -137,8 +137,8 @@ const PAKETLER = [
     fiyat: "52.800",
     birimFiyat: "1.100",
     aciklama: "Haftada 2-3 ders \u00b7 ~4-6 ay",
-    taksit: "3 taksit seçeneği",
-    maxTaksit: 3,
+    taksit: "2 taksit seçeneği",
+    maxTaksit: 2,
     ozellikler: [
       "48 ders hakkı",
       "Artistik cimnastik eğitimleri",
@@ -157,8 +157,8 @@ const PAKETLER = [
     fiyat: "60.000",
     birimFiyat: "1.000",
     aciklama: "Haftada 3+ ders \u00b7 ~5 ay",
-    taksit: "3 taksit seçeneği",
-    maxTaksit: 3,
+    taksit: "2 taksit seçeneği",
+    maxTaksit: 2,
     ozellikler: [
       "60 ders hakkı",
       "Artistik cimnastik eğitimleri",
@@ -177,7 +177,7 @@ const PAKETLER = [
 const TAKSIT_BILGI = {
   baslik: "Esnek Taksit Sistemi",
   aciklama:
-    "48 ve 60 seanslik paketlerde ilk 30.000 TL odeme sonrasinda kalan tutar icin 3 taksit seçeneği sunuyoruz. Odeme tarihlerinizi kendiniz secersiniz \u2014 en fazla 1 hafta uzatılabilir.",
+    "48 ve 60 seanslik paketlerde ilk 30.000 TL ödeme sonrasında kalan tutar için 2 taksit seçeneği sunuyoruz. Ödeme tarihlerinizi kendiniz seçersiniz \u2014 en fazla 1 hafta uzatılabilir.",
   adimlar: [
     {
       adim: "1",
@@ -276,7 +276,7 @@ function Section({
       initial="hidden"
       animate={isInView ? "visible" : "hidden"}
       variants={stagger}
-      className={className}
+      className={`scroll-mt-20 ${className}`}
     >
       {children}
     </motion.section>
@@ -352,7 +352,11 @@ export default function TenantSitePage() {
     setMobileMenuOpen(false)
     if (href.startsWith("#")) {
       const el = document.querySelector(href)
-      if (el) el.scrollIntoView({ behavior: "smooth", block: "start" })
+      if (el) {
+        const navHeight = 72
+        const top = el.getBoundingClientRect().top + window.scrollY - navHeight
+        window.scrollTo({ top, behavior: "smooth" })
+      }
     }
   }
 
