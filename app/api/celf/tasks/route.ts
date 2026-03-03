@@ -10,20 +10,23 @@ export async function POST(req: NextRequest) {
     const { data: { user } } = await supabase.auth.getUser()
     if (!user) return NextResponse.json({ error: 'Giris gerekli' }, { status: 401 })
 
-    // Rol kontrolu — sadece owner, manager veya coach gorev olusturabilir
-    const url0 = process.env.NEXT_PUBLIC_SUPABASE_URL ?? process.env.SUPABASE_URL
-    const key0 = process.env.SUPABASE_SERVICE_ROLE_KEY ?? process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY
-    if (url0 && key0) {
-      const svc = createServiceClient(url0, key0)
-      const { data: userRole } = await svc
-        .from('user_tenants')
-        .select('role')
-        .eq('user_id', user.id)
-        .in('role', ['owner', 'manager', 'coach'])
-        .limit(1)
-        .maybeSingle()
-      if (!userRole) return NextResponse.json({ error: 'Gorev olusturma yetkiniz yok' }, { status: 403 })
+    const url = process.env.NEXT_PUBLIC_SUPABASE_URL ?? process.env.SUPABASE_URL
+    const key = process.env.SUPABASE_SERVICE_ROLE_KEY ?? process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY
+    if (!url || !key) {
+      return NextResponse.json({ error: 'Sunucu yapilandirma hatasi' }, { status: 500 })
     }
+
+    const service = createServiceClient(url, key)
+
+    // Rol kontrolu — sadece owner, manager veya coach gorev olusturabilir
+    const { data: userRole } = await service
+      .from('user_tenants')
+      .select('role')
+      .eq('user_id', user.id)
+      .in('role', ['owner', 'manager', 'coach'])
+      .limit(1)
+      .maybeSingle()
+    if (!userRole) return NextResponse.json({ error: 'Gorev olusturma yetkiniz yok' }, { status: 403 })
 
     const body = await req.json()
     const title = typeof body.title === 'string' ? body.title.trim() : ''
@@ -34,14 +37,6 @@ export async function POST(req: NextRequest) {
     if (!title) {
       return NextResponse.json({ error: 'Gorev basligi zorunludur' }, { status: 400 })
     }
-
-    const url = process.env.NEXT_PUBLIC_SUPABASE_URL ?? process.env.SUPABASE_URL
-    const key = process.env.SUPABASE_SERVICE_ROLE_KEY ?? process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY
-    if (!url || !key) {
-      return NextResponse.json({ error: 'Sunucu yapilandirma hatasi' }, { status: 500 })
-    }
-
-    const service = createServiceClient(url, key)
 
     // Find or create default epic for manual tasks (upsert ile race condition onlenir)
     let epicId: string | null = null
