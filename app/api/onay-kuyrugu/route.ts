@@ -17,7 +17,7 @@ export async function GET() {
 
     const url = process.env.NEXT_PUBLIC_SUPABASE_URL ?? process.env.SUPABASE_URL
     const key = process.env.SUPABASE_SERVICE_ROLE_KEY ?? process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY
-    if (!url || !key) return NextResponse.json({ error: 'Sunucu hatasi' })
+    if (!url || !key) return NextResponse.json({ error: 'Sunucu hatasi' }, { status: 500 })
 
     const service = createServiceClient(url, key)
 
@@ -76,6 +76,6 @@ export async function GET() {
     })
   } catch (e) {
     console.error('[onay-kuyrugu]', e)
-    return NextResponse.json({ error: 'Sunucu hatasi' })
+    return NextResponse.json({ error: 'Sunucu hatasi' }, { status: 500 })
   }
 }
