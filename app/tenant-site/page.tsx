@@ -33,21 +33,21 @@ import {
 /* ------------------------------------------------------------------ */
 
 const TESIS = {
-  ad: "Tuzla Besiktas Cimnastik Okulu",
+  ad: "Tuzla Beşiktaş Cimnastik Okulu",
   kisa: "BJK Tuzla Cimnastik",
-  slogan: "Cocugunuzun Potansiyelini Kesfedin",
-  altSlogan: "Artistik cimnastikte profesyonel egitim",
+  slogan: "Çocuğunuzun Potansiyelini Keşfedin",
+  altSlogan: "Artistik cimnastikte profesyonel eğitim",
   aciklama:
-    "Besiktas JK Spor Okullari bunyesinde, profesyonel antrenorler esliginde artistik cimnastik egitimleri sunuyoruz. 4-14 yas arasi cocuklariniz icin guvenli, eglenceli ve gelisim odakli ortam.",
+    "Beşiktaş JK Spor Okulları bünyesinde, profesyonel antrenörler eşliğinde artistik cimnastik eğitimleri sunuyoruz. 4-14 yaş arası çocuklarınız için güvenli, eğlenceli ve gelişim odaklı ortam.",
   telefon: "0530 710 46 24",
   email: "info@hobigym.com",
   instagram: "@bjktuzlacimnastik",
   instagramUrl: "https://instagram.com/bjktuzlacimnastik",
   whatsapp: "905307104624",
   adres:
-    "Evliya Celebi Mah. Hatboyu Cad. No:1, Tuzla Port AVM, 34940 Tuzla/Istanbul",
-  adresKisa: "Tuzla Port AVM, Tuzla/Istanbul",
-  calisma: "Hafta ici 10:00-20:00 \u00b7 Cumartesi 09:00-17:00",
+    "Evliya Çelebi Mah. Hatboyu Cad. No:1, Tuzla Port AVM, 34940 Tuzla/İstanbul",
+  adresKisa: "Tuzla Port AVM, Tuzla/İstanbul",
+  calisma: "Hafta içi 10:00-20:00 \u00b7 Cumartesi 09:00-17:00",
   harita: "https://maps.google.com/?q=Tuzla+Port+AVM+Istanbul",
   haritaEmbed:
     "https://www.google.com/maps/embed?pb=!1m18!1m12!1m3!1d3016.8!2d29.3!3d40.82!2m3!1f0!2f0!3f0!3m2!1i1024!2i768!4f13.1!3m3!1m2!1s0x0%3A0x0!2sTuzla+Port+AVM!5e0!3m2!1str!2str!4v1",
@@ -57,117 +57,117 @@ const TESIS = {
 const BRANS_DETAY = {
   baslik: "Artistik Cimnastik",
   aciklama:
-    "Yer hareketleri, paralel bar, halka ve atlama aletlerinde temel ve ileri duzey egitim. Profesyonel ekipman ve guvenli ortamda, 4-14 yas arasi cocuklarimiz icin ozel tasarlanmis programlar.",
+    "Yer hareketleri, paralel bar, halka ve atlama aletlerinde temel ve ileri düzey eğitim. Profesyonel ekipman ve güvenli ortamda, 4-14 yaş arası çocuklarımız için özel tasarlanmış programlar.",
   ozellikler: [
     "Yer Hareketleri & Akrobasi",
     "Paralel Bar & Asimetrik Bar",
     "Halka & Denge Aleti",
     "Atlama & Trampolin",
-    "Esneklik & Kuvvet Gelistirme",
-    "Musabaka Hazirlik Programi",
+    "Esneklik & Kuvvet Geliştirme",
+    "Müsabaka Hazırlık Programı",
   ],
 }
 
 const ANTRENORLER = [
   {
     ad: "Ahmet Karadeniz",
-    unvan: "Bas Antrenor",
+    unvan: "Baş Antrenör",
     uzmanlik: "Artistik Cimnastik",
-    deneyim: "15 yil",
+    deneyim: "15 yıl",
     belge: "Cimnastik Federasyonu 3. Kademe",
   },
   {
-    ad: "Zeynep Ozturk",
-    unvan: "Yardimci Antrenor",
+    ad: "Zeynep Öztürk",
+    unvan: "Yardımcı Antrenör",
     uzmanlik: "Artistik Cimnastik \u2014 Yer Hareketleri",
-    deneyim: "8 yil",
+    deneyim: "8 yıl",
     belge: "Cimnastik Federasyonu 2. Kademe",
   },
   {
-    ad: "Ali Yilmaz",
-    unvan: "Yardimci Antrenor",
+    ad: "Ali Yılmaz",
+    unvan: "Yardımcı Antrenör",
     uzmanlik: "Artistik Cimnastik \u2014 Aletler",
-    deneyim: "6 yil",
+    deneyim: "6 yıl",
     belge: "Cimnastik Federasyonu 2. Kademe",
   },
   {
     ad: "Sena Kaya",
-    unvan: "Yardimci Antrenor",
+    unvan: "Yardımcı Antrenör",
     uzmanlik: "Artistik Cimnastik \u2014 Ritmik & Esneklik",
-    deneyim: "5 yil",
+    deneyim: "5 yıl",
     belge: "Cimnastik Federasyonu 1. Kademe",
   },
 ]
 
 const YONETIM = [
   {
-    ad: "Merve Gormezer",
-    unvan: "Sportif Direktor",
-    rol: "Tesis yonetimi ve program koordinasyonu",
+    ad: "Merve Görmezer",
+    unvan: "Sportif Direktör",
+    rol: "Tesis yönetimi ve program koordinasyonu",
   },
   {
-    ad: "Pelin Calik",
-    unvan: "Kayit Gorevlisi",
-    rol: "Ogrenci kayit ve veli iletisimi",
+    ad: "Pelin Çalık",
+    unvan: "Kayıt Görevlisi",
+    rol: "Öğrenci kayıt ve veli iletişimi",
   },
 ]
 
 const PAKETLER = [
   {
-    baslik: "Baslangic Paketi",
+    baslik: "Başlangıç Paketi",
     seans: 24,
     fiyat: "30.000",
     birimFiyat: "1.250",
     aciklama: "Haftada 2 ders \u00b7 ~3 ay",
-    taksit: "Tek seferde odeme",
+    taksit: "Tek seferde ödeme",
     maxTaksit: 1,
     ozellikler: [
-      "24 ders hakki",
-      "Artistik cimnastik egitimleri",
-      "Ilk olcum dahil",
-      "Gelisim raporu",
-      "Veli paneli erisimi",
-      "WhatsApp destek hatti",
+      "24 ders hakkı",
+      "Artistik cimnastik eğitimleri",
+      "İlk ölçüm dahil",
+      "Gelişim raporu",
+      "Veli paneli erişimi",
+      "WhatsApp destek hattı",
     ],
     one_cikan: false,
   },
   {
-    baslik: "Gelisim Paketi",
+    baslik: "Gelişim Paketi",
     seans: 48,
     fiyat: "52.800",
     birimFiyat: "1.100",
     aciklama: "Haftada 2-3 ders \u00b7 ~4-6 ay",
-    taksit: "3 taksit secenegi",
+    taksit: "3 taksit seçeneği",
     maxTaksit: 3,
     ozellikler: [
-      "48 ders hakki",
-      "Artistik cimnastik egitimleri",
-      "3 olcum dahil",
-      "Detayli gelisim raporu",
-      "Kardes kullanabilir",
-      "Veli paneli erisimi",
-      "Musabaka hazirlik destegi",
-      "WhatsApp oncelikli destek",
+      "48 ders hakkı",
+      "Artistik cimnastik eğitimleri",
+      "3 ölçüm dahil",
+      "Detaylı gelişim raporu",
+      "Kardeş kullanabilir",
+      "Veli paneli erişimi",
+      "Müsabaka hazırlık desteği",
+      "WhatsApp öncelikli destek",
     ],
     one_cikan: true,
   },
   {
-    baslik: "Sampiyon Paketi",
+    baslik: "Şampiyon Paketi",
     seans: 60,
     fiyat: "60.000",
     birimFiyat: "1.000",
     aciklama: "Haftada 3+ ders \u00b7 ~5 ay",
-    taksit: "3 taksit secenegi",
+    taksit: "3 taksit seçeneği",
     maxTaksit: 3,
     ozellikler: [
-      "60 ders hakki",
-      "Artistik cimnastik egitimleri",
-      "Sinirsiz olcum",
-      "Kisisel antrenman plani",
-      "Kardes kullanabilir",
-      "Veli paneli erisimi",
-      "Musabaka tam destek",
-      "Ozel antrenor gorusmesi",
+      "60 ders hakkı",
+      "Artistik cimnastik eğitimleri",
+      "Sınırsız ölçüm",
+      "Kişisel antrenman planı",
+      "Kardeş kullanabilir",
+      "Veli paneli erişimi",
+      "Müsabaka tam destek",
+      "Özel antrenör görüşmesi",
       "WhatsApp VIP destek",
     ],
     one_cikan: false,
@@ -177,68 +177,68 @@ const PAKETLER = [
 const TAKSIT_BILGI = {
   baslik: "Esnek Taksit Sistemi",
   aciklama:
-    "48 ve 60 seanslik paketlerde ilk 30.000 TL odeme sonrasinda kalan tutar icin 3 taksit secenegi sunuyoruz. Odeme tarihlerinizi kendiniz secersiniz \u2014 en fazla 1 hafta uzatilabilir.",
+    "48 ve 60 seanslik paketlerde ilk 30.000 TL odeme sonrasinda kalan tutar icin 3 taksit seçeneği sunuyoruz. Odeme tarihlerinizi kendiniz secersiniz \u2014 en fazla 1 hafta uzatılabilir.",
   adimlar: [
     {
       adim: "1",
-      baslik: "Paket Secimi",
-      aciklama: "24, 48 veya 60 seanslik paketten birini secin.",
+      baslik: "Paket Seçimi",
+      aciklama: "24, 48 veya 60 seanslik paketten birini seçin.",
     },
     {
       adim: "2",
-      baslik: "Ilk Odeme",
-      aciklama: "30.000 TL ilk odemeyi gerceklestirin.",
+      baslik: "İlk Ödeme",
+      aciklama: "30.000 TL ilk ödemeyi gerçekleştirin.",
     },
     {
       adim: "3",
       baslik: "Taksit Planlama",
       aciklama:
-        "Kalan tutari icin odeme tarihlerinizi kendiniz belirleyin (maks. 1 hafta esneklik).",
+        "Kalan tutarı için ödeme tarihlerinizi kendiniz belirleyin (maks. 1 hafta esneklik).",
     },
     {
       adim: "4",
-      baslik: "Baslayin!",
+      baslik: "Başlayın!",
       aciklama:
-        "Odemeniz onaylandiktan sonra derslerinize baslayabilirsiniz.",
+        "Ödemeniz onaylandıktan sonra derslerinize başlayabilirsiniz.",
     },
   ],
 }
 
 const SSS = [
   {
-    soru: "Deneme dersi ucretsiz mi?",
+    soru: "Deneme dersi ücretsiz mi?",
     cevap:
-      "Evet! Ilk deneme dersimiz tamamen ucretsizdir. Cocugunuz salonu, antrenorleri ve arkadaslarini tanisin.",
+      "Evet! İlk deneme dersimiz tamamen ücretsizdir. Çocuğunuz salonu, antrenörleri ve arkadaşlarını tanısın.",
   },
   {
-    soru: "Kac yasindan itibaren baslayabilir?",
+    soru: "Kaç yaşından itibaren başlayabilir?",
     cevap:
-      "4 yasindan itibaren cimnastige baslanabilir. Yas gruplarina gore siniflar olusturulur.",
+      "4 yaşından itibaren cimnastiğe başlanabilir. Yaş gruplarına göre sınıflar oluşturulur.",
   },
   {
-    soru: "Odeme sistemi nasil calisiyor?",
+    soru: "Ödeme sistemi nasıl çalışıyor?",
     cevap:
-      "Seans bazli kredi sistemi kullaniyoruz. 24, 48 veya 60 derslik paketlerden birini secebilirsiniz. 24 seanslik paket tek seferde, diger paketler 3 taksitle odenebilir. Ilk odeme 30.000 TL, kalan tutari kendi sectiginiz tarihlerde odersiniz.",
+      "Seans bazlı kredi sistemi kullanıyoruz. 24, 48 veya 60 derslik paketlerden birini seçebilirsiniz. 24 seanslik paket tek seferde, diğer paketler 3 taksitle ödenebilir. İlk ödeme 30.000 TL, kalan tutarı kendi seçtiğiniz tarihlerde ödersiniz.",
   },
   {
-    soru: "Taksit tarihleri nasil belirleniyor?",
+    soru: "Taksit tarihleri nasıl belirleniyor?",
     cevap:
-      "48 ve 60 seanslik paketlerde ilk 30.000 TL yi odedikten sonra, kalan tutar icin odeme tarihlerinizi kendiniz secersiniz. Taksitler arasinda en fazla 1 haftalik esneklik sunulmaktadir.",
+      "48 ve 60 seanslik paketlerde ilk 30.000 TL'yi ödedikten sonra, kalan tutar için ödeme tarihlerinizi kendiniz seçersiniz. Taksitler arasında en fazla 1 haftalık esneklik sunulmaktadır.",
   },
   {
-    soru: "Olcum ve gelisim takibi nasil yapiliyor?",
+    soru: "Ölçüm ve gelişim takibi nasıl yapılıyor?",
     cevap:
-      "YiSA-S teknoloji altyapimiz sayesinde cocugunuzun fiziksel, teknik ve mental gelisimi duzenli olarak olculur. WHO ve Eurofit normlarina gore 10 perspektiften degerlendirme yapilir. Sonuclar velilere dijital rapor olarak iletilir.",
+      "YiSA-S teknoloji altyapımız sayesinde çocuğunuzun fiziksel, teknik ve mental gelişimi düzenli olarak ölçülür. WHO ve Eurofit normlarına göre 10 perspektiften değerlendirme yapılır. Sonuçlar velilere dijital rapor olarak iletilir.",
   },
   {
-    soru: "Kiyafet ve malzeme gerekli mi?",
+    soru: "Kıyafet ve malzeme gerekli mi?",
     cevap:
-      "Rahat spor kiyafeti ve corap yeterlidir. Ileri seviye icin jimnastik mayosu onerilir. Tum ekipman salonumuzda mevcuttur.",
+      "Rahat spor kıyafeti ve çorap yeterlidir. İleri seviye için jimnastik mayosu önerilir. Tüm ekipman salonumuzda mevcuttur.",
   },
   {
-    soru: "Kardes indirimi var mi?",
+    soru: "Kardeş indirimi var mı?",
     cevap:
-      "48 ve 60 seanslik paketlerde kardesler ayni kredi havuzunu kullanabilir \u2014 ayri paket almaniza gerek yoktur.",
+      "48 ve 60 seanslik paketlerde kardeşler aynı kredi havuzunu kullanabilir \u2014 ayrı paket almanıza gerek yoktur.",
   },
 ]
 
@@ -324,25 +324,25 @@ export default function TenantSitePage() {
           name: formData.ad,
           phone: formData.telefon,
           email: formData.email || undefined,
-          notes: `Cocuk yasi: ${formData.cocukYas}. ${formData.mesaj}`.trim(),
+          notes: `Çocuk yaşı: ${formData.cocukYas}. ${formData.mesaj}`.trim(),
           source: "vitrin",
         }),
       })
       if (res.ok) {
         setFormGonderildi(true)
       } else {
-        setFormHata("Bir hata olustu, lutfen tekrar deneyin.")
+        setFormHata("Bir hata oluştu, lütfen tekrar deneyin.")
       }
     } catch {
-      setFormHata("Baglanti hatasi, lutfen tekrar deneyin.")
+      setFormHata("Bağlantı hatası, lütfen tekrar deneyin.")
     } finally {
       setGonderiyor(false)
     }
   }
 
   const NAV_LINKS = [
-    { label: "Bransimiz", href: "#brans" },
-    { label: "Antrenorler", href: "#antrenorler" },
+    { label: "Branşımız", href: "#brans" },
+    { label: "Antrenörler", href: "#antrenorler" },
     { label: "Paketler", href: "#paketler" },
     { label: "Taksit", href: "#taksit" },
     { label: "S.S.S", href: "#sss" },
@@ -376,7 +376,7 @@ export default function TenantSitePage() {
                 {TESIS.kisa}
               </p>
               <p className="text-[10px] text-cyan-400/70 tracking-wider uppercase">
-                Besiktas JK Spor Okullari
+                Beşiktaş JK Spor Okulları
               </p>
             </div>
           </div>
@@ -395,7 +395,7 @@ export default function TenantSitePage() {
               onClick={() => scrollTo("#kayit")}
               className="ml-3 rounded-full bg-gradient-to-r from-cyan-500 to-blue-600 px-5 py-2.5 text-sm font-semibold text-white shadow-lg shadow-cyan-500/20 hover:shadow-cyan-500/40 hover:scale-105 transition-all"
             >
-              Ucretsiz Deneme
+              Ücretsiz Deneme
             </button>
           </div>
 
@@ -433,7 +433,7 @@ export default function TenantSitePage() {
                   onClick={() => scrollTo("#kayit")}
                   className="mt-2 block w-full rounded-full bg-gradient-to-r from-cyan-500 to-blue-600 px-5 py-3 text-center text-sm font-semibold text-white"
                 >
-                  Ucretsiz Deneme Dersi
+                  Ücretsiz Deneme Dersi
                 </button>
               </div>
             </motion.div>
@@ -468,7 +468,7 @@ export default function TenantSitePage() {
           >
             <span className="inline-flex items-center gap-2 rounded-full bg-white/5 border border-white/10 px-4 py-2 text-sm text-cyan-300/80 backdrop-blur-sm">
               <Sparkles className="h-4 w-4 text-cyan-400" />
-              Besiktas JK Spor Okullari Bunyesinde
+              Beşiktaş JK Spor Okulları Bünyesinde
             </span>
           </motion.div>
 
@@ -502,7 +502,7 @@ export default function TenantSitePage() {
               onClick={() => scrollTo("#kayit")}
               className="group inline-flex items-center gap-2 rounded-full bg-gradient-to-r from-cyan-500 to-blue-600 px-8 py-4 text-lg font-bold text-white shadow-2xl shadow-cyan-500/20 hover:shadow-cyan-500/40 hover:scale-105 transition-all"
             >
-              Ucretsiz Deneme Dersi
+              Ücretsiz Deneme Dersi
               <ArrowRight className="h-5 w-5 group-hover:translate-x-1 transition-transform" />
             </button>
             <a
@@ -522,9 +522,9 @@ export default function TenantSitePage() {
           >
             {[
               { sayi: "140+", etiket: "Aktif Sporcu" },
-              { sayi: "4", etiket: "Uzman Antrenor" },
+              { sayi: "4", etiket: "Uzman Antrenör" },
               { sayi: "7", etiket: "Profesyonel Kadro" },
-              { sayi: "10+", etiket: "Yil Deneyim" },
+              { sayi: "10+", etiket: "Yıl Deneyim" },
             ].map((s, i) => (
               <div key={i} className="text-center">
                 <p className="text-3xl font-extrabold bg-gradient-to-r from-cyan-400 to-blue-400 bg-clip-text text-transparent md:text-4xl">
@@ -554,49 +554,49 @@ export default function TenantSitePage() {
               Neden BJK Tuzla Cimnastik?
             </h2>
             <p className="mx-auto mt-4 max-w-2xl text-gray-400">
-              Profesyonel kadromuz ve modern tesisimizle cocugunuzun fiziksel,
-              mental ve sosyal gelisimini destekliyoruz.
+              Profesyonel kadromuz ve modern tesisimizle çocuğunuzun fiziksel,
+              mental ve sosyal gelişimini destekliyoruz.
             </p>
           </motion.div>
           <div className="mt-14 grid gap-5 md:grid-cols-2 lg:grid-cols-3">
             {[
               {
                 ikon: Shield,
-                baslik: "Guvenli Ortam",
+                baslik: "Güvenli Ortam",
                 aciklama:
-                  "Profesyonel ekipman, yumusak zeminler ve surekli gozetim altinda antrenmanlar.",
+                  "Profesyonel ekipman, yumuşak zeminler ve sürekli gözetim altında antrenmanlar.",
                 renk: "from-cyan-500/20 to-cyan-500/5",
                 ikonRenk: "text-cyan-400",
               },
               {
                 ikon: Target,
-                baslik: "Kisisel Gelisim Takibi",
+                baslik: "Kişisel Gelişim Takibi",
                 aciklama:
-                  "YiSA-S teknolojisiyle 10 perspektiften olcum ve WHO/Eurofit normlarina gore degerlendirme.",
+                  "YiSA-S teknolojisiyle 10 perspektiften ölçüm ve WHO/Eurofit normlarına göre değerlendirme.",
                 renk: "from-blue-500/20 to-blue-500/5",
                 ikonRenk: "text-blue-400",
               },
               {
                 ikon: Users,
-                baslik: "Kucuk Gruplar",
+                baslik: "Küçük Gruplar",
                 aciklama:
-                  "Antrenor basina maksimum 10 ogrenci ile birebir ilgi ve kaliteli egitim.",
+                  "Antrenör başına maksimum 10 öğrenci ile birebir ilgi ve kaliteli eğitim.",
                 renk: "from-purple-500/20 to-purple-500/5",
                 ikonRenk: "text-purple-400",
               },
               {
                 ikon: Award,
-                baslik: "Lisansli Antrenorler",
+                baslik: "Lisansli Antrenörler",
                 aciklama:
-                  "Cimnastik Federasyonu sertifikali, deneyimli ve pedagoji egitimli antrenor kadrosu.",
+                  "Cimnastik Federasyonu sertifikalı, deneyimli ve pedagoji eğitimli antrenör kadrosu.",
                 renk: "from-amber-500/20 to-amber-500/5",
                 ikonRenk: "text-amber-400",
               },
               {
                 ikon: Heart,
-                baslik: "Eglenceli Ogrenme",
+                baslik: "Eğlenceli Öğrenme",
                 aciklama:
-                  "Oyun tabanli egitim metoduyla cocuklar eglenirken ogrenir ve gelisir.",
+                  "Oyun tabanlı eğitim metoduyla çocuklar eğlenirken öğrenir ve gelişir.",
                 renk: "from-rose-500/20 to-rose-500/5",
                 ikonRenk: "text-rose-400",
               },
@@ -604,7 +604,7 @@ export default function TenantSitePage() {
                 ikon: Calendar,
                 baslik: "Esnek Program",
                 aciklama:
-                  "Hafta ici ve hafta sonu secenekleri. Kredi sistemiyle istediginiz gun gelin.",
+                  "Hafta içi ve hafta sonu seçenekleri. Kredi sistemiyle istediğiniz gün gelin.",
                 renk: "from-emerald-500/20 to-emerald-500/5",
                 ikonRenk: "text-emerald-400",
               },
@@ -637,7 +637,7 @@ export default function TenantSitePage() {
           <div className="grid items-center gap-12 lg:grid-cols-2">
             <motion.div variants={fadeUp}>
               <span className="inline-flex items-center gap-2 rounded-full bg-amber-500/10 border border-amber-500/20 px-3 py-1 text-xs font-medium text-amber-400 uppercase tracking-wider">
-                Tek Bransimiz
+                Tek Branşımız
               </span>
               <h2 className="mt-4 text-3xl font-bold md:text-4xl">
                 {BRANS_DETAY.baslik}
@@ -672,7 +672,7 @@ export default function TenantSitePage() {
                   <p className="mt-4 text-xl font-bold text-white">
                     {BRANS_DETAY.baslik}
                   </p>
-                  <p className="mt-2 text-sm text-gray-500">4-14 Yas</p>
+                  <p className="mt-2 text-sm text-gray-500">4-14 Yaş</p>
                 </div>
               </div>
               <div className="absolute -top-3 -right-3 rounded-2xl bg-gradient-to-br from-cyan-500/20 to-blue-600/20 border border-cyan-500/20 px-4 py-2 backdrop-blur-sm">
@@ -682,7 +682,7 @@ export default function TenantSitePage() {
               </div>
               <div className="absolute -bottom-3 -left-3 rounded-2xl bg-gradient-to-br from-amber-500/20 to-orange-600/20 border border-amber-500/20 px-4 py-2 backdrop-blur-sm">
                 <p className="text-xs font-medium text-amber-300">
-                  Guvenli Zemin
+                  Güvenli Zemin
                 </p>
               </div>
             </motion.div>
@@ -690,16 +690,16 @@ export default function TenantSitePage() {
         </div>
       </Section>
 
-      {/* Antrenorler */}
+      {/* Antrenörler */}
       <Section id="antrenorler" className="py-20 md:py-28">
         <div className="mx-auto max-w-7xl px-4 md:px-6">
           <motion.div variants={fadeUp} className="text-center">
             <h2 className="text-3xl font-bold md:text-4xl">
-              Antrenor Kadromuz
+              Antrenör Kadromuz
             </h2>
             <p className="mx-auto mt-4 max-w-2xl text-gray-400">
-              Federasyon lisansli, deneyimli ve pedagoji egitimli kadromuzla
-              tanisin
+              Federasyon lisanslı, deneyimli ve pedagoji eğitimli kadromuzla
+              tanışın
             </p>
           </motion.div>
           <div className="mt-14 grid gap-6 md:grid-cols-2 lg:grid-cols-4">
@@ -735,7 +735,7 @@ export default function TenantSitePage() {
 
           <motion.div variants={fadeUp} className="mt-10">
             <p className="text-center text-sm text-gray-500 mb-4">
-              Yonetim Kadrosu
+              Yönetim Kadrosu
             </p>
             <div className="flex flex-wrap justify-center gap-4">
               {YONETIM.map((y, i) => (
@@ -762,11 +762,11 @@ export default function TenantSitePage() {
         <div className="mx-auto max-w-7xl px-4 md:px-6">
           <motion.div variants={fadeUp} className="text-center">
             <h2 className="text-3xl font-bold md:text-4xl">
-              Seans Bazli Paketler
+              Seans Bazlı Paketler
             </h2>
             <p className="mx-auto mt-4 max-w-2xl text-gray-400">
-              Aylik aidat yok! Kredi bazli esnek sistem. Istediginiz gun,
-              istediginiz kadar gelin.
+              Aylık aidat yok! Kredi bazlı esnek sistem. İstediğiniz gün,
+              istediğiniz kadar gelin.
             </p>
           </motion.div>
 
@@ -783,7 +783,7 @@ export default function TenantSitePage() {
               >
                 {p.one_cikan && (
                   <div className="absolute -top-3 left-1/2 -translate-x-1/2 rounded-full bg-gradient-to-r from-cyan-500 to-blue-600 px-4 py-1 text-xs font-bold text-white shadow-lg shadow-cyan-500/30">
-                    En Populer
+                    En Popüler
                   </div>
                 )}
                 <h3 className="text-xl font-bold">{p.baslik}</h3>
@@ -798,7 +798,7 @@ export default function TenantSitePage() {
                   </span>
                 </div>
                 <p className="mt-1 text-xs text-gray-600">
-                  Ders basi: {p.birimFiyat} {"\u20BA"}
+                  Ders başı: {p.birimFiyat} {"\u20BA"}
                 </p>
 
                 <div className="mt-3 flex items-center gap-2 rounded-lg bg-white/5 px-3 py-2">
@@ -829,7 +829,7 @@ export default function TenantSitePage() {
                       : "bg-white/5 text-white border border-white/10 hover:bg-white/10"
                   }`}
                 >
-                  Hemen Basla
+                  Hemen Başla
                 </button>
               </motion.div>
             ))}
@@ -879,13 +879,13 @@ export default function TenantSitePage() {
             <div className="flex items-center gap-3 mb-4">
               <TrendingUp className="h-5 w-5 text-cyan-400" />
               <h3 className="font-bold text-lg">
-                Ornek: 60 Seanslik Paket
+                Örnek: 60 Seanslik Paket
               </h3>
             </div>
             <div className="space-y-3 text-sm">
               <div className="flex justify-between border-b border-white/5 pb-2">
                 <span className="text-gray-400">
-                  1. Odeme (kayit aninda)
+                  1. Ödeme (kayıt anında)
                 </span>
                 <span className="font-semibold text-white">
                   30.000 {"\u20BA"}
@@ -893,7 +893,7 @@ export default function TenantSitePage() {
               </div>
               <div className="flex justify-between border-b border-white/5 pb-2">
                 <span className="text-gray-400">
-                  2. Taksit (tarih secersiniz)
+                  2. Taksit (tarih seçersiniz)
                 </span>
                 <span className="font-semibold text-white">
                   15.000 {"\u20BA"}
@@ -901,7 +901,7 @@ export default function TenantSitePage() {
               </div>
               <div className="flex justify-between border-b border-white/5 pb-2">
                 <span className="text-gray-400">
-                  3. Taksit (tarih secersiniz)
+                  3. Taksit (tarih seçersiniz)
                 </span>
                 <span className="font-semibold text-white">
                   15.000 {"\u20BA"}
@@ -923,7 +923,7 @@ export default function TenantSitePage() {
         <div className="mx-auto max-w-3xl px-4 md:px-6">
           <motion.div variants={fadeUp} className="text-center">
             <h2 className="text-3xl font-bold md:text-4xl">
-              Sikca Sorulan Sorular
+              Sıkça Sorulan Sorular
             </h2>
           </motion.div>
           <div className="mt-10 space-y-3">
@@ -977,11 +977,11 @@ export default function TenantSitePage() {
               <div className="p-8 md:p-12 lg:p-16">
                 <motion.div variants={fadeUp}>
                   <h2 className="text-3xl font-bold md:text-4xl">
-                    Ucretsiz Deneme Dersi
+                    Ücretsiz Deneme Dersi
                   </h2>
                   <p className="mt-4 text-gray-400">
-                    Formu doldurun, sizi arayalim. Cocugunuz icin en uygun
-                    bransi ve saati birlikte belirleyelim.
+                    Formu doldurun, sizi arayalım. Çocuğunuz için en uygun
+                    branşı ve saati birlikte belirleyelim.
                   </p>
                 </motion.div>
                 <div className="mt-8 space-y-4">
@@ -1044,17 +1044,17 @@ export default function TenantSitePage() {
                       <CheckCircle2 className="h-8 w-8 text-green-400" />
                     </div>
                     <h3 className="mt-4 text-xl font-bold">
-                      Talebiniz Alindi!
+                      Talebiniz Alındı!
                     </h3>
                     <p className="mt-2 text-gray-400">
-                      En kisa surede sizi arayacagiz. Tesekkur ederiz.
+                      En kısa sürede sizi arayacağız. Teşekkür ederiz.
                     </p>
                   </div>
                 ) : (
                   <form onSubmit={handleSubmit} className="space-y-4">
                     <div>
                       <label className="block text-sm font-medium text-gray-300">
-                        Veli Adi Soyadi *
+                        Veli Adı Soyadı *
                       </label>
                       <input
                         type="text"
@@ -1064,7 +1064,7 @@ export default function TenantSitePage() {
                           setFormData({ ...formData, ad: e.target.value })
                         }
                         className="mt-1 w-full rounded-xl border border-white/10 bg-white/5 px-4 py-3 text-sm text-white placeholder:text-gray-600 focus:border-cyan-500/50 focus:outline-none focus:ring-1 focus:ring-cyan-500/50 transition"
-                        placeholder="Adiniz Soyadiniz"
+                        placeholder="Adınız Soyadınız"
                       />
                     </div>
                     <div>
@@ -1101,7 +1101,7 @@ export default function TenantSitePage() {
                     </div>
                     <div>
                       <label className="block text-sm font-medium text-gray-300">
-                        Cocugunuzun Yasi
+                        Çocuğunuzun Yaşı
                       </label>
                       <input
                         type="text"
@@ -1118,7 +1118,7 @@ export default function TenantSitePage() {
                     </div>
                     <div>
                       <label className="block text-sm font-medium text-gray-300">
-                        Mesajiniz
+                        Mesajınız
                       </label>
                       <textarea
                         rows={3}
@@ -1127,7 +1127,7 @@ export default function TenantSitePage() {
                           setFormData({ ...formData, mesaj: e.target.value })
                         }
                         className="mt-1 w-full rounded-xl border border-white/10 bg-white/5 px-4 py-3 text-sm text-white placeholder:text-gray-600 focus:border-cyan-500/50 focus:outline-none focus:ring-1 focus:ring-cyan-500/50 transition resize-none"
-                        placeholder="Sormak istediginiz bir sey varsa yazabilirsiniz..."
+                        placeholder="Sormak istediğiniz bir şey varsa yazabilirsiniz..."
                       />
                     </div>
                     {formHata && (
@@ -1139,8 +1139,8 @@ export default function TenantSitePage() {
                       className="w-full rounded-full bg-gradient-to-r from-cyan-500 to-blue-600 py-3.5 text-sm font-bold text-white shadow-lg shadow-cyan-500/20 hover:shadow-cyan-500/40 transition-all disabled:opacity-50"
                     >
                       {gonderiyor
-                        ? "Gonderiliyor..."
-                        : "Ucretsiz Deneme Dersi Talep Et"}
+                        ? "Gönderiliyor..."
+                        : "Ücretsiz Deneme Dersi Talep Et"}
                     </button>
                   </form>
                 )}
@@ -1184,7 +1184,7 @@ export default function TenantSitePage() {
               className="inline-flex items-center gap-2 rounded-full border border-white/10 bg-white/5 px-5 py-2.5 text-sm text-gray-300 hover:bg-white/10 transition"
             >
               <MapPin className="h-4 w-4 text-blue-400" />
-              Google Maps ile Ac
+              Google Maps ile Aç
             </a>
             <a
               href={`https://wa.me/${TESIS.whatsapp}?text=Merhaba, tesisinize nasil ulasirim?`}
@@ -1211,17 +1211,17 @@ export default function TenantSitePage() {
                 <div>
                   <p className="font-bold text-white">{TESIS.kisa}</p>
                   <p className="text-xs text-gray-600">
-                    Besiktas JK Spor Okullari
+                    Beşiktaş JK Spor Okulları
                   </p>
                 </div>
               </div>
               <p className="mt-4 text-sm text-gray-500 leading-relaxed">
-                Profesyonel artistik cimnastik egitimiyle cocugunuzun fiziksel
-                ve mental gelisimini destekliyoruz.
+                Profesyonel artistik cimnastik eğitimiyle çocuğunuzun fiziksel
+                ve mental gelişimini destekliyoruz.
               </p>
             </div>
             <div>
-              <h4 className="font-bold text-white">Iletisim</h4>
+              <h4 className="font-bold text-white">İletişim</h4>
               <div className="mt-4 space-y-3 text-sm text-gray-500">
                 <a
                   href={`tel:${TESIS.telefon.replace(/\s/g, "")}`}
@@ -1278,7 +1278,7 @@ export default function TenantSitePage() {
           </div>
           <div className="mt-8 border-t border-white/5 pt-8 text-center text-xs text-gray-700">
             <p>
-              &copy; 2026 {TESIS.ad}. Tum haklari saklidir. YiSA-S Franchise
+              &copy; 2026 {TESIS.ad}. Tüm hakları saklıdır. YiSA-S Franchise
               Sistemi
             </p>
           </div>
