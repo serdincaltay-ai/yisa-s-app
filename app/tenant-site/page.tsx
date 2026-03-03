@@ -1017,7 +1017,7 @@ export default function TenantSitePage() {
                 </div>
                 <div className="mt-8 flex gap-3">
                   <a
-                    href={`https://wa.me/${TESIS.whatsapp}?text=Merhaba, deneme dersi hakkinda bilgi almak istiyorum.`}
+                    href={`https://wa.me/${TESIS.whatsapp}?text=Merhaba, deneme dersi hakkında bilgi almak istiyorum.`}
                     target="_blank"
                     rel="noopener noreferrer"
                     className="flex items-center gap-2 rounded-full bg-green-500 px-6 py-3 text-sm font-medium text-white hover:bg-green-600 transition-all hover:shadow-lg hover:shadow-green-500/20"
@@ -1187,7 +1187,7 @@ export default function TenantSitePage() {
               Google Maps ile Aç
             </a>
             <a
-              href={`https://wa.me/${TESIS.whatsapp}?text=Merhaba, tesisinize nasil ulasirim?`}
+              href={`https://wa.me/${TESIS.whatsapp}?text=Merhaba, tesisinize nasıl ulaşırım?`}
               target="_blank"
               rel="noopener noreferrer"
               className="inline-flex items-center gap-2 rounded-full border border-white/10 bg-white/5 px-5 py-2.5 text-sm text-gray-300 hover:bg-white/10 transition"
