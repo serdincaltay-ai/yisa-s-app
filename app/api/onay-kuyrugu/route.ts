@@ -31,37 +31,38 @@ export async function GET() {
       .maybeSingle()
     if (!userRole) return NextResponse.json({ error: 'Yetki yok' }, { status: 403 })
 
-    // Demo talep istatistikleri
-    const { data: requests } = await service
+    // Demo talep istatistikleri — sunucu tarafli count sorgulari (limit sorunu yok)
+    const yediGunOnce = new Date()
+    yediGunOnce.setDate(yediGunOnce.getDate() - 7)
+
+    const [toplamRes, bekleyenRes, onaylananRes, reddedilenRes, sonHaftaRes, tenantCountRes] = await Promise.all([
+      service.from('demo_requests').select('id', { count: 'exact', head: true }),
+      service.from('demo_requests').select('id', { count: 'exact', head: true }).eq('status', 'new'),
+      service.from('demo_requests').select('id', { count: 'exact', head: true }).eq('status', 'converted'),
+      service.from('demo_requests').select('id', { count: 'exact', head: true }).eq('status', 'rejected'),
+      service.from('demo_requests').select('id', { count: 'exact', head: true }).gte('created_at', yediGunOnce.toISOString()),
+      service.from('tenants').select('id', { count: 'exact', head: true }),
+    ])
+
+    const toplam = toplamRes.count ?? 0
+    const bekleyen = bekleyenRes.count ?? 0
+    const onaylanan = onaylananRes.count ?? 0
+    const reddedilen = reddedilenRes.count ?? 0
+    const sonHafta = sonHaftaRes.count ?? 0
+    const toplamTenant = tenantCountRes.count ?? 0
+
+    // Kaynak dagilimi (son 200 kayit yeterli — gorsel dagitim icin)
+    const { data: recentRequests } = await service
       .from('demo_requests')
-      .select('id, status, source, created_at, payment_status')
+      .select('source')
       .order('created_at', { ascending: false })
       .limit(200)
 
-    const items = requests ?? []
-    const bekleyen = items.filter((r: { status: string }) => r.status === 'new').length
-    const onaylanan = items.filter((r: { status: string }) => r.status === 'converted').length
-    const reddedilen = items.filter((r: { status: string }) => r.status === 'rejected').length
-    const toplam = items.length
-
-    // Kaynak dagilimi
     const kaynakDagilimi: Record<string, number> = {}
-    for (const r of items) {
+    for (const r of recentRequests ?? []) {
       const src = (r as { source?: string }).source || 'bilinmeyen'
       kaynakDagilimi[src] = (kaynakDagilimi[src] || 0) + 1
     }
-
-    // Tenant sayisi (provisioning sonucu)
-    const { count: tenantCount } = await service
-      .from('tenants')
-      .select('id', { count: 'exact', head: true })
-
-    // Son 7 gun talep trendi
-    const yediGunOnce = new Date()
-    yediGunOnce.setDate(yediGunOnce.getDate() - 7)
-    const sonHafta = items.filter((r: { created_at: string }) =>
-      new Date(r.created_at) >= yediGunOnce
-    ).length
 
     return NextResponse.json({
       ozet: {
@@ -70,7 +71,7 @@ export async function GET() {
         onaylanan,
         reddedilen,
         sonHaftaTalep: sonHafta,
-        toplamTenant: tenantCount ?? 0,
+        toplamTenant,
       },
       kaynakDagilimi: Object.entries(kaynakDagilimi).map(([kaynak, sayi]) => ({ kaynak, sayi })),
     })
