@@ -267,6 +267,53 @@ graph LR
 
 ---
 
+## 4.5 CELF Yol Haritasi (Roadmap)
+
+CELF (Patron AI Orkestrasyon Motoru) 12 direktorluk uzerinden komut dagitimi, AI provider calistirma ve gorev yonetimi saglar. Asagidaki faz plani uygulanmaktadir.
+
+### Faz 1 — Temel CELF Pipeline (Mart 2026) ✓
+
+| # | Ozellik | Aciklama | Durum |
+|---|---------|----------|-------|
+| 1.1 | Keyword Zenginlestirme | DIRECTORATE_KEYWORDS'e ek anahtar kelimeler: sistem/mimari/guncelle→CTO, panel/gelisim paneli→CPO, veli/hatirlatma→CCO, taksit/kredi/odeme/fiyat→CFO, brans→CSPO, sifre/guvenlik→CISO | Tamamlandi |
+| 1.2 | Otomatik Execution | POST /api/celf/tasks/command sonrasi tum queued task'lar otomatik calistirilir (auto-execute). Patron tek komutla sonuc gorur | Tamamlandi |
+| 1.3 | Dashboard ↔ CELF | sendToSim artik POST /api/celf/tasks/command cagiriyor. Karar paketi CELF'e gidiyor, sonuclar GET /api/celf/tasks/board ile dashboard'da gosteriliyor | Tamamlandi |
+| 1.4 | Pipeline Birlestirme | v1 (ceo_tasks/celf_logs) deprecated, tum yeni akis v2 (celf_epics/celf_tasks) uzerinden. v1 endpoint'leri deprecation header ile isaretlendi | Tamamlandi |
+
+**v2 Pipeline Endpoint'leri:**
+- `POST /api/celf/tasks/command` — Komut giris + otomatik parse + auto-execute
+- `POST /api/celf/tasks/execute/[taskId]` — Tekil task calistirma
+- `GET /api/celf/tasks/board` — Epic + task panosu (dashboard entegrasyonu)
+
+**Deprecated v1 Endpoint'leri (hala calisir, v2'ye gecis onerilir):**
+- `POST /api/celf/task` → v2: `/api/celf/tasks/command`
+- `POST /api/celf/parse` → v2: `/api/celf/tasks/command`
+- `POST /api/celf/execute` → v2: `/api/celf/tasks/command` (auto-execute)
+- `POST /api/celf/approve` → v2: celf_tasks status guncelleme
+
+### Faz 2 — Veli & Odeme & Brans (Nisan–Mayis 2026)
+
+| # | Ozellik | Oncelik | Aciklama |
+|---|---------|---------|----------|
+| 2.1 | Veli Odeme DB | Yuksek | Veli odeme kayitlari, taksit takibi, odeme gecmisi tablolari |
+| 2.2 | Telefon + Sifre Auth | Yuksek | Telefon numarasi + sifre ile giris (mevcut email auth'a ek) |
+| 2.3 | Brans Paneli | Orta | Brans bazli sporcu listeleme, filtreleme, istatistik paneli |
+| 2.4 | Taksit Hatirlatma | Orta | Otomatik taksit hatirlatma (SMS/bildirim) — CCO direktorlugu |
+
+### Faz 3 — Yapilandirilmis AI Cikti & Safe Executor (Haziran–Temmuz 2026)
+
+| # | Ozellik | Oncelik | Aciklama |
+|---|---------|---------|----------|
+| 3.1 | Yapilandirilmis AI Cikti | Yuksek | AI provider ciktilari JSON schema ile validate edilir, typed output |
+| 3.2 | Safe Executor | Yuksek | SQL/kod ciktilari sandbox ortamda calistirilir, risk kontrolu |
+| 3.3 | Mufredat Modulu | Orta | student_progress, curriculum_items, student_curriculum_progress tablolari |
+| 3.4 | Anket Sistemi | Orta | surveys, survey_questions, survey_responses tablolari |
+| 3.5 | Bildirim Sistemi | Orta | notifications tablosu, push/SMS/email entegrasyonu |
+
+> **Not:** Faz 3 migration (20250101000008) icindeki 7 tablo (student_progress, curriculum_items, student_curriculum_progress, surveys, survey_questions, survey_responses, notifications) su an bu projede mevcut degildir. Bu tablolar baska bir projeye (ozelderslerakademisi) ait olabilir veya henuz olusturulmamistir. Faz 3 calismalari basladiginda ilgili migration eklenecektir.
+
+---
+
 ## 5. lib/ Klasorleri (Yardimci Dosyalar)
 
 ### 5.1 app-yisa-s/lib/
