@@ -1,6 +1,7 @@
 "use client"
 
-import React, { useState } from "react"
+import React, { useState, useEffect, useRef } from "react"
+import { motion, AnimatePresence, useInView } from "framer-motion"
 import {
   Phone,
   Mail,
@@ -20,140 +21,291 @@ import {
   Sparkles,
   CheckCircle2,
   ArrowRight,
+  CreditCard,
+  TrendingUp,
+  Menu,
+  X,
 } from "lucide-react"
 
 /* ------------------------------------------------------------------ */
-/*  BJK Tuzla Cimnastik Okulu — Tenant Landing Page                   */
-/*  Referans: hobigym.com yapısı                                       */
+/*  BJK Tuzla Cimnastik Okulu — Premium Tenant Landing Page            */
+/*  Franchise Paket: Premium (en kaliteli sablon)                      */
 /* ------------------------------------------------------------------ */
 
 const TESIS = {
-  ad: "Tuzla Beşiktaş Cimnastik Okulu",
+  ad: "Tuzla Besiktas Cimnastik Okulu",
   kisa: "BJK Tuzla Cimnastik",
-  slogan: "Çocuğunuzun Potansiyelini Keşfedin",
+  slogan: "Cocugunuzun Potansiyelini Kesfedin",
+  altSlogan: "Artistik cimnastikte profesyonel egitim",
   aciklama:
-    "Beşiktaş JK Spor Okulları bünyesinde, profesyonel antrenörler eşliğinde artistik cimnastik, ritmik cimnastik ve trampolin eğitimleri sunuyoruz. 4-14 yaş arası çocuklarınız için güvenli, eğlenceli ve gelişim odaklı ortam.",
+    "Besiktas JK Spor Okullari bunyesinde, profesyonel antrenorler esliginde artistik cimnastik egitimleri sunuyoruz. 4-14 yas arasi cocuklariniz icin guvenli, eglenceli ve gelisim odakli ortam.",
   telefon: "0530 710 46 24",
-  email: "info@bjktuzlacimnastik.com",
-  instagram: "@besiktasjktuzlasporokulu",
-  instagramUrl: "https://instagram.com/besiktasjktuzlasporokulu",
+  email: "info@hobigym.com",
+  instagram: "@bjktuzlacimnastik",
+  instagramUrl: "https://instagram.com/bjktuzlacimnastik",
   whatsapp: "905307104624",
-  adres: "Tuzla, İstanbul",
-  calisma: "Hafta içi 10:00–20:00 · Cumartesi 09:00–17:00",
-  harita: "https://maps.google.com/?q=Tuzla+Istanbul+Cimnastik",
+  adres:
+    "Evliya Celebi Mah. Hatboyu Cad. No:1, Tuzla Port AVM, 34940 Tuzla/Istanbul",
+  adresKisa: "Tuzla Port AVM, Tuzla/Istanbul",
+  calisma: "Hafta ici 10:00-20:00 \u00b7 Cumartesi 09:00-17:00",
+  harita: "https://maps.google.com/?q=Tuzla+Port+AVM+Istanbul",
+  haritaEmbed:
+    "https://www.google.com/maps/embed?pb=!1m18!1m12!1m3!1d3016.8!2d29.3!3d40.82!2m3!1f0!2f0!3f0!3m2!1i1024!2i768!4f13.1!3m3!1m2!1s0x0%3A0x0!2sTuzla+Port+AVM!5e0!3m2!1str!2str!4v1",
+  brans: "Artistik Cimnastik",
 }
 
-const BRANSLAR = [
-  {
-    baslik: "Artistik Cimnastik",
-    aciklama: "Yer hareketleri, paralel bar, halka ve atlama aletlerinde temel ve ileri düzey eğitim. 4-14 yaş.",
-    ikon: "🤸",
-    renk: "from-amber-500 to-orange-600",
-  },
-  {
-    baslik: "Ritmik Cimnastik",
-    aciklama: "Top, kurdele, çember ve ip ile ritim, esneklik ve zarafet çalışmaları. 5-12 yaş kız grupları.",
-    ikon: "🎀",
-    renk: "from-pink-500 to-rose-600",
-  },
-  {
-    baslik: "Trampolin",
-    aciklama: "Koordinasyon, denge ve havada kontrol becerileri. Eğlenceli ve güvenli ortamda trampolin eğitimi.",
-    ikon: "🦘",
-    renk: "from-blue-500 to-indigo-600",
-  },
-  {
-    baslik: "Genel Fiziksel Gelişim",
-    aciklama: "Tüm branşlara hazırlık: kuvvet, esneklik, çeviklik ve koordinasyon temelli çalışmalar.",
-    ikon: "💪",
-    renk: "from-emerald-500 to-green-600",
-  },
-]
+const BRANS_DETAY = {
+  baslik: "Artistik Cimnastik",
+  aciklama:
+    "Yer hareketleri, paralel bar, halka ve atlama aletlerinde temel ve ileri duzey egitim. Profesyonel ekipman ve guvenli ortamda, 4-14 yas arasi cocuklarimiz icin ozel tasarlanmis programlar.",
+  ozellikler: [
+    "Yer Hareketleri & Akrobasi",
+    "Paralel Bar & Asimetrik Bar",
+    "Halka & Denge Aleti",
+    "Atlama & Trampolin",
+    "Esneklik & Kuvvet Gelistirme",
+    "Musabaka Hazirlik Programi",
+  ],
+}
 
 const ANTRENORLER = [
   {
-    ad: "Ayşe Korkmaz",
+    ad: "Ahmet Karadeniz",
+    unvan: "Bas Antrenor",
     uzmanlik: "Artistik Cimnastik",
-    deneyim: "12 yıl",
+    deneyim: "15 yil",
     belge: "Cimnastik Federasyonu 3. Kademe",
-    foto: null,
   },
   {
-    ad: "Mehmet Yıldız",
-    uzmanlik: "Trampolin & Artistik",
-    deneyim: "8 yıl",
+    ad: "Zeynep Ozturk",
+    unvan: "Yardimci Antrenor",
+    uzmanlik: "Artistik Cimnastik \u2014 Yer Hareketleri",
+    deneyim: "8 yil",
     belge: "Cimnastik Federasyonu 2. Kademe",
-    foto: null,
   },
   {
-    ad: "Zeynep Demir",
-    uzmanlik: "Ritmik Cimnastik",
-    deneyim: "10 yıl",
-    belge: "Cimnastik Federasyonu 3. Kademe",
-    foto: null,
+    ad: "Ali Yilmaz",
+    unvan: "Yardimci Antrenor",
+    uzmanlik: "Artistik Cimnastik \u2014 Aletler",
+    deneyim: "6 yil",
+    belge: "Cimnastik Federasyonu 2. Kademe",
+  },
+  {
+    ad: "Sena Kaya",
+    unvan: "Yardimci Antrenor",
+    uzmanlik: "Artistik Cimnastik \u2014 Ritmik & Esneklik",
+    deneyim: "5 yil",
+    belge: "Cimnastik Federasyonu 1. Kademe",
+  },
+]
+
+const YONETIM = [
+  {
+    ad: "Merve Gormezer",
+    unvan: "Sportif Direktor",
+    rol: "Tesis yonetimi ve program koordinasyonu",
+  },
+  {
+    ad: "Pelin Calik",
+    unvan: "Kayit Gorevlisi",
+    rol: "Ogrenci kayit ve veli iletisimi",
   },
 ]
 
 const PAKETLER = [
   {
-    baslik: "Keşif Paketi",
+    baslik: "Baslangic Paketi",
     seans: 24,
-    aciklama: "Haftada 2 ders · ~3 ay",
-    fiyat: "4.800 ₺",
-    ozellikler: ["24 ders hakkı", "1 branş seçimi", "İlk ölçüm dahil", "Gelişim raporu"],
+    fiyat: "30.000",
+    birimFiyat: "1.250",
+    aciklama: "Haftada 2 ders \u00b7 ~3 ay",
+    taksit: "Tek seferde odeme",
+    maxTaksit: 1,
+    ozellikler: [
+      "24 ders hakki",
+      "Artistik cimnastik egitimleri",
+      "Ilk olcum dahil",
+      "Gelisim raporu",
+      "Veli paneli erisimi",
+      "WhatsApp destek hatti",
+    ],
     one_cikan: false,
   },
   {
-    baslik: "Gelişim Paketi",
+    baslik: "Gelisim Paketi",
     seans: 48,
-    aciklama: "Haftada 2-3 ders · ~4-6 ay",
-    fiyat: "8.400 ₺",
-    ozellikler: ["48 ders hakkı", "2 branş seçimi", "3 ölçüm dahil", "Detaylı gelişim raporu", "Kardeş kullanabilir"],
+    fiyat: "52.800",
+    birimFiyat: "1.100",
+    aciklama: "Haftada 2-3 ders \u00b7 ~4-6 ay",
+    taksit: "3 taksit secenegi",
+    maxTaksit: 3,
+    ozellikler: [
+      "48 ders hakki",
+      "Artistik cimnastik egitimleri",
+      "3 olcum dahil",
+      "Detayli gelisim raporu",
+      "Kardes kullanabilir",
+      "Veli paneli erisimi",
+      "Musabaka hazirlik destegi",
+      "WhatsApp oncelikli destek",
+    ],
     one_cikan: true,
   },
   {
-    baslik: "Şampiyon Paketi",
+    baslik: "Sampiyon Paketi",
     seans: 60,
-    aciklama: "Haftada 3 ders · ~5 ay",
-    fiyat: "9.600 ₺",
-    ozellikler: ["60 ders hakkı", "Tüm branşlar", "Sınırsız ölçüm", "Kişisel antrenman planı", "Kardeş kullanabilir", "Diğer şubelerde geçerli"],
+    fiyat: "60.000",
+    birimFiyat: "1.000",
+    aciklama: "Haftada 3+ ders \u00b7 ~5 ay",
+    taksit: "3 taksit secenegi",
+    maxTaksit: 3,
+    ozellikler: [
+      "60 ders hakki",
+      "Artistik cimnastik egitimleri",
+      "Sinirsiz olcum",
+      "Kisisel antrenman plani",
+      "Kardes kullanabilir",
+      "Veli paneli erisimi",
+      "Musabaka tam destek",
+      "Ozel antrenor gorusmesi",
+      "WhatsApp VIP destek",
+    ],
     one_cikan: false,
   },
 ]
 
+const TAKSIT_BILGI = {
+  baslik: "Esnek Taksit Sistemi",
+  aciklama:
+    "48 ve 60 seanslik paketlerde ilk 30.000 TL odeme sonrasinda kalan tutar icin 3 taksit secenegi sunuyoruz. Odeme tarihlerinizi kendiniz secersiniz \u2014 en fazla 1 hafta uzatilabilir.",
+  adimlar: [
+    {
+      adim: "1",
+      baslik: "Paket Secimi",
+      aciklama: "24, 48 veya 60 seanslik paketten birini secin.",
+    },
+    {
+      adim: "2",
+      baslik: "Ilk Odeme",
+      aciklama: "30.000 TL ilk odemeyi gerceklestirin.",
+    },
+    {
+      adim: "3",
+      baslik: "Taksit Planlama",
+      aciklama:
+        "Kalan tutari icin odeme tarihlerinizi kendiniz belirleyin (maks. 1 hafta esneklik).",
+    },
+    {
+      adim: "4",
+      baslik: "Baslayin!",
+      aciklama:
+        "Odemeniz onaylandiktan sonra derslerinize baslayabilirsiniz.",
+    },
+  ],
+}
+
 const SSS = [
   {
-    soru: "Deneme dersi ücretsiz mi?",
-    cevap: "Evet! İlk deneme dersimiz tamamen ücretsizdir. Çocuğunuz salonu, antrenörleri ve arkadaşlarını tanısın.",
+    soru: "Deneme dersi ucretsiz mi?",
+    cevap:
+      "Evet! Ilk deneme dersimiz tamamen ucretsizdir. Cocugunuz salonu, antrenorleri ve arkadaslarini tanisin.",
   },
   {
-    soru: "Kaç yaşından itibaren başlayabilir?",
-    cevap: "4 yaşından itibaren cimnastiğe başlanabilir. Yaş gruplarına göre sınıflar oluşturulur.",
+    soru: "Kac yasindan itibaren baslayabilir?",
+    cevap:
+      "4 yasindan itibaren cimnastige baslanabilir. Yas gruplarina gore siniflar olusturulur.",
   },
   {
-    soru: "Aidat sistemi nasıl çalışıyor?",
-    cevap: "Aylık aidat yerine seans bazlı kredi sistemi kullanıyoruz. 24, 48 veya 60 derslik paketlerden birini seçebilirsiniz. Kredi hakkınızı istediğiniz branşta, istediğiniz gün kullanabilirsiniz.",
+    soru: "Odeme sistemi nasil calisiyor?",
+    cevap:
+      "Seans bazli kredi sistemi kullaniyoruz. 24, 48 veya 60 derslik paketlerden birini secebilirsiniz. 24 seanslik paket tek seferde, diger paketler 3 taksitle odenebilir. Ilk odeme 30.000 TL, kalan tutari kendi sectiginiz tarihlerde odersiniz.",
   },
   {
-    soru: "Birden fazla branşa kayıt olabilir miyiz?",
-    cevap: "Evet! Paketinize göre birden fazla branşta ders alabilirsiniz. 48 ve 60 derslik paketlerde kardeşler de aynı kredileri kullanabilir.",
+    soru: "Taksit tarihleri nasil belirleniyor?",
+    cevap:
+      "48 ve 60 seanslik paketlerde ilk 30.000 TL yi odedikten sonra, kalan tutar icin odeme tarihlerinizi kendiniz secersiniz. Taksitler arasinda en fazla 1 haftalik esneklik sunulmaktadir.",
   },
   {
-    soru: "Ölçüm ve gelişim takibi nasıl yapılıyor?",
-    cevap: "YİSA-S teknoloji altyapımız sayesinde çocuğunuzun fiziksel, teknik ve mental gelişimi düzenli olarak ölçülür. WHO ve Eurofit normlarına göre 10 perspektiften değerlendirme yapılır. Sonuçlar velilere dijital rapor olarak iletilir.",
+    soru: "Olcum ve gelisim takibi nasil yapiliyor?",
+    cevap:
+      "YiSA-S teknoloji altyapimiz sayesinde cocugunuzun fiziksel, teknik ve mental gelisimi duzenli olarak olculur. WHO ve Eurofit normlarina gore 10 perspektiften degerlendirme yapilir. Sonuclar velilere dijital rapor olarak iletilir.",
   },
   {
-    soru: "Kıyafet ve malzeme gerekli mi?",
-    cevap: "Rahat spor kıyafeti ve çorap yeterlidir. İleri seviye için jimnastik mayosu önerilir. Tüm ekipman salonumuzda mevcuttur.",
+    soru: "Kiyafet ve malzeme gerekli mi?",
+    cevap:
+      "Rahat spor kiyafeti ve corap yeterlidir. Ileri seviye icin jimnastik mayosu onerilir. Tum ekipman salonumuzda mevcuttur.",
+  },
+  {
+    soru: "Kardes indirimi var mi?",
+    cevap:
+      "48 ve 60 seanslik paketlerde kardesler ayni kredi havuzunu kullanabilir \u2014 ayri paket almaniza gerek yoktur.",
   },
 ]
 
+/* ------------------------------------------------------------------ */
+/*  Animasyon Yardimcilari                                             */
+/* ------------------------------------------------------------------ */
+const fadeUp = {
+  hidden: { opacity: 0, y: 30 },
+  visible: {
+    opacity: 1,
+    y: 0,
+    transition: { duration: 0.6, ease: "easeOut" },
+  },
+}
+
+const stagger = {
+  visible: { transition: { staggerChildren: 0.12 } },
+}
+
+function Section({
+  children,
+  className = "",
+  id,
+}: {
+  children: React.ReactNode
+  className?: string
+  id?: string
+}) {
+  const ref = useRef(null)
+  const isInView = useInView(ref, { once: true, margin: "-80px" })
+  return (
+    <motion.section
+      ref={ref}
+      id={id}
+      initial="hidden"
+      animate={isInView ? "visible" : "hidden"}
+      variants={stagger}
+      className={className}
+    >
+      {children}
+    </motion.section>
+  )
+}
+
+/* ------------------------------------------------------------------ */
+/*  Ana Sayfa                                                          */
+/* ------------------------------------------------------------------ */
 export default function TenantSitePage() {
-  const [formData, setFormData] = useState({ ad: "", telefon: "", email: "", cocukYas: "", mesaj: "" })
+  const [formData, setFormData] = useState({
+    ad: "",
+    telefon: "",
+    email: "",
+    cocukYas: "",
+    mesaj: "",
+  })
   const [formGonderildi, setFormGonderildi] = useState(false)
   const [formHata, setFormHata] = useState("")
   const [gonderiyor, setGonderiyor] = useState(false)
   const [acikSSS, setAcikSSS] = useState<number | null>(null)
+  const [mobileMenuOpen, setMobileMenuOpen] = useState(false)
+  const [scrolled, setScrolled] = useState(false)
+
+  useEffect(() => {
+    const onScroll = () => setScrolled(window.scrollY > 20)
+    window.addEventListener("scroll", onScroll, { passive: true })
+    return () => window.removeEventListener("scroll", onScroll)
+  }, [])
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault()
@@ -172,303 +324,692 @@ export default function TenantSitePage() {
           name: formData.ad,
           phone: formData.telefon,
           email: formData.email || undefined,
-          notes: `Çocuk yaşı: ${formData.cocukYas}. ${formData.mesaj}`.trim(),
+          notes: `Cocuk yasi: ${formData.cocukYas}. ${formData.mesaj}`.trim(),
           source: "vitrin",
         }),
       })
       if (res.ok) {
         setFormGonderildi(true)
       } else {
-        setFormHata("Bir hata oluştu, lütfen tekrar deneyin.")
+        setFormHata("Bir hata olustu, lutfen tekrar deneyin.")
       }
     } catch {
-      setFormHata("Bağlantı hatası, lütfen tekrar deneyin.")
+      setFormHata("Baglanti hatasi, lutfen tekrar deneyin.")
     } finally {
       setGonderiyor(false)
     }
   }
 
+  const NAV_LINKS = [
+    { label: "Bransimiz", href: "#brans" },
+    { label: "Antrenorler", href: "#antrenorler" },
+    { label: "Paketler", href: "#paketler" },
+    { label: "Taksit", href: "#taksit" },
+    { label: "S.S.S", href: "#sss" },
+  ]
+
+  const scrollTo = (href: string) => {
+    setMobileMenuOpen(false)
+    if (href.startsWith("#")) {
+      const el = document.querySelector(href)
+      if (el) el.scrollIntoView({ behavior: "smooth", block: "start" })
+    }
+  }
+
   return (
-    <div className="min-h-screen bg-white text-gray-900">
+    <div className="min-h-screen bg-[#060a13] text-white selection:bg-cyan-500/30">
       {/* Navbar */}
-      <nav className="sticky top-0 z-50 border-b border-gray-100 bg-white/95 backdrop-blur">
-        <div className="mx-auto flex max-w-7xl items-center justify-between px-4 py-3">
+      <nav
+        className={`fixed top-0 left-0 right-0 z-50 transition-all duration-300 ${
+          scrolled
+            ? "bg-[#060a13]/95 backdrop-blur-lg shadow-lg shadow-black/20 border-b border-white/5"
+            : "bg-transparent"
+        }`}
+      >
+        <div className="mx-auto flex max-w-7xl items-center justify-between px-4 py-3 md:px-6">
           <div className="flex items-center gap-3">
-            <div className="flex h-10 w-10 items-center justify-center rounded-lg bg-black text-white font-bold text-sm">BJK</div>
+            <div className="flex h-10 w-10 items-center justify-center rounded-xl bg-gradient-to-br from-white to-gray-300 font-black text-sm text-black shadow-lg">
+              BJK
+            </div>
             <div>
-              <p className="font-bold text-sm leading-tight">{TESIS.kisa}</p>
-              <p className="text-xs text-gray-500">Beşiktaş JK Spor Okulları</p>
+              <p className="font-bold text-sm leading-tight text-white">
+                {TESIS.kisa}
+              </p>
+              <p className="text-[10px] text-cyan-400/70 tracking-wider uppercase">
+                Besiktas JK Spor Okullari
+              </p>
             </div>
           </div>
-          <div className="hidden items-center gap-6 text-sm md:flex">
-            <a href="#branslar" className="text-gray-600 hover:text-black transition">Branşlar</a>
-            <a href="#antrenorler" className="text-gray-600 hover:text-black transition">Antrenörler</a>
-            <a href="#paketler" className="text-gray-600 hover:text-black transition">Paketler</a>
-            <a href="#sss" className="text-gray-600 hover:text-black transition">S.S.S</a>
-            <a
-              href="#kayit"
-              className="rounded-full bg-black px-5 py-2 text-white font-medium hover:bg-gray-800 transition"
+
+          <div className="hidden items-center gap-1 md:flex">
+            {NAV_LINKS.map((link) => (
+              <button
+                key={link.href}
+                onClick={() => scrollTo(link.href)}
+                className="rounded-lg px-3 py-2 text-sm text-gray-300 hover:text-white hover:bg-white/5 transition-all"
+              >
+                {link.label}
+              </button>
+            ))}
+            <button
+              onClick={() => scrollTo("#kayit")}
+              className="ml-3 rounded-full bg-gradient-to-r from-cyan-500 to-blue-600 px-5 py-2.5 text-sm font-semibold text-white shadow-lg shadow-cyan-500/20 hover:shadow-cyan-500/40 hover:scale-105 transition-all"
             >
-              Ücretsiz Deneme
-            </a>
+              Ucretsiz Deneme
+            </button>
           </div>
-          <a
-            href={`https://wa.me/${TESIS.whatsapp}`}
-            target="_blank"
-            rel="noopener noreferrer"
-            className="flex items-center gap-2 rounded-full bg-green-500 px-4 py-2 text-sm font-medium text-white hover:bg-green-600 transition md:hidden"
+
+          <button
+            onClick={() => setMobileMenuOpen(!mobileMenuOpen)}
+            className="flex h-10 w-10 items-center justify-center rounded-lg text-white hover:bg-white/10 transition md:hidden"
           >
-            <MessageCircle className="h-4 w-4" />
-            Ara
-          </a>
+            {mobileMenuOpen ? (
+              <X className="h-5 w-5" />
+            ) : (
+              <Menu className="h-5 w-5" />
+            )}
+          </button>
         </div>
+
+        <AnimatePresence>
+          {mobileMenuOpen && (
+            <motion.div
+              initial={{ opacity: 0, height: 0 }}
+              animate={{ opacity: 1, height: "auto" }}
+              exit={{ opacity: 0, height: 0 }}
+              className="overflow-hidden border-t border-white/5 bg-[#060a13]/98 backdrop-blur-lg md:hidden"
+            >
+              <div className="space-y-1 px-4 py-3">
+                {NAV_LINKS.map((link) => (
+                  <button
+                    key={link.href}
+                    onClick={() => scrollTo(link.href)}
+                    className="block w-full rounded-lg px-4 py-3 text-left text-sm text-gray-300 hover:text-white hover:bg-white/5 transition"
+                  >
+                    {link.label}
+                  </button>
+                ))}
+                <button
+                  onClick={() => scrollTo("#kayit")}
+                  className="mt-2 block w-full rounded-full bg-gradient-to-r from-cyan-500 to-blue-600 px-5 py-3 text-center text-sm font-semibold text-white"
+                >
+                  Ucretsiz Deneme Dersi
+                </button>
+              </div>
+            </motion.div>
+          )}
+        </AnimatePresence>
       </nav>
 
       {/* Hero */}
-      <section className="relative overflow-hidden bg-gradient-to-br from-gray-900 via-gray-800 to-black py-20 md:py-32">
-        <div className="absolute inset-0 opacity-20" style={{ backgroundImage: "url(\"data:image/svg+xml,%3Csvg width='60' height='60' viewBox='0 0 60 60' xmlns='http://www.w3.org/2000/svg'%3E%3Cg fill='none' fill-rule='evenodd'%3E%3Cg fill='%23ffffff' fill-opacity='0.1'%3E%3Cpath d='M36 34v-4h-2v4h-4v2h4v4h2v-4h4v-2h-4zm0-30V0h-2v4h-4v2h4v4h2V6h4V4h-4zM6 34v-4H4v4H0v2h4v4h2v-4h4v-2H6zM6 4V0H4v4H0v2h4v4h2V6h4V4H6z'/%3E%3C/g%3E%3C/g%3E%3C/svg%3E\")" }} />
-        <div className="relative mx-auto max-w-7xl px-4 text-center">
-          <div className="mb-6 inline-flex items-center gap-2 rounded-full bg-white/10 px-4 py-2 text-sm text-white/80">
-            <Sparkles className="h-4 w-4 text-yellow-400" />
-            Beşiktaş JK Spor Okulları Bünyesinde
-          </div>
-          <h1 className="mx-auto max-w-4xl text-4xl font-extrabold leading-tight text-white md:text-6xl">
-            {TESIS.slogan}
-          </h1>
-          <p className="mx-auto mt-6 max-w-2xl text-lg text-gray-300 md:text-xl">
+      <section className="relative min-h-screen flex items-center justify-center overflow-hidden pt-16">
+        <div className="absolute inset-0">
+          <div className="absolute inset-0 bg-gradient-to-b from-[#060a13] via-[#0a1628] to-[#060a13]" />
+          <div className="absolute top-1/4 left-1/4 w-[600px] h-[600px] rounded-full bg-cyan-500/5 blur-[150px] animate-pulse" />
+          <div
+            className="absolute bottom-1/4 right-1/4 w-[500px] h-[500px] rounded-full bg-blue-600/5 blur-[120px] animate-pulse"
+            style={{ animationDelay: "1s" }}
+          />
+          <div
+            className="absolute inset-0 opacity-[0.03]"
+            style={{
+              backgroundImage:
+                "linear-gradient(rgba(255,255,255,0.1) 1px, transparent 1px), linear-gradient(90deg, rgba(255,255,255,0.1) 1px, transparent 1px)",
+              backgroundSize: "60px 60px",
+            }}
+          />
+        </div>
+
+        <div className="relative mx-auto max-w-7xl px-4 py-20 text-center md:px-6">
+          <motion.div
+            initial={{ opacity: 0, y: -10 }}
+            animate={{ opacity: 1, y: 0 }}
+            transition={{ duration: 0.6 }}
+          >
+            <span className="inline-flex items-center gap-2 rounded-full bg-white/5 border border-white/10 px-4 py-2 text-sm text-cyan-300/80 backdrop-blur-sm">
+              <Sparkles className="h-4 w-4 text-cyan-400" />
+              Besiktas JK Spor Okullari Bunyesinde
+            </span>
+          </motion.div>
+
+          <motion.h1
+            initial={{ opacity: 0, y: 20 }}
+            animate={{ opacity: 1, y: 0 }}
+            transition={{ duration: 0.8, delay: 0.15 }}
+            className="mx-auto mt-8 max-w-5xl text-4xl font-extrabold leading-tight tracking-tight md:text-6xl lg:text-7xl"
+          >
+            <span className="bg-gradient-to-r from-white via-white to-gray-400 bg-clip-text text-transparent">
+              {TESIS.slogan}
+            </span>
+          </motion.h1>
+
+          <motion.p
+            initial={{ opacity: 0, y: 20 }}
+            animate={{ opacity: 1, y: 0 }}
+            transition={{ duration: 0.8, delay: 0.3 }}
+            className="mx-auto mt-6 max-w-2xl text-lg text-gray-400 md:text-xl leading-relaxed"
+          >
             {TESIS.aciklama}
-          </p>
-          <div className="mt-10 flex flex-col items-center gap-4 sm:flex-row sm:justify-center">
-            <a
-              href="#kayit"
-              className="inline-flex items-center gap-2 rounded-full bg-white px-8 py-4 text-lg font-bold text-gray-900 shadow-xl hover:bg-gray-100 transition"
+          </motion.p>
+
+          <motion.div
+            initial={{ opacity: 0, y: 20 }}
+            animate={{ opacity: 1, y: 0 }}
+            transition={{ duration: 0.8, delay: 0.45 }}
+            className="mt-10 flex flex-col items-center gap-4 sm:flex-row sm:justify-center"
+          >
+            <button
+              onClick={() => scrollTo("#kayit")}
+              className="group inline-flex items-center gap-2 rounded-full bg-gradient-to-r from-cyan-500 to-blue-600 px-8 py-4 text-lg font-bold text-white shadow-2xl shadow-cyan-500/20 hover:shadow-cyan-500/40 hover:scale-105 transition-all"
             >
-              Ücretsiz Deneme Dersi
-              <ArrowRight className="h-5 w-5" />
-            </a>
+              Ucretsiz Deneme Dersi
+              <ArrowRight className="h-5 w-5 group-hover:translate-x-1 transition-transform" />
+            </button>
             <a
               href={`tel:${TESIS.telefon.replace(/\s/g, "")}`}
-              className="inline-flex items-center gap-2 rounded-full border-2 border-white/30 px-8 py-4 text-lg font-medium text-white hover:bg-white/10 transition"
+              className="inline-flex items-center gap-2 rounded-full border border-white/10 bg-white/5 px-8 py-4 text-lg font-medium text-white backdrop-blur-sm hover:bg-white/10 transition-all"
             >
-              <Phone className="h-5 w-5" />
+              <Phone className="h-5 w-5 text-green-400" />
               {TESIS.telefon}
             </a>
-          </div>
+          </motion.div>
 
-          {/* Stats */}
-          <div className="mx-auto mt-16 grid max-w-3xl grid-cols-2 gap-6 md:grid-cols-4">
+          <motion.div
+            initial={{ opacity: 0, y: 30 }}
+            animate={{ opacity: 1, y: 0 }}
+            transition={{ duration: 0.8, delay: 0.6 }}
+            className="mx-auto mt-20 grid max-w-3xl grid-cols-2 gap-6 md:grid-cols-4"
+          >
             {[
-              { sayi: "200+", etiket: "Aktif Öğrenci" },
-              { sayi: "4", etiket: "Branş" },
-              { sayi: "3", etiket: "Uzman Antrenör" },
-              { sayi: "10+", etiket: "Yıl Deneyim" },
+              { sayi: "140+", etiket: "Aktif Sporcu" },
+              { sayi: "4", etiket: "Uzman Antrenor" },
+              { sayi: "7", etiket: "Profesyonel Kadro" },
+              { sayi: "10+", etiket: "Yil Deneyim" },
             ].map((s, i) => (
               <div key={i} className="text-center">
-                <p className="text-3xl font-extrabold text-white md:text-4xl">{s.sayi}</p>
-                <p className="mt-1 text-sm text-gray-400">{s.etiket}</p>
+                <p className="text-3xl font-extrabold bg-gradient-to-r from-cyan-400 to-blue-400 bg-clip-text text-transparent md:text-4xl">
+                  {s.sayi}
+                </p>
+                <p className="mt-1 text-sm text-gray-500">{s.etiket}</p>
               </div>
             ))}
-          </div>
+          </motion.div>
         </div>
+
+        <motion.div
+          initial={{ opacity: 0 }}
+          animate={{ opacity: 0.5 }}
+          transition={{ delay: 2 }}
+          className="absolute bottom-8 left-1/2 -translate-x-1/2"
+        >
+          <ChevronDown className="h-6 w-6 text-gray-500 animate-bounce" />
+        </motion.div>
       </section>
 
       {/* Neden Biz */}
-      <section className="bg-gray-50 py-16 md:py-24">
-        <div className="mx-auto max-w-7xl px-4">
-          <div className="text-center">
-            <h2 className="text-3xl font-bold md:text-4xl">Neden BJK Tuzla Cimnastik?</h2>
-            <p className="mx-auto mt-4 max-w-2xl text-gray-600">
-              Profesyonel kadromuz ve modern tesisimizle çocuğunuzun fiziksel, mental ve sosyal gelişimini destekliyoruz.
+      <Section className="py-20 md:py-28">
+        <div className="mx-auto max-w-7xl px-4 md:px-6">
+          <motion.div variants={fadeUp} className="text-center">
+            <h2 className="text-3xl font-bold md:text-4xl">
+              Neden BJK Tuzla Cimnastik?
+            </h2>
+            <p className="mx-auto mt-4 max-w-2xl text-gray-400">
+              Profesyonel kadromuz ve modern tesisimizle cocugunuzun fiziksel,
+              mental ve sosyal gelisimini destekliyoruz.
             </p>
-          </div>
-          <div className="mt-12 grid gap-6 md:grid-cols-2 lg:grid-cols-3">
+          </motion.div>
+          <div className="mt-14 grid gap-5 md:grid-cols-2 lg:grid-cols-3">
             {[
-              { ikon: Shield, baslik: "Güvenli Ortam", aciklama: "Profesyonel ekipman, yumuşak zeminler ve sürekli gözetim altında antrenmanlar." },
-              { ikon: Target, baslik: "Kişisel Gelişim Takibi", aciklama: "YİSA-S teknolojisiyle 10 perspektiften ölçüm ve WHO/Eurofit normlarına göre değerlendirme." },
-              { ikon: Users, baslik: "Küçük Gruplar", aciklama: "Antrenör başına maksimum 10 öğrenci ile birebir ilgi ve kaliteli eğitim." },
-              { ikon: Award, baslik: "Lisanslı Antrenörler", aciklama: "Cimnastik Federasyonu sertifikalı, deneyimli ve pedagoji eğitimli antrenör kadrosu." },
-              { ikon: Heart, baslik: "Eğlenceli Öğrenme", aciklama: "Oyun tabanlı eğitim metoduyla çocuklar eğlenirken öğrenir ve gelişir." },
-              { ikon: Calendar, baslik: "Esnek Program", aciklama: "Hafta içi ve hafta sonu seçenekleri. Kredi sistemiyle istediğiniz gün gelin." },
+              {
+                ikon: Shield,
+                baslik: "Guvenli Ortam",
+                aciklama:
+                  "Profesyonel ekipman, yumusak zeminler ve surekli gozetim altinda antrenmanlar.",
+                renk: "from-cyan-500/20 to-cyan-500/5",
+                ikonRenk: "text-cyan-400",
+              },
+              {
+                ikon: Target,
+                baslik: "Kisisel Gelisim Takibi",
+                aciklama:
+                  "YiSA-S teknolojisiyle 10 perspektiften olcum ve WHO/Eurofit normlarina gore degerlendirme.",
+                renk: "from-blue-500/20 to-blue-500/5",
+                ikonRenk: "text-blue-400",
+              },
+              {
+                ikon: Users,
+                baslik: "Kucuk Gruplar",
+                aciklama:
+                  "Antrenor basina maksimum 10 ogrenci ile birebir ilgi ve kaliteli egitim.",
+                renk: "from-purple-500/20 to-purple-500/5",
+                ikonRenk: "text-purple-400",
+              },
+              {
+                ikon: Award,
+                baslik: "Lisansli Antrenorler",
+                aciklama:
+                  "Cimnastik Federasyonu sertifikali, deneyimli ve pedagoji egitimli antrenor kadrosu.",
+                renk: "from-amber-500/20 to-amber-500/5",
+                ikonRenk: "text-amber-400",
+              },
+              {
+                ikon: Heart,
+                baslik: "Eglenceli Ogrenme",
+                aciklama:
+                  "Oyun tabanli egitim metoduyla cocuklar eglenirken ogrenir ve gelisir.",
+                renk: "from-rose-500/20 to-rose-500/5",
+                ikonRenk: "text-rose-400",
+              },
+              {
+                ikon: Calendar,
+                baslik: "Esnek Program",
+                aciklama:
+                  "Hafta ici ve hafta sonu secenekleri. Kredi sistemiyle istediginiz gun gelin.",
+                renk: "from-emerald-500/20 to-emerald-500/5",
+                ikonRenk: "text-emerald-400",
+              },
             ].map((item, i) => (
-              <div key={i} className="rounded-2xl bg-white p-6 shadow-sm hover:shadow-md transition">
-                <div className="flex h-12 w-12 items-center justify-center rounded-xl bg-gray-100">
-                  <item.ikon className="h-6 w-6 text-gray-700" />
+              <motion.div
+                key={i}
+                variants={fadeUp}
+                className="group rounded-2xl border border-white/5 bg-white/[0.02] p-6 hover:bg-white/[0.04] hover:border-white/10 transition-all duration-300"
+              >
+                <div
+                  className={`flex h-12 w-12 items-center justify-center rounded-xl bg-gradient-to-br ${item.renk}`}
+                >
+                  <item.ikon className={`h-6 w-6 ${item.ikonRenk}`} />
                 </div>
-                <h3 className="mt-4 text-lg font-bold">{item.baslik}</h3>
-                <p className="mt-2 text-sm text-gray-600 leading-relaxed">{item.aciklama}</p>
-              </div>
+                <h3 className="mt-4 text-lg font-bold text-white">
+                  {item.baslik}
+                </h3>
+                <p className="mt-2 text-sm text-gray-400 leading-relaxed">
+                  {item.aciklama}
+                </p>
+              </motion.div>
             ))}
           </div>
         </div>
-      </section>
+      </Section>
 
-      {/* Branşlar */}
-      <section id="branslar" className="py-16 md:py-24">
-        <div className="mx-auto max-w-7xl px-4">
-          <div className="text-center">
-            <h2 className="text-3xl font-bold md:text-4xl">Branşlarımız</h2>
-            <p className="mx-auto mt-4 max-w-2xl text-gray-600">
-              4-14 yaş arası çocuklar için profesyonel cimnastik eğitim programları
-            </p>
-          </div>
-          <div className="mt-12 grid gap-6 md:grid-cols-2">
-            {BRANSLAR.map((b, i) => (
-              <div key={i} className="group relative overflow-hidden rounded-2xl bg-gradient-to-br p-8 text-white shadow-lg" style={{ background: `linear-gradient(135deg, var(--tw-gradient-stops))` }}>
-                <div className={`absolute inset-0 bg-gradient-to-br ${b.renk} opacity-90`} />
-                <div className="relative">
-                  <span className="text-4xl">{b.ikon}</span>
-                  <h3 className="mt-4 text-2xl font-bold">{b.baslik}</h3>
-                  <p className="mt-2 text-white/90 leading-relaxed">{b.aciklama}</p>
-                  <a href="#kayit" className="mt-4 inline-flex items-center gap-1 text-sm font-medium text-white/80 hover:text-white transition">
-                    Deneme dersi al <ArrowRight className="h-4 w-4" />
-                  </a>
+      {/* Brans — Artistik Cimnastik */}
+      <Section id="brans" className="py-20 md:py-28">
+        <div className="mx-auto max-w-7xl px-4 md:px-6">
+          <div className="grid items-center gap-12 lg:grid-cols-2">
+            <motion.div variants={fadeUp}>
+              <span className="inline-flex items-center gap-2 rounded-full bg-amber-500/10 border border-amber-500/20 px-3 py-1 text-xs font-medium text-amber-400 uppercase tracking-wider">
+                Tek Bransimiz
+              </span>
+              <h2 className="mt-4 text-3xl font-bold md:text-4xl">
+                {BRANS_DETAY.baslik}
+              </h2>
+              <p className="mt-4 text-gray-400 leading-relaxed">
+                {BRANS_DETAY.aciklama}
+              </p>
+              <ul className="mt-6 space-y-3">
+                {BRANS_DETAY.ozellikler.map((oz, i) => (
+                  <li
+                    key={i}
+                    className="flex items-center gap-3 text-sm text-gray-300"
+                  >
+                    <CheckCircle2 className="h-4 w-4 shrink-0 text-cyan-400" />
+                    {oz}
+                  </li>
+                ))}
+              </ul>
+              <button
+                onClick={() => scrollTo("#kayit")}
+                className="mt-8 inline-flex items-center gap-2 rounded-full bg-gradient-to-r from-amber-500 to-orange-600 px-6 py-3 text-sm font-semibold text-white shadow-lg shadow-amber-500/20 hover:shadow-amber-500/40 transition-all"
+              >
+                Deneme Dersi Al
+                <ArrowRight className="h-4 w-4" />
+              </button>
+            </motion.div>
+
+            <motion.div variants={fadeUp} className="relative">
+              <div className="aspect-square rounded-3xl bg-gradient-to-br from-amber-500/10 via-orange-500/5 to-transparent border border-white/5 flex items-center justify-center">
+                <div className="text-center">
+                  <span className="text-8xl">{"\u{1F938}"}</span>
+                  <p className="mt-4 text-xl font-bold text-white">
+                    {BRANS_DETAY.baslik}
+                  </p>
+                  <p className="mt-2 text-sm text-gray-500">4-14 Yas</p>
                 </div>
               </div>
-            ))}
+              <div className="absolute -top-3 -right-3 rounded-2xl bg-gradient-to-br from-cyan-500/20 to-blue-600/20 border border-cyan-500/20 px-4 py-2 backdrop-blur-sm">
+                <p className="text-xs font-medium text-cyan-300">
+                  Profesyonel Ekipman
+                </p>
+              </div>
+              <div className="absolute -bottom-3 -left-3 rounded-2xl bg-gradient-to-br from-amber-500/20 to-orange-600/20 border border-amber-500/20 px-4 py-2 backdrop-blur-sm">
+                <p className="text-xs font-medium text-amber-300">
+                  Guvenli Zemin
+                </p>
+              </div>
+            </motion.div>
           </div>
         </div>
-      </section>
+      </Section>
 
-      {/* Antrenörler */}
-      <section id="antrenorler" className="bg-gray-50 py-16 md:py-24">
-        <div className="mx-auto max-w-7xl px-4">
-          <div className="text-center">
-            <h2 className="text-3xl font-bold md:text-4xl">Antrenörlerimiz</h2>
-            <p className="mx-auto mt-4 max-w-2xl text-gray-600">
-              Federasyon lisanslı, deneyimli ve pedagoji eğitimli kadromuzla tanışın
+      {/* Antrenorler */}
+      <Section id="antrenorler" className="py-20 md:py-28">
+        <div className="mx-auto max-w-7xl px-4 md:px-6">
+          <motion.div variants={fadeUp} className="text-center">
+            <h2 className="text-3xl font-bold md:text-4xl">
+              Antrenor Kadromuz
+            </h2>
+            <p className="mx-auto mt-4 max-w-2xl text-gray-400">
+              Federasyon lisansli, deneyimli ve pedagoji egitimli kadromuzla
+              tanisin
             </p>
-          </div>
-          <div className="mt-12 grid gap-8 md:grid-cols-3">
+          </motion.div>
+          <div className="mt-14 grid gap-6 md:grid-cols-2 lg:grid-cols-4">
             {ANTRENORLER.map((a, i) => (
-              <div key={i} className="rounded-2xl bg-white p-6 text-center shadow-sm hover:shadow-md transition">
-                <div className="mx-auto flex h-24 w-24 items-center justify-center rounded-full bg-gradient-to-br from-gray-200 to-gray-300">
-                  <Users className="h-10 w-10 text-gray-500" />
+              <motion.div
+                key={i}
+                variants={fadeUp}
+                className="group rounded-2xl border border-white/5 bg-white/[0.02] p-6 text-center hover:bg-white/[0.04] hover:border-white/10 transition-all duration-300"
+              >
+                <div className="mx-auto flex h-20 w-20 items-center justify-center rounded-full bg-gradient-to-br from-cyan-500/20 to-blue-600/20 border border-cyan-500/10">
+                  <Users className="h-8 w-8 text-cyan-400" />
                 </div>
-                <h3 className="mt-4 text-lg font-bold">{a.ad}</h3>
-                <p className="text-sm font-medium text-gray-500">{a.uzmanlik}</p>
+                <h3 className="mt-4 text-lg font-bold text-white">{a.ad}</h3>
+                <p className="text-sm font-medium text-cyan-400/80">
+                  {a.unvan}
+                </p>
+                <p className="mt-1 text-xs text-gray-500">{a.uzmanlik}</p>
                 <div className="mt-3 flex items-center justify-center gap-1">
                   {[...Array(5)].map((_, j) => (
-                    <Star key={j} className="h-4 w-4 fill-yellow-400 text-yellow-400" />
+                    <Star
+                      key={j}
+                      className="h-3.5 w-3.5 fill-amber-400 text-amber-400"
+                    />
                   ))}
                 </div>
                 <div className="mt-3 space-y-1 text-xs text-gray-500">
                   <p>{a.deneyim} deneyim</p>
                   <p>{a.belge}</p>
                 </div>
-              </div>
+              </motion.div>
             ))}
           </div>
+
+          <motion.div variants={fadeUp} className="mt-10">
+            <p className="text-center text-sm text-gray-500 mb-4">
+              Yonetim Kadrosu
+            </p>
+            <div className="flex flex-wrap justify-center gap-4">
+              {YONETIM.map((y, i) => (
+                <div
+                  key={i}
+                  className="flex items-center gap-3 rounded-xl border border-white/5 bg-white/[0.02] px-5 py-3"
+                >
+                  <div className="flex h-10 w-10 items-center justify-center rounded-full bg-gradient-to-br from-purple-500/20 to-pink-500/20 border border-purple-500/10">
+                    <Users className="h-5 w-5 text-purple-400" />
+                  </div>
+                  <div>
+                    <p className="text-sm font-semibold text-white">{y.ad}</p>
+                    <p className="text-xs text-gray-500">{y.unvan}</p>
+                  </div>
+                </div>
+              ))}
+            </div>
+          </motion.div>
         </div>
-      </section>
+      </Section>
 
       {/* Paketler */}
-      <section id="paketler" className="py-16 md:py-24">
-        <div className="mx-auto max-w-7xl px-4">
-          <div className="text-center">
-            <h2 className="text-3xl font-bold md:text-4xl">Seans Bazlı Paketler</h2>
-            <p className="mx-auto mt-4 max-w-2xl text-gray-600">
-              Aylık aidat yok! Kredi bazlı esnek sistem. İstediğiniz branşta, istediğiniz gün kullanın.
+      <Section id="paketler" className="py-20 md:py-28">
+        <div className="mx-auto max-w-7xl px-4 md:px-6">
+          <motion.div variants={fadeUp} className="text-center">
+            <h2 className="text-3xl font-bold md:text-4xl">
+              Seans Bazli Paketler
+            </h2>
+            <p className="mx-auto mt-4 max-w-2xl text-gray-400">
+              Aylik aidat yok! Kredi bazli esnek sistem. Istediginiz gun,
+              istediginiz kadar gelin.
             </p>
-          </div>
-          <div className="mt-12 grid gap-6 md:grid-cols-3">
+          </motion.div>
+
+          <div className="mt-14 grid gap-6 lg:grid-cols-3">
             {PAKETLER.map((p, i) => (
-              <div
+              <motion.div
                 key={i}
-                className={`relative rounded-2xl border-2 p-8 transition ${
+                variants={fadeUp}
+                className={`relative rounded-2xl border p-8 transition-all duration-300 ${
                   p.one_cikan
-                    ? "border-black bg-black text-white shadow-2xl scale-105"
-                    : "border-gray-200 bg-white hover:border-gray-300 hover:shadow-md"
+                    ? "border-cyan-500/30 bg-gradient-to-b from-cyan-500/10 via-blue-600/5 to-transparent shadow-2xl shadow-cyan-500/10 scale-[1.02] lg:scale-105"
+                    : "border-white/5 bg-white/[0.02] hover:border-white/10 hover:bg-white/[0.04]"
                 }`}
               >
                 {p.one_cikan && (
-                  <div className="absolute -top-4 left-1/2 -translate-x-1/2 rounded-full bg-yellow-400 px-4 py-1 text-xs font-bold text-black">
-                    En Popüler
+                  <div className="absolute -top-3 left-1/2 -translate-x-1/2 rounded-full bg-gradient-to-r from-cyan-500 to-blue-600 px-4 py-1 text-xs font-bold text-white shadow-lg shadow-cyan-500/30">
+                    En Populer
                   </div>
                 )}
                 <h3 className="text-xl font-bold">{p.baslik}</h3>
-                <p className={`mt-1 text-sm ${p.one_cikan ? "text-gray-300" : "text-gray-500"}`}>{p.aciklama}</p>
-                <div className="mt-4">
-                  <span className="text-4xl font-extrabold">{p.fiyat}</span>
-                  <span className={`text-sm ${p.one_cikan ? "text-gray-400" : "text-gray-500"}`}> / {p.seans} ders</span>
+                <p className="mt-1 text-sm text-gray-500">{p.aciklama}</p>
+                <div className="mt-5">
+                  <span className="text-4xl font-extrabold bg-gradient-to-r from-white to-gray-300 bg-clip-text text-transparent">
+                    {p.fiyat} {"\u20BA"}
+                  </span>
+                  <span className="text-sm text-gray-500">
+                    {" "}
+                    / {p.seans} seans
+                  </span>
                 </div>
+                <p className="mt-1 text-xs text-gray-600">
+                  Ders basi: {p.birimFiyat} {"\u20BA"}
+                </p>
+
+                <div className="mt-3 flex items-center gap-2 rounded-lg bg-white/5 px-3 py-2">
+                  <CreditCard
+                    className={`h-4 w-4 shrink-0 ${p.one_cikan ? "text-cyan-400" : "text-gray-500"}`}
+                  />
+                  <span className="text-xs text-gray-400">{p.taksit}</span>
+                </div>
+
                 <ul className="mt-6 space-y-3">
                   {p.ozellikler.map((oz, j) => (
-                    <li key={j} className="flex items-center gap-2 text-sm">
-                      <CheckCircle2 className={`h-4 w-4 shrink-0 ${p.one_cikan ? "text-green-400" : "text-green-500"}`} />
+                    <li
+                      key={j}
+                      className="flex items-center gap-2 text-sm text-gray-300"
+                    >
+                      <CheckCircle2
+                        className={`h-4 w-4 shrink-0 ${p.one_cikan ? "text-cyan-400" : "text-emerald-500"}`}
+                      />
                       {oz}
                     </li>
                   ))}
                 </ul>
-                <a
-                  href="#kayit"
-                  className={`mt-8 block w-full rounded-full py-3 text-center text-sm font-bold transition ${
+                <button
+                  onClick={() => scrollTo("#kayit")}
+                  className={`mt-8 block w-full rounded-full py-3.5 text-center text-sm font-bold transition-all ${
                     p.one_cikan
-                      ? "bg-white text-black hover:bg-gray-100"
-                      : "bg-black text-white hover:bg-gray-800"
+                      ? "bg-gradient-to-r from-cyan-500 to-blue-600 text-white shadow-lg shadow-cyan-500/20 hover:shadow-cyan-500/40"
+                      : "bg-white/5 text-white border border-white/10 hover:bg-white/10"
                   }`}
                 >
-                  Hemen Başla
-                </a>
-              </div>
+                  Hemen Basla
+                </button>
+              </motion.div>
             ))}
           </div>
         </div>
-      </section>
+      </Section>
+
+      {/* Taksit Sistemi */}
+      <Section id="taksit" className="py-20 md:py-28">
+        <div className="mx-auto max-w-7xl px-4 md:px-6">
+          <motion.div variants={fadeUp} className="text-center">
+            <h2 className="text-3xl font-bold md:text-4xl">
+              {TAKSIT_BILGI.baslik}
+            </h2>
+            <p className="mx-auto mt-4 max-w-2xl text-gray-400">
+              {TAKSIT_BILGI.aciklama}
+            </p>
+          </motion.div>
+
+          <div className="mt-14 grid gap-6 md:grid-cols-2 lg:grid-cols-4">
+            {TAKSIT_BILGI.adimlar.map((adim, i) => (
+              <motion.div
+                key={i}
+                variants={fadeUp}
+                className="relative rounded-2xl border border-white/5 bg-white/[0.02] p-6 text-center"
+              >
+                <div className="mx-auto flex h-12 w-12 items-center justify-center rounded-full bg-gradient-to-br from-cyan-500/20 to-blue-600/20 border border-cyan-500/10 text-lg font-bold text-cyan-400">
+                  {adim.adim}
+                </div>
+                <h3 className="mt-4 text-lg font-bold text-white">
+                  {adim.baslik}
+                </h3>
+                <p className="mt-2 text-sm text-gray-400 leading-relaxed">
+                  {adim.aciklama}
+                </p>
+                {i < TAKSIT_BILGI.adimlar.length - 1 && (
+                  <ArrowRight className="absolute -right-3 top-1/2 -translate-y-1/2 h-5 w-5 text-gray-700 hidden lg:block" />
+                )}
+              </motion.div>
+            ))}
+          </div>
+
+          <motion.div
+            variants={fadeUp}
+            className="mx-auto mt-12 max-w-2xl rounded-2xl border border-cyan-500/10 bg-gradient-to-br from-cyan-500/5 to-blue-600/5 p-8"
+          >
+            <div className="flex items-center gap-3 mb-4">
+              <TrendingUp className="h-5 w-5 text-cyan-400" />
+              <h3 className="font-bold text-lg">
+                Ornek: 60 Seanslik Paket
+              </h3>
+            </div>
+            <div className="space-y-3 text-sm">
+              <div className="flex justify-between border-b border-white/5 pb-2">
+                <span className="text-gray-400">
+                  1. Odeme (kayit aninda)
+                </span>
+                <span className="font-semibold text-white">
+                  30.000 {"\u20BA"}
+                </span>
+              </div>
+              <div className="flex justify-between border-b border-white/5 pb-2">
+                <span className="text-gray-400">
+                  2. Taksit (tarih secersiniz)
+                </span>
+                <span className="font-semibold text-white">
+                  15.000 {"\u20BA"}
+                </span>
+              </div>
+              <div className="flex justify-between border-b border-white/5 pb-2">
+                <span className="text-gray-400">
+                  3. Taksit (tarih secersiniz)
+                </span>
+                <span className="font-semibold text-white">
+                  15.000 {"\u20BA"}
+                </span>
+              </div>
+              <div className="flex justify-between pt-1">
+                <span className="font-bold text-gray-300">Toplam</span>
+                <span className="font-extrabold text-cyan-400">
+                  60.000 {"\u20BA"}
+                </span>
+              </div>
+            </div>
+          </motion.div>
+        </div>
+      </Section>
 
       {/* SSS */}
-      <section id="sss" className="bg-gray-50 py-16 md:py-24">
-        <div className="mx-auto max-w-3xl px-4">
-          <div className="text-center">
-            <h2 className="text-3xl font-bold md:text-4xl">Sıkça Sorulan Sorular</h2>
-          </div>
+      <Section id="sss" className="py-20 md:py-28">
+        <div className="mx-auto max-w-3xl px-4 md:px-6">
+          <motion.div variants={fadeUp} className="text-center">
+            <h2 className="text-3xl font-bold md:text-4xl">
+              Sikca Sorulan Sorular
+            </h2>
+          </motion.div>
           <div className="mt-10 space-y-3">
             {SSS.map((item, i) => (
-              <div key={i} className="rounded-xl bg-white shadow-sm">
+              <motion.div
+                key={i}
+                variants={fadeUp}
+                className="rounded-xl border border-white/5 bg-white/[0.02] overflow-hidden"
+              >
                 <button
                   onClick={() => setAcikSSS(acikSSS === i ? null : i)}
-                  className="flex w-full items-center justify-between px-6 py-4 text-left"
+                  className="flex w-full items-center justify-between px-6 py-4 text-left hover:bg-white/[0.02] transition"
                 >
-                  <span className="font-medium">{item.soru}</span>
+                  <span className="font-medium text-gray-200">
+                    {item.soru}
+                  </span>
                   {acikSSS === i ? (
-                    <ChevronUp className="h-5 w-5 shrink-0 text-gray-400" />
+                    <ChevronUp className="h-5 w-5 shrink-0 text-cyan-400" />
                   ) : (
-                    <ChevronDown className="h-5 w-5 shrink-0 text-gray-400" />
+                    <ChevronDown className="h-5 w-5 shrink-0 text-gray-600" />
                   )}
                 </button>
-                {acikSSS === i && (
-                  <div className="border-t px-6 py-4">
-                    <p className="text-sm text-gray-600 leading-relaxed">{item.cevap}</p>
-                  </div>
-                )}
-              </div>
+                <AnimatePresence>
+                  {acikSSS === i && (
+                    <motion.div
+                      initial={{ height: 0, opacity: 0 }}
+                      animate={{ height: "auto", opacity: 1 }}
+                      exit={{ height: 0, opacity: 0 }}
+                      transition={{ duration: 0.2 }}
+                      className="overflow-hidden"
+                    >
+                      <div className="border-t border-white/5 px-6 py-4">
+                        <p className="text-sm text-gray-400 leading-relaxed">
+                          {item.cevap}
+                        </p>
+                      </div>
+                    </motion.div>
+                  )}
+                </AnimatePresence>
+              </motion.div>
             ))}
           </div>
         </div>
-      </section>
+      </Section>
 
-      {/* Kayıt Formu */}
-      <section id="kayit" className="py-16 md:py-24">
-        <div className="mx-auto max-w-7xl px-4">
-          <div className="overflow-hidden rounded-3xl bg-gradient-to-br from-gray-900 to-black shadow-2xl">
+      {/* Kayit Formu */}
+      <Section id="kayit" className="py-20 md:py-28">
+        <div className="mx-auto max-w-7xl px-4 md:px-6">
+          <div className="overflow-hidden rounded-3xl border border-white/5 bg-gradient-to-br from-[#0a1628] to-[#060a13] shadow-2xl">
             <div className="grid md:grid-cols-2">
-              <div className="p-8 md:p-12">
-                <h2 className="text-3xl font-bold text-white md:text-4xl">Ücretsiz Deneme Dersi</h2>
-                <p className="mt-4 text-gray-300">
-                  Formu doldurun, sizi arayalım. Çocuğunuz için en uygun branş ve saati birlikte belirleyelim.
-                </p>
+              <div className="p-8 md:p-12 lg:p-16">
+                <motion.div variants={fadeUp}>
+                  <h2 className="text-3xl font-bold md:text-4xl">
+                    Ucretsiz Deneme Dersi
+                  </h2>
+                  <p className="mt-4 text-gray-400">
+                    Formu doldurun, sizi arayalim. Cocugunuz icin en uygun
+                    bransi ve saati birlikte belirleyelim.
+                  </p>
+                </motion.div>
                 <div className="mt-8 space-y-4">
-                  <div className="flex items-center gap-3 text-gray-300">
+                  <a
+                    href={`tel:${TESIS.telefon.replace(/\s/g, "")}`}
+                    className="flex items-center gap-3 text-gray-300 hover:text-white transition"
+                  >
                     <Phone className="h-5 w-5 text-green-400" />
-                    <a href={`tel:${TESIS.telefon.replace(/\s/g, "")}`} className="hover:text-white transition">{TESIS.telefon}</a>
-                  </div>
-                  <div className="flex items-center gap-3 text-gray-300">
+                    <span>{TESIS.telefon}</span>
+                  </a>
+                  <a
+                    href={TESIS.instagramUrl}
+                    target="_blank"
+                    rel="noopener noreferrer"
+                    className="flex items-center gap-3 text-gray-300 hover:text-white transition"
+                  >
                     <Instagram className="h-5 w-5 text-pink-400" />
-                    <a href={TESIS.instagramUrl} target="_blank" rel="noopener noreferrer" className="hover:text-white transition">{TESIS.instagram}</a>
-                  </div>
-                  <div className="flex items-center gap-3 text-gray-300">
+                    <span>{TESIS.instagram}</span>
+                  </a>
+                  <a
+                    href={TESIS.harita}
+                    target="_blank"
+                    rel="noopener noreferrer"
+                    className="flex items-center gap-3 text-gray-300 hover:text-white transition"
+                  >
                     <MapPin className="h-5 w-5 text-blue-400" />
-                    <span>{TESIS.adres}</span>
-                  </div>
+                    <span className="text-sm">{TESIS.adres}</span>
+                  </a>
                   <div className="flex items-center gap-3 text-gray-300">
                     <Clock className="h-5 w-5 text-yellow-400" />
                     <span>{TESIS.calisma}</span>
@@ -476,10 +1017,10 @@ export default function TenantSitePage() {
                 </div>
                 <div className="mt-8 flex gap-3">
                   <a
-                    href={`https://wa.me/${TESIS.whatsapp}?text=Merhaba, deneme dersi hakkında bilgi almak istiyorum.`}
+                    href={`https://wa.me/${TESIS.whatsapp}?text=Merhaba, deneme dersi hakkinda bilgi almak istiyorum.`}
                     target="_blank"
                     rel="noopener noreferrer"
-                    className="flex items-center gap-2 rounded-full bg-green-500 px-6 py-3 text-sm font-medium text-white hover:bg-green-600 transition"
+                    className="flex items-center gap-2 rounded-full bg-green-500 px-6 py-3 text-sm font-medium text-white hover:bg-green-600 transition-all hover:shadow-lg hover:shadow-green-500/20"
                   >
                     <MessageCircle className="h-4 w-4" />
                     WhatsApp
@@ -488,7 +1029,7 @@ export default function TenantSitePage() {
                     href={TESIS.instagramUrl}
                     target="_blank"
                     rel="noopener noreferrer"
-                    className="flex items-center gap-2 rounded-full bg-gradient-to-r from-purple-500 to-pink-500 px-6 py-3 text-sm font-medium text-white hover:opacity-90 transition"
+                    className="flex items-center gap-2 rounded-full bg-gradient-to-r from-purple-500 to-pink-500 px-6 py-3 text-sm font-medium text-white hover:opacity-90 transition-all hover:shadow-lg hover:shadow-purple-500/20"
                   >
                     <Instagram className="h-4 w-4" />
                     Instagram
@@ -496,76 +1037,110 @@ export default function TenantSitePage() {
                 </div>
               </div>
 
-              <div className="bg-white p-8 md:p-12">
+              <div className="border-t border-white/5 bg-white/[0.02] p-8 md:border-l md:border-t-0 md:p-12 lg:p-16">
                 {formGonderildi ? (
                   <div className="flex h-full flex-col items-center justify-center text-center">
-                    <div className="flex h-16 w-16 items-center justify-center rounded-full bg-green-100">
-                      <CheckCircle2 className="h-8 w-8 text-green-600" />
+                    <div className="flex h-16 w-16 items-center justify-center rounded-full bg-green-500/10 border border-green-500/20">
+                      <CheckCircle2 className="h-8 w-8 text-green-400" />
                     </div>
-                    <h3 className="mt-4 text-xl font-bold">Talebiniz Alındı!</h3>
-                    <p className="mt-2 text-gray-600">En kısa sürede sizi arayacağız. Teşekkür ederiz.</p>
+                    <h3 className="mt-4 text-xl font-bold">
+                      Talebiniz Alindi!
+                    </h3>
+                    <p className="mt-2 text-gray-400">
+                      En kisa surede sizi arayacagiz. Tesekkur ederiz.
+                    </p>
                   </div>
                 ) : (
                   <form onSubmit={handleSubmit} className="space-y-4">
                     <div>
-                      <label className="block text-sm font-medium text-gray-700">Veli Adı Soyadı *</label>
+                      <label className="block text-sm font-medium text-gray-300">
+                        Veli Adi Soyadi *
+                      </label>
                       <input
                         type="text"
                         required
                         value={formData.ad}
-                        onChange={(e) => setFormData({ ...formData, ad: e.target.value })}
-                        className="mt-1 w-full rounded-lg border border-gray-300 px-4 py-3 text-sm text-gray-900 focus:border-black focus:outline-none focus:ring-1 focus:ring-black"
-                        placeholder="Adınız Soyadınız"
+                        onChange={(e) =>
+                          setFormData({ ...formData, ad: e.target.value })
+                        }
+                        className="mt-1 w-full rounded-xl border border-white/10 bg-white/5 px-4 py-3 text-sm text-white placeholder:text-gray-600 focus:border-cyan-500/50 focus:outline-none focus:ring-1 focus:ring-cyan-500/50 transition"
+                        placeholder="Adiniz Soyadiniz"
                       />
                     </div>
                     <div>
-                      <label className="block text-sm font-medium text-gray-700">Telefon *</label>
+                      <label className="block text-sm font-medium text-gray-300">
+                        Telefon *
+                      </label>
                       <input
                         type="tel"
                         required
                         value={formData.telefon}
-                        onChange={(e) => setFormData({ ...formData, telefon: e.target.value })}
-                        className="mt-1 w-full rounded-lg border border-gray-300 px-4 py-3 text-sm text-gray-900 focus:border-black focus:outline-none focus:ring-1 focus:ring-black"
+                        onChange={(e) =>
+                          setFormData({
+                            ...formData,
+                            telefon: e.target.value,
+                          })
+                        }
+                        className="mt-1 w-full rounded-xl border border-white/10 bg-white/5 px-4 py-3 text-sm text-white placeholder:text-gray-600 focus:border-cyan-500/50 focus:outline-none focus:ring-1 focus:ring-cyan-500/50 transition"
                         placeholder="05XX XXX XX XX"
                       />
                     </div>
                     <div>
-                      <label className="block text-sm font-medium text-gray-700">E-posta</label>
+                      <label className="block text-sm font-medium text-gray-300">
+                        E-posta
+                      </label>
                       <input
                         type="email"
                         value={formData.email}
-                        onChange={(e) => setFormData({ ...formData, email: e.target.value })}
-                        className="mt-1 w-full rounded-lg border border-gray-300 px-4 py-3 text-sm text-gray-900 focus:border-black focus:outline-none focus:ring-1 focus:ring-black"
+                        onChange={(e) =>
+                          setFormData({ ...formData, email: e.target.value })
+                        }
+                        className="mt-1 w-full rounded-xl border border-white/10 bg-white/5 px-4 py-3 text-sm text-white placeholder:text-gray-600 focus:border-cyan-500/50 focus:outline-none focus:ring-1 focus:ring-cyan-500/50 transition"
                         placeholder="ornek@email.com"
                       />
                     </div>
                     <div>
-                      <label className="block text-sm font-medium text-gray-700">Çocuğunuzun Yaşı</label>
+                      <label className="block text-sm font-medium text-gray-300">
+                        Cocugunuzun Yasi
+                      </label>
                       <input
                         type="text"
                         value={formData.cocukYas}
-                        onChange={(e) => setFormData({ ...formData, cocukYas: e.target.value })}
-                        className="mt-1 w-full rounded-lg border border-gray-300 px-4 py-3 text-sm text-gray-900 focus:border-black focus:outline-none focus:ring-1 focus:ring-black"
-                        placeholder="Örn: 7"
+                        onChange={(e) =>
+                          setFormData({
+                            ...formData,
+                            cocukYas: e.target.value,
+                          })
+                        }
+                        className="mt-1 w-full rounded-xl border border-white/10 bg-white/5 px-4 py-3 text-sm text-white placeholder:text-gray-600 focus:border-cyan-500/50 focus:outline-none focus:ring-1 focus:ring-cyan-500/50 transition"
+                        placeholder="Orn: 7"
                       />
                     </div>
                     <div>
-                      <label className="block text-sm font-medium text-gray-700">Mesajınız</label>
+                      <label className="block text-sm font-medium text-gray-300">
+                        Mesajiniz
+                      </label>
                       <textarea
                         rows={3}
                         value={formData.mesaj}
-                        onChange={(e) => setFormData({ ...formData, mesaj: e.target.value })}
-                        className="mt-1 w-full rounded-lg border border-gray-300 px-4 py-3 text-sm text-gray-900 focus:border-black focus:outline-none focus:ring-1 focus:ring-black resize-none"
-                        placeholder="Sormak istediğiniz bir şey varsa yazabilirsiniz..."
+                        onChange={(e) =>
+                          setFormData({ ...formData, mesaj: e.target.value })
+                        }
+                        className="mt-1 w-full rounded-xl border border-white/10 bg-white/5 px-4 py-3 text-sm text-white placeholder:text-gray-600 focus:border-cyan-500/50 focus:outline-none focus:ring-1 focus:ring-cyan-500/50 transition resize-none"
+                        placeholder="Sormak istediginiz bir sey varsa yazabilirsiniz..."
                       />
                     </div>
-                    {formHata && <p className="text-sm text-red-600">{formHata}</p>}
+                    {formHata && (
+                      <p className="text-sm text-red-400">{formHata}</p>
+                    )}
                     <button
                       type="submit"
                       disabled={gonderiyor}
-                      className="w-full rounded-full bg-black py-3 text-sm font-bold text-white hover:bg-gray-800 transition disabled:opacity-50"
+                      className="w-full rounded-full bg-gradient-to-r from-cyan-500 to-blue-600 py-3.5 text-sm font-bold text-white shadow-lg shadow-cyan-500/20 hover:shadow-cyan-500/40 transition-all disabled:opacity-50"
                     >
-                      {gonderiyor ? "Gönderiliyor..." : "Ücretsiz Deneme Dersi Talep Et"}
+                      {gonderiyor
+                        ? "Gonderiliyor..."
+                        : "Ucretsiz Deneme Dersi Talep Et"}
                     </button>
                   </form>
                 )}
@@ -573,51 +1148,139 @@ export default function TenantSitePage() {
             </div>
           </div>
         </div>
-      </section>
+      </Section>
+
+      {/* Konum / Harita */}
+      <Section className="py-20 md:py-28">
+        <div className="mx-auto max-w-7xl px-4 md:px-6">
+          <motion.div variants={fadeUp} className="text-center">
+            <h2 className="text-3xl font-bold md:text-4xl">Konumumuz</h2>
+            <p className="mt-4 text-gray-400">{TESIS.adres}</p>
+          </motion.div>
+          <motion.div
+            variants={fadeUp}
+            className="mt-10 overflow-hidden rounded-2xl border border-white/5"
+          >
+            <iframe
+              src={TESIS.haritaEmbed}
+              width="100%"
+              height="400"
+              style={{ border: 0 }}
+              allowFullScreen
+              loading="lazy"
+              referrerPolicy="no-referrer-when-downgrade"
+              title="Tesis Konumu"
+              className="w-full"
+            />
+          </motion.div>
+          <motion.div
+            variants={fadeUp}
+            className="mt-6 flex flex-wrap justify-center gap-4"
+          >
+            <a
+              href={TESIS.harita}
+              target="_blank"
+              rel="noopener noreferrer"
+              className="inline-flex items-center gap-2 rounded-full border border-white/10 bg-white/5 px-5 py-2.5 text-sm text-gray-300 hover:bg-white/10 transition"
+            >
+              <MapPin className="h-4 w-4 text-blue-400" />
+              Google Maps ile Ac
+            </a>
+            <a
+              href={`https://wa.me/${TESIS.whatsapp}?text=Merhaba, tesisinize nasil ulasirim?`}
+              target="_blank"
+              rel="noopener noreferrer"
+              className="inline-flex items-center gap-2 rounded-full border border-white/10 bg-white/5 px-5 py-2.5 text-sm text-gray-300 hover:bg-white/10 transition"
+            >
+              <MessageCircle className="h-4 w-4 text-green-400" />
+              Yol Tarifi Al
+            </a>
+          </motion.div>
+        </div>
+      </Section>
 
       {/* Footer */}
-      <footer className="border-t bg-gray-900 py-12 text-gray-400">
-        <div className="mx-auto max-w-7xl px-4">
+      <footer className="border-t border-white/5 bg-[#040811] py-12">
+        <div className="mx-auto max-w-7xl px-4 md:px-6">
           <div className="grid gap-8 md:grid-cols-3">
             <div>
               <div className="flex items-center gap-3">
-                <div className="flex h-10 w-10 items-center justify-center rounded-lg bg-white text-black font-bold text-sm">BJK</div>
+                <div className="flex h-10 w-10 items-center justify-center rounded-xl bg-gradient-to-br from-white to-gray-300 font-black text-sm text-black">
+                  BJK
+                </div>
                 <div>
                   <p className="font-bold text-white">{TESIS.kisa}</p>
-                  <p className="text-xs">Beşiktaş JK Spor Okulları</p>
+                  <p className="text-xs text-gray-600">
+                    Besiktas JK Spor Okullari
+                  </p>
                 </div>
               </div>
-              <p className="mt-4 text-sm leading-relaxed">
-                Profesyonel cimnastik eğitimi ile çocuğunuzun fiziksel ve mental gelişimini destekliyoruz.
+              <p className="mt-4 text-sm text-gray-500 leading-relaxed">
+                Profesyonel artistik cimnastik egitimiyle cocugunuzun fiziksel
+                ve mental gelisimini destekliyoruz.
               </p>
             </div>
             <div>
-              <h4 className="font-bold text-white">İletişim</h4>
-              <div className="mt-4 space-y-2 text-sm">
-                <p className="flex items-center gap-2"><Phone className="h-4 w-4" /> {TESIS.telefon}</p>
-                <p className="flex items-center gap-2"><Mail className="h-4 w-4" /> {TESIS.email}</p>
-                <p className="flex items-center gap-2"><MapPin className="h-4 w-4" /> {TESIS.adres}</p>
-                <p className="flex items-center gap-2"><Clock className="h-4 w-4" /> {TESIS.calisma}</p>
+              <h4 className="font-bold text-white">Iletisim</h4>
+              <div className="mt-4 space-y-3 text-sm text-gray-500">
+                <a
+                  href={`tel:${TESIS.telefon.replace(/\s/g, "")}`}
+                  className="flex items-center gap-2 hover:text-white transition"
+                >
+                  <Phone className="h-4 w-4" /> {TESIS.telefon}
+                </a>
+                <a
+                  href={`mailto:${TESIS.email}`}
+                  className="flex items-center gap-2 hover:text-white transition"
+                >
+                  <Mail className="h-4 w-4" /> {TESIS.email}
+                </a>
+                <a
+                  href={TESIS.harita}
+                  target="_blank"
+                  rel="noopener noreferrer"
+                  className="flex items-center gap-2 hover:text-white transition"
+                >
+                  <MapPin className="h-4 w-4" /> {TESIS.adresKisa}
+                </a>
+                <p className="flex items-center gap-2">
+                  <Clock className="h-4 w-4" /> {TESIS.calisma}
+                </p>
               </div>
             </div>
             <div>
               <h4 className="font-bold text-white">Sosyal Medya</h4>
               <div className="mt-4 flex gap-3">
-                <a href={TESIS.instagramUrl} target="_blank" rel="noopener noreferrer" className="flex h-10 w-10 items-center justify-center rounded-full bg-gray-800 hover:bg-gray-700 transition">
+                <a
+                  href={TESIS.instagramUrl}
+                  target="_blank"
+                  rel="noopener noreferrer"
+                  className="flex h-10 w-10 items-center justify-center rounded-full border border-white/10 bg-white/5 hover:bg-white/10 transition"
+                >
                   <Instagram className="h-5 w-5" />
                 </a>
-                <a href={`https://wa.me/${TESIS.whatsapp}`} target="_blank" rel="noopener noreferrer" className="flex h-10 w-10 items-center justify-center rounded-full bg-gray-800 hover:bg-gray-700 transition">
+                <a
+                  href={`https://wa.me/${TESIS.whatsapp}`}
+                  target="_blank"
+                  rel="noopener noreferrer"
+                  className="flex h-10 w-10 items-center justify-center rounded-full border border-white/10 bg-white/5 hover:bg-white/10 transition"
+                >
                   <MessageCircle className="h-5 w-5" />
                 </a>
               </div>
               <div className="mt-6">
-                <p className="text-xs text-gray-500">Powered by</p>
-                <p className="text-sm font-medium text-gray-300">YİSA-S Spor Teknolojileri</p>
+                <p className="text-xs text-gray-700">Powered by</p>
+                <p className="text-sm font-medium text-gray-500">
+                  YiSA-S Spor Teknolojileri
+                </p>
               </div>
             </div>
           </div>
-          <div className="mt-8 border-t border-gray-800 pt-8 text-center text-xs">
-            <p>&copy; 2026 {TESIS.ad}. Tüm hakları saklıdır. YİSA-S Franchise Sistemi</p>
+          <div className="mt-8 border-t border-white/5 pt-8 text-center text-xs text-gray-700">
+            <p>
+              &copy; 2026 {TESIS.ad}. Tum haklari saklidir. YiSA-S Franchise
+              Sistemi
+            </p>
           </div>
         </div>
       </footer>
@@ -627,7 +1290,7 @@ export default function TenantSitePage() {
         href={`https://wa.me/${TESIS.whatsapp}?text=Merhaba, bilgi almak istiyorum.`}
         target="_blank"
         rel="noopener noreferrer"
-        className="fixed bottom-6 right-6 z-50 flex h-14 w-14 items-center justify-center rounded-full bg-green-500 text-white shadow-lg hover:bg-green-600 transition hover:scale-110"
+        className="fixed bottom-6 right-6 z-50 flex h-14 w-14 items-center justify-center rounded-full bg-green-500 text-white shadow-2xl shadow-green-500/30 hover:bg-green-600 hover:scale-110 transition-all"
       >
         <MessageCircle className="h-7 w-7" />
       </a>
