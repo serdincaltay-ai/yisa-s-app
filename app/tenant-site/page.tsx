@@ -309,8 +309,8 @@ export default function TenantSitePage() {
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault()
-    if (!formData.ad || !formData.telefon) {
-      setFormHata("Ad ve telefon zorunludur.")
+    if (!formData.ad || !formData.telefon || !formData.email) {
+      setFormHata("Ad, telefon ve e-posta zorunludur.")
       return
     }
     setGonderiyor(true)
@@ -1087,10 +1087,11 @@ export default function TenantSitePage() {
                     </div>
                     <div>
                       <label className="block text-sm font-medium text-gray-300">
-                        E-posta
+                        E-posta *
                       </label>
                       <input
                         type="email"
+                        required
                         value={formData.email}
                         onChange={(e) =>
                           setFormData({ ...formData, email: e.target.value })
