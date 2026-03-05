@@ -87,9 +87,9 @@
 
 | # | İş | Faz | Başlangıç | Engel / Not |
 |---|-----|-----|-----------|-------------|
-| 1 | CELF otomatik tetikleme (provisionTenant -> CELF) | Faz 2 | Şubat 2026 | sim_updates altyapısı var; tam bağlantı eksik |
+| ~~1~~ | ~~CELF otomatik tetikleme (provisionTenant -> CELF)~~ | ~~Faz 2~~ | ~~Şubat 2026~~ | **Yapıldı 05.03.2026** — provisionTenant Step 7 triggerCelfStartup ile bağlandı (Bkz. 3.1 #19) |
 | 2 | 3 Duvar sistemi tam entegrasyonu | Faz 3 | Şubat 2026 | Parçalar mevcut; entegrasyon tamamlanacak |
-| 3 | Patron onay -> CELF tetik uçtan uca test | Faz 7 | Şubat 2026 | Her parça var; tam akış test edilmeli |
+| 3 | Patron onay -> CELF tetik uçtan uca test | Faz 7 | Şubat 2026 | Tetikleme bağlandı; canlı Supabase ile tam e2e test gerekiyor |
 | 4 | Görev sonuçlarının dashboard'a yansıması | Faz 7 | Şubat 2026 | task_results arşivleme var; gösterim kısmen |
 | 5 | İletişim modülü (anket eksik) | Faz 5 | Şubat 2026 | franchise/iletisim mevcut; anket yok |
 | 6 | Belge yönetimi (geçerlilik uyarısı eksik) | Faz 5 | Şubat 2026 | franchise/belgeler mevcut; uyarı mekanizması yok |
