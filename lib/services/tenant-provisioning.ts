@@ -318,7 +318,7 @@ async function markDemoRequestConverted(ctx: ProvisioningContext): Promise<void>
  * sim_updates kuralları:
  *   - status: "beklemede" veya "islendi" (başka değer yok)
  *   - payload kolonu yok — ek bilgi command alanına JSON string olarak yazılır
- *   - Parametre adı: target_direktorluk (target_directorate değil)
+ *   - Kolon adı: target_directorate (canlı DB şeması ile doğrulandı)
  */
 async function triggerCelfStartup(ctx: ProvisioningContext): Promise<void> {
   const { supabase, tenantId, slug, demoRequest } = ctx
@@ -338,8 +338,8 @@ async function triggerCelfStartup(ctx: ProvisioningContext): Promise<void> {
 
   try {
     const { error } = await supabase.from('sim_updates').insert({
-      target_robot: 'celf',
-      target_direktorluk: 'Operasyon',
+      target_robot: 'CELF',
+      target_directorate: 'genel_mudurluk',
       command: commandPayload,
       status: 'beklemede',
     })
