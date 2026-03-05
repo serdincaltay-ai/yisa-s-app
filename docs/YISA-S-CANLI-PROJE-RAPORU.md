@@ -37,12 +37,12 @@
 | Faz 1 | — | ManyChat entegrasyonu | Yapılacak | 05.03.2026 | Webhook/bot bağlantısı kodda yok |
 | Faz 1 | — | Vitrin sayfaları (ozellikler, fiyatlandirma, hakkimizda vb.) | Yapıldı | 05.03.2026 | yisa-s-com/app: 10+ sayfa mevcut |
 
-### Faz 2 — Tenant Oluşturma (~%85)
+### Faz 2 — Tenant Oluşturma (~%95)
 
 | Faz | Adım | Madde / iş | Durum | Son güncelleme | Not |
 |-----|-------|------------|--------|----------------|-----|
 | Faz 2 | 2.1 | provisionTenant zinciri (6 adım: tenant→user→franchise→subdomain→seed→status) | Yapıldı | 05.03.2026 | lib/services/tenant-provisioning.ts (501 satır) |
-| Faz 2 | 2.2 | CELF otomatik tetikleme (sim_updates üzerinden) | İşleniyor | 05.03.2026 | sim_updates + CELF altyapısı var; provisionTenant → CELF zinciri tam bağlı değil |
+| Faz 2 | 2.2 | CELF otomatik tetikleme (sim_updates üzerinden) | Yapıldı | 05.03.2026 | provisionTenant → triggerCelfStartup (Step 7) eklendi; sim_updates tablosuna tenant_baslangic_gorevleri INSERT yapılıyor; 12 direktörlük bilgisi command JSON'a dahil |
 | Faz 2 | — | Subdomain oluşturma (franchise_subdomains) | Yapıldı | 05.03.2026 | createSubdomain() mevcut |
 | Faz 2 | — | Rollback / compensating transaction | Yapıldı | 05.03.2026 | rollback() fonksiyonu mevcut |
 
@@ -91,7 +91,7 @@
 | Faz 7 | 7.1 | Başlangıç görev motoru | Yapıldı | 05.03.2026 | directorate-initial-tasks.ts (15 direktörlük, 25+ görev), api/startup |
 | Faz 7 | — | 12 direktörlük CELF yapısı | Yapıldı | 05.03.2026 | celf-center.ts, celf-config-merged.ts, hierarchy.ts |
 | Faz 7 | — | CEO/COO/CIO robot | Yapıldı | 05.03.2026 | ceo-robot.ts, coo-robot.ts, cio-robot.ts |
-| Faz 7 | — | Patron onay → CELF tetik uçtan uca akış | İşleniyor | 05.03.2026 | Her parça mevcut; tam entegre akış test edilmemiş |
+| Faz 7 | — | Patron onay → CELF tetik uçtan uca akış | Yapıldı | 05.03.2026 | provisionTenant zincirinde Step 7 (triggerCelfStartup) ile sim_updates → CELF tetikleme bağlandı |
 | Faz 7 | — | Görev sonuçlarının dashboard'a yansıması | İşleniyor | 05.03.2026 | task_results arşivleme var; dashboard gösterimi kısmen |
 
 ---
