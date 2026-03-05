@@ -6,6 +6,7 @@
 
 import { createClient, type SupabaseClient } from '@supabase/supabase-js'
 import { generateTenantSlug, subdomainSlug } from '@/lib/utils/slug'
+import { CELF_DIRECTORATE_KEYS } from '@/lib/robots/celf-center'
 
 // ─── Types ───────────────────────────────────────────────────────────────────
 
@@ -323,7 +324,8 @@ async function triggerCelfStartup(ctx: ProvisioningContext): Promise<void> {
   const { supabase, tenantId, slug, demoRequest } = ctx
   if (!tenantId) return
 
-  const celfDirectorlukler = ['CTO', 'CHRO', 'CLO', 'CFO', 'CSPO', 'CMO', 'COO', 'CISO', 'CDO', 'CCO', 'CPO', 'CSO_SATIS']
+  // Tüm direktörlük anahtarlarını celf-center.ts'den al (15 direktörlük)
+  const celfDirectorlukler = [...CELF_DIRECTORATE_KEYS]
 
   const commandPayload = JSON.stringify({
     type: 'tenant_baslangic_gorevleri',
