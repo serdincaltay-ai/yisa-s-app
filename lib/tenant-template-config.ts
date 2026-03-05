@@ -190,6 +190,30 @@ export const TENANT_CONFIGS: Record<string, TenantConfig> = {
     logoBadge: 'BJK',
     ustBaslik: 'Beşiktaş JK Spor Okulları',
   },
+  fenerbahceatasehir: {
+    slug: 'fenerbahceatasehir',
+    ad: 'Fenerbahçe Ataşehir Spor Okulu',
+    kisa: 'Fener Ataşehir',
+    slogan: 'Sporda Geleceğin Yıldızlarını Yetiştiriyoruz',
+    altSlogan: 'Çok branşlı profesyonel spor eğitimi',
+    aciklama:
+      'Fenerbahçe Spor Kulübü bünyesinde, cimnastik, yüzme, basketbol ve daha fazlası. Profesyonel antrenör kadrosu ile 4-16 yaş arası çocuklarınıza modern tesislerde eğitim.',
+    telefon: '0532 000 00 00',
+    email: 'info@feneratasehir.com',
+    instagram: '@feneratasehir',
+    instagramUrl: 'https://instagram.com/feneratasehir',
+    whatsapp: '905320000000',
+    adres: 'Ataşehir, İstanbul',
+    adresKisa: 'Ataşehir/İstanbul',
+    calisma: 'Hafta içi 09:00-21:00 · Cumartesi 09:00-18:00',
+    harita: 'https://maps.google.com/?q=Atasehir+Istanbul',
+    haritaEmbed:
+      'https://www.google.com/maps/embed?pb=!1m18!1m12!1m3!1d12065.8!2d29.1!3d40.98!2m3!1f0!2f0!3f0!3m2!1i1024!2i768!4f13.1!3m3!1m2!1s0x0%3A0x0!2zQXRhxZ9laGly!5e0!3m2!1str!2str',
+    brans: 'Çok Branşlı',
+    template: 'premium',
+    logoBadge: 'FB',
+    ustBaslik: 'Fenerbahçe Spor Kulübü',
+  },
   feneratasehir: {
     slug: 'feneratasehir',
     ad: 'Fenerbahçe Ataşehir Spor Okulu',
@@ -222,6 +246,7 @@ export function getDersProgrami(slug: string): DersProgramiItem[] {
     case 'bjktuzlacimnastik':
       return BJK_DERS_PROGRAMI
     case 'feneratasehir':
+    case 'fenerbahceatasehir':
       return FENER_DERS_PROGRAMI
     default:
       return BJK_DERS_PROGRAMI
