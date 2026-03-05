@@ -202,6 +202,51 @@ YİSA-S çoklu kiracı (multi-tenant) mimarisi kullanır:
 | Fuar | `/fuar` | Fuar hesaplama |
 | Şablonlar | `/sablonlar` | Şablon galerisi |
 
+### B.6.1 Tesis Sayfaları (*.yisa-s.com) — 3 Şablon Sistemi
+
+Her tesis (tenant) için subdomain bazlı sayfa. Şablon tipi `tenant-template-config.ts` dosyasından okunur.
+
+| Şablon | Hedef Kitle | Özellikler |
+|--------|-------------|------------|
+| **Standard** | Küçük tesisler (hobigym.com benzeri) | Logo, branş listesi, temel iletişim, basit düzen |
+| **Medium** | Orta ölçekli tesisler | Standard + haftalık GRID, genişletilmiş galeri, animasyonlar |
+| **Premium** | Büyük/teknolojik tesisler | Robot karşılama, randevu sistemi, haftalık GRID, neon/koyu tema, tam özellik |
+
+**Mevcut tenant yapılandırması:**
+
+| Tenant Slug | Şablon | Domain |
+|-------------|--------|--------|
+| `bjktuzlacimnastik` | premium | bjktuzlacimnastik.yisa-s.com |
+| `feneratasehir` | premium | feneratasehir.yisa-s.com |
+| `fenerbahceatasehir` | premium | fenerbahceatasehir.yisa-s.com |
+| `kartalcimnastik` | standard | kartalcimnastik.yisa-s.com |
+
+**Bileşenler:**
+
+| Dosya | Açıklama |
+|-------|----------|
+| `lib/tenant-template-config.ts` | Tenant → şablon eşlemesi, ders programı, fiyat, iletişim config |
+| `components/tenant-templates/StandardTemplate.tsx` | Standard şablon bileşeni |
+| `components/tenant-templates/MediumTemplate.tsx` | Medium şablon bileşeni |
+| `components/tenant-templates/PremiumTemplate.tsx` | Premium şablon bileşeni (robot + randevu) |
+| `components/tenant-templates/WeeklyScheduleGrid.tsx` | Haftalık ders programı GRID (08:00-19:00, PZT-PAZ) |
+| `components/tenant-templates/RobotGreeting.tsx` | Robot karşılama animasyonu (premium) |
+| `app/tenant-site/page.tsx` | Şablon yönlendirici (template router — 30 satır) |
+
+**Haftalık Ders Programı GRID:**
+- Sol sütun: Saatler (08:00–19:00)
+- Üst satır: PZT–PAZ
+- Hücre: Ders adı (branş + seviye), renk kodlu
+- Config: `tenant-template-config.ts` → `schedule` dizisi
+
+**Paket Fiyatları (Güncel):**
+
+| Paket | Fiyat |
+|-------|-------|
+| 24 ders | 30.000 TL |
+| 48 seans | 52.800 TL |
+| 60 seans | 60.000 TL |
+
 ---
 
 ## B.7 Kullanıcı Tipleri ve Yetkileri

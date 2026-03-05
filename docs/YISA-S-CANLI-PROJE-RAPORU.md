@@ -24,7 +24,7 @@
 
 *Kaynak: YISA_S_V0_YOL_HARITASI.md. Kod tabanı (tenant-yisa-s, app-yisa-s, yisa-s-com) incelenerek adım adım değerlendirildi. Detay: YISA-S-7-FAZ-DURUMU.md.*
 
-### Faz 1 — Vitrin + Demo (~%90)
+### Faz 1 — Vitrin + Demo + Tesis Sayfaları (~%95)
 
 | Faz | Adım | Madde / iş | Durum | Son güncelleme | Not |
 |-----|-------|------------|--------|----------------|-----|
@@ -36,6 +36,10 @@
 | Faz 1 | 1.6 | Onay kuyruğu sayfası | Yapıldı | 05.03.2026 | patron/onay-kuyrugu + api/onay-kuyrugu |
 | Faz 1 | — | ManyChat entegrasyonu | Yapılacak | 05.03.2026 | Webhook/bot bağlantısı kodda yok |
 | Faz 1 | — | Vitrin sayfaları (ozellikler, fiyatlandirma, hakkimizda vb.) | Yapıldı | 05.03.2026 | yisa-s-com/app: 10+ sayfa mevcut |
+| Faz 1 | — | Tesis sayfaları 3 şablon sistemi (standard/medium/premium) | **Yapıldı** | 05.03.2026 | tenant-yisa-s: 3 şablon + config + GRID + robot |
+| Faz 1 | — | Haftalık ders programı GRID bileşeni | **Yapıldı** | 05.03.2026 | WeeklyScheduleGrid.tsx: saatler×günler, renk kodlu |
+| Faz 1 | — | Robot karşılama + randevu sistemi (premium) | **Yapıldı** | 05.03.2026 | RobotGreeting.tsx + PremiumTemplate randevu modalı |
+| Faz 1 | — | Paket fiyatları güncellemesi (24→30K, 48→52.8K, 60→60K) | **Düzeltildi** | 05.03.2026 | tenant-yisa-s + v0-web-page-content-edit-bjktesis |
 
 ### Faz 2 — Tenant Oluşturma (~%95)
 
@@ -44,6 +48,7 @@
 | Faz 2 | 2.1 | provisionTenant zinciri (6 adım: tenant→user→franchise→subdomain→seed→status) | Yapıldı | 05.03.2026 | lib/services/tenant-provisioning.ts (501 satır) |
 | Faz 2 | 2.2 | CELF otomatik tetikleme (sim_updates üzerinden) | Yapıldı | 05.03.2026 | provisionTenant → triggerCelfStartup (Step 7) eklendi; sim_updates tablosuna tenant_baslangic_gorevleri INSERT yapılıyor; 12 direktörlük bilgisi command JSON'a dahil |
 | Faz 2 | — | Subdomain oluşturma (franchise_subdomains) | Yapıldı | 05.03.2026 | createSubdomain() mevcut |
+| Faz 2 | — | feneratasehir subdomain desteği | **Yapıldı** | 05.03.2026 | FRANCHISE_SUBDOMAINS_DEFAULT'a eklendi |
 | Faz 2 | — | Rollback / compensating transaction | Yapıldı | 05.03.2026 | rollback() fonksiyonu mevcut |
 
 ### Faz 3 — Güvenlik Robotu MVP (~%80)
@@ -86,7 +91,7 @@
 | Faz 6 | — | Bildirim / push notification | Yapılacak | 05.03.2026 | Push notification altyapısı yok |
 | Faz 6 | — | Veli paneli canlı veri testi (BJK parent bağlantısı + auth) | **Yapıldı** | 05.03.2026 | 2 test veli kullanıcısı oluşturuldu; 3 sporcu parent_user_id ile bağlandı; demo auth → gerçek signInWithPassword; user_tenants role='veli' eklendi |
 
-### Faz 7 — CELF Zinciri + Başlangıç Görevleri (~%75)
+### Faz 7 — CELF Zinciri + Başlangıç Görevleri (~%80)
 
 | Faz | Adım | Madde / iş | Durum | Son güncelleme | Not |
 |-----|-------|------------|--------|----------------|-----|
