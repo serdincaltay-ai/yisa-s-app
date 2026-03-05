@@ -72,10 +72,10 @@ export default function VeliMesajlarPage() {
           <Link href="/veli/dashboard" className="text-zinc-400 hover:text-white transition-colors">
             <ArrowLeft className="h-5 w-5" strokeWidth={1.5} />
           </Link>
-          <h1 className="text-xl font-bold text-white">Mesajlasma</h1>
+          <h1 className="text-xl font-bold text-white">Mesajlaşma</h1>
         </div>
 
-        <p className="text-sm text-zinc-400">Antrenor ile iletisim — cocugunuzun antrenoruyle mesajlasin.</p>
+        <p className="text-sm text-zinc-400">Antrenör ile iletişim — çocuğunuzun antrenörüyle mesajlaşın.</p>
 
         {loading && !selectedThreadId ? (
           <div className="flex justify-center py-12">
@@ -87,12 +87,12 @@ export default function VeliMesajlarPage() {
               onClick={() => setSelectedThreadId(null)}
               className="text-sm text-cyan-400 hover:text-cyan-300 transition-colors"
             >
-              ← Konusma listesi
+              ← Konuşma listesi
             </button>
             <div className="bg-zinc-900 border border-zinc-800 rounded-2xl flex flex-col min-h-[300px]">
               <div className="flex-1 overflow-y-auto p-4 space-y-3">
                 {messages.length === 0 ? (
-                  <p className="text-sm text-zinc-500 text-center py-8">Henuz mesaj yok.</p>
+                  <p className="text-sm text-zinc-500 text-center py-8">Henüz mesaj yok.</p>
                 ) : (
                   messages.map((m) => (
                     <div key={m.id} className={`flex ${m.from_veli ? 'justify-end' : 'justify-start'}`}>
@@ -112,7 +112,7 @@ export default function VeliMesajlarPage() {
                 <input
                   value={input}
                   onChange={(e) => setInput(e.target.value)}
-                  placeholder="Mesajiniz..."
+                  placeholder="Mesajınız..."
                   onKeyDown={(e) => e.key === 'Enter' && handleSend()}
                   className="flex-1 rounded-xl border border-zinc-700 bg-zinc-800 px-4 py-2.5 text-white text-sm placeholder:text-zinc-500 focus:border-cyan-400 focus:outline-none"
                 />
@@ -129,10 +129,10 @@ export default function VeliMesajlarPage() {
         ) : (
           <div className="bg-zinc-900 border border-zinc-800 rounded-2xl p-6">
             <MessageSquare className="h-8 w-8 text-cyan-400 mb-3" strokeWidth={1.5} />
-            <h3 className="font-semibold text-white mb-1">Antrenor ile iletisim</h3>
-            <p className="text-sm text-zinc-400 mb-4">Cocugunuzun antrenoruyle mesajlasin.</p>
+            <h3 className="font-semibold text-white mb-1">Antrenör ile iletişim</h3>
+            <p className="text-sm text-zinc-400 mb-4">Çocuğunuzun antrenörüyle mesajlaşın.</p>
             {threads.length === 0 ? (
-              <p className="text-sm text-zinc-500">Henuz konusma yok. Tesis tarafindan antrenor atandiginda burada gorunecek.</p>
+              <p className="text-sm text-zinc-500">Henüz konuşma yok. Tesis tarafından antrenör atandığında burada görünecek.</p>
             ) : (
               <div className="space-y-2">
                 {threads.map((t) => (
