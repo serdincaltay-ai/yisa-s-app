@@ -30,16 +30,16 @@ YİSA-S sisteminde 4 ana robot ve 15 direktörlük (agent) bulunur. Her robot be
 | 3 | Chief Information Officer | **CIO** | Bilgi analizi, çakışma kontrolü, yönlendirme | 1 görev |
 | 4 | Chief Marketing Officer | **CMO** | Pazarlama, sosyal medya, kampanya | 2 görev |
 | 5 | Chief Human Resources Officer | **CHRO** | İnsan kaynakları, personel, eğitim | 2 görev |
-| 6 | Chief Legal Officer | **CLO** | Hukuk, sözleşme, KVKK uyumu | 1 görev |
+| 6 | Chief Legal Officer | **CLO** | Hukuk, sözleşme, KVKK uyumu | 2 görev |
 | 7 | Chief Sales Officer (Satış) | **CSO_SATIS** | Satış, lead yönetimi, franchise satış | 2 görev |
-| 8 | Chief Product Officer | **CPO** | Ürün geliştirme, özellik planlama | 1 görev |
+| 8 | Chief Product Officer | **CPO** | Ürün geliştirme, özellik planlama | 2 görev |
 | 9 | Chief Data Officer | **CDO** | Veri yönetimi, analiz, raporlama | 2 görev |
-| 10 | Chief Information Security Officer | **CISO** | Bilgi güvenliği, penetrasyon testi, güvenlik politikası | 1 görev |
-| 11 | Chief Communications Officer | **CCO** | İletişim, duyurular, medya | 1 görev |
+| 10 | Chief Information Security Officer | **CISO** | Bilgi güvenliği, penetrasyon testi, güvenlik politikası | 2 görev |
+| 11 | Chief Communications Officer | **CCO** | İletişim, duyurular, medya | 2 görev |
 | 12 | Chief Strategy Officer | **CSO_STRATEJI** | Strateji, vizyon, rakip analizi | 1 görev |
-| 13 | Chief Sports Officer | **CSPO** | Spor programları, antrenör yönetimi, gelişim ölçüm | 2 görev |
-| 14 | Chief Operating Officer | **COO** | Operasyon, rutin görevler, cron yönetimi | 1 görev |
-| 15 | Research & Development | **RND** | Ar-Ge, yeni teknoloji, inovasyon | 1 görev |
+| 13 | Chief Sports Officer | **CSPO** | Spor programları, antrenör yönetimi, gelişim ölçüm | 3 görev |
+| 14 | Chief Operating Officer | **COO** | Operasyon, rutin görevler, cron yönetimi | 2 görev |
+| 15 | Research & Development | **RND** | Ar-Ge, yeni teknoloji, inovasyon | 2 görev |
 
 **Kaynak:** `lib/robots/directorate-initial-tasks.ts` (476 satır) — Her direktörlüğün başlangıç görevleri burada tanımlı.
 

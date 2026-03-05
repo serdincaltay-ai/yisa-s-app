@@ -99,6 +99,6 @@
 | Adım | Tanım | Durum | Kanıt |
 |------|-------|-------|-------|
 | 7.1 | Başlangıç görev motoru | **Yapıldı** | lib/robots/directorate-initial-tasks.ts (15 direktörlük, 25+ görev), api/startup (run_task, run_director, run_all) |
-| — | 12 direktörlük CELF yapısı | **Yapıldı** | lib/robots/celf-center.ts, celf-config-merged.ts, hierarchy.ts |
+| — | 15 direktörlük CELF yapısı | **Yapıldı** | lib/robots/celf-center.ts, celf-config-merged.ts, hierarchy.ts |
 | — | CEO/COO robot | **Yapıldı** | lib/robots/ceo-robot.ts, coo-robot.ts, cio-robot.ts |
 | — | Patron onay → CELF tetik uçtan uca | **Kısmen** | Her parça mevcut ancak tam entegre akış test edilmemiş |
