@@ -89,7 +89,7 @@
 | Faz | Adım | Madde / iş | Durum | Son güncelleme | Not |
 |-----|-------|------------|--------|----------------|-----|
 | Faz 7 | 7.1 | Başlangıç görev motoru | Yapıldı | 05.03.2026 | directorate-initial-tasks.ts (15 direktörlük, 25+ görev), api/startup |
-| Faz 7 | — | 12 direktörlük CELF yapısı | Yapıldı | 05.03.2026 | celf-center.ts, celf-config-merged.ts, hierarchy.ts |
+| Faz 7 | — | 15 direktörlük CELF yapısı | Yapıldı | 05.03.2026 | celf-center.ts, celf-config-merged.ts, hierarchy.ts |
 | Faz 7 | — | CEO/COO/CIO robot | Yapıldı | 05.03.2026 | ceo-robot.ts, coo-robot.ts, cio-robot.ts |
 | Faz 7 | — | Patron onay → CELF tetik uçtan uca akış | İşleniyor | 05.03.2026 | Her parça mevcut; tam entegre akış test edilmemiş |
 | Faz 7 | — | Görev sonuçlarının dashboard'a yansıması | İşleniyor | 05.03.2026 | task_results arşivleme var; dashboard gösterimi kısmen |
