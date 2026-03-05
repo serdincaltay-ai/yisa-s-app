@@ -2,7 +2,7 @@
 
 > **CANLI DOSYA:** Projede herhangi bir değişiklik olduğunda bu dosya **aynı gün** güncellenir. Planlanan, devam eden ve tamamlanan işler burada takip edilir.
 >
-> **Son güncelleme:** 05.03.2026 — Veli paneli canlı veri testi tamamlandı; Faz 4 ve Faz 6 yüzdeleri güncellendi.
+> **Son güncelleme:** 05.03.2026 — Tüm fazlar güncellendi: 3 şablon sistemi (PR #52), Faz 4 gelişim tabloları, Faz 6 canlı veri testi, Faz 2 CELF tetikleme. Genel ilerleme ~%89.
 
 ---
 
@@ -33,15 +33,15 @@
 
 | Faz | İçerik | Durum | Tamamlanma |
 |-----|--------|-------|------------|
-| Faz 1 | Vitrin + Demo formu | Büyük oranda tamam | ~%90 |
-| Faz 2 | Tenant otomatik oluşturma | Büyük oranda tamam | ~%85 |
+| Faz 1 | Vitrin + Demo formu + Tesis sayfaları | Büyük oranda tamam | ~%95 |
+| Faz 2 | Tenant otomatik oluşturma | Tamamlandı | ~%95 |
 | Faz 3 | Güvenlik robotu MVP | Büyük oranda tamam | ~%80 |
 | Faz 4 | Veri robotu / Şablon havuzu | Büyük oranda tamam | ~%90 |
 | Faz 5 | Franchise paneli | Büyük oranda tamam | ~%90 |
 | Faz 6 | Veli paneli MVP | Büyük oranda tamam | ~%90 |
-| Faz 7 | CELF zinciri + Başlangıç görevleri | Büyük oranda tamam | ~%75 |
+| Faz 7 | CELF zinciri + Başlangıç görevleri | Büyük oranda tamam | ~%80 |
 
-**Genel ilerleme:** ~%87 (ağırlıklı ortalama)
+**Genel ilerleme:** ~%89 (ağırlıklı ortalama)
 
 ---
 
@@ -76,14 +76,20 @@
 | 23 | 137 öğrenci veri kontrolü: **140 sporcu, 1575 ödeme, 3022 yoklama** (BJK tenant) | Veri | 05.03.2026 |
 | 24 | Veli paneli canlı veri: 2 test veli + 3 sporcu parent bağlantısı + gerçek auth (signInWithPassword) | Faz 6 | 05.03.2026 |
 | 25 | Kırık trigger düzeltmesi (trg_update_athletes → guncelleme_tarihi) | Düzeltme | 05.03.2026 |
+| 26 | 3 şablon sistemi (standard/medium/premium) + tenant config | Faz 1 | 05.03.2026 |
+| 27 | Haftalık ders programı GRID bileşeni (08:00-19:00, PZT-PAZ, renk kodlu) | Faz 1 | 05.03.2026 |
+| 28 | Robot karşılama + randevu sistemi (premium şablon) | Faz 1 | 05.03.2026 |
+| 29 | Paket fiyatları güncellendi: 24→30.000, 48→52.800, 60→60.000 TL | Faz 1 | 05.03.2026 |
+| 30 | feneratasehir subdomain desteği eklendi | Faz 2 | 05.03.2026 |
+| 31 | tenant-site/page.tsx şablon yönlendirici (template router) olarak yeniden yazıldı | Faz 1 | 05.03.2026 |
 
 ### 3.2 Devam Eden (İşleniyor)
 
 | # | İş | Faz | Başlangıç | Engel / Not |
 |---|-----|-----|-----------|-------------|
-| 1 | CELF otomatik tetikleme (provisionTenant -> CELF) | Faz 2 | Şubat 2026 | sim_updates altyapısı var; tam bağlantı eksik |
+| ~~1~~ | ~~CELF otomatik tetikleme (provisionTenant -> CELF)~~ | ~~Faz 2~~ | ~~Şubat 2026~~ | **Yapıldı 05.03.2026** — provisionTenant Step 7 triggerCelfStartup ile bağlandı (Bkz. 3.1 #19) |
 | 2 | 3 Duvar sistemi tam entegrasyonu | Faz 3 | Şubat 2026 | Parçalar mevcut; entegrasyon tamamlanacak |
-| 3 | Patron onay -> CELF tetik uçtan uca test | Faz 7 | Şubat 2026 | Her parça var; tam akış test edilmeli |
+| 3 | Patron onay -> CELF tetik uçtan uca test | Faz 7 | Şubat 2026 | Tetikleme bağlandı; canlı Supabase ile tam e2e test gerekiyor |
 | 4 | Görev sonuçlarının dashboard'a yansıması | Faz 7 | Şubat 2026 | task_results arşivleme var; gösterim kısmen |
 | 5 | İletişim modülü (anket eksik) | Faz 5 | Şubat 2026 | franchise/iletisim mevcut; anket yok |
 | 6 | Belge yönetimi (geçerlilik uyarısı eksik) | Faz 5 | Şubat 2026 | franchise/belgeler mevcut; uyarı mekanizması yok |
@@ -120,6 +126,7 @@
 | 05.03.2026 | **Veli paneli canlı veri:** 2 test veli (veli1@bjktuzla.test, veli2@bjktuzla.test) oluşturuldu; 3 sporcu parent_user_id ile bağlandı; demo→gerçek auth; kırık trigger düzeltildi; user_tenants role='veli' eklendi | app/veli/giris/page.tsx, app/veli/dashboard/page.tsx, scripts/013_veli_canli_veri_setup.sql |
 | 05.03.2026 | **137 öğrenci veri kontrolü:** BJK tenant (8cc3ea1d) — athletes=140, payments=1575, attendance=3022. Hedef aşıldı. Eksik: athlete_measurements=0, users=0 (parent_user_id bağlı değil). | docs/YISA-S-CANLI-PROJE-RAPORU.md, docs/YISA-S-CANLI-IS-AKISI-SEMASI.md |
 | 05.03.2026 | **Faz 4 tamamlandı:** gelisim_olcumleri + referans_degerler + sport_templates tabloları; GET/POST gelisim-olcumleri API; gelisim-analiz endpoint; WHO/TGF referans seed; veli/gelisim birleşik sorgu | scripts/011, scripts/012, app/api/gelisim-olcumleri, app/api/gelisim-analiz, app/api/veli/gelisim |
+| 05.03.2026 | **3 şablon sistemi (PR #52):** standard/medium/premium şablonlar, haftalık GRID, robot karşılama, randevu, paket fiyat güncellemesi, feneratasehir subdomain | tenant-site/page.tsx, components/tenant-templates/*, lib/tenant-template-config.ts, lib/subdomain.ts |
 | 05.03.2026 | Canlı dokümantasyon sistemi kuruldu: 7-faz değerlendirmesi, çalışma prensibi kılavuzu, iş akışı şeması, canlı proje raporu | YISA-S-7-FAZ-DURUMU.md, YISA-S-CANLI-PROJE-RAPORU.md, YISA-S-CALISMA-PRENSIBI-VE-KULLANIM-KILAVUZU-CANLI.md, YISA-S-CANLI-IS-AKISI-SEMASI.md |
 | 04.02.2026 | Veri arşivleme düzeltmesi: COO run-due ve CELF API'de archiveTaskResult eklendi | MEVCUT_DURUM_ANAYASA_KONTROL_RAPORU.md |
 | 04.02.2026 | ceo_routines seed eklendi; task_results tüketimi (GET API + Raporlar sayfası) | GOREV_SONLANDIRMA_RAPORU.md |
