@@ -1,53 +1,83 @@
 'use client'
 
 import React from 'react'
-import Link from 'next/link'
-import { Button } from '@/components/ui/button'
-import { Card, CardContent } from '@/components/ui/card'
-import { ArrowLeft, Megaphone, Activity, Users } from 'lucide-react'
+import { PanelHeader } from '@/components/PanelHeader'
+import { VeliBottomNav } from '@/components/PanelBottomNav'
+import { Bell, Megaphone, Calendar, Wallet } from 'lucide-react'
 
 export default function VeliDuyurularPage() {
   return (
-    <div className="min-h-screen bg-white pb-24">
-      <header className="sticky top-0 z-40 border-b border-gray-200 bg-white">
-        <div className="flex h-14 items-center gap-2 px-4">
-          <Button variant="ghost" size="sm" asChild>
-            <Link href="/veli/dashboard"><ArrowLeft className="h-4 w-4" /></Link>
-          </Button>
-          <h1 className="font-bold text-gray-900">Duyurular</h1>
-        </div>
-      </header>
+    <div className="min-h-screen bg-zinc-950 pb-20">
+      <PanelHeader panelName="VELİ PANELİ" />
 
-      <main className="p-4">
-        <Card className="border-gray-200">
-          <CardContent className="flex flex-col items-center justify-center py-16 text-center">
-            <div className="flex h-16 w-16 items-center justify-center rounded-full bg-[#2563eb]/10 text-[#2563eb] mb-4">
-              <Megaphone className="h-8 w-8" />
+      <main className="p-4 space-y-4">
+        <h1 className="text-xl font-bold text-white">Bildirimler</h1>
+        <p className="text-sm text-zinc-400">0 okunmamış bildirim</p>
+
+        {/* Filtre sekmeleri */}
+        <div className="flex gap-2 overflow-x-auto pb-2">
+          {['Tümü', 'Okunmamış', 'Aidat', 'Ders', 'Duyuru'].map((tab, i) => (
+            <button
+              key={tab}
+              className={`rounded-full px-4 py-1.5 text-sm font-medium whitespace-nowrap transition-colors ${
+                i === 0
+                  ? 'bg-cyan-400/20 text-cyan-400 border border-cyan-400/30'
+                  : 'bg-zinc-900 text-zinc-400 border border-zinc-800 hover:border-zinc-700'
+              }`}
+            >
+              {tab}
+            </button>
+          ))}
+        </div>
+
+        {/* Boş durum kartı */}
+        <div className="bg-zinc-900 border border-zinc-800 rounded-2xl p-8 flex flex-col items-center justify-center text-center">
+          <div className="flex h-16 w-16 items-center justify-center rounded-full bg-cyan-400/10 text-cyan-400 mb-4">
+            <Megaphone className="h-8 w-8" strokeWidth={1.5} />
+          </div>
+          <h2 className="text-lg font-semibold text-white mb-2">Yakında</h2>
+          <p className="text-sm text-zinc-400 max-w-sm">
+            Bildirimler yakında aktif olacak. Tesisinizden gelen önemli bilgiler burada görüntülenecek.
+          </p>
+        </div>
+
+        {/* Örnek bildirim kartları (şablon) */}
+        <div className="space-y-3 opacity-40">
+          <div className="bg-zinc-900 border border-zinc-800 rounded-2xl p-4 flex items-start gap-3">
+            <div className="flex h-10 w-10 shrink-0 items-center justify-center rounded-lg bg-amber-500/10">
+              <Wallet className="h-5 w-5 text-amber-400" strokeWidth={1.5} />
             </div>
-            <h2 className="text-lg font-semibold text-gray-900 mb-2">Yakında</h2>
-            <p className="text-sm text-gray-600 max-w-sm">
-              Duyurular yakında aktif olacak. Tesisinizden gelen önemli bilgiler burada görüntülenecek.
-            </p>
-          </CardContent>
-        </Card>
+            <div className="flex-1">
+              <p className="font-medium text-white text-sm">Aidat Hatırlatma</p>
+              <p className="text-xs text-zinc-500 mt-1">Mart ayı aidatınız henüz ödenmedi.</p>
+              <p className="text-[10px] text-zinc-600 mt-2">2 saat önce</p>
+            </div>
+            <span className="h-2 w-2 rounded-full bg-cyan-400 mt-1" />
+          </div>
+          <div className="bg-zinc-900 border border-zinc-800 rounded-2xl p-4 flex items-start gap-3">
+            <div className="flex h-10 w-10 shrink-0 items-center justify-center rounded-lg bg-cyan-400/10">
+              <Calendar className="h-5 w-5 text-cyan-400" strokeWidth={1.5} />
+            </div>
+            <div className="flex-1">
+              <p className="font-medium text-white text-sm">Ders Değişikliği</p>
+              <p className="text-xs text-zinc-500 mt-1">Cumartesi dersi 10:00 olarak güncellendi.</p>
+              <p className="text-[10px] text-zinc-600 mt-2">1 gün önce</p>
+            </div>
+          </div>
+          <div className="bg-zinc-900 border border-zinc-800 rounded-2xl p-4 flex items-start gap-3">
+            <div className="flex h-10 w-10 shrink-0 items-center justify-center rounded-lg bg-emerald-500/10">
+              <Bell className="h-5 w-5 text-emerald-400" strokeWidth={1.5} />
+            </div>
+            <div className="flex-1">
+              <p className="font-medium text-white text-sm">Duyuru</p>
+              <p className="text-xs text-zinc-500 mt-1">Yarıyıl tatili programı yayınlandı.</p>
+              <p className="text-[10px] text-zinc-600 mt-2">3 gün önce</p>
+            </div>
+          </div>
+        </div>
       </main>
 
-      <nav className="fixed bottom-0 left-0 right-0 z-40 border-t border-gray-200 bg-white">
-        <div className="flex items-center justify-around py-2 min-h-[56px]">
-          <Link href="/veli/dashboard" className="flex flex-col items-center gap-1 px-4 py-2 text-gray-500">
-            <Activity className="h-5 w-5" />
-            <span className="text-xs">Dashboard</span>
-          </Link>
-          <Link href="/veli/dashboard" className="flex flex-col items-center gap-1 px-4 py-2 text-gray-500">
-            <Users className="h-5 w-5" />
-            <span className="text-xs">Çocuklarım</span>
-          </Link>
-          <Link href="/veli/duyurular" className="flex flex-col items-center gap-1 px-4 py-2 text-[#2563eb]">
-            <Megaphone className="h-5 w-5" />
-            <span className="text-xs font-medium">Duyurular</span>
-          </Link>
-        </div>
-      </nav>
+      <VeliBottomNav />
     </div>
   )
 }

@@ -2,9 +2,9 @@
 
 import { useEffect, useState } from 'react'
 import Link from 'next/link'
-import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card'
-import { Button } from '@/components/ui/button'
-import { ArrowLeft, Coins, AlertTriangle } from 'lucide-react'
+import { PanelHeader } from '@/components/PanelHeader'
+import { VeliBottomNav } from '@/components/PanelBottomNav'
+import { ArrowLeft, Coins, AlertTriangle, Loader2 } from 'lucide-react'
 
 type Paket = { isim: string; saat: number; fiyat: number }
 type Child = { id: string; name: string; surname?: string; ders_kredisi?: number; toplam_kredi?: number }
@@ -32,7 +32,7 @@ export default function VeliKrediPage() {
       .finally(() => setLoading(false))
   }, [])
 
-  const handleSatınAl = async () => {
+  const handleSatinAl = async () => {
     if (!selectedChild || selectedPaket < 0) return
     setSaving(true)
     try {
@@ -45,99 +45,103 @@ export default function VeliKrediPage() {
       if (res.ok && j.ok) {
         setChildren((prev) => prev.map((c) => (c.id === selectedChild ? { ...c, ders_kredisi: j.ders_kredisi } : c)))
       } else {
-        alert(j.error ?? 'İşlem başarısız')
+        alert(j.error ?? 'Islem basarisiz')
       }
     } catch {
-      alert('İşlem başarısız')
+      alert('Islem basarisiz')
     } finally {
       setSaving(false)
     }
   }
 
-  if (loading) {
-    return (
-      <div className="min-h-screen flex items-center justify-center bg-background">
-        <span className="text-muted-foreground">Yükleniyor...</span>
-      </div>
-    )
-  }
-
   return (
-    <div className="min-h-screen bg-background p-4">
-      <div className="max-w-lg mx-auto space-y-6">
-        <Link href="/veli/dashboard" className="inline-flex items-center gap-2 text-sm text-muted-foreground hover:text-foreground">
-          <ArrowLeft className="h-4 w-4" />
-          Veli paneline dön
-        </Link>
+    <div className="min-h-screen bg-zinc-950 pb-20">
+      <PanelHeader panelName="VELİ PANELİ" />
 
-        <h1 className="text-2xl font-bold flex items-center gap-2">
-          <Coins className="h-7 w-7 text-primary" />
-          Kredi Satın Al
-        </h1>
-
-        <Card>
-          <CardHeader>
-            <CardTitle>Çocuk Seçin</CardTitle>
-            <CardDescription>Hangi çocuk için kredi alacaksınız?</CardDescription>
-          </CardHeader>
-          <CardContent>
-            <select
-              value={selectedChild}
-              onChange={(e) => setSelectedChild(e.target.value)}
-              className="w-full rounded-lg border border-input bg-background px-4 py-2"
-            >
-              <option value="">Seçin</option>
-              {children.map((c) => (
-                <option key={c.id} value={c.id}>
-                  {c.name} {c.surname ?? ''} — Kalan: {(c.ders_kredisi ?? 0)} ders
-                </option>
-              ))}
-            </select>
-          </CardContent>
-        </Card>
-
-        {packages.length === 0 ? (
-          <Card>
-            <CardContent className="py-8 text-center text-muted-foreground">
-              Henüz kredi paketi tanımlanmamış. Tesisinizle iletişime geçin.
-            </CardContent>
-          </Card>
-        ) : (
-          <Card>
-            <CardHeader>
-              <CardTitle>Paket Seçin</CardTitle>
-              <CardDescription>Ders kredisi paketleri</CardDescription>
-            </CardHeader>
-            <CardContent className="space-y-3">
-              {packages.map((p, i) => (
-                <div
-                  key={i}
-                  onClick={() => setSelectedPaket(i)}
-                  className={`flex items-center justify-between rounded-lg border p-4 cursor-pointer transition-colors ${
-                    selectedPaket === i ? 'border-primary bg-primary/10' : 'hover:bg-muted/50'
-                  }`}
-                >
-                  <div>
-                    <p className="font-medium">{p.isim}</p>
-                    <p className="text-sm text-muted-foreground">{p.saat} ders hakkı</p>
-                  </div>
-                  <p className="font-bold">{p.fiyat.toLocaleString('tr-TR')} ₺</p>
-                </div>
-              ))}
-              <Button onClick={handleSatınAl} disabled={saving || !selectedChild || selectedPaket < 0} className="w-full mt-4">
-                {saving ? 'İşleniyor...' : 'Satın Al'}
-              </Button>
-            </CardContent>
-          </Card>
-        )}
-
-        <div className="flex items-start gap-3 rounded-lg bg-amber-500/10 border border-amber-500/30 p-3">
-          <AlertTriangle className="h-5 w-5 shrink-0 text-amber-600" />
-          <p className="text-sm">
-            Kredi bittiğinde yeni paket almanız gerekir. Antrenör yoklamada &quot;Geldi&quot; işaretlendiğinde 1 ders hakkı düşer.
-          </p>
+      <main className="p-4 space-y-4">
+        <div className="flex items-center gap-2">
+          <Link href="/veli/dashboard" className="text-zinc-400 hover:text-white transition-colors">
+            <ArrowLeft className="h-5 w-5" strokeWidth={1.5} />
+          </Link>
+          <h1 className="text-xl font-bold text-white flex items-center gap-2">
+            <Coins className="h-6 w-6 text-cyan-400" strokeWidth={1.5} />
+            Kredi Satin Al
+          </h1>
         </div>
-      </div>
+
+        {loading ? (
+          <div className="flex justify-center py-12">
+            <Loader2 className="h-8 w-8 animate-spin text-cyan-400" />
+          </div>
+        ) : (
+          <>
+            {/* Cocuk Secimi */}
+            <div className="bg-zinc-900 border border-zinc-800 rounded-2xl p-4">
+              <h3 className="text-sm font-semibold text-white mb-2">Cocuk Secin</h3>
+              <p className="text-xs text-zinc-500 mb-3">Hangi cocuk icin kredi alacaksiniz?</p>
+              <select
+                value={selectedChild}
+                onChange={(e) => setSelectedChild(e.target.value)}
+                className="w-full rounded-xl border border-zinc-700 bg-zinc-800 px-4 py-2.5 text-white text-sm focus:border-cyan-400 focus:outline-none"
+              >
+                <option value="">Secin</option>
+                {children.map((c) => (
+                  <option key={c.id} value={c.id}>
+                    {c.name} {c.surname ?? ''} — Kalan: {(c.ders_kredisi ?? 0)} ders
+                  </option>
+                ))}
+              </select>
+            </div>
+
+            {/* Paketler */}
+            {packages.length === 0 ? (
+              <div className="bg-zinc-900 border border-zinc-800 rounded-2xl p-8 text-center">
+                <p className="text-sm text-zinc-400">Henuz kredi paketi tanimlanmamis. Tesisinizle iletisime gecin.</p>
+              </div>
+            ) : (
+              <div className="bg-zinc-900 border border-zinc-800 rounded-2xl p-4">
+                <h3 className="text-sm font-semibold text-white mb-2">Paket Secin</h3>
+                <p className="text-xs text-zinc-500 mb-3">Ders kredisi paketleri</p>
+                <div className="space-y-3">
+                  {packages.map((p, i) => (
+                    <div
+                      key={i}
+                      onClick={() => setSelectedPaket(i)}
+                      className={`flex items-center justify-between rounded-xl border p-4 cursor-pointer transition-all duration-300 ${
+                        selectedPaket === i
+                          ? 'border-cyan-400/50 bg-cyan-400/10 shadow-[0_0_15px_rgba(34,211,238,0.1)]'
+                          : 'border-zinc-700 hover:border-zinc-600'
+                      }`}
+                    >
+                      <div>
+                        <p className="font-medium text-white">{p.isim}</p>
+                        <p className="text-sm text-zinc-400">{p.saat} ders hakki</p>
+                      </div>
+                      <p className="font-bold text-white">{p.fiyat.toLocaleString('tr-TR')} TL</p>
+                    </div>
+                  ))}
+                </div>
+                <button
+                  onClick={handleSatinAl}
+                  disabled={saving || !selectedChild || selectedPaket < 0}
+                  className="w-full mt-4 rounded-xl bg-gradient-to-r from-cyan-500 to-cyan-400 px-4 py-3 text-sm font-medium text-zinc-950 hover:shadow-[0_0_20px_rgba(34,211,238,0.3)] transition-all disabled:opacity-50 disabled:cursor-not-allowed"
+                >
+                  {saving ? 'Isleniyor...' : 'Satin Al'}
+                </button>
+              </div>
+            )}
+
+            <div className="flex items-start gap-3 rounded-2xl bg-amber-500/10 border border-amber-500/30 p-3">
+              <AlertTriangle className="h-5 w-5 shrink-0 text-amber-400" />
+              <p className="text-sm text-zinc-300">
+                Kredi bittiginde yeni paket almaniz gerekir. Antrenor yoklamada &quot;Geldi&quot; isaretlendiginde 1 ders hakki duser.
+              </p>
+            </div>
+          </>
+        )}
+      </main>
+
+      <VeliBottomNav />
     </div>
   )
 }

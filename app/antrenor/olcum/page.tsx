@@ -1,9 +1,7 @@
 'use client'
 
 import { useEffect, useState } from 'react'
-import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card'
-import { Button } from '@/components/ui/button'
-import { Badge } from '@/components/ui/badge'
+import { Ruler, Loader2 } from 'lucide-react'
 
 type Sporcu = { id: string; name: string; surname?: string; birth_date?: string; gender?: string }
 
@@ -42,10 +40,10 @@ export default function AntrenorOlcumPage() {
         setSonuc({ analiz: j.analiz ?? [], bransOnerileri: j.bransOnerileri ?? [] })
         setForm({})
       } else {
-        alert(j.error ?? 'Kaydetme başarısız')
+        alert(j.error ?? 'Kaydetme basarisiz')
       }
     } catch {
-      alert('Kaydetme başarısız')
+      alert('Kaydetme basarisiz')
     } finally {
       setSaving(false)
     }
@@ -55,97 +53,112 @@ export default function AntrenorOlcumPage() {
     { key: 'boy', label: 'Boy (cm)', type: 'number' },
     { key: 'kilo', label: 'Kilo (kg)', type: 'number' },
     { key: 'esneklik', label: 'Esneklik (cm)', type: 'number' },
-    { key: 'dikey_sicrama', label: 'Dikey Sıçrama (cm)', type: 'number' },
+    { key: 'dikey_sicrama', label: 'Dikey Sicrama (cm)', type: 'number' },
     { key: 'sure_20m', label: '20m Sprint (sn)', type: 'number' },
     { key: 'denge', label: 'Denge (sn)', type: 'number' },
     { key: 'koordinasyon', label: 'Koordinasyon (puan)', type: 'number' },
     { key: 'kuvvet', label: 'Kuvvet (puan)', type: 'number' },
-    { key: 'dayaniklilik', label: 'Dayanıklılık (puan)', type: 'number' },
+    { key: 'dayaniklilik', label: 'Dayaniklilik (puan)', type: 'number' },
   ]
 
+  if (loading) {
+    return (
+      <div className="flex items-center justify-center py-16">
+        <Loader2 className="h-8 w-8 animate-spin text-cyan-400" />
+      </div>
+    )
+  }
+
   return (
-    <div className="p-6 space-y-6">
-      <h1 className="text-2xl font-bold">Ölçüm Girişi</h1>
+    <main className="p-4 space-y-4">
+      <h1 className="text-xl font-bold text-white flex items-center gap-2">
+        <Ruler className="h-6 w-6 text-cyan-400" strokeWidth={1.5} />
+        Olcum Girisi
+      </h1>
 
-      <Card>
-        <CardHeader>
-          <CardTitle>Sporcu Seçimi</CardTitle>
-          <CardDescription>Ölçüm yapılacak sporcuyu seçin</CardDescription>
-        </CardHeader>
-        <CardContent>
-          <select
-            value={selected}
-            onChange={(e) => { setSelected(e.target.value); setSonuc(null) }}
-            className="w-full max-w-md rounded-lg border border-input bg-background px-4 py-2"
-          >
-            <option value="">Sporcu seçin</option>
-            {sporcular.map((s) => (
-              <option key={s.id} value={s.id}>{s.name} {s.surname ?? ''}</option>
-            ))}
-          </select>
-        </CardContent>
-      </Card>
+      {/* Sporcu Secimi */}
+      <div className="bg-zinc-900 border border-zinc-800 rounded-2xl p-4">
+        <h3 className="text-sm font-semibold text-white mb-2">Sporcu Secimi</h3>
+        <p className="text-xs text-zinc-500 mb-3">Olcum yapilacak sporcuyu secin</p>
+        <select
+          value={selected}
+          onChange={(e) => { setSelected(e.target.value); setSonuc(null) }}
+          className="w-full rounded-xl border border-zinc-700 bg-zinc-800 px-4 py-2.5 text-white text-sm focus:border-cyan-400 focus:outline-none"
+        >
+          <option value="">Sporcu secin</option>
+          {sporcular.map((s) => (
+            <option key={s.id} value={s.id}>{s.name} {s.surname ?? ''}</option>
+          ))}
+        </select>
+      </div>
 
+      {/* Olcum Degerleri */}
       {selected && (
-        <Card>
-          <CardHeader>
-            <CardTitle>Ölçüm Değerleri</CardTitle>
-            <CardDescription>Tüm parametreleri girin (opsiyonel alanlar boş bırakılabilir)</CardDescription>
-          </CardHeader>
-          <CardContent className="space-y-4">
-            <div className="grid gap-4 md:grid-cols-2">
-              {alanlar.map((a) => (
-                <div key={a.key}>
-                  <label className="text-sm font-medium">{a.label}</label>
-                  <input
-                    type={a.type}
-                    value={form[a.key] ?? ''}
-                    onChange={(e) => setForm((f) => ({ ...f, [a.key]: e.target.value }))}
-                    className="mt-1 w-full rounded border border-input bg-background px-3 py-2"
-                  />
-                </div>
+        <div className="bg-zinc-900 border border-zinc-800 rounded-2xl p-4">
+          <h3 className="text-sm font-semibold text-white mb-2">Olcum Degerleri</h3>
+          <p className="text-xs text-zinc-500 mb-3">Tum parametreleri girin (opsiyonel alanlar bos birakilabilir)</p>
+          <div className="grid gap-3 sm:grid-cols-2">
+            {alanlar.map((a) => (
+              <div key={a.key}>
+                <label className="text-xs font-medium text-zinc-400">{a.label}</label>
+                <input
+                  type={a.type}
+                  value={form[a.key] ?? ''}
+                  onChange={(e) => setForm((f) => ({ ...f, [a.key]: e.target.value }))}
+                  className="mt-1 w-full rounded-xl border border-zinc-700 bg-zinc-800 px-3 py-2 text-white text-sm focus:border-cyan-400 focus:outline-none"
+                />
+              </div>
+            ))}
+          </div>
+          <div className="mt-3">
+            <label className="text-xs font-medium text-zinc-400">Postur Notu</label>
+            <textarea
+              value={form.postur_notu ?? ''}
+              onChange={(e) => setForm((f) => ({ ...f, postur_notu: e.target.value }))}
+              className="mt-1 w-full rounded-xl border border-zinc-700 bg-zinc-800 px-3 py-2 text-white text-sm focus:border-cyan-400 focus:outline-none"
+              rows={2}
+            />
+          </div>
+          <div className="mt-3">
+            <label className="text-xs font-medium text-zinc-400">Genel Degerlendirme</label>
+            <textarea
+              value={form.genel_degerlendirme ?? ''}
+              onChange={(e) => setForm((f) => ({ ...f, genel_degerlendirme: e.target.value }))}
+              className="mt-1 w-full rounded-xl border border-zinc-700 bg-zinc-800 px-3 py-2 text-white text-sm focus:border-cyan-400 focus:outline-none"
+              rows={2}
+            />
+          </div>
+          <button
+            onClick={handleKaydet}
+            disabled={saving}
+            className="w-full mt-4 rounded-xl bg-gradient-to-r from-cyan-500 to-cyan-400 px-4 py-3 text-sm font-medium text-zinc-950 hover:shadow-[0_0_20px_rgba(34,211,238,0.3)] transition-all disabled:opacity-50"
+          >
+            {saving ? 'Kaydediliyor...' : 'Kaydet'}
+          </button>
+        </div>
+      )}
+
+      {/* Analiz Sonucu */}
+      {sonuc && (
+        <div className="bg-zinc-900 border border-cyan-400/20 rounded-2xl p-4 shadow-[0_0_20px_rgba(34,211,238,0.1)]">
+          <h3 className="text-sm font-semibold text-white mb-3">Analiz Sonucu</h3>
+          {sonuc.analiz && sonuc.analiz.length > 0 && (
+            <div className="flex flex-wrap gap-2 mb-3">
+              {sonuc.analiz.map((a) => (
+                <span key={a.parametre} className="rounded-full bg-zinc-800 border border-zinc-700 text-zinc-300 text-xs px-3 py-1">
+                  {a.parametre}: {a.deger} — {a.seviye}
+                </span>
               ))}
             </div>
+          )}
+          {sonuc.bransOnerileri && sonuc.bransOnerileri.length > 0 && (
             <div>
-              <label className="text-sm font-medium">Postür Notu</label>
-              <textarea value={form.postur_notu ?? ''} onChange={(e) => setForm((f) => ({ ...f, postur_notu: e.target.value }))} className="mt-1 w-full rounded border border-input bg-background px-3 py-2" rows={2} />
+              <p className="font-medium text-white text-sm mb-1">Brans Uygunluk Onerisi</p>
+              <p className="text-sm text-zinc-400">{sonuc.bransOnerileri.join(', ')}</p>
             </div>
-            <div>
-              <label className="text-sm font-medium">Genel Değerlendirme</label>
-              <textarea value={form.genel_degerlendirme ?? ''} onChange={(e) => setForm((f) => ({ ...f, genel_degerlendirme: e.target.value }))} className="mt-1 w-full rounded border border-input bg-background px-3 py-2" rows={2} />
-            </div>
-            <Button onClick={handleKaydet} disabled={saving}>Kaydet</Button>
-          </CardContent>
-        </Card>
+          )}
+        </div>
       )}
-
-      {sonuc && (
-        <Card>
-          <CardHeader>
-            <CardTitle>Analiz Sonucu</CardTitle>
-            <CardDescription>Referans değerlerle karşılaştırma</CardDescription>
-          </CardHeader>
-          <CardContent className="space-y-4">
-            {sonuc.analiz && sonuc.analiz.length > 0 && (
-              <div className="flex flex-wrap gap-2">
-                {sonuc.analiz.map((a) => (
-                  <Badge key={a.parametre} variant="outline">
-                    {a.parametre}: {a.deger} — {a.seviye}
-                  </Badge>
-                ))}
-              </div>
-            )}
-            {sonuc.bransOnerileri && sonuc.bransOnerileri.length > 0 && (
-              <div>
-                <p className="font-medium mb-2">Branş Uygunluk Önerisi</p>
-                <p className="text-sm text-muted-foreground">{sonuc.bransOnerileri.join(', ')}</p>
-              </div>
-            )}
-          </CardContent>
-        </Card>
-      )}
-
-      {loading && <p className="text-muted-foreground">Yükleniyor...</p>}
-    </div>
+    </main>
   )
 }

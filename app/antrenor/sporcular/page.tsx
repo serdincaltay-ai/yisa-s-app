@@ -2,9 +2,7 @@
 
 import { useEffect, useState } from 'react'
 import Link from 'next/link'
-import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card'
-import { Badge } from '@/components/ui/badge'
-import { Users, CheckCircle, XCircle, Clock } from 'lucide-react'
+import { Users, CheckCircle, XCircle, Clock, Loader2 } from 'lucide-react'
 
 type Sporcu = {
   id: string
@@ -31,74 +29,76 @@ export default function AntrenorSporcularPage() {
 
   if (loading) {
     return (
-      <div className="p-6 flex items-center justify-center">
-        <span className="text-muted-foreground">Yükleniyor...</span>
+      <div className="flex items-center justify-center py-16">
+        <Loader2 className="h-8 w-8 animate-spin text-cyan-400" />
       </div>
     )
   }
 
   return (
-    <div className="p-6 space-y-6">
+    <main className="p-4 space-y-4">
       <div>
-        <h1 className="text-2xl font-bold">Sporcularım</h1>
-        <p className="text-muted-foreground">Size atanan sporcuların listesi.</p>
+        <h1 className="text-xl font-bold text-white">Sporcularim</h1>
+        <p className="text-sm text-zinc-400">Size atanan sporcularin listesi.</p>
       </div>
 
-      <Card>
-        <CardHeader>
-          <CardTitle className="flex items-center gap-2">
-            <Users className="h-5 w-5 text-primary" />
-            Sporcular ({items.length})
-          </CardTitle>
-          <CardDescription>Detay ve yoklama geçmişi için tıklayın</CardDescription>
-        </CardHeader>
-        <CardContent className="space-y-3">
-          {items.length === 0 ? (
-            <p className="text-muted-foreground text-sm py-4">Henüz atanmış sporcu yok.</p>
-          ) : (
-            items.map((s) => (
+      <div className="bg-zinc-900 border border-zinc-800 rounded-2xl p-4">
+        <h3 className="text-sm font-semibold text-white flex items-center gap-2 mb-1">
+          <Users className="h-4 w-4 text-cyan-400" strokeWidth={1.5} />
+          Sporcular ({items.length})
+        </h3>
+        <p className="text-xs text-zinc-500 mb-3">Detay ve yoklama gecmisi icin tiklayin</p>
+
+        {items.length === 0 ? (
+          <p className="text-sm text-zinc-500 py-4">Henuz atanmis sporcu yok.</p>
+        ) : (
+          <div className="space-y-2">
+            {items.map((s) => (
               <Link
                 key={s.id}
                 href={`/antrenor/sporcular/${s.id}`}
-                className="flex items-center justify-between rounded-lg border p-3 hover:bg-muted/50 transition-colors"
+                className="flex items-center justify-between rounded-xl border border-zinc-700 p-3 hover:border-cyan-400/30 transition-all duration-300"
               >
-                <div>
-                  <p className="font-medium">
-                    {s.name} {s.surname ?? ''}
-                  </p>
-                  <p className="text-xs text-muted-foreground">
-                    {[s.branch, s.level, s.group].filter(Boolean).join(' • ')}
-                  </p>
+                <div className="flex items-center gap-3">
+                  <div className="flex h-10 w-10 shrink-0 items-center justify-center rounded-full bg-cyan-400/10 text-cyan-400 font-semibold text-sm">
+                    {(s.name?.[0] ?? '') + (s.surname?.[0] ?? '')}
+                  </div>
+                  <div>
+                    <p className="font-medium text-white">{s.name} {s.surname ?? ''}</p>
+                    <p className="text-xs text-zinc-500">
+                      {[s.branch, s.level, s.group].filter(Boolean).join(' · ')}
+                    </p>
+                  </div>
                 </div>
                 <div className="flex items-center gap-2">
                   {s.sonYoklama && (
                     <>
                       {s.sonYoklama.durum === 'geldi' && (
-                        <Badge variant="outline" className="text-green-600 border-green-600/50">
-                          <CheckCircle className="h-3 w-3 mr-1" />
+                        <span className="flex items-center gap-1 rounded-full bg-emerald-500/20 text-emerald-400 text-xs px-2.5 py-1">
+                          <CheckCircle className="h-3 w-3" strokeWidth={1.5} />
                           {s.sonYoklama.tarih}
-                        </Badge>
+                        </span>
                       )}
                       {s.sonYoklama.durum === 'gelmedi' && (
-                        <Badge variant="outline" className="text-red-600 border-red-600/50">
-                          <XCircle className="h-3 w-3 mr-1" />
+                        <span className="flex items-center gap-1 rounded-full bg-red-500/20 text-red-400 text-xs px-2.5 py-1">
+                          <XCircle className="h-3 w-3" strokeWidth={1.5} />
                           {s.sonYoklama.tarih}
-                        </Badge>
+                        </span>
                       )}
                       {s.sonYoklama.durum === 'izinli' && (
-                        <Badge variant="outline" className="text-amber-600 border-amber-600/50">
-                          <Clock className="h-3 w-3 mr-1" />
+                        <span className="flex items-center gap-1 rounded-full bg-amber-500/20 text-amber-400 text-xs px-2.5 py-1">
+                          <Clock className="h-3 w-3" strokeWidth={1.5} />
                           {s.sonYoklama.tarih}
-                        </Badge>
+                        </span>
                       )}
                     </>
                   )}
                 </div>
               </Link>
-            ))
-          )}
-        </CardContent>
-      </Card>
-    </div>
+            ))}
+          </div>
+        )}
+      </div>
+    </main>
   )
 }
