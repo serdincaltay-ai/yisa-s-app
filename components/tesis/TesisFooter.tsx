@@ -23,21 +23,21 @@ export function TesisFooter({ tesisAdi }: TesisFooterProps) {
               </div>
             </div>
             <p className="text-sm text-zinc-500">
-              Spor ile buyuyen nesiller icin profesyonel egitim ve takip sistemi.
+              Spor ile büyüyen nesiller için profesyonel eğitim ve takip sistemi.
             </p>
           </div>
           <div>
-            <h4 className="text-sm font-semibold text-white mb-3">Hizli Erisim</h4>
+            <h4 className="text-sm font-semibold text-white mb-3">Hızlı Erişim</h4>
             <ul className="space-y-2 text-sm text-zinc-500">
-              <li><a href="#hakkimizda" className="hover:text-cyan-400 transition-colors">Hakkimizda</a></li>
-              <li><a href="#branslar" className="hover:text-cyan-400 transition-colors">Branslar</a></li>
-              <li><a href="#program" className="hover:text-cyan-400 transition-colors">Ders Programi</a></li>
+              <li><a href="#hakkimizda" className="hover:text-cyan-400 transition-colors">Hakkımızda</a></li>
+              <li><a href="#branslar" className="hover:text-cyan-400 transition-colors">Branşlar</a></li>
+              <li><a href="#program" className="hover:text-cyan-400 transition-colors">Ders Programı</a></li>
               <li><a href="#fiyatlar" className="hover:text-cyan-400 transition-colors">Fiyatlar</a></li>
-              <li><a href="#iletisim" className="hover:text-cyan-400 transition-colors">Iletisim</a></li>
+              <li><a href="#iletisim" className="hover:text-cyan-400 transition-colors">İletişim</a></li>
             </ul>
           </div>
           <div>
-            <h4 className="text-sm font-semibold text-white mb-3">Iletisim</h4>
+            <h4 className="text-sm font-semibold text-white mb-3">İletişim</h4>
             <ul className="space-y-2 text-sm text-zinc-500">
               <li>info@yisa-s.com</li>
               <li>+90 (212) 000 00 00</li>
@@ -45,7 +45,7 @@ export function TesisFooter({ tesisAdi }: TesisFooterProps) {
           </div>
         </div>
         <div className="mt-8 pt-6 border-t border-zinc-800 text-center text-xs text-zinc-600">
-          &copy; {new Date().getFullYear()} {tesisAdi}. Tum haklar saklidir. Powered by YİSA-S
+          &copy; {new Date().getFullYear()} {tesisAdi}. Tüm hakları saklıdır. Powered by YİSA-S
         </div>
       </div>
     </footer>

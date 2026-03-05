@@ -40,7 +40,7 @@ export default function AntrenorLayout({ children }: { children: React.ReactNode
   if (loading) {
     return (
       <div className="min-h-screen flex items-center justify-center bg-zinc-950">
-        <span className="text-zinc-400">Yukleniyor...</span>
+        <span className="text-zinc-400">Yükleniyor...</span>
       </div>
     )
   }
