@@ -24,7 +24,7 @@ export async function GET(req: NextRequest) {
     const { data: { user } } = await supabase.auth.getUser()
     if (!user) return NextResponse.json({ error: 'Giriş gerekli' }, { status: 401 })
 
-    const tenantId = req.nextUrl.searchParams.get('tenant_id') ?? (await getTenantIdWithFallback(user.id, req))
+    const tenantId = await getTenantIdWithFallback(user.id, req)
     if (!tenantId) return NextResponse.json({ items: [], message: 'Tenant atanmamış' })
 
     const athleteId = req.nextUrl.searchParams.get('athlete_id')

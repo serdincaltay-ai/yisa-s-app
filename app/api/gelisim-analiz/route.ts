@@ -136,9 +136,7 @@ export async function POST(req: NextRequest) {
     const athleteId = typeof body.athlete_id === 'string' ? body.athlete_id.trim() : ''
     if (!athleteId) return NextResponse.json({ error: 'athlete_id zorunludur' }, { status: 400 })
 
-    const tenantId = typeof body.tenant_id === 'string'
-      ? body.tenant_id.trim()
-      : (await getTenantIdWithFallback(user.id, req))
+    const tenantId = await getTenantIdWithFallback(user.id, req)
     if (!tenantId) return NextResponse.json({ error: 'Tenant atanmamış' }, { status: 403 })
 
     const service = getService()
