@@ -78,10 +78,10 @@ export default function AntrenorYoklamaPage() {
         })
         setDurumMap(m)
       } else {
-        alert(j.error ?? 'Kaydetme basarisiz')
-      }
-    } catch {
-      alert('Kaydetme basarisiz')
+            alert(j.error ?? 'Kaydetme başarısız')
+          }
+        } catch {
+          alert('Kaydetme başarısız')
     } finally {
       setSaving(false)
     }
@@ -93,19 +93,19 @@ export default function AntrenorYoklamaPage() {
     <main className="p-4 space-y-4">
       <div>
         <h1 className="text-xl font-bold text-white">Yoklama Al</h1>
-        <p className="text-sm text-zinc-400">Ders secin ve sporcularin devam durumunu isaretleyin.</p>
+        <p className="text-sm text-zinc-400">Ders seçin ve sporcuların devam durumunu işaretleyin.</p>
       </div>
 
       {/* Ders Secimi */}
       <div className="bg-zinc-900 border border-zinc-800 rounded-2xl p-4">
-        <h3 className="text-sm font-semibold text-white mb-2">Ders Secimi</h3>
-        <p className="text-xs text-zinc-500 mb-3">Yoklama alacaginiz dersi secin</p>
+                <h3 className="text-sm font-semibold text-white mb-2">Ders Seçimi</h3>
+                <p className="text-xs text-zinc-500 mb-3">Yoklama alacağınız dersi seçin</p>
         <select
           value={selectedSchedule}
           onChange={(e) => setSelectedSchedule(e.target.value)}
           className="w-full rounded-xl border border-zinc-700 bg-zinc-800 px-4 py-2.5 text-white text-sm focus:border-cyan-400 focus:outline-none"
         >
-          <option value="">Ders secin</option>
+          <option value="">Ders seçin</option>
           {schedules.map((s) => (
             <option key={s.id} value={s.id}>
               {s.ders_adi} — {s.gun} {s.saat} {s.brans ? `(${s.brans})` : ''}
@@ -121,7 +121,7 @@ export default function AntrenorYoklamaPage() {
       ) : sporcular.length > 0 ? (
         <div className="bg-zinc-900 border border-zinc-800 rounded-2xl p-4">
           <h3 className="text-sm font-semibold text-white mb-1">Sporcular</h3>
-          <p className="text-xs text-zinc-500 mb-3">Her sporcu icin durum secin: Geldi / Gelmedi / Izinli</p>
+          <p className="text-xs text-zinc-500 mb-3">Her sporcu için durum seçin: Geldi / Gelmedi / İzinli</p>
           <div className="space-y-3">
             {sporcular.map((s) => (
               <div key={s.id} className="rounded-xl border border-zinc-700 p-3">
@@ -162,7 +162,7 @@ export default function AntrenorYoklamaPage() {
                         : 'bg-zinc-800 text-zinc-400 border border-zinc-700 hover:border-zinc-600'
                     }`}
                   >
-                    <Clock className="h-4 w-4" strokeWidth={1.5} /> Izinli
+                    <Clock className="h-4 w-4" strokeWidth={1.5} /> İzinli
                   </button>
                 </div>
               </div>
@@ -181,7 +181,7 @@ export default function AntrenorYoklamaPage() {
         </div>
       ) : selectedSchedule ? (
         <div className="bg-zinc-900 border border-zinc-800 rounded-2xl p-8 text-center">
-          <p className="text-sm text-zinc-400">Bu derse atanmis sporcu bulunamadi.</p>
+          <p className="text-sm text-zinc-400">Bu derse atanmış sporcu bulunamadı.</p>
         </div>
       ) : null}
     </main>

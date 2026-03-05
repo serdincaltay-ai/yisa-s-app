@@ -40,10 +40,10 @@ export default function AntrenorOlcumPage() {
         setSonuc({ analiz: j.analiz ?? [], bransOnerileri: j.bransOnerileri ?? [] })
         setForm({})
       } else {
-        alert(j.error ?? 'Kaydetme basarisiz')
-      }
-    } catch {
-      alert('Kaydetme basarisiz')
+            alert(j.error ?? 'Kaydetme başarısız')
+          }
+        } catch {
+          alert('Kaydetme başarısız')
     } finally {
       setSaving(false)
     }
@@ -53,12 +53,12 @@ export default function AntrenorOlcumPage() {
     { key: 'boy', label: 'Boy (cm)', type: 'number' },
     { key: 'kilo', label: 'Kilo (kg)', type: 'number' },
     { key: 'esneklik', label: 'Esneklik (cm)', type: 'number' },
-    { key: 'dikey_sicrama', label: 'Dikey Sicrama (cm)', type: 'number' },
+    { key: 'dikey_sicrama', label: 'Dikey Sıçrama (cm)', type: 'number' },
     { key: 'sure_20m', label: '20m Sprint (sn)', type: 'number' },
     { key: 'denge', label: 'Denge (sn)', type: 'number' },
     { key: 'koordinasyon', label: 'Koordinasyon (puan)', type: 'number' },
     { key: 'kuvvet', label: 'Kuvvet (puan)', type: 'number' },
-    { key: 'dayaniklilik', label: 'Dayaniklilik (puan)', type: 'number' },
+    { key: 'dayaniklilik', label: 'Dayanıklılık (puan)', type: 'number' },
   ]
 
   if (loading) {
@@ -73,19 +73,19 @@ export default function AntrenorOlcumPage() {
     <main className="p-4 space-y-4">
       <h1 className="text-xl font-bold text-white flex items-center gap-2">
         <Ruler className="h-6 w-6 text-cyan-400" strokeWidth={1.5} />
-        Olcum Girisi
+        Ölçüm Girişi
       </h1>
 
       {/* Sporcu Secimi */}
       <div className="bg-zinc-900 border border-zinc-800 rounded-2xl p-4">
-        <h3 className="text-sm font-semibold text-white mb-2">Sporcu Secimi</h3>
-        <p className="text-xs text-zinc-500 mb-3">Olcum yapilacak sporcuyu secin</p>
+                <h3 className="text-sm font-semibold text-white mb-2">Sporcu Seçimi</h3>
+                <p className="text-xs text-zinc-500 mb-3">Ölçüm yapılacak sporcuyu seçin</p>
         <select
           value={selected}
           onChange={(e) => { setSelected(e.target.value); setSonuc(null) }}
           className="w-full rounded-xl border border-zinc-700 bg-zinc-800 px-4 py-2.5 text-white text-sm focus:border-cyan-400 focus:outline-none"
         >
-          <option value="">Sporcu secin</option>
+          <option value="">Sporcu seçin</option>
           {sporcular.map((s) => (
             <option key={s.id} value={s.id}>{s.name} {s.surname ?? ''}</option>
           ))}
@@ -95,8 +95,8 @@ export default function AntrenorOlcumPage() {
       {/* Olcum Degerleri */}
       {selected && (
         <div className="bg-zinc-900 border border-zinc-800 rounded-2xl p-4">
-          <h3 className="text-sm font-semibold text-white mb-2">Olcum Degerleri</h3>
-          <p className="text-xs text-zinc-500 mb-3">Tum parametreleri girin (opsiyonel alanlar bos birakilabilir)</p>
+                    <h3 className="text-sm font-semibold text-white mb-2">Ölçüm Değerleri</h3>
+                    <p className="text-xs text-zinc-500 mb-3">Tüm parametreleri girin (opsiyonel alanlar boş bırakılabilir)</p>
           <div className="grid gap-3 sm:grid-cols-2">
             {alanlar.map((a) => (
               <div key={a.key}>
@@ -120,7 +120,7 @@ export default function AntrenorOlcumPage() {
             />
           </div>
           <div className="mt-3">
-            <label className="text-xs font-medium text-zinc-400">Genel Degerlendirme</label>
+            <label className="text-xs font-medium text-zinc-400">Genel Değerlendirme</label>
             <textarea
               value={form.genel_degerlendirme ?? ''}
               onChange={(e) => setForm((f) => ({ ...f, genel_degerlendirme: e.target.value }))}
@@ -153,7 +153,7 @@ export default function AntrenorOlcumPage() {
           )}
           {sonuc.bransOnerileri && sonuc.bransOnerileri.length > 0 && (
             <div>
-              <p className="font-medium text-white text-sm mb-1">Brans Uygunluk Onerisi</p>
+              <p className="font-medium text-white text-sm mb-1">Branş Uygunluk Önerisi</p>
               <p className="text-sm text-zinc-400">{sonuc.bransOnerileri.join(', ')}</p>
             </div>
           )}

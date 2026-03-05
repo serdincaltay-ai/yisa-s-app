@@ -54,10 +54,10 @@ export default function AntrenorDashboard() {
     <main className="p-4 space-y-4">
       {/* Hos geldiniz */}
       <div className="bg-zinc-900 border border-cyan-400/20 rounded-2xl p-4 shadow-[0_0_20px_rgba(34,211,238,0.05)]">
-        <p className="text-sm text-zinc-400">Hos geldiniz</p>
-        <h1 className="text-xl font-bold text-white">Antrenor Paneli</h1>
-        <p className="text-sm text-zinc-400">
-          Bugun {d.bugunDersleri.length} ders, {d.sporcuSayisi} sporcu
+                <p className="text-sm text-zinc-400">Hoş geldiniz</p>
+                <h1 className="text-xl font-bold text-white">Antrenör Paneli</h1>
+                <p className="text-sm text-zinc-400">
+                  Bugün {d.bugunDersleri.length} ders, {d.sporcuSayisi} sporcu
         </p>
       </div>
 
@@ -71,21 +71,21 @@ export default function AntrenorDashboard() {
         <div className="bg-zinc-900 border border-zinc-800 rounded-2xl p-4">
           <Calendar className="h-5 w-5 text-cyan-400 mb-2" strokeWidth={1.5} />
           <p className="text-2xl font-bold text-white">{d.bugunDersleri.length}</p>
-          <p className="text-xs text-zinc-500">Bugunun Dersleri</p>
+          <p className="text-xs text-zinc-500">Bugünün Dersleri</p>
         </div>
         <div className="bg-zinc-900 border border-zinc-800 rounded-2xl p-4">
           <ClipboardCheck className="h-5 w-5 text-cyan-400 mb-2" strokeWidth={1.5} />
           <p className="text-2xl font-bold text-white">{d.haftalikDersSayisi ?? 0}</p>
-          <p className="text-xs text-zinc-500">Haftalik Ders</p>
+          <p className="text-xs text-zinc-500">Haftalık Ders</p>
         </div>
         <div className="bg-zinc-900 border border-zinc-800 rounded-2xl p-4">
           <TrendingUp className="h-5 w-5 text-cyan-400 mb-2" strokeWidth={1.5} />
           <p className="text-2xl font-bold text-white">%{d.devamOrani ?? 0}</p>
-          <p className="text-xs text-zinc-500">Devam Orani</p>
+          <p className="text-xs text-zinc-500">Devam Oranı</p>
         </div>
       </div>
 
-      {/* Hizli Erisim */}
+      {/* Hızlı Erişim */}
       <div className="grid grid-cols-3 gap-3">
         <Link href="/antrenor/yoklama">
           <div className="bg-zinc-900 border border-zinc-800 rounded-2xl p-4 hover:border-cyan-400/30 transition-all duration-300 text-center">
@@ -96,13 +96,13 @@ export default function AntrenorDashboard() {
         <Link href="/antrenor/sporcular">
           <div className="bg-zinc-900 border border-zinc-800 rounded-2xl p-4 hover:border-cyan-400/30 transition-all duration-300 text-center">
             <Users className="h-6 w-6 text-cyan-400 mx-auto mb-2" strokeWidth={1.5} />
-            <p className="text-xs font-medium text-white">Sporcularim</p>
+            <p className="text-xs font-medium text-white">Sporcularım</p>
           </div>
         </Link>
         <Link href="/antrenor/olcum">
           <div className="bg-zinc-900 border border-zinc-800 rounded-2xl p-4 hover:border-cyan-400/30 transition-all duration-300 text-center">
             <Ruler className="h-6 w-6 text-cyan-400 mx-auto mb-2" strokeWidth={1.5} />
-            <p className="text-xs font-medium text-white">Olcum Girisi</p>
+            <p className="text-xs font-medium text-white">Ölçüm Girişi</p>
           </div>
         </Link>
       </div>
@@ -111,11 +111,11 @@ export default function AntrenorDashboard() {
       <div className="bg-zinc-900 border border-zinc-800 rounded-2xl p-4">
         <h3 className="text-sm font-semibold text-white flex items-center gap-2 mb-1">
           <Calendar className="h-4 w-4 text-cyan-400" strokeWidth={1.5} />
-          Bugunun Programi
-        </h3>
-        <p className="text-xs text-zinc-500 mb-3">{d.bugunTarih}</p>
-        {d.bugunDersleri.length === 0 ? (
-          <p className="text-sm text-zinc-500">Bugun ders yok.</p>
+                  Bugünün Programı
+                </h3>
+                <p className="text-xs text-zinc-500 mb-3">{d.bugunTarih}</p>
+                {d.bugunDersleri.length === 0 ? (
+                  <p className="text-sm text-zinc-500">Bugün ders yok.</p>
         ) : (
           <div className="space-y-2">
             {d.bugunDersleri.map((ders) => (
@@ -133,10 +133,10 @@ export default function AntrenorDashboard() {
 
       {/* Son Yoklamalar */}
       <div className="bg-zinc-900 border border-zinc-800 rounded-2xl p-4">
-        <h3 className="text-sm font-semibold text-white mb-1">Son Yoklamalar Ozeti</h3>
-        <p className="text-xs text-zinc-500 mb-3">Son gunlerin geldi / gelmedi sayilari</p>
-        {d.sonYoklamalar.length === 0 ? (
-          <p className="text-sm text-zinc-500">Henuz yoklama yok.</p>
+                <h3 className="text-sm font-semibold text-white mb-1">Son Yoklamalar Özeti</h3>
+                <p className="text-xs text-zinc-500 mb-3">Son günlerin geldi / gelmedi sayıları</p>
+                {d.sonYoklamalar.length === 0 ? (
+                  <p className="text-sm text-zinc-500">Henüz yoklama yok.</p>
         ) : (
           <div className="space-y-2">
             {d.sonYoklamalar.map((y) => (

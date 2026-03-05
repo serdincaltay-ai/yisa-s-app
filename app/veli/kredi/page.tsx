@@ -45,10 +45,10 @@ export default function VeliKrediPage() {
       if (res.ok && j.ok) {
         setChildren((prev) => prev.map((c) => (c.id === selectedChild ? { ...c, ders_kredisi: j.ders_kredisi } : c)))
       } else {
-        alert(j.error ?? 'Islem basarisiz')
+        alert(j.error ?? 'İşlem başarısız')
       }
     } catch {
-      alert('Islem basarisiz')
+      alert('İşlem başarısız')
     } finally {
       setSaving(false)
     }
@@ -65,7 +65,7 @@ export default function VeliKrediPage() {
           </Link>
           <h1 className="text-xl font-bold text-white flex items-center gap-2">
             <Coins className="h-6 w-6 text-cyan-400" strokeWidth={1.5} />
-            Kredi Satin Al
+            Kredi Satın Al
           </h1>
         </div>
 
@@ -77,14 +77,14 @@ export default function VeliKrediPage() {
           <>
             {/* Cocuk Secimi */}
             <div className="bg-zinc-900 border border-zinc-800 rounded-2xl p-4">
-              <h3 className="text-sm font-semibold text-white mb-2">Cocuk Secin</h3>
-              <p className="text-xs text-zinc-500 mb-3">Hangi cocuk icin kredi alacaksiniz?</p>
+              <h3 className="text-sm font-semibold text-white mb-2">Çocuk Seçin</h3>
+              <p className="text-xs text-zinc-500 mb-3">Hangi çocuk için kredi alacaksınız?</p>
               <select
                 value={selectedChild}
                 onChange={(e) => setSelectedChild(e.target.value)}
                 className="w-full rounded-xl border border-zinc-700 bg-zinc-800 px-4 py-2.5 text-white text-sm focus:border-cyan-400 focus:outline-none"
               >
-                <option value="">Secin</option>
+                <option value="">Seçin</option>
                 {children.map((c) => (
                   <option key={c.id} value={c.id}>
                     {c.name} {c.surname ?? ''} — Kalan: {(c.ders_kredisi ?? 0)} ders
@@ -96,11 +96,11 @@ export default function VeliKrediPage() {
             {/* Paketler */}
             {packages.length === 0 ? (
               <div className="bg-zinc-900 border border-zinc-800 rounded-2xl p-8 text-center">
-                <p className="text-sm text-zinc-400">Henuz kredi paketi tanimlanmamis. Tesisinizle iletisime gecin.</p>
+                <p className="text-sm text-zinc-400">Henüz kredi paketi tanımlanmamış. Tesisinizle iletişime geçin.</p>
               </div>
             ) : (
               <div className="bg-zinc-900 border border-zinc-800 rounded-2xl p-4">
-                <h3 className="text-sm font-semibold text-white mb-2">Paket Secin</h3>
+                <h3 className="text-sm font-semibold text-white mb-2">Paket Seçin</h3>
                 <p className="text-xs text-zinc-500 mb-3">Ders kredisi paketleri</p>
                 <div className="space-y-3">
                   {packages.map((p, i) => (
@@ -115,7 +115,7 @@ export default function VeliKrediPage() {
                     >
                       <div>
                         <p className="font-medium text-white">{p.isim}</p>
-                        <p className="text-sm text-zinc-400">{p.saat} ders hakki</p>
+                        <p className="text-sm text-zinc-400">{p.saat} ders hakkı</p>
                       </div>
                       <p className="font-bold text-white">{p.fiyat.toLocaleString('tr-TR')} TL</p>
                     </div>
@@ -126,7 +126,7 @@ export default function VeliKrediPage() {
                   disabled={saving || !selectedChild || selectedPaket < 0}
                   className="w-full mt-4 rounded-xl bg-gradient-to-r from-cyan-500 to-cyan-400 px-4 py-3 text-sm font-medium text-zinc-950 hover:shadow-[0_0_20px_rgba(34,211,238,0.3)] transition-all disabled:opacity-50 disabled:cursor-not-allowed"
                 >
-                  {saving ? 'Isleniyor...' : 'Satin Al'}
+                  {saving ? 'İşleniyor...' : 'Satın Al'}
                 </button>
               </div>
             )}
@@ -134,7 +134,7 @@ export default function VeliKrediPage() {
             <div className="flex items-start gap-3 rounded-2xl bg-amber-500/10 border border-amber-500/30 p-3">
               <AlertTriangle className="h-5 w-5 shrink-0 text-amber-400" />
               <p className="text-sm text-zinc-300">
-                Kredi bittiginde yeni paket almaniz gerekir. Antrenor yoklamada &quot;Geldi&quot; isaretlendiginde 1 ders hakki duser.
+                Kredi bittiğinde yeni paket almanız gerekir. Antrenör yoklamada &quot;Geldi&quot; işaretlendiğinde 1 ders hakkı düşer.
               </p>
             </div>
           </>

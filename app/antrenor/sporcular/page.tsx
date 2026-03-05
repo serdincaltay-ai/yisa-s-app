@@ -38,8 +38,8 @@ export default function AntrenorSporcularPage() {
   return (
     <main className="p-4 space-y-4">
       <div>
-        <h1 className="text-xl font-bold text-white">Sporcularim</h1>
-        <p className="text-sm text-zinc-400">Size atanan sporcularin listesi.</p>
+                <h1 className="text-xl font-bold text-white">Sporcularım</h1>
+                <p className="text-sm text-zinc-400">Size atanan sporcuların listesi.</p>
       </div>
 
       <div className="bg-zinc-900 border border-zinc-800 rounded-2xl p-4">
@@ -47,10 +47,10 @@ export default function AntrenorSporcularPage() {
           <Users className="h-4 w-4 text-cyan-400" strokeWidth={1.5} />
           Sporcular ({items.length})
         </h3>
-        <p className="text-xs text-zinc-500 mb-3">Detay ve yoklama gecmisi icin tiklayin</p>
+        <p className="text-xs text-zinc-500 mb-3">Detay ve yoklama geçmişi için tıklayın</p>
 
         {items.length === 0 ? (
-          <p className="text-sm text-zinc-500 py-4">Henuz atanmis sporcu yok.</p>
+          <p className="text-sm text-zinc-500 py-4">Henüz atanmış sporcu yok.</p>
         ) : (
           <div className="space-y-2">
             {items.map((s) => (

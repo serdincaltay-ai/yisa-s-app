@@ -19,7 +19,7 @@ type ScheduleItem = {
 
 const DAYS = ['Pzt', 'Sal', 'Car', 'Per', 'Cum', 'Cmt', 'Paz']
 const DAY_MAP: Record<string, string> = {
-  'Pzt': 'Pazartesi', 'Sal': 'Sali', 'Car': 'Carsamba', 'Per': 'Persembe',
+  'Pzt': 'Pazartesi', 'Sal': 'Salı', 'Car': 'Çarşamba', 'Per': 'Perşembe',
   'Cum': 'Cuma', 'Cmt': 'Cumartesi', 'Paz': 'Pazar',
 }
 
@@ -69,9 +69,9 @@ export default function VeliProgramPage() {
         <div>
           <h1 className="text-xl font-bold text-white flex items-center gap-2">
             <Calendar className="h-6 w-6 text-cyan-400" strokeWidth={1.5} />
-            Ders Programi
-          </h1>
-          <p className="text-sm text-zinc-400 mt-1">Haftalik {toplamDers} ders</p>
+                      Ders Programı
+                    </h1>
+                    <p className="text-sm text-zinc-400 mt-1">Haftalık {toplamDers} ders</p>
         </div>
 
         {/* Gun secici — pill butonlar */}
@@ -93,12 +93,12 @@ export default function VeliProgramPage() {
 
         {/* Ders kartlari */}
         {loading ? (
-          <p className="text-zinc-400">Yukleniyor...</p>
+          <p className="text-zinc-400">Yükleniyor...</p>
         ) : filteredSchedule.length === 0 ? (
           <div className="bg-zinc-900 border border-zinc-800 rounded-2xl p-8 text-center">
             <Calendar className="h-12 w-12 text-zinc-600 mx-auto mb-3" strokeWidth={1.5} />
-            <p className="text-sm text-zinc-400">{DAY_MAP[selectedDay]} gunu icin ders yok.</p>
-            <p className="text-xs text-zinc-500 mt-1">Program tesisiniz tarafindan yonetilmektedir.</p>
+            <p className="text-sm text-zinc-400">{DAY_MAP[selectedDay]} günü için ders yok.</p>
+            <p className="text-xs text-zinc-500 mt-1">Program tesisiniz tarafından yönetilmektedir.</p>
           </div>
         ) : (
           <div className="space-y-3">
@@ -138,7 +138,7 @@ export default function VeliProgramPage() {
 
         {/* Haftalik Ozet — 3 kutucuk */}
         <div className="mt-2">
-          <h3 className="text-sm font-semibold text-white mb-3">Haftalik Ozet</h3>
+          <h3 className="text-sm font-semibold text-white mb-3">Haftalık Özet</h3>
           <div className="grid grid-cols-3 gap-3">
             {children.slice(0, 2).map((c) => (
               <div key={c.id} className="bg-zinc-900 border border-zinc-800 rounded-2xl p-3 text-center">

@@ -20,8 +20,8 @@ type AttendanceItem = { lesson_date: string; status: string }
 type PaymentItem = { period_month?: number; period_year?: number; amount: number; status: string; due_date?: string; paid_date?: string }
 
 const AYLAR: Record<number, string> = {
-  1: 'Ocak', 2: 'Subat', 3: 'Mart', 4: 'Nisan', 5: 'Mayis', 6: 'Haziran',
-  7: 'Temmuz', 8: 'Agustos', 9: 'Eylul', 10: 'Ekim', 11: 'Kasim', 12: 'Aralik',
+    1: 'Ocak', 2: 'Şubat', 3: 'Mart', 4: 'Nisan', 5: 'Mayıs', 6: 'Haziran',
+    7: 'Temmuz', 8: 'Ağustos', 9: 'Eylül', 10: 'Ekim', 11: 'Kasım', 12: 'Aralık',
 }
 
 export default function VeliCocukPage() {
@@ -79,7 +79,7 @@ export default function VeliCocukPage() {
         <Link href="/veli/dashboard" className="inline-flex items-center gap-2 text-sm text-zinc-400 hover:text-white">
           <ArrowLeft className="h-4 w-4" /> Geri
         </Link>
-        <p className="text-zinc-400 mt-4">Cocuk bulunamadi.</p>
+        <p className="text-zinc-400 mt-4">Çocuk bulunamadı.</p>
       </div>
     )
   }
@@ -100,15 +100,15 @@ export default function VeliCocukPage() {
             </div>
             <div>
               <h1 className="font-bold text-white">{child.name} {child.surname ?? ''}</h1>
-              <p className="text-xs text-zinc-400">{ageFromBirth(child.birth_date) ?? '—'} yas · {child.branch ?? '—'} · {child.level ?? '—'}</p>
+              <p className="text-xs text-zinc-400">{ageFromBirth(child.birth_date) ?? '—'} yaş · {child.branch ?? '—'} · {child.level ?? '—'}</p>
             </div>
           </div>
         </div>
 
         {/* Yoklama Takvimi */}
         <div className="bg-zinc-900 border border-zinc-800 rounded-2xl p-4">
-          <h3 className="text-sm font-semibold text-white mb-1">Yoklama Takvimi (Son 30 Gun)</h3>
-          <p className="text-xs text-zinc-500 mb-3">Gunluk durum: Geldi / Gelmedi / Izinli</p>
+          <h3 className="text-sm font-semibold text-white mb-1">Yoklama Takvimi (Son 30 Gün)</h3>
+          <p className="text-xs text-zinc-500 mb-3">Günlük durum: Geldi / Gelmedi / İzinli</p>
           <div className="grid grid-cols-5 sm:grid-cols-10 gap-1.5">
             {last30Days.map((d) => {
               const status = attByDate.get(d)
@@ -129,7 +129,7 @@ export default function VeliCocukPage() {
           <div className="mt-3 flex gap-4 text-xs text-zinc-400">
             <span className="flex items-center gap-1"><span className="w-3 h-3 rounded bg-emerald-500" /> Geldi</span>
             <span className="flex items-center gap-1"><span className="w-3 h-3 rounded bg-red-500" /> Gelmedi</span>
-            <span className="flex items-center gap-1"><span className="w-3 h-3 rounded bg-amber-500" /> Izinli</span>
+            <span className="flex items-center gap-1"><span className="w-3 h-3 rounded bg-amber-500" /> İzinli</span>
           </div>
         </div>
 
@@ -137,7 +137,7 @@ export default function VeliCocukPage() {
         <div className="bg-zinc-900 border border-zinc-800 rounded-2xl p-4">
           <h3 className="text-sm font-semibold text-white mb-3">Aidat Durumu (Son 3 Ay)</h3>
           {payments.length === 0 ? (
-            <p className="text-sm text-zinc-500">Odeme kaydi yok.</p>
+            <p className="text-sm text-zinc-500">Ödeme kaydı yok.</p>
           ) : (
             <div className="space-y-2">
               {payments.slice(0, 6).map((p, i) => (
@@ -153,7 +153,7 @@ export default function VeliCocukPage() {
                     p.status === 'overdue' ? 'bg-red-500/20 text-red-400' :
                     'bg-amber-500/20 text-amber-400'
                   }`}>
-                    {p.status === 'paid' ? 'Odendi' : p.status === 'overdue' ? 'Gecikmis' : 'Bekleyen'}
+                    {p.status === 'paid' ? 'Ödendi' : p.status === 'overdue' ? 'Gecikmiş' : 'Bekleyen'}
                   </span>
                 </div>
               ))}
@@ -164,9 +164,9 @@ export default function VeliCocukPage() {
         {/* Ders Programi */}
         <div className="bg-zinc-900 border border-zinc-800 rounded-2xl p-4">
           <h3 className="text-sm font-semibold text-white flex items-center gap-2 mb-2">
-            <Calendar className="h-4 w-4 text-cyan-400" strokeWidth={1.5} /> Ders Programi
+            <Calendar className="h-4 w-4 text-cyan-400" strokeWidth={1.5} /> Ders Programı
           </h3>
-          <p className="text-sm text-zinc-400">Haftalik program tesisiniz tarafindan yonetilmektedir. Detay icin <Link href="/veli/program" className="text-cyan-400 hover:underline">Program</Link> sayfasina bakin.</p>
+          <p className="text-sm text-zinc-400">Haftalık program tesisiniz tarafından yönetilmektedir. Detay için <Link href="/veli/program" className="text-cyan-400 hover:underline">Program</Link> sayfasına bakın.</p>
         </div>
       </main>
 
