@@ -55,14 +55,16 @@
 | Faz 3 | 3.3 | Güvenlik paneli (dashboard UI) | Yapılacak | 05.03.2026 | API endpoint var; ayrı güvenlik dashboard sayfası yok |
 | Faz 3 | — | 3 Duvar sistemi tam entegrasyonu | İşleniyor | 05.03.2026 | forbidden-zones.ts, patron-lock.ts, siber-guvenlik.ts mevcut; tam entegrasyon eksik |
 
-### Faz 4 — Veri Robotu / Şablon Havuzu (~%60)
+### Faz 4 — Veri Robotu / Şablon Havuzu (~%85)
 
 | Faz | Adım | Madde / iş | Durum | Son güncelleme | Not |
 |-----|-------|------------|--------|----------------|-----|
 | Faz 4 | 4.1 | Şablon tabloları (ceo_templates, templates, v0_template_library) | Yapıldı | 05.03.2026 | api/templates (305 satır) — 3 tablodan çekiyor |
-| Faz 4 | 4.2 | Gelişim ölçüm tabloları (gelisim_olcumleri, referans_degerler) | Yapılacak | 05.03.2026 | Bu tablolar ve API'ler kodda bulunamadı |
-| Faz 4 | — | Gelişim analiz API | Yapılacak | 05.03.2026 | Veli panelinde gelişim sayfası (UI) var ama arka plan API eksik |
-| Faz 4 | — | Çocuk gelişim referans değerleri seed | Yapılacak | 05.03.2026 | Yaş/cinsiyet bazlı referans değer verisi yok |
+| Faz 4 | 4.2 | Gelişim ölçüm tabloları (gelisim_olcumleri, referans_degerler, sport_templates) | **Yapıldı** | 05.03.2026 | scripts/011_veri_robotu_tablolar.sql — 3 tablo + RLS + index |
+| Faz 4 | — | Gelişim analiz API (referans karşılaştırma + branş önerisi) | **Yapıldı** | 05.03.2026 | api/gelisim-analiz/route.ts — POST endpoint, vücut tipi tahmini, branş önerisi |
+| Faz 4 | — | Gelişim ölçümleri GET/POST API | **Yapıldı** | 05.03.2026 | api/gelisim-olcumleri/route.ts — şablon bazlı JSONB ölçüm kaydı |
+| Faz 4 | — | Çocuk gelişim referans değerleri seed (WHO/TGF) | **Yapıldı** | 05.03.2026 | scripts/012_referans_degerler_seed.sql — 10 parametre, yaş 5-15, E/K |
+| Faz 4 | — | Veli/gelisim birleşik sorgu (athlete_measurements + gelisim_olcumleri) | **Yapıldı** | 05.03.2026 | api/veli/gelisim/route.ts güncellendi |
 
 ### Faz 5 — Franchise Paneli (~%90)
 
@@ -89,7 +91,7 @@
 | Faz | Adım | Madde / iş | Durum | Son güncelleme | Not |
 |-----|-------|------------|--------|----------------|-----|
 | Faz 7 | 7.1 | Başlangıç görev motoru | Yapıldı | 05.03.2026 | directorate-initial-tasks.ts (15 direktörlük, 25+ görev), api/startup |
-| Faz 7 | — | 12 direktörlük CELF yapısı | Yapıldı | 05.03.2026 | celf-center.ts, celf-config-merged.ts, hierarchy.ts |
+| Faz 7 | — | 15 direktörlük CELF yapısı | Yapıldı | 05.03.2026 | celf-center.ts, celf-config-merged.ts, hierarchy.ts |
 | Faz 7 | — | CEO/COO/CIO robot | Yapıldı | 05.03.2026 | ceo-robot.ts, coo-robot.ts, cio-robot.ts |
 | Faz 7 | — | Patron onay → CELF tetik uçtan uca akış | İşleniyor | 05.03.2026 | Her parça mevcut; tam entegre akış test edilmemiş |
 | Faz 7 | — | Görev sonuçlarının dashboard'a yansıması | İşleniyor | 05.03.2026 | task_results arşivleme var; dashboard gösterimi kısmen |
@@ -104,7 +106,7 @@
 |---|---------------|-------------|--------|----------------|-----|
 | 1.1 | YISA_S_V0_YOL_HARITASI | 7 faz tanımı ve adım planı | Mevcut | 05.03.2026 | 7 faz docs/ içinde tanımlı; adım bazlı değerlendirme yukarıda |
 | 1.2 | YISA_S_V0_YOL_HARITASI | ManyChat / WhatsApp bot entegrasyonu | Yapılacak | 05.03.2026 | Vitrin chat bot bağlantısı henüz yok |
-| 1.3 | YISA_S_V0_YOL_HARITASI_v2 | Gelişim ölçüm sistemi (referans değerler, yaş bazlı analiz) | Yapılacak | 05.03.2026 | Faz 4 eksikleri — tablo ve API yok |
+| 1.3 | YISA_S_V0_YOL_HARITASI_v2 | Gelişim ölçüm sistemi (referans değerler, yaş bazlı analiz) | **Yapıldı** | 05.03.2026 | Faz 4 tamamlandı — 3 tablo, 3 API, WHO/TGF seed |
 | 1.4 | YISA_S_VIZYON_HARITASI | CELF zinciri tam otomasyon (boşta robot yok) | İşleniyor | 05.03.2026 | Başlangıç görev motoru var; uçtan uca otomasyon test edilmeli |
 | 1.5 | YISA_S_TAM_YOL_HARITASI_DEGERLENDIRME | Mobil uygulama / PWA optimizasyonu | Yapılacak | 05.03.2026 | icon.svg PWA var; native mobil uygulama planlanmamış |
 | 1.6 | YISA_S_VIZYON_HARITASI | Uluslararası genişleme (çoklu dil, para birimi) | Yapılacak | 05.03.2026 | Şu an sadece Türkçe / TRY |
