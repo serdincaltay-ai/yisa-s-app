@@ -34,7 +34,7 @@ export default function VeliGirisPage() {
       if (authError) {
         setError(authError.message === 'Invalid login credentials'
           ? 'E-posta veya şifre hatalı.'
-          : authError.message)
+          : 'Giriş yapılamadı. Lütfen tekrar deneyin.')
         return
       }
 

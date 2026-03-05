@@ -64,7 +64,7 @@ export async function POST(req: NextRequest) {
     const olcumTarihi = typeof body.olcum_tarihi === 'string' && /^\d{4}-\d{2}-\d{2}$/.test(body.olcum_tarihi)
       ? body.olcum_tarihi
       : new Date().toISOString().slice(0, 10)
-    const olcumVerileri = body.olcum_verileri != null && typeof body.olcum_verileri === 'object'
+    const olcumVerileri = body.olcum_verileri != null && typeof body.olcum_verileri === 'object' && !Array.isArray(body.olcum_verileri)
       ? body.olcum_verileri
       : {}
     const antrenorNotu = typeof body.antrenor_notu === 'string' ? body.antrenor_notu.trim() : null
