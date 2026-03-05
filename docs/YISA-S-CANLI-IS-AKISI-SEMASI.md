@@ -36,12 +36,12 @@
 | Faz 1 | Vitrin + Demo formu | Büyük oranda tamam | ~%90 |
 | Faz 2 | Tenant otomatik oluşturma | Büyük oranda tamam | ~%85 |
 | Faz 3 | Güvenlik robotu MVP | Büyük oranda tamam | ~%80 |
-| Faz 4 | Veri robotu / Şablon havuzu | Kısmen tamam | ~%60 |
+| Faz 4 | Veri robotu / Şablon havuzu | Büyük oranda tamam | ~%85 |
 | Faz 5 | Franchise paneli | Büyük oranda tamam | ~%90 |
 | Faz 6 | Veli paneli MVP | Büyük oranda tamam | ~%85 |
 | Faz 7 | CELF zinciri + Başlangıç görevleri | Büyük oranda tamam | ~%75 |
 
-**Genel ilerleme:** ~%81 (ağırlıklı ortalama)
+**Genel ilerleme:** ~%85 (ağırlıklı ortalama)
 
 ---
 
@@ -70,6 +70,10 @@
 | 17 | Patron asistan sohbet (11 AI provider) | Faz 7 | Şubat 2026 |
 | 18 | A-B-C-D-E akışı tamamlandı | Tüm | Şubat 2026 |
 | 19 | Canlı dokümantasyon sistemi kuruldu | Tüm | 05.03.2026 |
+| 20 | Gelişim ölçüm tabloları + API (gelisim_olcumleri, referans_degerler, sport_templates) | Faz 4 | 05.03.2026 |
+| 21 | Çocuk gelişim referans değerleri seed (WHO/TGF, yaş 5-15, E/K) | Faz 4 | 05.03.2026 |
+| 22 | Gelişim analiz endpoint'i (referans karşılaştırma + branş önerisi) | Faz 4 | 05.03.2026 |
+| 23 | 137 öğrenci veri kontrolü: **140 sporcu, 1575 ödeme, 3022 yoklama** (BJK tenant) | Veri | 05.03.2026 |
 
 ### 3.2 Devam Eden (İşleniyor)
 
@@ -88,8 +92,8 @@
 | # | İş | Faz | Öncelik | Not |
 |---|-----|-----|---------|-----|
 | 1 | ManyChat / WhatsApp bot entegrasyonu | Faz 1 | Orta | Vitrin chatbot bağlantısı |
-| 2 | Gelişim ölçüm tabloları + API (gelisim_olcumleri, referans_degerler) | Faz 4 | Yüksek | En eksik faz |
-| 3 | Çocuk gelişim referans değerleri seed | Faz 4 | Yüksek | Yaş/cinsiyet bazlı |
+| ~~2~~ | ~~Gelişim ölçüm tabloları + API~~ | ~~Faz 4~~ | ~~Yüksek~~ | **Yapıldı 05.03.2026** — 3.1 #20 |
+| ~~3~~ | ~~Çocuk gelişim referans değerleri seed~~ | ~~Faz 4~~ | ~~Yüksek~~ | **Yapıldı 05.03.2026** — 3.1 #21 |
 | 4 | Güvenlik dashboard paneli UI | Faz 3 | Orta | API var; sayfa yok |
 | 5 | Bildirim / push notification altyapısı | Faz 6 | Orta | Push altyapısı yok |
 | 6 | Tesis müdürü paneli — gerçek API + alt sayfalar | — | Orta | Mock veri; gerçek API gerekli |
@@ -100,7 +104,7 @@
 | 11 | Aidat hatırlatma mekanizması | Faz 5 | Orta | Sayfa var; hatırlatma yok |
 | 12 | 7/24 Acil Destek otomatik alarm | — | Düşük | e-posta/push alarm |
 | 13 | BJK Tuzla logosu ekleme | — | Düşük | Kullanıcı ekleyecek |
-| 14 | 137 öğrenci veri kontrolü (Supabase) | — | Yüksek | Ortamda test gerekli |
+| ~~14~~ | ~~137 öğrenci veri kontrolü (Supabase)~~ | ~~—~~ | ~~Yüksek~~ | **Yapıldı 05.03.2026** — 3.1 #23: 140 sporcu, 1575 ödeme, 3022 yoklama |
 | 15 | Veli paneli canlı veri testi | Faz 6 | Yüksek | .env + Supabase ile |
 | 16 | Mobil uygulama / PWA optimizasyonu | — | Düşük | Uzun vadeli |
 | 17 | Uluslararası genişleme (çoklu dil) | — | Düşük | Uzun vadeli |
@@ -111,6 +115,8 @@
 
 | Tarih | Değişiklik | Etkileyen Dosya(lar) |
 |-------|-----------|----------------------|
+| 05.03.2026 | **137 öğrenci veri kontrolü:** BJK tenant (8cc3ea1d) — athletes=140, payments=1575, attendance=3022. Hedef aşıldı. Eksik: athlete_measurements=0, users=0 (parent_user_id bağlı değil). | docs/YISA-S-CANLI-PROJE-RAPORU.md, docs/YISA-S-CANLI-IS-AKISI-SEMASI.md |
+| 05.03.2026 | **Faz 4 tamamlandı:** gelisim_olcumleri + referans_degerler + sport_templates tabloları; GET/POST gelisim-olcumleri API; gelisim-analiz endpoint; WHO/TGF referans seed; veli/gelisim birleşik sorgu | scripts/011, scripts/012, app/api/gelisim-olcumleri, app/api/gelisim-analiz, app/api/veli/gelisim |
 | 05.03.2026 | Canlı dokümantasyon sistemi kuruldu: 7-faz değerlendirmesi, çalışma prensibi kılavuzu, iş akışı şeması, canlı proje raporu | YISA-S-7-FAZ-DURUMU.md, YISA-S-CANLI-PROJE-RAPORU.md, YISA-S-CALISMA-PRENSIBI-VE-KULLANIM-KILAVUZU-CANLI.md, YISA-S-CANLI-IS-AKISI-SEMASI.md |
 | 04.02.2026 | Veri arşivleme düzeltmesi: COO run-due ve CELF API'de archiveTaskResult eklendi | MEVCUT_DURUM_ANAYASA_KONTROL_RAPORU.md |
 | 04.02.2026 | ceo_routines seed eklendi; task_results tüketimi (GET API + Raporlar sayfası) | GOREV_SONLANDIRMA_RAPORU.md |

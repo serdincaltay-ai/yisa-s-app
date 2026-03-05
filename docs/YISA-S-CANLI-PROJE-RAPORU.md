@@ -55,14 +55,16 @@
 | Faz 3 | 3.3 | Güvenlik paneli (dashboard UI) | Yapılacak | 05.03.2026 | API endpoint var; ayrı güvenlik dashboard sayfası yok |
 | Faz 3 | — | 3 Duvar sistemi tam entegrasyonu | İşleniyor | 05.03.2026 | forbidden-zones.ts, patron-lock.ts, siber-guvenlik.ts mevcut; tam entegrasyon eksik |
 
-### Faz 4 — Veri Robotu / Şablon Havuzu (~%60)
+### Faz 4 — Veri Robotu / Şablon Havuzu (~%85)
 
 | Faz | Adım | Madde / iş | Durum | Son güncelleme | Not |
 |-----|-------|------------|--------|----------------|-----|
 | Faz 4 | 4.1 | Şablon tabloları (ceo_templates, templates, v0_template_library) | Yapıldı | 05.03.2026 | api/templates (305 satır) — 3 tablodan çekiyor |
-| Faz 4 | 4.2 | Gelişim ölçüm tabloları (gelisim_olcumleri, referans_degerler) | Yapılacak | 05.03.2026 | Bu tablolar ve API'ler kodda bulunamadı |
-| Faz 4 | — | Gelişim analiz API | Yapılacak | 05.03.2026 | Veli panelinde gelişim sayfası (UI) var ama arka plan API eksik |
-| Faz 4 | — | Çocuk gelişim referans değerleri seed | Yapılacak | 05.03.2026 | Yaş/cinsiyet bazlı referans değer verisi yok |
+| Faz 4 | 4.2 | Gelişim ölçüm tabloları (gelisim_olcumleri, referans_degerler, sport_templates) | **Yapıldı** | 05.03.2026 | scripts/011_veri_robotu_tablolar.sql — 3 tablo + RLS + index |
+| Faz 4 | — | Gelişim analiz API (referans karşılaştırma + branş önerisi) | **Yapıldı** | 05.03.2026 | api/gelisim-analiz/route.ts — POST endpoint, vücut tipi tahmini, branş önerisi |
+| Faz 4 | — | Gelişim ölçümleri GET/POST API | **Yapıldı** | 05.03.2026 | api/gelisim-olcumleri/route.ts — şablon bazlı JSONB ölçüm kaydı |
+| Faz 4 | — | Çocuk gelişim referans değerleri seed (WHO/TGF) | **Yapıldı** | 05.03.2026 | scripts/012_referans_degerler_seed.sql — 10 parametre, yaş 5-15, E/K |
+| Faz 4 | — | Veli/gelisim birleşik sorgu (athlete_measurements + gelisim_olcumleri) | **Yapıldı** | 05.03.2026 | api/veli/gelisim/route.ts güncellendi |
 
 ### Faz 5 — Franchise Paneli (~%90)
 
@@ -104,7 +106,7 @@
 |---|---------------|-------------|--------|----------------|-----|
 | 1.1 | YISA_S_V0_YOL_HARITASI | 7 faz tanımı ve adım planı | Mevcut | 05.03.2026 | 7 faz docs/ içinde tanımlı; adım bazlı değerlendirme yukarıda |
 | 1.2 | YISA_S_V0_YOL_HARITASI | ManyChat / WhatsApp bot entegrasyonu | Yapılacak | 05.03.2026 | Vitrin chat bot bağlantısı henüz yok |
-| 1.3 | YISA_S_V0_YOL_HARITASI_v2 | Gelişim ölçüm sistemi (referans değerler, yaş bazlı analiz) | Yapılacak | 05.03.2026 | Faz 4 eksikleri — tablo ve API yok |
+| 1.3 | YISA_S_V0_YOL_HARITASI_v2 | Gelişim ölçüm sistemi (referans değerler, yaş bazlı analiz) | **Yapıldı** | 05.03.2026 | Faz 4 tamamlandı — 3 tablo, 3 API, WHO/TGF seed |
 | 1.4 | YISA_S_VIZYON_HARITASI | CELF zinciri tam otomasyon (boşta robot yok) | İşleniyor | 05.03.2026 | Başlangıç görev motoru var; uçtan uca otomasyon test edilmeli |
 | 1.5 | YISA_S_TAM_YOL_HARITASI_DEGERLENDIRME | Mobil uygulama / PWA optimizasyonu | Yapılacak | 05.03.2026 | icon.svg PWA var; native mobil uygulama planlanmamış |
 | 1.6 | YISA_S_VIZYON_HARITASI | Uluslararası genişleme (çoklu dil, para birimi) | Yapılacak | 05.03.2026 | Şu an sadece Türkçe / TRY |
@@ -118,8 +120,8 @@
 | # | Kaynak dosya | Madde / iş | Durum | Son güncelleme | Not |
 |---|---------------|-------------|--------|----------------|-----|
 | 2.1 | FINAL-IS-HARITASI | BJK Tuzla logosu tenant'a ekle | Yapılacak | 05.03.2026 | public/tenants/bjktuzlacimnastik/logo.png — kullanıcı ekleyecek |
-| 2.2 | FINAL-IS-HARITASI | 137 öğrenci/ödeme/yoklama verisi Supabase kontrolü | Yapılacak | 05.03.2026 | Tablolar: students, payments, student_attendance; tenant_id = BJK |
-| 2.3 | FINAL-IS-HARITASI | Eksik veri varsa migration/seed ile BJK tenant'a eşle | Yapılacak | 05.03.2026 | 2.2'ye bağlı |
+| 2.2 | FINAL-IS-HARITASI | 137 öğrenci/ödeme/yoklama verisi Supabase kontrolü | **Yapıldı** | 05.03.2026 | **140 sporcu, 1575 ödeme, 3022 yoklama** — hedef aşıldı. student_attendance=0 (attendance tablosu kullanılıyor). athlete_measurements=0, users=0 (parent_user_id bağlı değil). |
+| 2.3 | FINAL-IS-HARITASI | Eksik veri varsa migration/seed ile BJK tenant'a eşle | **Kısmen gerekli** | 05.03.2026 | Sporcu/ödeme/yoklama tamam. Eksik: athlete_measurements (gelişim ölçümü yok), parent_user_id bağlantısı (veli girişi için gerekli), users tablosunda BJK kaydı yok. |
 | 2.4 | FINAL-IS-HARITASI | .env.example şema uyumu (3 çekirdek repo) | İşleniyor | 05.03.2026 | Her repoda .env.example mevcut; tam uyum kontrol edilmeli |
 | 2.5 | IS-AKISI-VE-ASAMALAR | A→B→C→D→E akışı | Yapıldı | 05.03.2026 | Tüm aşamalar tamamlandı |
 
