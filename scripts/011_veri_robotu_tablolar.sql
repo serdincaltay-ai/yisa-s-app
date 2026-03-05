@@ -116,9 +116,8 @@ CREATE POLICY "rls_gelisim_olcumleri_staff" ON gelisim_olcumleri FOR ALL
     )
   );
 
--- Service role bypass
+-- Service role RLS'i tamamen bypass eder; ayrı USING(true) policy gerekmiyor (bkz. 006_rls_policies.sql)
 DROP POLICY IF EXISTS "Service can manage gelisim_olcumleri" ON gelisim_olcumleri;
-CREATE POLICY "Service can manage gelisim_olcumleri" ON gelisim_olcumleri FOR ALL USING (true) WITH CHECK (true);
 
 
 -- ─────────────────────────────────────────────────────────────────────────────
@@ -153,8 +152,8 @@ DROP POLICY IF EXISTS "rls_referans_degerler_patron_write" ON referans_degerler;
 CREATE POLICY "rls_referans_degerler_patron_write" ON referans_degerler FOR ALL
   USING (rls_is_patron()) WITH CHECK (rls_is_patron());
 
+-- Service role RLS'i tamamen bypass eder; ayrı USING(true) policy gerekmiyor (bkz. 006_rls_policies.sql)
 DROP POLICY IF EXISTS "Service can manage referans_degerler" ON referans_degerler;
-CREATE POLICY "Service can manage referans_degerler" ON referans_degerler FOR ALL USING (true) WITH CHECK (true);
 
 
 -- sport_templates herkes okuyabilir (global data)
@@ -168,5 +167,5 @@ DROP POLICY IF EXISTS "rls_sport_templates_patron_write" ON sport_templates;
 CREATE POLICY "rls_sport_templates_patron_write" ON sport_templates FOR ALL
   USING (rls_is_patron()) WITH CHECK (rls_is_patron());
 
+-- Service role RLS'i tamamen bypass eder; ayrı USING(true) policy gerekmiyor (bkz. 006_rls_policies.sql)
 DROP POLICY IF EXISTS "Service can manage sport_templates" ON sport_templates;
-CREATE POLICY "Service can manage sport_templates" ON sport_templates FOR ALL USING (true) WITH CHECK (true);
