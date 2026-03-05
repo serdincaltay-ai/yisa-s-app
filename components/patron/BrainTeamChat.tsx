@@ -32,7 +32,7 @@ const DIRECTORS = [
 
 interface BrainTeamChatProps {
   chatInput: string
-  setChatInput: (v: string) => void
+  setChatInput: React.Dispatch<React.SetStateAction<string>>
   onSent?: () => void
   targetDirector: string
   setTargetDirector: (v: string) => void
