@@ -70,6 +70,12 @@
 | 17 | Patron asistan sohbet (11 AI provider) | Faz 7 | Şubat 2026 |
 | 18 | A-B-C-D-E akışı tamamlandı | Tüm | Şubat 2026 |
 | 19 | Canlı dokümantasyon sistemi kuruldu | Tüm | 05.03.2026 |
+| 20 | 3 şablon sistemi (standard/medium/premium) + tenant config | Faz 1 | 05.03.2026 |
+| 21 | Haftalık ders programı GRID bileşeni (08:00-19:00, PZT-PAZ, renk kodlu) | Faz 1 | 05.03.2026 |
+| 22 | Robot karşılama + randevu sistemi (premium şablon) | Faz 1 | 05.03.2026 |
+| 23 | Paket fiyatları güncellendi: 24→30.000, 48→52.800, 60→60.000 TL | Faz 1 | 05.03.2026 |
+| 24 | feneratasehir subdomain desteği eklendi | Faz 2 | 05.03.2026 |
+| 25 | tenant-site/page.tsx şablon yönlendirici (template router) olarak yeniden yazıldı | Faz 1 | 05.03.2026 |
 
 ### 3.2 Devam Eden (İşleniyor)
 
@@ -112,6 +118,7 @@
 | Tarih | Değişiklik | Etkileyen Dosya(lar) |
 |-------|-----------|----------------------|
 | 05.03.2026 | Canlı dokümantasyon sistemi kuruldu: 7-faz değerlendirmesi, çalışma prensibi kılavuzu, iş akışı şeması, canlı proje raporu | YISA-S-7-FAZ-DURUMU.md, YISA-S-CANLI-PROJE-RAPORU.md, YISA-S-CALISMA-PRENSIBI-VE-KULLANIM-KILAVUZU-CANLI.md, YISA-S-CANLI-IS-AKISI-SEMASI.md |
+| 05.03.2026 | 3 şablon sistemi (standard/medium/premium), haftalık GRID, robot karşılama, randevu, paket fiyat güncellemesi, feneratasehir subdomain | tenant-site/page.tsx, components/tenant-templates/*, lib/tenant-template-config.ts, lib/subdomain.ts |
 | 04.02.2026 | Veri arşivleme düzeltmesi: COO run-due ve CELF API'de archiveTaskResult eklendi | MEVCUT_DURUM_ANAYASA_KONTROL_RAPORU.md |
 | 04.02.2026 | ceo_routines seed eklendi; task_results tüketimi (GET API + Raporlar sayfası) | GOREV_SONLANDIRMA_RAPORU.md |
 | Şubat 2026 | A-B-C-D-E akışı tamamlandı; PWA ikonları eklendi; referans dokümanlar oluşturuldu | YISA-S-IS-AKISI-VE-ASAMALAR.md, YISA-S-FINAL-IS-HARITASI.md |
