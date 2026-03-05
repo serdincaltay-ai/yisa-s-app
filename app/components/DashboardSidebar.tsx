@@ -20,6 +20,7 @@ import {
   X,
   Monitor,
   Wrench,
+  Shield,
 } from 'lucide-react'
 
 /** Patron paneli menüsü — sadece gerekli sayfalar */
@@ -35,6 +36,7 @@ const NAV = [
   { href: '/dashboard/kasa-defteri', label: 'Kasa Defteri', icon: Wallet },
   { href: '/dashboard/sablonlar', label: 'Şablonlar', icon: LayoutTemplate },
   { href: '/dashboard/reports', label: 'Raporlar', icon: BarChart3 },
+  { href: '/dashboard/guvenlik', label: 'Güvenlik', icon: Shield },
 ]
 
 export default function DashboardSidebar() {
