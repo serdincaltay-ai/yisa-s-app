@@ -2,7 +2,7 @@
 
 > **CANLI DOSYA:** Projede herhangi bir değişiklik olduğunda bu dosya **aynı gün** güncellenir. Planlanan, devam eden ve tamamlanan işler burada takip edilir.
 >
-> **Son güncelleme:** 05.03.2026 — Kod tabanı (tenant-yisa-s, app-yisa-s, yisa-s-com) incelenerek tüm iş akışı durumları güncellendi.
+> **Son güncelleme:** 05.03.2026 — Veli paneli canlı veri testi tamamlandı; Faz 4 ve Faz 6 yüzdeleri güncellendi.
 
 ---
 
@@ -36,12 +36,12 @@
 | Faz 1 | Vitrin + Demo formu | Büyük oranda tamam | ~%90 |
 | Faz 2 | Tenant otomatik oluşturma | Büyük oranda tamam | ~%85 |
 | Faz 3 | Güvenlik robotu MVP | Büyük oranda tamam | ~%80 |
-| Faz 4 | Veri robotu / Şablon havuzu | Büyük oranda tamam | ~%85 |
+| Faz 4 | Veri robotu / Şablon havuzu | Büyük oranda tamam | ~%90 |
 | Faz 5 | Franchise paneli | Büyük oranda tamam | ~%90 |
-| Faz 6 | Veli paneli MVP | Büyük oranda tamam | ~%85 |
+| Faz 6 | Veli paneli MVP | Büyük oranda tamam | ~%90 |
 | Faz 7 | CELF zinciri + Başlangıç görevleri | Büyük oranda tamam | ~%75 |
 
-**Genel ilerleme:** ~%85 (ağırlıklı ortalama)
+**Genel ilerleme:** ~%87 (ağırlıklı ortalama)
 
 ---
 
@@ -74,6 +74,8 @@
 | 21 | Çocuk gelişim referans değerleri seed (WHO/TGF, yaş 5-15, E/K) | Faz 4 | 05.03.2026 |
 | 22 | Gelişim analiz endpoint'i (referans karşılaştırma + branş önerisi) | Faz 4 | 05.03.2026 |
 | 23 | 137 öğrenci veri kontrolü: **140 sporcu, 1575 ödeme, 3022 yoklama** (BJK tenant) | Veri | 05.03.2026 |
+| 24 | Veli paneli canlı veri: 2 test veli + 3 sporcu parent bağlantısı + gerçek auth (signInWithPassword) | Faz 6 | 05.03.2026 |
+| 25 | Kırık trigger düzeltmesi (trg_update_athletes → guncelleme_tarihi) | Düzeltme | 05.03.2026 |
 
 ### 3.2 Devam Eden (İşleniyor)
 
@@ -105,7 +107,7 @@
 | 12 | 7/24 Acil Destek otomatik alarm | — | Düşük | e-posta/push alarm |
 | 13 | BJK Tuzla logosu ekleme | — | Düşük | Kullanıcı ekleyecek |
 | ~~14~~ | ~~137 öğrenci veri kontrolü (Supabase)~~ | ~~—~~ | ~~Yüksek~~ | **Yapıldı 05.03.2026** — 3.1 #23: 140 sporcu, 1575 ödeme, 3022 yoklama |
-| 15 | Veli paneli canlı veri testi | Faz 6 | Yüksek | .env + Supabase ile |
+| ~~15~~ | ~~Veli paneli canlı veri testi~~ | ~~Faz 6~~ | ~~Yüksek~~ | **Yapıldı 05.03.2026** — 3.1 #24: 2 test veli, 3 sporcu bağlandı, gerçek auth |
 | 16 | Mobil uygulama / PWA optimizasyonu | — | Düşük | Uzun vadeli |
 | 17 | Uluslararası genişleme (çoklu dil) | — | Düşük | Uzun vadeli |
 
@@ -115,6 +117,7 @@
 
 | Tarih | Değişiklik | Etkileyen Dosya(lar) |
 |-------|-----------|----------------------|
+| 05.03.2026 | **Veli paneli canlı veri:** 2 test veli (veli1@bjktuzla.test, veli2@bjktuzla.test) oluşturuldu; 3 sporcu parent_user_id ile bağlandı; demo→gerçek auth; kırık trigger düzeltildi; user_tenants role='veli' eklendi | app/veli/giris/page.tsx, app/veli/dashboard/page.tsx, scripts/013_veli_canli_veri_setup.sql |
 | 05.03.2026 | **137 öğrenci veri kontrolü:** BJK tenant (8cc3ea1d) — athletes=140, payments=1575, attendance=3022. Hedef aşıldı. Eksik: athlete_measurements=0, users=0 (parent_user_id bağlı değil). | docs/YISA-S-CANLI-PROJE-RAPORU.md, docs/YISA-S-CANLI-IS-AKISI-SEMASI.md |
 | 05.03.2026 | **Faz 4 tamamlandı:** gelisim_olcumleri + referans_degerler + sport_templates tabloları; GET/POST gelisim-olcumleri API; gelisim-analiz endpoint; WHO/TGF referans seed; veli/gelisim birleşik sorgu | scripts/011, scripts/012, app/api/gelisim-olcumleri, app/api/gelisim-analiz, app/api/veli/gelisim |
 | 05.03.2026 | Canlı dokümantasyon sistemi kuruldu: 7-faz değerlendirmesi, çalışma prensibi kılavuzu, iş akışı şeması, canlı proje raporu | YISA-S-7-FAZ-DURUMU.md, YISA-S-CANLI-PROJE-RAPORU.md, YISA-S-CALISMA-PRENSIBI-VE-KULLANIM-KILAVUZU-CANLI.md, YISA-S-CANLI-IS-AKISI-SEMASI.md |

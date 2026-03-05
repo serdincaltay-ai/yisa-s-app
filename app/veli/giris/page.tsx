@@ -2,22 +2,48 @@
 
 import React, { useState } from 'react'
 import { useRouter } from 'next/navigation'
+import { supabase } from '@/lib/supabase'
 import { Button } from '@/components/ui/button'
 import { Input } from '@/components/ui/input'
 import { Label } from '@/components/ui/label'
-import { Activity } from 'lucide-react'
+import { Activity, Loader2 } from 'lucide-react'
 
 export default function VeliGirisPage() {
   const router = useRouter()
   const [email, setEmail] = useState('')
   const [password, setPassword] = useState('')
+  const [error, setError] = useState('')
+  const [loading, setLoading] = useState(false)
 
-  const handleSubmit = (e: React.FormEvent) => {
+  const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault()
-    if (typeof window !== 'undefined') {
-      sessionStorage.setItem('veli-demo-logged-in', '1')
+    setError('')
+
+    if (!email.trim() || !password.trim()) {
+      setError('E-posta ve şifre zorunludur.')
+      return
     }
-    router.push('/veli/dashboard')
+
+    setLoading(true)
+    try {
+      const { error: authError } = await supabase.auth.signInWithPassword({
+        email: email.trim(),
+        password: password.trim(),
+      })
+
+      if (authError) {
+        setError(authError.message === 'Invalid login credentials'
+          ? 'E-posta veya şifre hatalı.'
+          : authError.message)
+        return
+      }
+
+      router.push('/veli/dashboard')
+    } catch {
+      setError('Giriş sırasında bir hata oluştu.')
+    } finally {
+      setLoading(false)
+    }
   }
 
   return (
@@ -40,6 +66,7 @@ export default function VeliGirisPage() {
               value={email}
               onChange={(e) => setEmail(e.target.value)}
               className="mt-1 bg-white border-gray-300 text-gray-900"
+              disabled={loading}
             />
           </div>
           <div>
@@ -51,17 +78,26 @@ export default function VeliGirisPage() {
               value={password}
               onChange={(e) => setPassword(e.target.value)}
               className="mt-1 bg-white border-gray-300 text-gray-900"
+              disabled={loading}
             />
           </div>
+          {error && (
+            <p className="text-sm text-red-600 text-center">{error}</p>
+          )}
           <Button
             type="submit"
             className="w-full bg-[#2563eb] hover:bg-[#1d4ed8] text-white min-h-[44px]"
+            disabled={loading}
           >
-            Giriş Yap
+            {loading ? (
+              <Loader2 className="h-5 w-5 animate-spin" />
+            ) : (
+              'Giriş Yap'
+            )}
           </Button>
         </form>
         <p className="text-xs text-center text-gray-500">
-          Demo: Herhangi bir e-posta ve şifre ile giriş yapabilirsiniz.
+          Test: veli1@bjktuzla.test (şifre için .env'e bakın)
         </p>
       </div>
     </div>

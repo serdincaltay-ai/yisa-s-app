@@ -4,7 +4,7 @@
 >
 > **Güncelleme kuralı:** İşi tamamladığınızda ilgili satırda **Durum** → Yapıldı veya Düzeltildi; **Son güncelleme** → bugünün tarihi (GG.AA.YYYY); **Not** → kısa açıklama yazın.
 
-**Son rapor güncellemesi:** 05.03.2026 — Kod tabanı (tenant-yisa-s, app-yisa-s, yisa-s-com) incelenerek 7 faz değerlendirmesi ve tüm belgelerden eksik madde çıkarımı yapıldı.
+**Son rapor güncellemesi:** 05.03.2026 — Veli paneli canlı veri testi (BJK users + parent bağlantısı) tamamlandı; tüm kaynak belgelerden yapılmayan iş maddeleri güncellendi.
 
 ---
 
@@ -55,7 +55,7 @@
 | Faz 3 | 3.3 | Güvenlik paneli (dashboard UI) | Yapılacak | 05.03.2026 | API endpoint var; ayrı güvenlik dashboard sayfası yok |
 | Faz 3 | — | 3 Duvar sistemi tam entegrasyonu | İşleniyor | 05.03.2026 | forbidden-zones.ts, patron-lock.ts, siber-guvenlik.ts mevcut; tam entegrasyon eksik |
 
-### Faz 4 — Veri Robotu / Şablon Havuzu (~%85)
+### Faz 4 — Veri Robotu / Şablon Havuzu (~%90)
 
 | Faz | Adım | Madde / iş | Durum | Son güncelleme | Not |
 |-----|-------|------------|--------|----------------|-----|
@@ -77,14 +77,14 @@
 | Faz 5 | — | Ders programı | Yapıldı | 05.03.2026 | panel/program, api/franchise/schedule |
 | Faz 5 | — | Personel yönetimi | Yapıldı | 05.03.2026 | api/franchise/personel, api/franchise/staff |
 
-### Faz 6 — Veli Paneli MVP (~%85)
+### Faz 6 — Veli Paneli MVP (~%90)
 
 | Faz | Adım | Madde / iş | Durum | Son güncelleme | Not |
 |-----|-------|------------|--------|----------------|-----|
 | Faz 6 | 6.1 | Veli paneli sayfaları | Yapıldı | 05.03.2026 | app/veli: dashboard, cocuk, gelisim, mesajlar, odeme, duyurular, kredi, giris |
 | Faz 6 | — | Veli API'leri | Yapıldı | 05.03.2026 | api/veli: children, attendance, payments, messages, health, gelisim, schedule, movements, ai-insights |
 | Faz 6 | — | Bildirim / push notification | Yapılacak | 05.03.2026 | Push notification altyapısı yok |
-| Faz 6 | — | Veli paneli canlı veri testi | Yapılacak | 05.03.2026 | .env + Supabase verisi ile test edilmeli |
+| Faz 6 | — | Veli paneli canlı veri testi (BJK parent bağlantısı + auth) | **Yapıldı** | 05.03.2026 | 2 test veli kullanıcısı oluşturuldu; 3 sporcu parent_user_id ile bağlandı; demo auth → gerçek signInWithPassword; user_tenants role='veli' eklendi |
 
 ### Faz 7 — CELF Zinciri + Başlangıç Görevleri (~%75)
 
@@ -121,7 +121,7 @@
 |---|---------------|-------------|--------|----------------|-----|
 | 2.1 | FINAL-IS-HARITASI | BJK Tuzla logosu tenant'a ekle | Yapılacak | 05.03.2026 | public/tenants/bjktuzlacimnastik/logo.png — kullanıcı ekleyecek |
 | 2.2 | FINAL-IS-HARITASI | 137 öğrenci/ödeme/yoklama verisi Supabase kontrolü | **Yapıldı** | 05.03.2026 | **140 sporcu, 1575 ödeme, 3022 yoklama** — hedef aşıldı. student_attendance=0 (attendance tablosu kullanılıyor). athlete_measurements=0, users=0 (parent_user_id bağlı değil). |
-| 2.3 | FINAL-IS-HARITASI | Eksik veri varsa migration/seed ile BJK tenant'a eşle | **Kısmen gerekli** | 05.03.2026 | Sporcu/ödeme/yoklama tamam. Eksik: athlete_measurements (gelişim ölçümü yok), parent_user_id bağlantısı (veli girişi için gerekli), users tablosunda BJK kaydı yok. |
+| 2.3 | FINAL-IS-HARITASI | Eksik veri varsa migration/seed ile BJK tenant'a eşle | **Yapıldı** | 05.03.2026 | parent_user_id bağlantısı kuruldu (3 sporcu, 2 veli); user_tenants role='veli' eklendi; kırık trigger (trg_update_athletes) düzeltildi. Kalan eksik: athlete_measurements=0 (gelişim ölçümü henüz girilmemiş). |
 | 2.4 | FINAL-IS-HARITASI | .env.example şema uyumu (3 çekirdek repo) | İşleniyor | 05.03.2026 | Her repoda .env.example mevcut; tam uyum kontrol edilmeli |
 | 2.5 | IS-AKISI-VE-ASAMALAR | A→B→C→D→E akışı | Yapıldı | 05.03.2026 | Tüm aşamalar tamamlandı |
 
@@ -140,7 +140,7 @@
 | 3.5 | PANELLER-DURUM | Tesis müdürü paneli — gerçek API + alt sayfalar | Yapılacak | 05.03.2026 | Tek sayfa mock veri; /tesis/ogrenciler, /tesis/dersler vb. yok |
 | 3.6 | PANELLER-DURUM | Temizlik personeli — günlük checklist sayfası/API | Yapılacak | 05.03.2026 | Rol var (cleaning); ayrı panel/checklist yok |
 | 3.7 | PANELLER-DURUM | Kayıt görevlisi — rol bazlı ayrı yönlendirme | Yapılacak | 05.03.2026 | Şu an franchise/panel kullanıyor; resolve-role'de yeni case |
-| 3.8 | PANELLER-DURUM | Veli paneli canlı veri testi (parent_user_id + giriş) | Yapılacak | 05.03.2026 | UI hazır; .env + Supabase verisi ile test edilmeli |
+| 3.8 | PANELLER-DURUM | Veli paneli canlı veri testi (parent_user_id + giriş) | **Yapıldı** | 05.03.2026 | 2 test veli (veli1@bjktuzla.test, veli2@bjktuzla.test) oluşturuldu; 3 sporcu parent_user_id ile bağlandı; demo→gerçek auth; veli/giris signInWithPassword, veli/dashboard /api/veli/children kullanıyor |
 | 3.9 | TENANT_YAPILACAKLAR | Yoklama SMS tetik entegrasyonu | Yapılacak | 05.03.2026 | sms_templates + sms-provider ile entegre edilecek |
 | 3.10 | TENANT_YAPILACAKLAR | Aidat hatırlatma / toplu düzenleme | Yapılacak | 05.03.2026 | franchise/aidatlar sayfası mevcut; hatırlatma mekanizması eksik |
 | 3.11 | TENANT_YAPILACAKLAR | İletişim modülü (duyurular, anketler, eğitmen-veli mesajlaşma) | İşleniyor | 05.03.2026 | franchise/iletisim ve mesajlar var; anket yok |

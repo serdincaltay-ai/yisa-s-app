@@ -22,7 +22,7 @@ export default function VeliDashboardPage() {
   const [attendanceMap, setAttendanceMap] = useState<Record<string, { rate: number; lastDate: string | null }>>({})
 
   const fetchChildren = useCallback(async () => {
-    const res = await fetch('/api/veli/demo/children')
+    const res = await fetch('/api/veli/children')
     const data = await res.json()
     setChildren(Array.isArray(data.items) ? data.items : [])
   }, [])
@@ -33,7 +33,7 @@ export default function VeliDashboardPage() {
 
   useEffect(() => {
     children.forEach((c) => {
-      fetch(`/api/veli/demo/attendance?athlete_id=${c.id}&days=30`)
+      fetch(`/api/veli/attendance?athlete_id=${c.id}&days=30`)
         .then((r) => r.json())
         .then((d) => {
           setAttendanceMap((prev) => ({
