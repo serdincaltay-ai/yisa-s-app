@@ -40,8 +40,8 @@ export default function VeliProgramPage() {
   }, [])
 
   const filteredSchedule = schedule.filter((s) => {
-    const dayShort = s.gun?.substring(0, 3)
-    return dayShort === selectedDay || s.gun === DAY_MAP[selectedDay]
+    const gunFull = s.gun ?? ''
+    return gunFull === DAY_MAP[selectedDay] || gunFull === selectedDay
   })
 
   // Haftalik ozet: her cocuk icin toplam ders sayisi
