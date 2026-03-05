@@ -120,8 +120,8 @@
 | # | Kaynak dosya | Madde / iş | Durum | Son güncelleme | Not |
 |---|---------------|-------------|--------|----------------|-----|
 | 2.1 | FINAL-IS-HARITASI | BJK Tuzla logosu tenant'a ekle | Yapılacak | 05.03.2026 | public/tenants/bjktuzlacimnastik/logo.png — kullanıcı ekleyecek |
-| 2.2 | FINAL-IS-HARITASI | 137 öğrenci/ödeme/yoklama verisi Supabase kontrolü | Yapılacak | 05.03.2026 | Tablolar: students, payments, student_attendance; tenant_id = BJK |
-| 2.3 | FINAL-IS-HARITASI | Eksik veri varsa migration/seed ile BJK tenant'a eşle | Yapılacak | 05.03.2026 | 2.2'ye bağlı |
+| 2.2 | FINAL-IS-HARITASI | 137 öğrenci/ödeme/yoklama verisi Supabase kontrolü | **Yapıldı** | 05.03.2026 | **140 sporcu, 1575 ödeme, 3022 yoklama** — hedef aşıldı. student_attendance=0 (attendance tablosu kullanılıyor). athlete_measurements=0, users=0 (parent_user_id bağlı değil). |
+| 2.3 | FINAL-IS-HARITASI | Eksik veri varsa migration/seed ile BJK tenant'a eşle | **Kısmen gerekli** | 05.03.2026 | Sporcu/ödeme/yoklama tamam. Eksik: athlete_measurements (gelişim ölçümü yok), parent_user_id bağlantısı (veli girişi için gerekli), users tablosunda BJK kaydı yok. |
 | 2.4 | FINAL-IS-HARITASI | .env.example şema uyumu (3 çekirdek repo) | İşleniyor | 05.03.2026 | Her repoda .env.example mevcut; tam uyum kontrol edilmeli |
 | 2.5 | IS-AKISI-VE-ASAMALAR | A→B→C→D→E akışı | Yapıldı | 05.03.2026 | Tüm aşamalar tamamlandı |
 
