@@ -4,6 +4,7 @@
 >
 > **Son güncelleme:** 05.03.2026 — Kullanıcı paneli tasarım kilidi (koyu tema, alt nav) + Tesis sayfaları (3 şablon, ders programı grid, fiyat kartları) tamamlandı.
 > **Son güncelleme:** 05.03.2026 — 3 Duvar entegrasyonu, güvenlik dashboard, CELF uçtan uca test, görev→dashboard yansıması tamamlandı. Genel ilerleme ~%93.
+> **Son güncelleme:** 06.03.2026 — ManyChat webhook + CRM tabloları, Vitest test altyapısı (140 test), Stripe ödeme entegrasyonu, backup stratejisi. Genel ilerleme ~%95.
 
 ---
 
@@ -39,13 +40,10 @@
 | Faz 3 | Güvenlik robotu MVP | Büyük oranda tamam | ~%95 |
 | Faz 4 | Veri robotu / Şablon havuzu | Büyük oranda tamam | ~%90 |
 | Faz 5 | Franchise paneli | Büyük oranda tamam | ~%90 |
-| Faz 6 | Veli paneli MVP | Büyük oranda tamam | ~%95 |
-| Faz 7 | CELF zinciri + Başlangıç görevleri | Büyük oranda tamam | ~%75 |
-| Faz 6 | Veli paneli MVP | Büyük oranda tamam | ~%90 |
-| Faz 7 | CELF zinciri + Başlangıç görevleri | Büyük oranda tamam | ~%90 |
+| Faz 6 | Veli paneli MVP + Stripe ödeme | Büyük oranda tamam | ~%97 |
+| Faz 7 | CELF zinciri + Başlangıç görevleri + E2E testler | Büyük oranda tamam | ~%90 |
 
-**Genel ilerleme:** ~%89 (ağırlıklı ortalama)
-**Genel ilerleme:** ~%93 (ağırlıklı ortalama)
+**Genel ilerleme:** ~%95 (ağırlıklı ortalama)
 
 ---
 
@@ -99,6 +97,12 @@
 | 35 | CELF uçtan uca test endpoint'i (POST /api/celf/test-akis): 7 adımlı akış doğrulama | Faz 7 | 05.03.2026 |
 | 36 | Raporlar sayfası genişletildi: Özet kartları, direktörlük dağılımı, AI sağlayıcı grafiği, filtre sistemi | Faz 7 | 05.03.2026 |
 | 37 | Sidebar'a Güvenlik linki eklendi | Faz 3 | 05.03.2026 |
+| 38 | ManyChat webhook entegrasyonu — crm_contacts + crm_activities + demo_requests yazma | Faz 1 | 06.03.2026 |
+| 39 | CRM tabloları migration (crm_contacts, crm_activities) + RLS politikaları | Faz 1 | 06.03.2026 |
+| 40 | Vitest test altyapısı + CELF pipeline E2E testler (140 test, 3 suite) | Faz 7 | 06.03.2026 |
+| 41 | Stripe ödeme entegrasyonu — Checkout Session + Webhook + Veli/Franchise UI | Faz 6 | 06.03.2026 |
+| 42 | Stripe expired checkout düzeltmesi — orijinal durum geri yükleme + catch rollback | Faz 6 | 06.03.2026 |
+| 43 | Backup stratejisi dokümantasyonu + backup-check API endpoint + Vercel cron | Ops | 06.03.2026 |
 
 ### 3.2 Devam Eden (İşleniyor)
 
@@ -115,12 +119,13 @@
 | 5 | İletişim modülü (anket eksik) | Faz 5 | Şubat 2026 | franchise/iletisim mevcut; anket yok |
 | 6 | Belge yönetimi (geçerlilik uyarısı eksik) | Faz 5 | Şubat 2026 | franchise/belgeler mevcut; uyarı mekanizması yok |
 | 7 | .env.example şema uyumu kontrolü | Tüm | Şubat 2026 | Her repoda .env.example mevcut; tam uyum kontrol edilmeli |
+| 8 | Stripe ödeme akışı uçtan uca test (gerçek Stripe hesabıyla) | Faz 6 | 06.03.2026 | Kod hazır; gerçek hesap testi yapılmalı |
 
 ### 3.3 Yapılacak (Henüz Başlanmadı)
 
 | # | İş | Faz | Öncelik | Not |
 |---|-----|-----|---------|-----|
-| 1 | ManyChat / WhatsApp bot entegrasyonu | Faz 1 | Orta | Vitrin chatbot bağlantısı |
+| ~~1~~ | ~~ManyChat / WhatsApp bot entegrasyonu~~ | ~~Faz 1~~ | ~~Orta~~ | **Yapıldı 06.03.2026** — PR #59: ManyChat webhook + CRM tabloları |
 | ~~2~~ | ~~Gelişim ölçüm tabloları + API~~ | ~~Faz 4~~ | ~~Yüksek~~ | **Yapıldı 05.03.2026** — 3.1 #20 |
 | ~~3~~ | ~~Çocuk gelişim referans değerleri seed~~ | ~~Faz 4~~ | ~~Yüksek~~ | **Yapıldı 05.03.2026** — 3.1 #21 |
 | ~~4~~ | ~~Güvenlik dashboard paneli UI~~ | ~~Faz 3~~ | ~~Orta~~ | **Yapıldı 05.03.2026** — /dashboard/guvenlik (Bkz. 3.1 #33) |
@@ -128,7 +133,7 @@
 | 6 | Tesis müdürü paneli — gerçek API + alt sayfalar | — | Orta | Mock veri; gerçek API gerekli |
 | 7 | Temizlik personeli günlük checklist | — | Düşük | Rol var; panel yok |
 | 8 | Kayıt görevlisi rol bazlı yönlendirme | — | Düşük | resolve-role'de yeni case |
-| 9 | Veli online aidat ödeme (İyzico/Paratika) | Faz 6 | Orta | UI var; gateway yok |
+| ~~9~~ | ~~Veli online aidat ödeme (İyzico/Paratika)~~ | ~~Faz 6~~ | ~~Orta~~ | **Yapıldı 06.03.2026** — PR #62+#64: Stripe Checkout Session + Webhook + expired handler |
 | 10 | Yoklama SMS tetik entegrasyonu | Faz 5 | Orta | sms-provider ile entegre |
 | 11 | Aidat hatırlatma mekanizması | Faz 5 | Orta | Sayfa var; hatırlatma yok |
 | 12 | 7/24 Acil Destek otomatik alarm | — | Düşük | e-posta/push alarm |
@@ -152,6 +157,10 @@
 | 05.03.2026 | **Faz 4 tamamlandı:** gelisim_olcumleri + referans_degerler + sport_templates tabloları; GET/POST gelisim-olcumleri API; gelisim-analiz endpoint; WHO/TGF referans seed; veli/gelisim birleşik sorgu | scripts/011, scripts/012, app/api/gelisim-olcumleri, app/api/gelisim-analiz, app/api/veli/gelisim |
 | 05.03.2026 | **3 şablon sistemi (PR #52):** standard/medium/premium şablonlar, haftalık GRID, robot karşılama, randevu, paket fiyat güncellemesi, feneratasehir subdomain | tenant-site/page.tsx, components/tenant-templates/*, lib/tenant-template-config.ts, lib/subdomain.ts |
 | 05.03.2026 | Canlı dokümantasyon sistemi kuruldu: 7-faz değerlendirmesi, çalışma prensibi kılavuzu, iş akışı şeması, canlı proje raporu | YISA-S-7-FAZ-DURUMU.md, YISA-S-CANLI-PROJE-RAPORU.md, YISA-S-CALISMA-PRENSIBI-VE-KULLANIM-KILAVUZU-CANLI.md, YISA-S-CANLI-IS-AKISI-SEMASI.md |
+| 06.03.2026 | **ManyChat webhook + CRM (PR #59):** crm_contacts + crm_activities tabloları, HMAC-SHA256 doğrulama, partial response desteği, RLS politikaları | app/api/webhooks/manychat/route.ts, supabase/migrations/20260306120000_crm_contacts_activities.sql |
+| 06.03.2026 | **Vitest test altyapısı + CELF E2E (PR #60):** 140 test (3 suite: provisioning, patron chain, directorate routing), mock Supabase client, vitest.config.ts | __tests__/*, vitest.config.ts, package.json |
+| 06.03.2026 | **Stripe ödeme entegrasyonu (PR #62+#64):** Checkout Session oluşturma, webhook handler (completed+expired), processing status lock, race condition koruması, orijinal durum geri yükleme | lib/stripe/client.ts, app/api/payments/create-checkout/route.ts, app/api/webhooks/stripe/route.ts, app/veli/odeme/page.tsx, app/franchise/aidatlar/page.tsx |
+| 06.03.2026 | **Backup stratejisi (PR #84):** Supabase günlük otomatik backup + haftalık pg_dump dokümantasyonu, /api/admin/backup-check endpoint, Vercel cron (Pazartesi 03:00 UTC) | docs/BACKUP-STRATEJISI.md, app/api/admin/backup-check/route.ts, vercel.json |
 | 05.03.2026 | 3 şablon sistemi (standard/medium/premium), haftalık GRID, robot karşılama, randevu, paket fiyat güncellemesi, feneratasehir subdomain | tenant-site/page.tsx, components/tenant-templates/*, lib/tenant-template-config.ts, lib/subdomain.ts |
 | 04.02.2026 | Veri arşivleme düzeltmesi: COO run-due ve CELF API'de archiveTaskResult eklendi | MEVCUT_DURUM_ANAYASA_KONTROL_RAPORU.md |
 | 04.02.2026 | ceo_routines seed eklendi; task_results tüketimi (GET API + Raporlar sayfası) | GOREV_SONLANDIRMA_RAPORU.md |
