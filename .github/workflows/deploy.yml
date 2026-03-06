@@ -1,12 +1,17 @@
 name: Deploy to Vercel (Production)
 
 on:
-  push:
-    branches: [main]
+  workflow_dispatch:
+    inputs:
+      confirm_deploy:
+        description: 'Patron onayi ile deploy'
+        required: true
+        type: boolean
 
 jobs:
   deploy:
     runs-on: ubuntu-latest
+    if: ${{ github.event.inputs.confirm_deploy == 'true' }}
     steps:
       - uses: actions/checkout@v4
 
