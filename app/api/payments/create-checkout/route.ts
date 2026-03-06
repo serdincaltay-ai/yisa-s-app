@@ -111,7 +111,9 @@ export async function POST(req: NextRequest) {
         }
       })
 
-      const origin = req.headers.get('origin') || req.headers.get('referer')?.replace(/\/[^/]*$/, '') || 'https://app.yisa-s.com'
+      const allowedOrigins = [process.env.NEXT_PUBLIC_SITE_URL, 'https://app.yisa-s.com', 'https://yisa-s.com'].filter(Boolean)
+      const rawOrigin = req.headers.get('origin') || req.headers.get('referer')?.replace(/\/[^/]*$/, '')
+      const origin = (rawOrigin && allowedOrigins.includes(rawOrigin)) ? rawOrigin : 'https://app.yisa-s.com'
       const successUrl = `${origin}/veli/odeme?status=success`
       const cancelUrl = `${origin}/veli/odeme?status=cancel`
 
@@ -156,7 +158,9 @@ export async function POST(req: NextRequest) {
       }
     })
 
-    const origin = req.headers.get('origin') || req.headers.get('referer')?.replace(/\/[^/]*$/, '') || 'https://app.yisa-s.com'
+    const allowedOrigins = [process.env.NEXT_PUBLIC_SITE_URL, 'https://app.yisa-s.com', 'https://yisa-s.com'].filter(Boolean)
+    const rawOrigin = req.headers.get('origin') || req.headers.get('referer')?.replace(/\/[^/]*$/, '')
+    const origin = (rawOrigin && allowedOrigins.includes(rawOrigin)) ? rawOrigin : 'https://app.yisa-s.com'
     const successUrl = `${origin}/veli/odeme?status=success`
     const cancelUrl = `${origin}/veli/odeme?status=cancel`
 
