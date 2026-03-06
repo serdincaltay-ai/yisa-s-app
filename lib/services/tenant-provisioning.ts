@@ -6,6 +6,7 @@
 
 import { createClient, type SupabaseClient } from '@supabase/supabase-js'
 import { generateTenantSlug, subdomainSlug } from '@/lib/utils/slug'
+import { CELF_DIRECTORATE_KEYS } from '@/lib/robots/celf-center'
 
 // ─── Types ───────────────────────────────────────────────────────────────────
 
@@ -33,6 +34,7 @@ export interface ProvisioningResult {
   temp_password?: string
   login_email?: string
   franchise_created?: boolean
+  celf_triggered?: boolean
   steps_completed: string[]
   error_step?: string
   error_detail?: string
@@ -47,6 +49,7 @@ interface ProvisioningContext {
   userId?: string
   tempPassword?: string
   franchiseCreated: boolean
+  celfTriggered: boolean
   stepsCompleted: string[]
 }
 
@@ -305,6 +308,57 @@ async function markDemoRequestConverted(ctx: ProvisioningContext): Promise<void>
   ctx.stepsCompleted.push('status_updated')
 }
 
+// ─── Step 7: Trigger CELF Startup Tasks (Faz 2 — Adım 2.2) ─────────────────
+
+/**
+ * Tenant oluşturulduktan sonra CELF başlangıç görevlerini tetikler.
+ * sim_updates tablosuna INSERT yaparak CELF motorunu haberdar eder.
+ * Yol haritası referansı: YISA_S_V0_YOL_HARITASI.md — Faz 2, Adım 2.2
+ *
+ * sim_updates kuralları:
+ *   - status: "beklemede" veya "islendi" (başka değer yok)
+ *   - payload kolonu yok — ek bilgi command alanına JSON string olarak yazılır
+ *   - Kolon adı: target_directorate (canlı DB şeması ile doğrulandı)
+ */
+async function triggerCelfStartup(ctx: ProvisioningContext): Promise<void> {
+  const { supabase, tenantId, slug, demoRequest } = ctx
+  if (!tenantId) return
+
+  // Tüm direktörlük anahtarlarını celf-center.ts'den al (15 direktörlük)
+  const celfDirectorlukler = [...CELF_DIRECTORATE_KEYS]
+
+  const commandPayload = JSON.stringify({
+    type: 'tenant_baslangic_gorevleri',
+    tenant_id: tenantId,
+    slug: slug ?? '',
+    firma_adi: demoRequest.name ?? '',
+    email: demoRequest.email ?? '',
+    direktorlukler: celfDirectorlukler,
+  })
+
+  try {
+    const { error } = await supabase.from('sim_updates').insert({
+      target_robot: 'CELF',
+      target_directorate: 'genel_mudurluk',
+      command: commandPayload,
+      status: 'beklemede',
+    })
+
+    if (error) {
+      console.error('[tenant-provisioning] CELF sim_updates INSERT error:', error.message)
+      ctx.stepsCompleted.push('celf_trigger_failed')
+      return
+    }
+
+    ctx.celfTriggered = true
+    ctx.stepsCompleted.push('celf_triggered')
+  } catch (e) {
+    // CELF trigger failure is non-fatal — tenant still exists and is usable
+    console.error('[tenant-provisioning] CELF trigger error:', e)
+    ctx.stepsCompleted.push('celf_trigger_error')
+  }
+}
+
 // ─── Compensating Transaction (Rollback) ────────────────────────────────────
 
 async function rollback(ctx: ProvisioningContext, failedStep: string): Promise<void> {
@@ -382,6 +436,7 @@ export async function provisionTenant(demoRequestId: string): Promise<Provisioni
     supabase,
     demoRequest: row as DemoRequest,
     franchiseCreated: false,
+    celfTriggered: false,
     stepsCompleted: [],
   }
 
@@ -393,6 +448,7 @@ export async function provisionTenant(demoRequestId: string): Promise<Provisioni
     { name: 'create_subdomain', fn: createSubdomain },
     { name: 'seed_data', fn: seedTenantData },
     { name: 'update_status', fn: markDemoRequestConverted },
+    { name: 'celf_trigger', fn: triggerCelfStartup },
   ]
 
   for (const step of steps) {
@@ -443,6 +499,9 @@ export async function provisionTenant(demoRequestId: string): Promise<Provisioni
   if (ctx.subdomain) {
     message += ` Subdomain: ${ctx.subdomain}.yisa-s.com`
   }
+  if (ctx.celfTriggered) {
+    message += ' CELF başlangıç görevleri tetiklendi.'
+  }
 
   return {
     ok: true,
@@ -453,6 +512,7 @@ export async function provisionTenant(demoRequestId: string): Promise<Provisioni
     temp_password: ctx.tempPassword,
     login_email: ctx.tempPassword ? reqEmail : undefined,
     franchise_created: ctx.franchiseCreated,
+    celf_triggered: ctx.celfTriggered,
     steps_completed: ctx.stepsCompleted,
   }
 }

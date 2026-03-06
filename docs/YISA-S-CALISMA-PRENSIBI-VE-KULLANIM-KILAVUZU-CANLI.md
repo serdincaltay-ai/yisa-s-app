@@ -2,7 +2,7 @@
 
 > **CANLI DOSYA:** Çalışma prensibi veya kullanıcı arayüzünde (UI) değişiklik olduğunda bu dosya güncellenir.
 >
-> **Son güncelleme:** 05.03.2026 — Kod tabanı incelenerek 4 robot, 15 direktörlük, 3 site, rol-panel eşlemeleri detaylı yazıldı.
+> **Son güncelleme:** 05.03.2026 — Veli paneli canlı veri testi tamamlandı; API endpoint eşlemeleri, kullanıcı tipleri tablosu ve ekran öğesi→agent/API haritası eklendi.
 
 ---
 
@@ -30,16 +30,16 @@ YİSA-S sisteminde 4 ana robot ve 15 direktörlük (agent) bulunur. Her robot be
 | 3 | Chief Information Officer | **CIO** | Bilgi analizi, çakışma kontrolü, yönlendirme | 1 görev |
 | 4 | Chief Marketing Officer | **CMO** | Pazarlama, sosyal medya, kampanya | 2 görev |
 | 5 | Chief Human Resources Officer | **CHRO** | İnsan kaynakları, personel, eğitim | 2 görev |
-| 6 | Chief Legal Officer | **CLO** | Hukuk, sözleşme, KVKK uyumu | 1 görev |
+| 6 | Chief Legal Officer | **CLO** | Hukuk, sözleşme, KVKK uyumu | 2 görev |
 | 7 | Chief Sales Officer (Satış) | **CSO_SATIS** | Satış, lead yönetimi, franchise satış | 2 görev |
-| 8 | Chief Product Officer | **CPO** | Ürün geliştirme, özellik planlama | 1 görev |
+| 8 | Chief Product Officer | **CPO** | Ürün geliştirme, özellik planlama | 2 görev |
 | 9 | Chief Data Officer | **CDO** | Veri yönetimi, analiz, raporlama | 2 görev |
-| 10 | Chief Information Security Officer | **CISO** | Bilgi güvenliği, penetrasyon testi, güvenlik politikası | 1 görev |
-| 11 | Chief Communications Officer | **CCO** | İletişim, duyurular, medya | 1 görev |
+| 10 | Chief Information Security Officer | **CISO** | Bilgi güvenliği, penetrasyon testi, güvenlik politikası | 2 görev |
+| 11 | Chief Communications Officer | **CCO** | İletişim, duyurular, medya | 2 görev |
 | 12 | Chief Strategy Officer | **CSO_STRATEJI** | Strateji, vizyon, rakip analizi | 1 görev |
-| 13 | Chief Sports Officer | **CSPO** | Spor programları, antrenör yönetimi, gelişim ölçüm | 2 görev |
-| 14 | Chief Operating Officer | **COO** | Operasyon, rutin görevler, cron yönetimi | 1 görev |
-| 15 | Research & Development | **RND** | Ar-Ge, yeni teknoloji, inovasyon | 1 görev |
+| 13 | Chief Sports Officer | **CSPO** | Spor programları, antrenör yönetimi, gelişim ölçüm | 3 görev |
+| 14 | Chief Operating Officer | **COO** | Operasyon, rutin görevler, cron yönetimi | 2 görev |
+| 15 | Research & Development | **RND** | Ar-Ge, yeni teknoloji, inovasyon | 2 görev |
 
 **Kaynak:** `lib/robots/directorate-initial-tasks.ts` (476 satır) — Her direktörlüğün başlangıç görevleri burada tanımlı.
 
@@ -152,6 +152,22 @@ YİSA-S çoklu kiracı (multi-tenant) mimarisi kullanır:
 
 **Veri kaynağı:** `api/veli/children` → athletes tablosu (parent_user_id = giriş yapan). İlk girişte parent_email ile otomatik bağlanır.
 
+**Veli Auth:** Gerçek Supabase `signInWithPassword` (demo auth kaldırıldı). Test hesapları: veli1@bjktuzla.test, veli2@bjktuzla.test (şifreler ortam değişkenlerinden alınır).
+
+**Veli API Endpoint’leri:**
+
+| Endpoint | Method | Açıklama | Kullanılan Tablo |
+|----------|--------|----------|------------------|
+| `/api/veli/children` | GET | Velinin çocuklarını listeler (parent_user_id = auth.uid) | athletes |
+| `/api/veli/attendance` | GET | Çocukların yoklama geçmişi (son N gün) | attendance + athletes |
+| `/api/veli/payments` | GET | Çocukların aidat durumu + toplam borç | payments + athletes |
+| `/api/veli/messages` | GET/POST | Antrenör-veli mesajlaşma | messages |
+| `/api/veli/health` | GET | Sağlık bilgileri | athlete_health |
+| `/api/veli/gelisim` | GET | Gelişim ölçümleri (athlete_measurements + gelisim_olcumleri) | athlete_measurements, gelisim_olcumleri |
+| `/api/veli/schedule` | GET | Ders programı | schedule |
+| `/api/veli/movements` | GET | Kredi hareketleri | credit_movements |
+| `/api/veli/ai-insights` | GET | AI önerileri | task_results |
+
 ### B.4 Antrenör Paneli (/antrenor)
 
 | Sayfa | URL | Açıklama |
@@ -169,7 +185,7 @@ YİSA-S çoklu kiracı (multi-tenant) mimarisi kullanır:
 |-------|-----|----------|
 | Ana Sayfa | `/tesis` | Tek sayfa: sidebar menü (Ana Sayfa, Öğrenciler, Ders Programı, Sağlık Takibi, Antrenörler, Belgeler, Raporlar, Ayarlar) |
 
-**Not:** Şu an mock veri ile çalışıyor. Gerçek API ve alt sayfalar yapılacak.
+**Not:** Şu an mock veri ile çalışıyor. Gerçek API ve alt sayfalar yapılacak (Bkz. CANLI-PROJE-RAPORU 3.5).
 
 ### B.6 Vitrin (yisa-s.com)
 
@@ -185,6 +201,119 @@ YİSA-S çoklu kiracı (multi-tenant) mimarisi kullanır:
 | Robot | `/robot` | NeebChat robot sayfası |
 | Fuar | `/fuar` | Fuar hesaplama |
 | Şablonlar | `/sablonlar` | Şablon galerisi |
+
+### B.6.1 Tesis Sayfaları (*.yisa-s.com) — 3 Şablon Sistemi
+
+Her tesis (tenant) için subdomain bazlı sayfa. Şablon tipi `tenant-template-config.ts` dosyasından okunur.
+
+| Şablon | Hedef Kitle | Özellikler |
+|--------|-------------|------------|
+| **Standard** | Küçük tesisler (hobigym.com benzeri) | Logo, branş listesi, temel iletişim, basit düzen |
+| **Medium** | Orta ölçekli tesisler | Standard + haftalık GRID, genişletilmiş galeri, animasyonlar |
+| **Premium** | Büyük/teknolojik tesisler | Robot karşılama, randevu sistemi, haftalık GRID, neon/koyu tema, tam özellik |
+
+**Mevcut tenant yapılandırması:**
+
+| Tenant Slug | Şablon | Domain |
+|-------------|--------|--------|
+| `bjktuzlacimnastik` | premium | bjktuzlacimnastik.yisa-s.com |
+| `feneratasehir` | premium | feneratasehir.yisa-s.com |
+| `fenerbahceatasehir` | premium | fenerbahceatasehir.yisa-s.com |
+| `kartalcimnastik` | standard | kartalcimnastik.yisa-s.com |
+
+**Bileşenler:**
+
+| Dosya | Açıklama |
+|-------|----------|
+| `lib/tenant-template-config.ts` | Tenant → şablon eşlemesi, ders programı, fiyat, iletişim config |
+| `components/tenant-templates/StandardTemplate.tsx` | Standard şablon bileşeni |
+| `components/tenant-templates/MediumTemplate.tsx` | Medium şablon bileşeni |
+| `components/tenant-templates/PremiumTemplate.tsx` | Premium şablon bileşeni (robot + randevu) |
+| `components/tenant-templates/WeeklyScheduleGrid.tsx` | Haftalık ders programı GRID (08:00-19:00, PZT-PAZ) |
+| `components/tenant-templates/RobotGreeting.tsx` | Robot karşılama animasyonu (premium) |
+| `app/tenant-site/page.tsx` | Şablon yönlendirici (template router — 30 satır) |
+
+**Haftalık Ders Programı GRID:**
+- Sol sütun: Saatler (08:00–19:00)
+- Üst satır: PZT–PAZ
+- Hücre: Ders adı (branş + seviye), renk kodlu
+- Config: `tenant-template-config.ts` → `schedule` dizisi
+
+**Paket Fiyatları (Güncel):**
+
+| Paket | Fiyat |
+|-------|-------|
+| 24 ders | 30.000 TL |
+| 48 seans | 52.800 TL |
+| 60 seans | 60.000 TL |
+
+---
+
+## B.7 Kullanıcı Tipleri ve Yetkileri
+
+| # | Rol (user_tenants.role) | Giriş Panel | Supabase Auth | Yönlendirme (resolve-role.ts) |
+|---|-------------------------|-------------|---------------|-------------------------------|
+| 1 | **patron** | Patron Dashboard | E-posta/şifre | `/dashboard` |
+| 2 | **franchise** | Franchise Paneli | E-posta/şifre | `/franchise` |
+| 3 | **facility_manager** | Tesis Paneli | E-posta/şifre | `/tesis` |
+| 4 | **trainer** / **antrenor** | Antrenör Paneli | E-posta/şifre | `/antrenor` |
+| 5 | **veli** | Veli Paneli | signInWithPassword | `/veli/dashboard` |
+| 6 | **registrar** | Franchise/Panel | E-posta/şifre | `/franchise` veya `/panel` |
+| 7 | **cleaning** | Franchise | E-posta/şifre | `/franchise` |
+| 8 | **parent** | Veli Paneli (eski) | — | `/veli` |
+| 9 | **staff** | Franchise | E-posta/şifre | `/franchise` |
+| 10 | **admin** | Patron Dashboard | E-posta/şifre | `/dashboard` |
+
+**Not:** `veli` rolü canlı test için user_tenants'a eklendi (05.03.2026). `parent` eski uyumluluk için.
+
+---
+
+## B.8 Ekran Öğesi → API / Robot Eşlemesi
+
+### Patron Paneli
+
+| Ekran / Buton | API Endpoint | Robot / Agent |
+|---------------|-------------|---------------|
+| Asistan Sohbet → "Gönder" | `/api/flow` | Güvenlik → CIO → CEO → CELF |
+| Asistan Sohbet → "CEO'ya Gönder" | `/api/ceo` | CEO Robot (createCeoTask) |
+| Onay Kuyruğu → "Onayla" | `/api/demo-requests` (action=decide) | provisionTenant zinciri |
+| Onay Kuyruğu → "Reddet" | `/api/demo-requests` (action=decide) | rejectDemoRequest |
+| Direktörlükler Listesi | `/api/startup` | CEO → CELF Direktörlükler |
+| Raporlar | `/api/task-results` | Veri Robotu (archiveTaskResult) |
+| Şablonlar | `/api/templates` | Veri Robotu (3 tablo) |
+| Kasa Defteri | `/api/expenses` | CFO (finans) |
+
+### Franchise Paneli
+
+| Ekran / Buton | API Endpoint | Robot / Agent |
+|---------------|-------------|---------------|
+| Öğrenci Ekle/Düzenle | `/api/students` | — (doğrudan CRUD) |
+| Yoklama Al | `/api/attendance` | CSPO (spor, yoklama) |
+| Aidat Ödeme Kaydet | `/api/payments` | CFO (finans) |
+| Ders Programı | `/api/franchise/schedule` | CSPO |
+| Personel Davet | `/api/franchise/staff` | CHRO |
+| Belge Yükle | `/api/franchise/documents` | CLO (hukuk, KVKK) |
+
+### Veli Paneli
+
+| Ekran / Buton | API Endpoint | Robot / Agent |
+|---------------|-------------|---------------|
+| Giriş Yap | Supabase `signInWithPassword` | Güvenlik Robotu (auth) |
+| Çocuklarım Listesi | `/api/veli/children` | — (parent_user_id filtre) |
+| Devam Oranı | `/api/veli/attendance` | — |
+| Aidat Durumu | `/api/veli/payments` | CFO |
+| Gelişim Takibi | `/api/veli/gelisim` | CSPO + Veri Robotu |
+| Mesajlar | `/api/veli/messages` | CCO |
+| AI Önerileri | `/api/veli/ai-insights` | CIO → CEO |
+
+### Antrenör Paneli
+
+| Ekran / Buton | API Endpoint | Robot / Agent |
+|---------------|-------------|---------------|
+| Sporcu Listesi | `/api/athletes` (trainer filter) | CSPO |
+| Ölçüm Girişi | `/api/gelisim-olcumleri` | CSPO + Veri Robotu |
+| Yoklama Al | `/api/attendance` | CSPO |
+| Gelişim Analiz | `/api/gelisim-analiz` | Veri Robotu (referans_degerler) |
 
 ---
 
@@ -211,6 +340,9 @@ YİSA-S çoklu kiracı (multi-tenant) mimarisi kullanır:
 | `ceo_routines` | Rutin görevler (cron) |
 | `approval_queue` / `patron_commands` | Onay kuyruğu |
 | `sim_updates` | CELF tetikleme kayıtları |
+| `gelisim_olcumleri` | Gelişim ölçüm kayıtları (JSONB) |
+| `referans_degerler` | WHO/TGF referans değerleri (yaş 5-15) |
+| `sport_templates` | Spor branşı şablonları |
 
 ### RLS (Row Level Security)
 
@@ -228,7 +360,9 @@ Tüm tablolarda RLS aktif. Temel fonksiyonlar:
 Bu dosya **çalışma prensibi veya UI değişikliği** olduğunda güncellenir:
 - Yeni robot/agent eklendiğinde → A.1 tablosuna ekle
 - Yeni sayfa/panel eklendiğinde → B bölümüne ekle
-- Rol değişikliği olduğunda → A.2 rol-panel tablosunu güncelle
+- Rol değişikliği olduğunda → A.2 ve B.7 tablosunu güncelle
 - Tablo eklendiğinde → C bölümünü güncelle
+- Yeni API endpoint eklendiğinde → B.8 ekran→API eşlemesini güncelle
+- Kullanıcı tipi eklendiğinde → B.7 tablosunu güncelle
 
 **Bu dosya canlı kılavuz dosyasıdır; prensip veya UI değişikliğinde anında güncellenir.**

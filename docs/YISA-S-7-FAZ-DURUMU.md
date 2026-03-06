@@ -2,7 +2,7 @@
 
 > **Kaynak:** YISA_S_V0_YOL_HARITASI.md (v0.dev 7 faz). Resmi süreç artık A→B→C→D→E + Final İş Haritası; bu dosya sadece "7 faza göre kaba konum" özetidir.
 >
-> **Son güncelleme:** 05.03.2026 — Kod tabanı (tenant-yisa-s, app-yisa-s, yisa-s-com) incelenerek detaylı değerlendirme yapıldı.
+> **Son güncelleme:** 05.03.2026 — Faz 2 CELF tetikleme, Faz 4 gelişim tabloları/API, Faz 6 canlı veri testi, 3 şablon sistemi (PR #52) ve tesis sayfaları güncellemeleri yansıtıldı.
 
 ---
 
@@ -10,25 +10,25 @@
 
 | Faz | İçerik | Durum | Tamamlanma | Not |
 |-----|--------|-------|------------|-----|
-| **Faz 1** | Vitrin + demo formu | **Büyük oranda tamam** | ~%90 | yisa-s-com vitrin (demo, fiyatlandırma, franchise, robot sayfaları) + tenant-yisa-s demo_requests API + patron onay kuyruğu mevcut. ManyChat entegrasyonu eksik. |
-| **Faz 2** | Tenant otomatik oluşturma | **Büyük oranda tamam** | ~%85 | `provisionTenant()` zinciri çalışıyor: tenant → user → franchise → subdomain → seed data. CELF otomatik tetikleme (sim_updates üzerinden) henüz tam bağlantılı değil. |
+| **Faz 1** | Vitrin + demo formu + tesis sayfaları | **Büyük oranda tamam** | ~%95 | Vitrin sayfaları, demo form, onay kuyruğu, 3 şablon sistemi (standard/medium/premium), haftalık GRID, robot karşılama, paket fiyatları güncel. ManyChat eksik. |
+| **Faz 2** | Tenant otomatik oluşturma | **Tamamlandı** | ~%95 | provisionTenant zinciri + Step 7 triggerCelfStartup + feneratasehir subdomain. Sadece minor entegrasyon testleri kaldı. |
 | **Faz 3** | Güvenlik robotu MVP | **Büyük oranda tamam** | ~%80 | RLS politikaları kapsamlı (006_rls_policies.sql — 1539 satır), security-robot.ts çalışıyor, security_logs tablosu mevcut. Eksik: Güvenlik dashboard paneli UI, 3 Duvar sistemi tam entegrasyonu. |
-| **Faz 4** | Veri robotu — şablon havuzu | **Kısmen tamam** | ~%60 | ceo_templates (66+ şablon), templates API (GET/POST), v0_template_library mevcut. Eksik: gelisim_olcumleri tablosu, referans_degerler tablosu, gelişim analiz API, çocuk gelişim referans değerleri. |
+| **Faz 4** | Veri robotu — şablon havuzu + gelişim | **Büyük oranda tamam** | ~%90 | Şablon tabloları + gelisim_olcumleri + referans_degerler + sport_templates + gelişim analiz API + WHO/TGF seed tamamlandı. |
 | **Faz 5** | Franchise paneli | **Büyük oranda tamam** | ~%90 | /franchise (dashboard, öğrenci yönetimi, yoklama, belgeler, iletişim, aidatlar), /panel (ogrenciler, odemeler, yoklama, program, aidat), /kasa (rapor), /antrenor (yoklama, ölçüm, sporcular) mevcut. |
-| **Faz 6** | Veli paneli MVP | **Büyük oranda tamam** | ~%85 | /veli (dashboard, çocuk, gelişim, mesajlar, ödeme, duyurular, kredi, giriş), API'ler (children, attendance, payments, messages, health, gelisim, schedule, movements, ai-insights) mevcut. Eksik: Canlı veri testi, bildirim push. |
-| **Faz 7** | CELF zinciri + başlangıç görevleri | **Büyük oranda tamam** | ~%75 | directorate-initial-tasks.ts (15 direktörlük, 25+ görev), startup API (run_task, run_director, run_all), celf-center.ts, ceo-robot.ts, coo-robot.ts mevcut. Eksik: Patron onay → CELF tetik → otomatik görev üretimi uçtan uca test, görev sonuçlarının dashboard'a yansıması. |
+| **Faz 6** | Veli paneli MVP | **Büyük oranda tamam** | ~%90 | Veli sayfaları + API'ler + canlı veri testi (2 test veli, 3 sporcu bağlandı, gerçek auth). Eksik: push notification. |
+| **Faz 7** | CELF zinciri + başlangıç görevleri | **Büyük oranda tamam** | ~%80 | 15 direktörlük, başlangıç görev motoru, CELF tetikleme (provisionTenant Step 7) bağlandı. Eksik: görev sonuçlarının dashboard'a yansıması. |
 
 ---
 
 ## Şu Ana Kadar Kaçıncı Faza Gelmişiz? (Detaylı)
 
-- **Faz 1–2:** Vitrin, demo formu, tenant oluşturma zinciri çalışıyor — **~Faz 2 tamamlanmış** (ManyChat ve bazı minor eksikler hariç).
+- **Faz 1–2:** Vitrin, demo formu, tesis sayfaları (3 şablon), tenant oluşturma + CELF tetikleme — **~%95 tamamlanmış** (ManyChat eksik).
 - **Faz 3:** RLS politikaları kapsamlı, güvenlik robotu aktif — **~%80 tamamlanmış** (dashboard UI ve 3 Duvar entegrasyonu eksik).
-- **Faz 4:** Şablon sistemi çalışıyor ancak gelişim ölçüm/referans eksik — **~%60 tamamlanmış**.
-- **Faz 5–6:** Franchise ve veli panelleri sayfa/API olarak kapsamlı — **~%85-90 tamamlanmış** (canlı veri testi ve bazı edge case'ler eksik).
-- **Faz 7:** CELF başlangıç görev motoru mevcut ancak uçtan uca test eksik — **~%75 tamamlanmış**.
+- **Faz 4:** Şablon sistemi + gelişim ölçüm tabloları + referans değerler + analiz API — **~%90 tamamlanmış**.
+- **Faz 5–6:** Franchise ve veli panelleri kapsamlı, canlı veri testi yapıldı — **~%90 tamamlanmış** (push notification eksik).
+- **Faz 7:** CELF başlangıç görev motoru + provisionTenant tetikleme bağlandı — **~%80 tamamlanmış** (dashboard gösterim eksik).
 
-**Tek cümle:** 7 faza göre **Faz 5-6 aşamasına** gelinmiş; Faz 1-2-5-6 büyük oranda tamam, Faz 3 ve 7 ilerlemiş ama eksik, Faz 4 en çok eksik olan faz. Resmi ilerleme **YISA-S-FINAL-IS-HARITASI** ve **YISA-S-IS-AKISI-VE-ASAMALAR** ile takip edilir.
+**Tek cümle:** 7 faza göre **Faz 6-7 aşamasına** gelinmiş; Faz 1-2-4-5-6 büyük oranda tamam (~%90+), Faz 3 ve 7 ilerlemiş ama kalan eksikler var. **Genel ilerleme: ~%89.** Resmi ilerleme **YISA-S-CANLI-IS-AKISI-SEMASI** ve **YISA-S-CANLI-PROJE-RAPORU** ile takip edilir.
 
 ---
 
@@ -52,7 +52,7 @@
 | Adım | Tanım | Durum | Kanıt |
 |------|-------|-------|-------|
 | 2.1 | Tenant oluşturma API (provisionTenant zinciri) | **Yapıldı** | lib/services/tenant-provisioning.ts: 6 adımlı zincir (tenant → user → franchise → subdomain → seed → status) |
-| 2.2 | CELF tetikleme (sim_updates üzerinden) | **Kısmen** | sim_updates tablosu ve CELF altyapısı var; ancak provisionTenant → CELF zinciri otomatik tetik tam bağlı değil |
+| 2.2 | CELF tetikleme (sim_updates üzerinden) | **Yapıldı** | provisionTenant → triggerCelfStartup (Step 7) ile sim_updates → CELF tetikleme bağlandı |
 | — | Subdomain oluşturma | **Yapıldı** | franchise_subdomains tablosu + createSubdomain() fonksiyonu |
 | — | Rollback/compensating transaction | **Yapıldı** | rollback() fonksiyonu mevcut |
 
@@ -70,9 +70,10 @@
 | Adım | Tanım | Durum | Kanıt |
 |------|-------|-------|-------|
 | 4.1 | Şablon tabloları (templates, ceo_templates) | **Yapıldı** | api/templates: ceo_templates, templates, v0_template_library tabloları |
-| 4.2 | Gelişim ölçüm tabloları (gelisim_olcumleri, referans_degerler) | **Yapılmadı** | Bu tablolar ve API'ler kodda bulunamadı |
-| — | Gelişim analiz API | **Yapılmadı** | Veli panelinde gelişim sayfası var (UI) ancak arka plan analiz API'si eksik |
-| — | Çocuk gelişim referans değerleri seed | **Yapılmadı** | Yaş/cinsiyet bazlı referans değer verisi yok |
+| 4.2 | Gelişim ölçüm tabloları (gelisim_olcumleri, referans_degerler, sport_templates) | **Yapıldı** | scripts/011_veri_robotu_tablolar.sql — 3 tablo + RLS + index |
+| — | Gelişim analiz API (referans karşılaştırma + branş önerisi) | **Yapıldı** | api/gelisim-analiz/route.ts — POST endpoint |
+| — | Gelişim ölçümleri GET/POST API | **Yapıldı** | api/gelisim-olcumleri/route.ts |
+| — | Çocuk gelişim referans değerleri seed (WHO/TGF) | **Yapıldı** | scripts/012_referans_degerler_seed.sql — 10 parametre, yaş 5-15, E/K |
 
 ### Faz 5 — Franchise Paneli
 
@@ -92,6 +93,7 @@
 |------|-------|-------|-------|
 | 6.1 | Veli paneli sayfaları | **Yapıldı** | app/veli: dashboard, cocuk, gelisim, mesajlar, odeme, duyurular, kredi, giris |
 | — | Veli API'leri | **Yapıldı** | api/veli: children, attendance, payments, messages, health, gelisim, schedule, movements, ai-insights, demo, uye-ol, kredi |
+| — | Veli canlı veri testi | **Yapıldı** | 2 test veli + 3 sporcu parent bağlantısı + gerçek signInWithPassword auth |
 | — | Bildirim/push | **Yapılmadı** | Push notification altyapısı yok |
 
 ### Faz 7 — CELF Zinciri + Başlangıç Görevleri
@@ -99,6 +101,7 @@
 | Adım | Tanım | Durum | Kanıt |
 |------|-------|-------|-------|
 | 7.1 | Başlangıç görev motoru | **Yapıldı** | lib/robots/directorate-initial-tasks.ts (15 direktörlük, 25+ görev), api/startup (run_task, run_director, run_all) |
-| — | 12 direktörlük CELF yapısı | **Yapıldı** | lib/robots/celf-center.ts, celf-config-merged.ts, hierarchy.ts |
+| — | 15 direktörlük CELF yapısı | **Yapıldı** | lib/robots/celf-center.ts, celf-config-merged.ts, hierarchy.ts |
 | — | CEO/COO robot | **Yapıldı** | lib/robots/ceo-robot.ts, coo-robot.ts, cio-robot.ts |
-| — | Patron onay → CELF tetik uçtan uca | **Kısmen** | Her parça mevcut ancak tam entegre akış test edilmemiş |
+| — | Patron onay → CELF tetik uçtan uca | **Yapıldı** | provisionTenant Step 7 (triggerCelfStartup) ile sim_updates → CELF bağlandı |
+| — | Görev sonuçlarının dashboard'a yansıması | **Kısmen** | task_results arşivleme var; dashboard gösterimi eksik |
