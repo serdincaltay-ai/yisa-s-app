@@ -45,10 +45,10 @@ export default function VeliAnketlerPage() {
   const [submitted, setSubmitted] = useState<Set<string>>(new Set())
 
   const fetchSurveys = useCallback(async () => {
-    const res = await fetch('/api/franchise/surveys')
+    const res = await fetch('/api/franchise/surveys?status=active')
     const data = await res.json()
     const items: Survey[] = Array.isArray(data.items) ? data.items : []
-    setSurveys(items.filter((s) => s.status === 'active'))
+    setSurveys(items)
   }, [])
 
   useEffect(() => {

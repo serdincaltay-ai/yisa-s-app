@@ -24,10 +24,15 @@ export async function GET(req: NextRequest) {
     const service = getService()
     if (!service) return NextResponse.json({ items: [] })
 
-    const { data, error } = await service
+    const statusFilter = req.nextUrl.searchParams.get('status')
+    let query = service
       .from('tenant_surveys')
       .select('id, title, description, questions, status, created_at')
       .eq('tenant_id', tenantId)
+    if (statusFilter && ['draft', 'active', 'closed'].includes(statusFilter)) {
+      query = query.eq('status', statusFilter)
+    }
+    const { data, error } = await query
       .order('created_at', { ascending: false })
       .limit(100)
 
