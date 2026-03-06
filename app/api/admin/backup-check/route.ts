@@ -36,7 +36,7 @@ export async function GET(req: NextRequest) {
     if (cronSecret) {
       const auth = req.headers.get('authorization')
       if (auth !== `Bearer ${cronSecret}`) {
-        return NextResponse.json({ error: 'Unauthorized' }, { status: 401 })
+        return NextResponse.json({ error: 'Yetkisiz erişim' }, { status: 401 })
       }
     }
 
