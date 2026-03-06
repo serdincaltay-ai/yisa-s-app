@@ -211,8 +211,8 @@ export default function FranchiseAidatlarPage() {
     }
   }
 
-  const handleStripeCheckout = async () => {
-    const ids = Array.from(selectedIds)
+  const handleStripeCheckout = async (overrideIds?: string[]) => {
+    const ids = overrideIds ?? Array.from(selectedIds)
     if (ids.length === 0) {
       alert('Lütfen online ödeme yapılacak aidatları seçin.')
       return
@@ -380,7 +380,7 @@ export default function FranchiseAidatlarPage() {
                         {p.status === 'pending' || p.status === 'overdue' ? (
                           <div className="flex gap-1">
                             <Button size="sm" variant="outline" onClick={() => handleMarkPaid(p.id)} disabled={sending}>Ödendi Yap</Button>
-                            <Button size="sm" onClick={() => { setSelectedIds(new Set([p.id])); handleStripeCheckout() }} disabled={sending}>
+                            <Button size="sm" onClick={() => handleStripeCheckout([p.id])} disabled={sending}>
                               <CreditCard className="h-3 w-3 mr-1" />
                               Online Ödeme
                             </Button>
