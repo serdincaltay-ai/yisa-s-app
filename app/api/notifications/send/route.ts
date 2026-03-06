@@ -6,7 +6,7 @@
 
 import { NextRequest, NextResponse } from 'next/server'
 import { requirePatronOrFlow } from '@/lib/auth/api-auth'
-import { getUserSubscriptions } from '@/lib/db/push-subscriptions'
+import { getUserSubscriptions, getNotificationPreferences } from '@/lib/db/push-subscriptions'
 import {
   sendPushNotification,
   type NotificationType,
@@ -43,6 +43,15 @@ export async function POST(req: NextRequest) {
 
     if (!title) {
       return NextResponse.json({ error: 'title alanı gerekli.' }, { status: 400 })
+    }
+
+    // Kullanıcının bildirim tercihlerini kontrol et
+    const { data: prefs } = await getNotificationPreferences(userId)
+    if (prefs && !prefs[notificationType]) {
+      return NextResponse.json(
+        { ok: false, error: 'Kullanıcı bu bildirim türünü devre dışı bırakmış.' },
+        { status: 200 }
+      )
     }
 
     // Kullanıcının subscription'larını getir
