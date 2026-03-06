@@ -22,6 +22,7 @@ interface PaymentRow {
   status: string
   period_month: number | null
   period_year: number | null
+  tenant_id: string
 }
 
 interface AthleteRow {
@@ -48,7 +49,7 @@ export async function GET(req: NextRequest) {
     if (cronSecret) {
       const auth = req.headers.get('authorization')
       if (auth !== `Bearer ${cronSecret}`) {
-        return NextResponse.json({ error: 'Unauthorized' }, { status: 401 })
+        return NextResponse.json({ error: 'Yetkisiz erişim' }, { status: 401 })
       }
     }
 
@@ -84,7 +85,7 @@ export async function GET(req: NextRequest) {
     // pending + due_date <= bugün+7 olan ödemeleri bul
     const { data: payments, error: payErr } = await service
       .from('payments')
-      .select('id, athlete_id, amount, due_date, status, period_month, period_year')
+      .select('id, athlete_id, amount, due_date, status, period_month, period_year, tenant_id')
       .eq('status', 'pending')
       .lte('due_date', yediGunStr)
       .order('due_date', { ascending: true })
@@ -149,6 +150,7 @@ export async function GET(req: NextRequest) {
       channel: string
       status: string
       error_message: string | null
+      tenant_id: string | null
     }> = []
 
     for (const payment of typedPayments) {
@@ -175,6 +177,7 @@ export async function GET(req: NextRequest) {
           channel: 'push',
           status: 'skipped',
           error_message: 'Kullanıcı ödeme hatırlatmayı devre dışı bırakmış',
+          tenant_id: payment.tenant_id,
         })
         atlanan++
         continue
@@ -189,6 +192,7 @@ export async function GET(req: NextRequest) {
           channel: 'push',
           status: 'skipped',
           error_message: 'Aktif push aboneliği yok',
+          tenant_id: payment.tenant_id,
         })
         atlanan++
         continue
@@ -227,6 +231,7 @@ export async function GET(req: NextRequest) {
             channel: 'push',
             status: 'failed',
             error_message: result.error ?? 'Bilinmeyen hata',
+            tenant_id: payment.tenant_id,
           })
         }
       }
@@ -239,6 +244,7 @@ export async function GET(req: NextRequest) {
           channel: 'push',
           status: 'sent',
           error_message: null,
+          tenant_id: payment.tenant_id,
         })
       } else {
         atlanan++
