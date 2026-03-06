@@ -192,14 +192,24 @@ export async function GET(req: NextRequest) {
       // Bildirim tercihi kontrolü
       const pref = prefsMap.get(veliId)
       if (pref && !pref.odeme_hatirlatma) {
-        logRows.push({
-          payment_id: payment.id,
-          veli_user_id: veliId,
-          channel: 'push',
-          status: 'skipped',
-          error_message: 'Kullanıcı ödeme hatırlatmayı devre dışı bırakmış',
-          tenant_id: payment.tenant_id,
-        })
+        logRows.push(
+          {
+            payment_id: payment.id,
+            veli_user_id: veliId,
+            channel: 'push',
+            status: 'skipped',
+            error_message: 'Kullanıcı ödeme hatırlatmayı devre dışı bırakmış',
+            tenant_id: payment.tenant_id,
+          },
+          {
+            payment_id: payment.id,
+            veli_user_id: veliId,
+            channel: 'email',
+            status: 'skipped',
+            error_message: 'Kullanıcı ödeme hatırlatmayı devre dışı bırakmış',
+            tenant_id: payment.tenant_id,
+          }
+        )
         atlanan++
         continue
       }
