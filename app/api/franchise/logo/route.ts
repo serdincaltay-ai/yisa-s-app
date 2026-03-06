@@ -58,18 +58,12 @@ export async function POST(req: NextRequest) {
     if (!url || !key) return NextResponse.json({ error: 'Sunucu yapılandırma hatası' }, { status: 500 })
     const service = createServiceClient(url, key)
 
-    // Sabit dosya adı: tenant_id/logo — eski dosyaları temizle
+    // Sabit dosya adı: tenant_id/logo (upsert ile üzerine yazar)
     const filePath = `${tenantId}/logo`
-
-    // Önceki logo dosyalarını temizle (farklı uzantılı dosyalar kalmasın)
-    const { data: existingFiles } = await service.storage.from('tenant-logos').list(tenantId)
-    if (existingFiles?.length) {
-      const filesToRemove = existingFiles.map((f: { name: string }) => `${tenantId}/${f.name}`)
-      await service.storage.from('tenant-logos').remove(filesToRemove)
-    }
 
     const buffer = Buffer.from(await file.arrayBuffer())
 
+    // Önce yükle (upsert: true) — eski dosya korunur, hata olursa bozulmaz
     const { error: uploadError } = await service.storage
       .from('tenant-logos')
       .upload(filePath, buffer, {
@@ -80,6 +74,17 @@ export async function POST(req: NextRequest) {
     if (uploadError) {
       console.error('[franchise/logo] Upload error:', uploadError)
       return NextResponse.json({ error: 'Logo yüklenemedi: ' + uploadError.message }, { status: 500 })
+    }
+
+    // Yükleme başarılı — eski farklı adlı dosyaları temizle (orphan cleanup)
+    const { data: existingFiles } = await service.storage.from('tenant-logos').list(tenantId)
+    if (existingFiles?.length) {
+      const staleFiles = existingFiles
+        .filter((f: { name: string }) => f.name !== 'logo')
+        .map((f: { name: string }) => `${tenantId}/${f.name}`)
+      if (staleFiles.length > 0) {
+        await service.storage.from('tenant-logos').remove(staleFiles)
+      }
     }
 
     // Public URL oluştur
