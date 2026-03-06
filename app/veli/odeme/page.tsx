@@ -3,9 +3,10 @@
 import React, { useEffect, useState, useCallback } from 'react'
 import Link from 'next/link'
 import { useSearchParams } from 'next/navigation'
-import { PanelHeader } from '@/components/PanelHeader'
-import { VeliBottomNav } from '@/components/PanelBottomNav'
-import { CreditCard, Loader2, ArrowLeft, CheckCircle, XCircle } from 'lucide-react'
+import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card'
+import { Button } from '@/components/ui/button'
+import { Badge } from '@/components/ui/badge'
+import { ArrowLeft, CreditCard, Loader2, CheckCircle2, XCircle } from 'lucide-react'
 
 type PaymentItem = {
   id: string
@@ -20,14 +21,14 @@ type PaymentItem = {
 }
 
 export default function VeliOdemePage() {
+  const searchParams = useSearchParams()
   const [payments, setPayments] = useState<PaymentItem[]>([])
   const [totalDebt, setTotalDebt] = useState(0)
   const [loading, setLoading] = useState(true)
-  const [checkoutLoading, setCheckoutLoading] = useState<string | null>(null)
-  const searchParams = useSearchParams()
+  const [checkoutLoading, setCheckoutLoading] = useState(false)
+  const [selectedIds, setSelectedIds] = useState<Set<string>>(new Set())
 
-  const success = searchParams.get('success') === 'true'
-  const cancelled = searchParams.get('cancelled') === 'true'
+  const callbackStatus = searchParams.get('status')
 
   const fetchPayments = useCallback(async () => {
     try {
@@ -48,162 +49,170 @@ export default function VeliOdemePage() {
   }, [fetchPayments])
 
   const pending = payments.filter((p) => p.status === 'pending' || p.status === 'overdue')
-  const paid = payments.filter((p) => p.status === 'paid')
 
-  const handleStripeCheckout = async (paymentId: string) => {
-    setCheckoutLoading(paymentId)
+  const toggleSelect = (id: string) => {
+    setSelectedIds((prev) => {
+      const n = new Set(prev)
+      if (n.has(id)) n.delete(id)
+      else n.add(id)
+      return n
+    })
+  }
+
+  const selectAll = () => {
+    if (selectedIds.size >= pending.length) {
+      setSelectedIds(new Set())
+    } else {
+      setSelectedIds(new Set(pending.map((p) => p.id)))
+    }
+  }
+
+  const handleStripeCheckout = async () => {
+    const ids = selectedIds.size > 0 ? Array.from(selectedIds) : pending.map((p) => p.id)
+    if (ids.length === 0) return
+
+    setCheckoutLoading(true)
     try {
       const res = await fetch('/api/payments/create-checkout', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ payment_id: paymentId }),
+        body: JSON.stringify({ payment_ids: ids }),
       })
-      const data = await res.json() as { ok?: boolean; url?: string; error?: string }
-
-      if (data.ok && data.url) {
+      const data = await res.json()
+      if (data?.url) {
         window.location.href = data.url
       } else {
-        alert(data.error ?? 'Ödeme sayfası oluşturulamadı.')
+        alert(data?.error ?? 'Stripe checkout oluşturulamadı')
       }
     } catch {
-      alert('Bağlantı hatası. Lütfen tekrar deneyin.')
+      alert('İstek gönderilemedi')
     } finally {
-      setCheckoutLoading(null)
+      setCheckoutLoading(false)
     }
   }
 
+  const selectedTotal = pending
+    .filter((p) => selectedIds.has(p.id))
+    .reduce((sum, p) => sum + p.amount, 0)
+
   return (
-    <div className="min-h-screen bg-zinc-950 pb-20">
-      <PanelHeader panelName="VELİ PANELİ" />
+    <div className="min-h-screen bg-white p-4 pb-24">
+      <header className="flex items-center gap-2 mb-6">
+        <Button variant="ghost" size="sm" asChild>
+          <Link href="/veli/dashboard"><ArrowLeft className="h-4 w-4" /> Geri</Link>
+        </Button>
+      </header>
 
-      <main className="p-4 space-y-4">
-        <div className="flex items-center gap-2">
-          <Link href="/veli/dashboard" className="text-zinc-400 hover:text-white transition-colors">
-            <ArrowLeft className="h-5 w-5" strokeWidth={1.5} />
-          </Link>
-          <h1 className="text-xl font-bold text-white">Aidat & Ödemeler</h1>
-        </div>
-
-        {/* Başarı/İptal mesajları */}
-        {success && (
-          <div className="flex items-center gap-2 p-3 rounded-2xl bg-emerald-500/10 border border-emerald-500/30 text-emerald-400">
-            <CheckCircle className="h-5 w-5" strokeWidth={1.5} />
-            <span className="text-sm font-medium">Ödemeniz başarıyla tamamlandı! Teşekkür ederiz.</span>
-          </div>
-        )}
-        {cancelled && (
-          <div className="flex items-center gap-2 p-3 rounded-2xl bg-amber-500/10 border border-amber-500/30 text-amber-400">
-            <XCircle className="h-5 w-5" strokeWidth={1.5} />
-            <span className="text-sm font-medium">Ödeme iptal edildi. Dilediğiniz zaman tekrar deneyebilirsiniz.</span>
-          </div>
-        )}
-
-        {loading ? (
-          <div className="flex justify-center py-12">
-            <Loader2 className="h-8 w-8 animate-spin text-cyan-400" />
-          </div>
-        ) : (
-          <>
-            {/* Özet Kartları */}
-            <div className="grid grid-cols-2 gap-3">
-              <div className="bg-zinc-900 border border-orange-500/30 rounded-2xl p-4">
-                <p className="text-xs text-zinc-400">Bekleyen</p>
-                <p className="text-2xl font-bold text-orange-400 mt-1">
-                  {totalDebt > 0 ? `${totalDebt.toLocaleString('tr-TR')} ₺` : '0 ₺'}
-                </p>
-                <p className="text-xs text-zinc-500 mt-1">{pending.length} aidat</p>
-              </div>
-              <div className="bg-zinc-900 border border-emerald-500/30 rounded-2xl p-4">
-                <p className="text-xs text-zinc-400">Ödenen</p>
-                <p className="text-2xl font-bold text-emerald-400 mt-1">
-                  {paid.reduce((s, p) => s + p.amount, 0).toLocaleString('tr-TR')} ₺
-                </p>
-                <p className="text-xs text-zinc-500 mt-1">{paid.length} aidat</p>
-              </div>
+      {callbackStatus === 'success' && (
+        <Card className="border-green-500/50 bg-green-50 mb-6">
+          <CardContent className="p-4 flex items-center gap-3">
+            <CheckCircle2 className="h-6 w-6 text-green-600" />
+            <div>
+              <p className="font-medium text-green-800">Ödeme başarıyla tamamlandı!</p>
+              <p className="text-sm text-green-700">Ödemeniz işlendi. Aidat durumunuz kısa sürede güncellenecektir.</p>
             </div>
+          </CardContent>
+        </Card>
+      )}
 
-            {/* Bekleyen Aidatlar */}
-            {pending.length > 0 && (
-              <div className="space-y-3">
-                <h2 className="text-sm font-semibold text-white">Bekleyen Aidatlar</h2>
-                {pending.map((p) => (
-                  <div key={p.id} className="bg-zinc-900 border border-zinc-800 rounded-2xl p-4 hover:border-cyan-400/30 transition-all duration-300">
-                    <div className="flex items-center justify-between">
-                      <div>
-                        <p className="font-medium text-white">{p.athlete_name}</p>
-                        <p className="text-sm text-zinc-400">{p.payment_type} — {p.period_month}/{p.period_year}</p>
-                        {p.due_date && (
-                          <p className="text-xs text-zinc-500 mt-1">Son ödeme: {new Date(p.due_date).toLocaleDateString('tr-TR')}</p>
-                        )}
-                      </div>
-                      <div className="text-right">
-                        <p className="font-bold text-white">{p.amount.toLocaleString('tr-TR')} ₺</p>
-                        <button
-                          onClick={() => handleStripeCheckout(p.id)}
-                          disabled={checkoutLoading !== null}
-                          className="mt-2 rounded-lg bg-gradient-to-r from-cyan-500 to-cyan-400 px-4 py-1.5 text-xs font-medium text-zinc-950 hover:shadow-[0_0_20px_rgba(34,211,238,0.3)] transition-all disabled:opacity-50"
-                        >
-                          {checkoutLoading === p.id ? (
-                            <Loader2 className="h-4 w-4 animate-spin inline mr-1" />
-                          ) : (
-                            <CreditCard className="h-4 w-4 inline mr-1" />
-                          )}
-                          Öde
-                        </button>
-                      </div>
-                    </div>
+      {callbackStatus === 'cancel' && (
+        <Card className="border-amber-500/50 bg-amber-50 mb-6">
+          <CardContent className="p-4 flex items-center gap-3">
+            <XCircle className="h-6 w-6 text-amber-600" />
+            <div>
+              <p className="font-medium text-amber-800">Ödeme iptal edildi</p>
+              <p className="text-sm text-amber-700">Ödeme işlemi tamamlanmadı. Tekrar deneyebilirsiniz.</p>
+            </div>
+          </CardContent>
+        </Card>
+      )}
+
+      <h1 className="text-xl font-bold text-gray-900 mb-2">Online Aidat Ödeme</h1>
+      <p className="text-sm text-gray-600 mb-6">Stripe ile güvenli online ödeme. Bekleyen aidatlarınızı kartınızla ödeyebilirsiniz.</p>
+
+      {loading ? (
+        <div className="flex justify-center py-12"><Loader2 className="h-8 w-8 animate-spin text-[#2563eb]" /></div>
+      ) : (
+        <>
+          <Card className="border-gray-200 mb-6">
+            <CardHeader>
+              <CreditCard className="h-8 w-8 text-[#2563eb]" />
+              <CardTitle>Bekleyen aidatlar</CardTitle>
+              <CardDescription>Ödeme yapılmamış aidatlar listelenir. Stripe ile online ödeyebilirsiniz.</CardDescription>
+            </CardHeader>
+            <CardContent className="space-y-4">
+              {pending.length === 0 ? (
+                <p className="text-sm text-gray-600">Bekleyen aidatınız yok.</p>
+              ) : (
+                <>
+                  <div className="flex items-center justify-between">
+                    <p className="text-sm font-medium text-gray-900">Toplam borç: {totalDebt.toLocaleString('tr-TR')} TL</p>
+                    <Button variant="ghost" size="sm" onClick={selectAll}>
+                      {selectedIds.size >= pending.length ? 'Seçimi kaldır' : 'Tümünü seç'}
+                    </Button>
                   </div>
-                ))}
-              </div>
-            )}
+                  <ul className="space-y-2">
+                    {pending.map((p) => (
+                      <li
+                        key={p.id}
+                        className={`flex items-center justify-between py-3 px-3 rounded-lg border cursor-pointer transition-colors ${
+                          selectedIds.has(p.id)
+                            ? 'border-[#2563eb] bg-blue-50'
+                            : 'border-gray-100 hover:bg-gray-50'
+                        }`}
+                        onClick={() => toggleSelect(p.id)}
+                      >
+                        <div className="flex items-center gap-3">
+                          <input
+                            type="checkbox"
+                            checked={selectedIds.has(p.id)}
+                            onChange={() => toggleSelect(p.id)}
+                            className="h-4 w-4 rounded border-gray-300 text-[#2563eb]"
+                          />
+                          <div>
+                            <span className="text-sm font-medium">{p.athlete_name}</span>
+                            <span className="text-sm text-gray-500 ml-2">{p.period_month}/{p.period_year}</span>
+                          </div>
+                        </div>
+                        <div className="flex items-center gap-2">
+                          {p.status === 'overdue' && <Badge className="bg-red-500/20 text-red-600 text-xs">Gecikmiş</Badge>}
+                          <span className="font-medium">{p.amount.toLocaleString('tr-TR')} TL</span>
+                        </div>
+                      </li>
+                    ))}
+                  </ul>
 
-            {/* Ödeme Geçmişi */}
-            {paid.length > 0 && (
-              <div className="space-y-3">
-                <h2 className="text-sm font-semibold text-white">Ödeme Geçmişi</h2>
-                {paid.map((p) => (
-                  <div key={p.id} className="bg-zinc-900 border border-zinc-800 rounded-2xl p-4">
-                    <div className="flex items-center justify-between">
-                      <div>
-                        <p className="font-medium text-white">{p.athlete_name}</p>
-                        <p className="text-sm text-zinc-400">{p.payment_type} — {p.period_month}/{p.period_year}</p>
-                      </div>
-                      <div className="flex items-center gap-2">
-                        <p className="font-medium text-zinc-300">{p.amount.toLocaleString('tr-TR')} ₺</p>
-                        <CheckCircle className="h-5 w-5 text-emerald-400" strokeWidth={1.5} />
-                      </div>
+                  {selectedIds.size > 0 && (
+                    <div className="flex items-center justify-between pt-2 border-t">
+                      <p className="text-sm font-medium">{selectedIds.size} aidat seçili: {selectedTotal.toLocaleString('tr-TR')} TL</p>
                     </div>
-                  </div>
-                ))}
-              </div>
-            )}
+                  )}
 
-            {payments.length === 0 && (
-              <div className="bg-zinc-900 border border-zinc-800 rounded-2xl p-8 text-center">
-                <CreditCard className="h-12 w-12 text-zinc-600 mx-auto mb-3" strokeWidth={1.5} />
-                <p className="text-sm text-zinc-400">Henüz ödeme kaydı yok.</p>
-              </div>
-            )}
+                  <Button
+                    onClick={handleStripeCheckout}
+                    disabled={checkoutLoading || pending.length === 0}
+                    className="w-full bg-[#2563eb] hover:bg-[#1d4ed8]"
+                  >
+                    {checkoutLoading ? (
+                      <Loader2 className="h-4 w-4 animate-spin mr-2" />
+                    ) : (
+                      <CreditCard className="h-4 w-4 mr-2" />
+                    )}
+                    {selectedIds.size > 0
+                      ? `Seçilenleri öde (${selectedTotal.toLocaleString('tr-TR')} TL)`
+                      : `Tümünü öde (${totalDebt.toLocaleString('tr-TR')} TL)`
+                    }
+                  </Button>
+                </>
+              )}
+            </CardContent>
+          </Card>
 
-            {/* Toplam Bekleyen Özet */}
-            {totalDebt > 0 && (
-              <div className="bg-zinc-900 border border-orange-500/20 rounded-2xl p-4">
-                <div className="flex items-center justify-between">
-                  <p className="text-sm text-zinc-400">Toplam Bekleyen</p>
-                  <p className="text-lg font-bold text-orange-400">{totalDebt.toLocaleString('tr-TR')} ₺</p>
-                </div>
-              </div>
-            )}
-
-            <p className="text-xs text-zinc-500">
-              Güvenli ödeme: Stripe altyapısı ile kredi/banka kartı ödemesi yapılır.
-              Kart bilgileriniz sunucularımızda saklanmaz.
-            </p>
-          </>
-        )}
-      </main>
-
-      <VeliBottomNav />
+          <p className="text-xs text-gray-500">
+            Stripe üzerinden güvenli ödeme. Kart bilgileriniz Stripe tarafından korunur, sunucularımızda saklanmaz.
+          </p>
+        </>
+      )}
     </div>
   )
 }
