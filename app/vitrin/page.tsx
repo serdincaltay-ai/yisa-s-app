@@ -358,10 +358,10 @@ function KademeFiyatSlider() {
     <div className="mt-16 rounded-2xl border border-white/10 bg-white/5 p-8">
       <div className="flex items-center gap-3 mb-6">
         <Users className="h-6 w-6 text-cyan-400" />
-        <h2 className="text-xl font-bold text-white/95">Kademe Fiyatlandirma</h2>
+        <h2 className="text-xl font-bold text-white/95">Kademe Fiyatlandırma</h2>
       </div>
       <p className="text-sm text-white/50 mb-8">
-        Ogrenci sayinizi secin, paketle birlikte canli fiyati gorun. Fazla ogrenci = dusuk birim fiyat.
+        Öğrenci sayınızı seçin, paketle birlikte canlı fiyatı görün. Fazla öğrenci = düşük birim fiyat.
       </p>
 
       {/* Paket secimi */}
@@ -386,7 +386,7 @@ function KademeFiyatSlider() {
       {/* Slider */}
       <div className="mb-8">
         <div className="flex items-center justify-between mb-3">
-          <span className="text-sm text-white/70">Ogrenci sayisi</span>
+          <span className="text-sm text-white/70">Öğrenci sayısı</span>
           <span className="text-2xl font-bold text-emerald-400">{sonuc.ogrenciSayisi}</span>
         </div>
         <input
@@ -418,7 +418,7 @@ function KademeFiyatSlider() {
               }`}
             >
               <div className="font-medium">{k.etiket}</div>
-              <div className="mt-1">{k.birimFiyat[paketTipi]} TL/ogrenci</div>
+              <div className="mt-1">{k.birimFiyat[paketTipi]} TL/öğrenci</div>
             </div>
           )
         })}
@@ -429,21 +429,21 @@ function KademeFiyatSlider() {
         <div className="rounded-xl border border-white/10 bg-white/5 p-5 text-center">
           <div className="text-xs text-white/50 mb-1">Birim fiyat</div>
           <div className="text-lg font-bold text-cyan-400">{sonuc.birimFiyat} TL</div>
-          <div className="text-xs text-white/40">/ogrenci/ay</div>
+          <div className="text-xs text-white/40">/öğrenci/ay</div>
         </div>
         <div className="rounded-xl border border-emerald-500/30 bg-emerald-500/5 p-5 text-center">
-          <div className="text-xs text-white/50 mb-1">Aylik toplam</div>
+          <div className="text-xs text-white/50 mb-1">Aylık toplam</div>
           <div className="text-2xl font-bold text-emerald-400">
             {sonuc.aylikFiyat.toLocaleString("tr-TR")} TL
           </div>
           <div className="text-xs text-white/40">/ay</div>
         </div>
         <div className="rounded-xl border border-white/10 bg-white/5 p-5 text-center">
-          <div className="text-xs text-white/50 mb-1">Yillik (%10 indirim)</div>
+          <div className="text-xs text-white/50 mb-1">Yıllık (%10 indirim)</div>
           <div className="text-lg font-bold text-amber-400">
             {sonuc.yillikFiyat.toLocaleString("tr-TR")} TL
           </div>
-          <div className="text-xs text-white/40">/yil</div>
+          <div className="text-xs text-white/40">/yıl</div>
         </div>
       </div>
     </div>

@@ -47,15 +47,15 @@ export const YILLIK_INDIRIM_ORANI = 0.10
 /** Paket tipi bilgileri */
 export const PAKET_TIPLERI: Record<PaketTipi, { ad: string; aciklama: string }> = {
   starter: {
-    ad: 'Starter',
+    ad: 'Başlangıç',
     aciklama: 'Küçük tesisler için temel yönetim paketi',
   },
   pro: {
-    ad: 'Pro',
+    ad: 'Profesyonel',
     aciklama: 'Büyüyen tesisler için gelişmiş özellikler',
   },
   enterprise: {
-    ad: 'Enterprise',
+    ad: 'Kurumsal',
     aciklama: 'Büyük organizasyonlar için tam çözüm',
   },
 }
