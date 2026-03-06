@@ -7,6 +7,10 @@ export default defineConfig({
     environment: 'node',
     include: ['__tests__/**/*.test.ts'],
     setupFiles: ['__tests__/setup.ts'],
+    coverage: {
+      provider: 'v8',
+      include: ['lib/**/*.ts'],
+    },
   },
   resolve: {
     alias: {
