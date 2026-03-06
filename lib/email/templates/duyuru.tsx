@@ -15,6 +15,7 @@ import {
   Preview,
 } from '@react-email/components'
 import * as React from 'react'
+import sanitizeHtml from 'sanitize-html'
 
 export interface DuyuruProps {
   /** Alici adi */
@@ -51,7 +52,16 @@ export function Duyuru({
           <Section style={contentBoxStyle}>
             <Text
               style={contentTextStyle}
-              dangerouslySetInnerHTML={{ __html: icerik }}
+              dangerouslySetInnerHTML={{
+                __html: sanitizeHtml(icerik, {
+                  allowedTags: ['p', 'strong', 'em', 'b', 'i', 'br', 'ul', 'ol', 'li', 'a', 'h1', 'h2', 'h3', 'span'],
+                  allowedAttributes: {
+                    a: ['href', 'target'],
+                    span: ['style'],
+                  },
+                  allowedSchemes: ['https', 'mailto'],
+                }),
+              }}
             />
           </Section>
           {gonderen ? (

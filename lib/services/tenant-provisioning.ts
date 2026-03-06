@@ -384,7 +384,9 @@ async function sendWelcomeEmail(ctx: ProvisioningContext): Promise<void> {
   }
 
   const ownerAd = demoRequest.name?.trim() || 'Sayın İşletme Sahibi'
-  const tesisAdi = demoRequest.name?.trim() || demoRequest.facility_type || 'Yeni Tesis'
+  const baseName = demoRequest.name?.trim() || demoRequest.facility_type || 'Yeni Tesis'
+  const cityPart = demoRequest.city ? ` ${demoRequest.city}` : ''
+  const tesisAdi = `${baseName}${cityPart}`.trim() || 'Yeni Tesis'
 
   try {
     const html = await render(
