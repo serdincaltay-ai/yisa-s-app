@@ -16,4 +16,34 @@ CREATE INDEX IF NOT EXISTS idx_cleaning_checklists_tenant ON cleaning_checklists
 CREATE INDEX IF NOT EXISTS idx_cleaning_checklists_tarih ON cleaning_checklists(tarih);
 CREATE INDEX IF NOT EXISTS idx_cleaning_checklists_user ON cleaning_checklists(user_id);
 
+-- RLS politikalari
+ALTER TABLE cleaning_checklists ENABLE ROW LEVEL SECURITY;
+
+CREATE POLICY cleaning_checklists_select ON cleaning_checklists
+  FOR SELECT USING (tenant_id IN (
+    SELECT tenant_id FROM staff WHERE user_id = auth.uid()
+    UNION
+    SELECT id FROM tenants WHERE owner_id = auth.uid()
+  ));
+
+CREATE POLICY cleaning_checklists_insert ON cleaning_checklists
+  FOR INSERT WITH CHECK (
+    user_id = auth.uid()
+    AND tenant_id IN (
+      SELECT tenant_id FROM staff WHERE user_id = auth.uid()
+      UNION
+      SELECT id FROM tenants WHERE owner_id = auth.uid()
+    )
+  );
+
+CREATE POLICY cleaning_checklists_update ON cleaning_checklists
+  FOR UPDATE USING (
+    user_id = auth.uid()
+    AND tenant_id IN (
+      SELECT tenant_id FROM staff WHERE user_id = auth.uid()
+      UNION
+      SELECT id FROM tenants WHERE owner_id = auth.uid()
+    )
+  );
+
 COMMENT ON TABLE cleaning_checklists IS 'Temizlik personeli gunluk checklist kayitlari — tenant_id ile izole';

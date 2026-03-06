@@ -27,7 +27,7 @@ interface ChecklistItem {
   not: string
 }
 
-const ALANLAR = ['Salon', 'Soyunma Odasi', 'Tuvalet', 'Giris']
+const ALANLAR = ['Salon', 'Soyunma Odası', 'Tuvalet', 'Giriş']
 
 const VARSAYILAN_ITEMS: ChecklistItem[] = (['sabah', 'ogle', 'aksam'] as Vardiya[]).flatMap(
   (vardiya) =>
@@ -41,8 +41,8 @@ const VARSAYILAN_ITEMS: ChecklistItem[] = (['sabah', 'ogle', 'aksam'] as Vardiya
 
 const VARDIYA_BILGI: Record<Vardiya, { label: string; icon: React.ReactNode }> = {
   sabah: { label: 'Sabah', icon: <Sun className="h-5 w-5 text-amber-500" /> },
-  ogle: { label: 'Ogle', icon: <CloudSun className="h-5 w-5 text-blue-500" /> },
-  aksam: { label: 'Aksam', icon: <Moon className="h-5 w-5 text-indigo-500" /> },
+  ogle: { label: 'Öğle', icon: <CloudSun className="h-5 w-5 text-blue-500" /> },
+  aksam: { label: 'Akşam', icon: <Moon className="h-5 w-5 text-indigo-500" /> },
 }
 
 export default function TemizlikChecklistPage() {
@@ -103,11 +103,14 @@ export default function TemizlikChecklistPage() {
       const data = await res.json()
       if (data.ok) {
         setToast({ message: 'Checklist kaydedildi!', type: 'success' })
+        if (data.checklist?.items) {
+          setItems(data.checklist.items as ChecklistItem[])
+        }
       } else {
-        setToast({ message: data.error || 'Kayit basarisiz', type: 'error' })
+        setToast({ message: data.error || 'Kayıt başarısız', type: 'error' })
       }
     } catch {
-      setToast({ message: 'Baglanti hatasi', type: 'error' })
+      setToast({ message: 'Bağlantı hatası', type: 'error' })
     } finally {
       setSaving(false)
       setTimeout(() => setToast(null), 3000)
@@ -138,7 +141,7 @@ export default function TemizlikChecklistPage() {
               Temizlik Checklist
             </h1>
             <p className="text-muted-foreground">
-              {new Date(tarih).toLocaleDateString('tr-TR', {
+              {new Date(tarih + 'T12:00:00').toLocaleDateString('tr-TR', {
                 weekday: 'long',
                 year: 'numeric',
                 month: 'long',
@@ -148,7 +151,7 @@ export default function TemizlikChecklistPage() {
           </div>
           <div className="flex items-center gap-3">
             <Badge variant={oran === 100 ? 'default' : 'secondary'} className="text-sm px-3 py-1">
-              %{oran} tamamlandi
+              %{oran} tamamlandı
             </Badge>
             <Button onClick={handleSave} disabled={saving}>
               {saving ? (
