@@ -20,6 +20,17 @@ jobs:
       - name: Install dependencies
         run: npm ci
 
+      - name: Check env schema
+        run: npm run check:env
+        env:
+          NEXT_PUBLIC_SUPABASE_URL: https://placeholder.supabase.co
+          NEXT_PUBLIC_SUPABASE_ANON_KEY: placeholder-key
+          SUPABASE_SERVICE_ROLE_KEY: placeholder-key
+          GOOGLE_API_KEY: placeholder-key
+          OPENAI_API_KEY: placeholder-key
+          ANTHROPIC_API_KEY: placeholder-key
+          TOGETHER_API_KEY: placeholder-key
+
       - name: Lint
         run: npm run lint
         continue-on-error: true
