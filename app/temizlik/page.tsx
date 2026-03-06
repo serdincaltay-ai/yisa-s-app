@@ -102,7 +102,7 @@ export default function TemizlikChecklistPage() {
       })
       const data = await res.json()
       if (data.ok) {
-        setToast({ message: 'Checklist kaydedildi!', type: 'success' })
+        setToast({ message: 'Kontrol listesi kaydedildi!', type: 'success' })
         if (data.checklist?.items) {
           setItems(data.checklist.items as ChecklistItem[])
         }
@@ -138,7 +138,7 @@ export default function TemizlikChecklistPage() {
           <div>
             <h1 className="text-2xl font-bold flex items-center gap-2">
               <Sparkles className="h-6 w-6 text-primary" />
-              Temizlik Checklist
+              Temizlik Kontrol Listesi
             </h1>
             <p className="text-muted-foreground">
               {new Date(tarih + 'T12:00:00').toLocaleDateString('tr-TR', {

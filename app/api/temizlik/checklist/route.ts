@@ -60,7 +60,7 @@ export async function POST(req: NextRequest) {
     const { tarih, items } = body as { tarih?: string; items?: unknown[] }
 
     if (!items || !Array.isArray(items)) {
-      return NextResponse.json({ error: 'items alani gerekli (array)' }, { status: 400 })
+      return NextResponse.json({ error: '\u00d6\u011feler alan\u0131 gerekli (dizi olmal\u0131)' }, { status: 400 })
     }
 
     const checklistTarih = tarih || new Date().toISOString().slice(0, 10)
