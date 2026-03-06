@@ -7,7 +7,7 @@ CREATE TABLE IF NOT EXISTS sms_logs (
   provider TEXT NOT NULL DEFAULT 'twilio',
   provider_sid TEXT,
   error_message TEXT,
-  tenant_id UUID REFERENCES tenants(id),
+  tenant_id UUID REFERENCES tenants(id) ON DELETE CASCADE,
   trigger_type TEXT,
   athlete_id UUID,
   created_at TIMESTAMPTZ NOT NULL DEFAULT now()
