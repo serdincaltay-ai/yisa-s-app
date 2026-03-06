@@ -22,12 +22,13 @@ export interface PushSubscriptionData {
   }
 }
 
-export type NotificationType = 'yoklama_sonucu' | 'odeme_hatirlatma' | 'duyuru'
+export type NotificationType = 'yoklama_sonucu' | 'odeme_hatirlatma' | 'duyuru' | 'belge_uyari'
 
 export const NOTIFICATION_TYPE_LABELS: Record<NotificationType, string> = {
   yoklama_sonucu: 'Yoklama Sonucu',
   odeme_hatirlatma: 'Ödeme Hatırlatma',
   duyuru: 'Duyuru',
+  belge_uyari: 'Belge Geçerlilik Uyarısı',
 }
 
 const VAPID_PUBLIC_KEY = process.env.NEXT_PUBLIC_VAPID_PUBLIC_KEY ?? ''
