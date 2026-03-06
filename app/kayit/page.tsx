@@ -117,6 +117,7 @@ export default function KayitGorevlisiPage() {
 
   /* kaydet */
   const handleSubmit = async () => {
+    if (toastTimerRef.current) clearTimeout(toastTimerRef.current)
     if (!ogrenci.ad.trim()) {
       setToast({ message: 'Öğrenci adı zorunludur', type: 'error' })
       return
