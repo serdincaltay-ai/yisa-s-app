@@ -13,6 +13,7 @@
 import { isForbiddenForAI, requiresPatronApproval, checkPatronLock, REQUIRE_PATRON_APPROVAL, FORBIDDEN_FOR_AI, type PatronLockCheck } from './patron-lock'
 import { ALARM_SEVIYELERI, SIBER_GUVENLIK_KURALLARI, type AlarmSeviyesi } from './siber-guvenlik'
 import { runCelfChecks, type DirectorKey, type CelfAuditResult } from '../robots/celf-center'
+import { executeAcilAlarm } from './acil-alarm'
 
 // ─── Types ──────────────────────────────────────────────────────────────────
 
@@ -221,9 +222,9 @@ export function ucDuvarKontrol(params: UcDuvarParams): UcDuvarResult {
     sonuc = 'uyari'
   }
 
-  // Alarm seviyesi 'ACIL' ise /api/alarm/acil tetikle
+  // Alarm seviyesi 'ACIL' ise dogrudan acil alarm calistir (HTTP self-call yerine)
   if (d2.alarmSeviyesi === 'ACIL') {
-    triggerAcilAlarm({
+    executeAcilAlarm({
       type: engellendi ? 'guvenlik_ihlali' : 'sistem_hatasi',
       message: d2.detay,
       details: engelSebebi ?? message,
@@ -284,46 +285,6 @@ export function ucDuvarDurumu(): DuvarDurumu[] {
       renk: '#eab308', // sarı
     },
   ]
-}
-
-// ─── Acil Alarm Tetikleyici ────────────────────────────────────────────────
-
-/**
- * /api/alarm/acil endpoint'ini çağırarak Patron'a email + push bildirim gönderir.
- * Alarm seviyesi 'ACIL' olduğunda ucDuvarKontrol tarafından otomatik tetiklenir.
- */
-async function triggerAcilAlarm(params: {
-  type: 'sistem_hatasi' | 'guvenlik_ihlali'
-  message: string
-  details?: string
-  source?: string
-}): Promise<void> {
-  try {
-    const baseUrl = process.env.NEXT_PUBLIC_SITE_URL
-      ?? process.env.NEXT_PUBLIC_APP_URL
-      ?? (process.env.VERCEL_URL
-        ? `https://${process.env.VERCEL_URL}`
-        : 'http://localhost:3000')
-
-    const headers: Record<string, string> = { 'Content-Type': 'application/json' }
-    const alarmSecret = process.env.ALARM_INTERNAL_SECRET
-    if (alarmSecret) {
-      headers['x-alarm-secret'] = alarmSecret
-    }
-
-    const response = await fetch(`${baseUrl}/api/alarm/acil`, {
-      method: 'POST',
-      headers,
-      body: JSON.stringify(params),
-    })
-
-    if (!response.ok) {
-      const text = await response.text()
-      console.error('[uc-duvar] Acil alarm API hatası:', response.status, text)
-    }
-  } catch (err) {
-    console.error('[uc-duvar] Acil alarm gönderim hatası:', err)
-  }
 }
 
 // ─── Alarm Seviyeleri Dışa Aktarma ─────────────────────────────────────────
