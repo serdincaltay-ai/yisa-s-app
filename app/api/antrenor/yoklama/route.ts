@@ -6,6 +6,8 @@ import { NextRequest, NextResponse } from 'next/server'
 import { createClient } from '@/lib/supabase/server'
 import { createClient as createServiceClient } from '@supabase/supabase-js'
 import { getTenantIdWithFallback } from '@/lib/franchise-tenant'
+import { yoklamaGelmediSMS } from '@/lib/sms/triggers'
+import { isSmsConfigured } from '@/lib/sms/provider'
 
 export const dynamic = 'force-dynamic'
 
@@ -103,6 +105,41 @@ export async function POST(req: NextRequest) {
         const { data: a } = await service.from('athletes').select('ders_kredisi').eq('id', r.athlete_id).single()
         const kredi = Math.max(0, (Number(a?.ders_kredisi) ?? 0) - 1)
         await service.from('athletes').update({ ders_kredisi: kredi }).eq('id', r.athlete_id)
+      }
+    }
+
+    // Gelmedi olan sporcuların velisine otomatik SMS tetikle (arka planda)
+    if (isSmsConfigured()) {
+      const absentRows = rows.filter((r) => r.status === 'absent')
+      if (absentRows.length > 0) {
+        const absentIds = absentRows.map((r) => r.athlete_id)
+        const { data: athletes } = await service
+          .from('athletes')
+          .select('id, name, surname, parent_phone')
+          .in('id', absentIds)
+
+        // Daha önce absent işaretlenmemiş olanlar için SMS gönder (tekrar SMS'i engelle)
+        const oncekiAbsent = new Set(
+          (mevcut ?? [])
+            .filter((m: { status: string }) => m.status === 'absent')
+            .map((m: { athlete_id: string }) => m.athlete_id)
+        )
+
+        const smsPromises: Promise<unknown>[] = []
+        for (const athlete of (athletes ?? []) as Array<{ id: string; name: string; surname?: string; parent_phone?: string }>) {
+          if (athlete.parent_phone && !oncekiAbsent.has(athlete.id)) {
+            const cocukAdi = [athlete.name, athlete.surname].filter(Boolean).join(' ')
+            smsPromises.push(
+              yoklamaGelmediSMS(athlete.parent_phone, cocukAdi, bugun, {
+                tenant_id: tenantId,
+                athlete_id: athlete.id,
+              })
+            )
+          }
+        }
+        if (smsPromises.length > 0) {
+          await Promise.allSettled(smsPromises)
+        }
       }
     }
 
