@@ -1,6 +1,6 @@
 "use client"
 
-import { useState, useEffect, useCallback } from "react"
+import { useState, useEffect, useCallback, useRef } from "react"
 import { AlertTriangle, X, RefreshCw } from "lucide-react"
 
 interface AcilAlarm {
@@ -26,6 +26,7 @@ export default function AcilAlarmBanner({
   const [alarmlar, setAlarmlar] = useState<AcilAlarm[]>([])
   const [dismissed, setDismissed] = useState(false)
   const [loading, setLoading] = useState(false)
+  const dismissedLatestId = useRef<string | null>(null)
 
   const fetchAlarms = useCallback(async () => {
     try {
@@ -35,8 +36,8 @@ export default function AcilAlarmBanner({
       const data = await res.json()
       if (data.ok && data.alarmlar) {
         setAlarmlar(data.alarmlar)
-        // Yeni alarm gelirse dismissed'i sifirla
-        if (data.alarmlar.length > 0) {
+        // Sadece yeni alarm geldiginde dismissed'i sifirla
+        if (data.alarmlar.length > 0 && data.alarmlar[0].id !== dismissedLatestId.current) {
           setDismissed(false)
         }
       }
@@ -137,6 +138,7 @@ export default function AcilAlarmBanner({
             <button
               onClick={(e) => {
                 e.stopPropagation()
+                dismissedLatestId.current = alarmlar[0]?.id ?? null
                 setDismissed(true)
               }}
               className="p-1.5 rounded-lg transition-colors"

@@ -305,9 +305,15 @@ async function triggerAcilAlarm(params: {
         ? `https://${process.env.VERCEL_URL}`
         : 'http://localhost:3000')
 
+    const headers: Record<string, string> = { 'Content-Type': 'application/json' }
+    const alarmSecret = process.env.ALARM_INTERNAL_SECRET
+    if (alarmSecret) {
+      headers['x-alarm-secret'] = alarmSecret
+    }
+
     const response = await fetch(`${baseUrl}/api/alarm/acil`, {
       method: 'POST',
-      headers: { 'Content-Type': 'application/json' },
+      headers,
       body: JSON.stringify(params),
     })
 

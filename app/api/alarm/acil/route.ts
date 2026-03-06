@@ -20,6 +20,17 @@ import { getUserSubscriptions } from '@/lib/db/push-subscriptions'
 import { sendPushNotification, type PushSubscriptionData } from '@/lib/notifications/web-push'
 import { getSupabaseServer } from '@/lib/supabase'
 import { PATRON_EMAIL } from '@/lib/auth/roles'
+import { requirePatron } from '@/lib/auth/api-auth'
+
+/** HTML ozel karakterlerini escape eder (XSS/injection onlemi) */
+function escapeHtml(str: string): string {
+  return str
+    .replace(/&/g, '&amp;')
+    .replace(/</g, '&lt;')
+    .replace(/>/g, '&gt;')
+    .replace(/"/g, '&quot;')
+    .replace(/'/g, '&#39;')
+}
 
 export const dynamic = 'force-dynamic'
 
@@ -32,10 +43,22 @@ const ALARM_TYPE_LABELS: Record<AcilAlarmType, string> = {
   guvenlik_ihlali: 'Guvenlik Ihlali',
 }
 
+/** Dahili cagrilar icin secret kontrolu (uc-duvar.ts → /api/alarm/acil) */
+const ALARM_SECRET = process.env.ALARM_INTERNAL_SECRET ?? ''
+
 // ─── POST: Acil alarm tetikle ─────────────────────────────────────────────
 
 export async function POST(req: NextRequest) {
   try {
+    // Yetki kontrolu: ya dahili secret ya da patron oturumu gerekli
+    const internalSecret = req.headers.get('x-alarm-secret')
+    if (ALARM_SECRET && internalSecret === ALARM_SECRET) {
+      // Dahili cagri (uc-duvar.ts) — gecerli
+    } else {
+      const auth = await requirePatron()
+      if (auth instanceof NextResponse) return auth
+    }
+
     const body = await req.json()
 
     const type = body.type as AcilAlarmType
@@ -76,23 +99,23 @@ export async function POST(req: NextRequest) {
         <div style="font-family: Arial, sans-serif; max-width: 600px; margin: 0 auto;">
           <div style="background: #dc2626; color: white; padding: 20px; border-radius: 12px 12px 0 0;">
             <h1 style="margin: 0; font-size: 24px;">&#x1F6A8; ACIL ALARM</h1>
-            <p style="margin: 8px 0 0; opacity: 0.9;">${alarmLabel}</p>
+            <p style="margin: 8px 0 0; opacity: 0.9;">${escapeHtml(alarmLabel)}</p>
           </div>
           <div style="background: #1e293b; color: #f8fafc; padding: 24px; border-radius: 0 0 12px 12px;">
             <div style="background: #0f172a; padding: 16px; border-radius: 8px; margin-bottom: 16px;">
               <p style="margin: 0; font-size: 14px; color: #94a3b8;">Mesaj:</p>
-              <p style="margin: 8px 0 0; font-size: 16px; font-weight: bold;">${message}</p>
+              <p style="margin: 8px 0 0; font-size: 16px; font-weight: bold;">${escapeHtml(message)}</p>
             </div>
             ${details ? `
             <div style="background: #0f172a; padding: 16px; border-radius: 8px; margin-bottom: 16px;">
               <p style="margin: 0; font-size: 14px; color: #94a3b8;">Detay:</p>
-              <p style="margin: 8px 0 0; font-size: 14px;">${details}</p>
+              <p style="margin: 8px 0 0; font-size: 14px;">${escapeHtml(details)}</p>
             </div>
             ` : ''}
             <div style="display: flex; gap: 16px; margin-top: 16px;">
               <div style="flex: 1; background: #0f172a; padding: 12px; border-radius: 8px;">
                 <p style="margin: 0; font-size: 12px; color: #94a3b8;">Kaynak</p>
-                <p style="margin: 4px 0 0; font-size: 14px;">${source}</p>
+                <p style="margin: 4px 0 0; font-size: 14px;">${escapeHtml(source)}</p>
               </div>
               <div style="flex: 1; background: #0f172a; padding: 12px; border-radius: 8px;">
                 <p style="margin: 0; font-size: 12px; color: #94a3b8;">Tarih</p>
@@ -200,6 +223,10 @@ export async function POST(req: NextRequest) {
 
 export async function GET(req: NextRequest) {
   try {
+    // Patron yetki kontrolu
+    const auth = await requirePatron()
+    if (auth instanceof NextResponse) return auth
+
     const { searchParams } = new URL(req.url)
     const limit = Math.min(Number(searchParams.get('limit')) || 10, 50)
     const spikeHours = Number(searchParams.get('hours')) || 24
