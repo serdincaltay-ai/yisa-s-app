@@ -5,6 +5,7 @@
 > **Güncelleme kuralı:** İşi tamamladığınızda ilgili satırda **Durum** → Yapıldı veya Düzeltildi; **Son güncelleme** → bugünün tarihi (GG.AA.YYYY); **Not** → kısa açıklama yazın.
 
 **Son rapor güncellemesi:** 05.03.2026 — Kullanıcı paneli tasarım kilidi (koyu tema + alt nav) ve Tesis sayfaları (3 şablon, ders programı grid, fiyat kartları, premium özellikler) tamamlandı.
+**Son rapor güncellemesi:** 05.03.2026 — 3 şablon sistemi, haftalık GRID, robot karşılama, paket fiyat güncellemesi, feneratasehir subdomain, veli canlı veri testi, Faz 3+7 tamamlama güncellemeleri eklendi.
 
 ---
 
@@ -24,7 +25,7 @@
 
 *Kaynak: YISA_S_V0_YOL_HARITASI.md. Kod tabanı (tenant-yisa-s, app-yisa-s, yisa-s-com) incelenerek adım adım değerlendirildi. Detay: YISA-S-7-FAZ-DURUMU.md.*
 
-### Faz 1 — Vitrin + Demo (~%90)
+### Faz 1 — Vitrin + Demo + Tesis Sayfaları (~%95)
 
 | Faz | Adım | Madde / iş | Durum | Son güncelleme | Not |
 |-----|-------|------------|--------|----------------|-----|
@@ -36,6 +37,10 @@
 | Faz 1 | 1.6 | Onay kuyruğu sayfası | Yapıldı | 05.03.2026 | patron/onay-kuyrugu + api/onay-kuyrugu |
 | Faz 1 | — | ManyChat entegrasyonu | Yapılacak | 05.03.2026 | Webhook/bot bağlantısı kodda yok |
 | Faz 1 | — | Vitrin sayfaları (ozellikler, fiyatlandirma, hakkimizda vb.) | Yapıldı | 05.03.2026 | yisa-s-com/app: 10+ sayfa mevcut |
+| Faz 1 | — | Tesis sayfaları 3 şablon sistemi (standard/medium/premium) | **Yapıldı** | 05.03.2026 | tenant-yisa-s: 3 şablon + config + GRID + robot |
+| Faz 1 | — | Haftalık ders programı GRID bileşeni | **Yapıldı** | 05.03.2026 | WeeklyScheduleGrid.tsx: saatler×günler, renk kodlu |
+| Faz 1 | — | Robot karşılama + randevu sistemi (premium) | **Yapıldı** | 05.03.2026 | RobotGreeting.tsx + PremiumTemplate randevu modalı |
+| Faz 1 | — | Paket fiyatları güncellemesi (24→30K, 48→52.8K, 60→60K) | **Düzeltildi** | 05.03.2026 | tenant-yisa-s + v0-web-page-content-edit-bjktesis |
 
 ### Faz 2 — Tenant Oluşturma (~%95)
 
@@ -44,6 +49,7 @@
 | Faz 2 | 2.1 | provisionTenant zinciri (6 adım: tenant→user→franchise→subdomain→seed→status) | Yapıldı | 05.03.2026 | lib/services/tenant-provisioning.ts (501 satır) |
 | Faz 2 | 2.2 | CELF otomatik tetikleme (sim_updates üzerinden) | Yapıldı | 05.03.2026 | provisionTenant → triggerCelfStartup (Step 7) eklendi; sim_updates tablosuna tenant_baslangic_gorevleri INSERT yapılıyor; 12 direktörlük bilgisi command JSON'a dahil |
 | Faz 2 | — | Subdomain oluşturma (franchise_subdomains) | Yapıldı | 05.03.2026 | createSubdomain() mevcut |
+| Faz 2 | — | feneratasehir subdomain desteği | **Yapıldı** | 05.03.2026 | FRANCHISE_SUBDOMAINS_DEFAULT'a eklendi |
 | Faz 2 | — | Rollback / compensating transaction | Yapıldı | 05.03.2026 | rollback() fonksiyonu mevcut |
 
 ### Faz 3 — Güvenlik Robotu MVP (~%80)
@@ -88,7 +94,7 @@
 | Faz 6 | — | Kullanıcı paneli tasarım kilidi (Veli + Antrenör koyu tema, kutucuk layout, alt nav) | **Yapıldı** | 05.03.2026 | PanelBottomNav + PanelHeader shared bileşenler; tüm veli/antrenör sayfaları zinc-950 koyu tema; Antrenör sidebar→bottom nav; Veli ders programı sayfası |
 | Faz 6 | — | Tesis web sayfaları (BJK Tuzla + Fener Atasehir) | **Yapıldı** | 05.03.2026 | 3 şablon (standart/orta/premium); haftalık ders programı grid; paket fiyatları; premium: robot karşılama + randevu modal |
 
-### Faz 7 — CELF Zinciri + Başlangıç Görevleri (~%75)
+### Faz 7 — CELF Zinciri + Başlangıç Görevleri (~%80)
 
 | Faz | Adım | Madde / iş | Durum | Son güncelleme | Not |
 |-----|-------|------------|--------|----------------|-----|

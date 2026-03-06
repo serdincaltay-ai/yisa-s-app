@@ -2,9 +2,10 @@
 
 import React, { useEffect, useState, useCallback } from 'react'
 import Link from 'next/link'
+import { useSearchParams } from 'next/navigation'
 import { PanelHeader } from '@/components/PanelHeader'
 import { VeliBottomNav } from '@/components/PanelBottomNav'
-import { CreditCard, Loader2, ArrowLeft, CheckCircle } from 'lucide-react'
+import { CreditCard, Loader2, ArrowLeft, CheckCircle, XCircle } from 'lucide-react'
 
 type PaymentItem = {
   id: string
@@ -22,6 +23,11 @@ export default function VeliOdemePage() {
   const [payments, setPayments] = useState<PaymentItem[]>([])
   const [totalDebt, setTotalDebt] = useState(0)
   const [loading, setLoading] = useState(true)
+  const [checkoutLoading, setCheckoutLoading] = useState<string | null>(null)
+  const searchParams = useSearchParams()
+
+  const success = searchParams.get('success') === 'true'
+  const cancelled = searchParams.get('cancelled') === 'true'
 
   const fetchPayments = useCallback(async () => {
     try {
@@ -44,6 +50,28 @@ export default function VeliOdemePage() {
   const pending = payments.filter((p) => p.status === 'pending' || p.status === 'overdue')
   const paid = payments.filter((p) => p.status === 'paid')
 
+  const handleStripeCheckout = async (paymentId: string) => {
+    setCheckoutLoading(paymentId)
+    try {
+      const res = await fetch('/api/payments/create-checkout', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ payment_id: paymentId }),
+      })
+      const data = await res.json() as { ok?: boolean; url?: string; error?: string }
+
+      if (data.ok && data.url) {
+        window.location.href = data.url
+      } else {
+        alert(data.error ?? 'Ödeme sayfası oluşturulamadı.')
+      }
+    } catch {
+      alert('Bağlantı hatası. Lütfen tekrar deneyin.')
+    } finally {
+      setCheckoutLoading(null)
+    }
+  }
+
   return (
     <div className="min-h-screen bg-zinc-950 pb-20">
       <PanelHeader panelName="VELİ PANELİ" />
@@ -55,6 +83,20 @@ export default function VeliOdemePage() {
           </Link>
           <h1 className="text-xl font-bold text-white">Aidat & Ödemeler</h1>
         </div>
+
+        {/* Başarı/İptal mesajları */}
+        {success && (
+          <div className="flex items-center gap-2 p-3 rounded-2xl bg-emerald-500/10 border border-emerald-500/30 text-emerald-400">
+            <CheckCircle className="h-5 w-5" strokeWidth={1.5} />
+            <span className="text-sm font-medium">Ödemeniz başarıyla tamamlandı! Teşekkür ederiz.</span>
+          </div>
+        )}
+        {cancelled && (
+          <div className="flex items-center gap-2 p-3 rounded-2xl bg-amber-500/10 border border-amber-500/30 text-amber-400">
+            <XCircle className="h-5 w-5" strokeWidth={1.5} />
+            <span className="text-sm font-medium">Ödeme iptal edildi. Dilediğiniz zaman tekrar deneyebilirsiniz.</span>
+          </div>
+        )}
 
         {loading ? (
           <div className="flex justify-center py-12">
@@ -96,8 +138,17 @@ export default function VeliOdemePage() {
                       </div>
                       <div className="text-right">
                         <p className="font-bold text-white">{p.amount.toLocaleString('tr-TR')} ₺</p>
-                        <button className="mt-2 rounded-lg bg-gradient-to-r from-cyan-500 to-cyan-400 px-4 py-1.5 text-xs font-medium text-zinc-950 hover:shadow-[0_0_20px_rgba(34,211,238,0.3)] transition-all">
-                          Ödeme Yap
+                        <button
+                          onClick={() => handleStripeCheckout(p.id)}
+                          disabled={checkoutLoading !== null}
+                          className="mt-2 rounded-lg bg-gradient-to-r from-cyan-500 to-cyan-400 px-4 py-1.5 text-xs font-medium text-zinc-950 hover:shadow-[0_0_20px_rgba(34,211,238,0.3)] transition-all disabled:opacity-50"
+                        >
+                          {checkoutLoading === p.id ? (
+                            <Loader2 className="h-4 w-4 animate-spin inline mr-1" />
+                          ) : (
+                            <CreditCard className="h-4 w-4 inline mr-1" />
+                          )}
+                          Öde
                         </button>
                       </div>
                     </div>
@@ -143,6 +194,11 @@ export default function VeliOdemePage() {
                 </div>
               </div>
             )}
+
+            <p className="text-xs text-zinc-500">
+              Güvenli ödeme: Stripe altyapısı ile kredi/banka kartı ödemesi yapılır.
+              Kart bilgileriniz sunucularımızda saklanmaz.
+            </p>
           </>
         )}
       </main>
