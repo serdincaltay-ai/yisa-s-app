@@ -63,19 +63,19 @@ function mergeTenantConfig(base: TenantConfig, row: TenantBrandingRow): TenantCo
   return {
     ...base,
     // Temel bilgiler (DB varsa override)
-    ad: row.name || base.ad,
+    ad: row.name ?? base.ad,
     template: mapPackageToTemplate(row.package_type) ?? base.template,
 
-    // İletişim (DB varsa override)
-    telefon: row.phone || base.telefon,
-    email: row.email || base.email,
-    adres: row.address || base.adres,
-    calisma: row.working_hours || base.calisma,
+    // İletişim (DB varsa override — null ise fallback, boş string korunur)
+    telefon: row.phone ?? base.telefon,
+    email: row.email ?? base.email,
+    adres: row.address ?? base.adres,
+    calisma: row.working_hours ?? base.calisma,
 
-    // Sosyal medya (DB varsa override)
-    instagramUrl: row.instagram_url || base.instagramUrl,
-    whatsapp: row.whatsapp_number || base.whatsapp,
-    harita: row.google_maps_url || base.harita,
+    // Sosyal medya (DB varsa override — null ise fallback, boş string korunur)
+    instagramUrl: row.instagram_url ?? base.instagramUrl,
+    whatsapp: row.whatsapp_number ?? base.whatsapp,
+    harita: row.google_maps_url ?? base.harita,
 
     // Logo (DB varsa override — logoBadge statik kalır)
     // Not: logo_url ayrı bir alan olarak template'lere geçilecek

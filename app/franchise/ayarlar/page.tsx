@@ -327,17 +327,17 @@ export default function FranchiseAyarlarPage() {
               <div
                 className="h-8 w-16 rounded"
                 style={{ backgroundColor: form.primary_color }}
-                title="Primary"
+                title="Ana Renk"
               />
               <div
                 className="h-8 w-16 rounded"
                 style={{ backgroundColor: form.secondary_color }}
-                title="Secondary"
+                title="İkincil Renk"
               />
               <div
                 className="h-8 w-16 rounded"
                 style={{ backgroundColor: form.accent_color }}
-                title="Accent"
+                title="Vurgu Renk"
               />
             </div>
           </CardContent>
