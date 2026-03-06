@@ -96,7 +96,7 @@ export async function PATCH(req: NextRequest) {
     if (!service) return NextResponse.json({ error: 'Sunucu hatası' }, { status: 500 })
 
     const updates: Record<string, unknown> = {}
-    if (typeof body.title === 'string') updates.title = body.title.trim()
+    if (typeof body.title === 'string' && body.title.trim()) updates.title = body.title.trim()
     if (typeof body.description === 'string') updates.description = body.description.trim() || null
     if (Array.isArray(body.questions)) updates.questions = body.questions
     if (typeof body.status === 'string' && ['draft', 'active', 'closed'].includes(body.status)) {
