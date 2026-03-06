@@ -95,8 +95,7 @@ export async function PATCH(req: NextRequest) {
       }
     }
 
-    // logo_url yalnızca /api/franchise/logo endpoint'i tarafından güncellenir
-    // Doğrudan PATCH ile logo_url göndermek engellenmiştir
+    // logo_url: Normalde /api/franchise/logo ile yüklenir, ama PATCH ile de https:// URL gönderilebilir
     if (typeof body.logo_url === 'string') {
       const logoVal = body.logo_url.trim()
       if (logoVal !== '' && !logoVal.startsWith('https://')) {

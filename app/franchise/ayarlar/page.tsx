@@ -210,7 +210,7 @@ export default function FranchiseAyarlarPage() {
               <ImageIcon className="h-5 w-5 text-primary" />
               <CardTitle>Logo</CardTitle>
             </div>
-            <CardDescription>Tesis logonuzu yükleyin (PNG, JPEG, WebP, SVG — maks. 2 MB)</CardDescription>
+            <CardDescription>Tesis logonuzu yükleyin (PNG, JPEG, WebP — maks. 2 MB)</CardDescription>
           </CardHeader>
           <CardContent>
             <div className="flex items-center gap-6">
@@ -229,7 +229,7 @@ export default function FranchiseAyarlarPage() {
                 <input
                   ref={fileInputRef}
                   type="file"
-                  accept="image/png,image/jpeg,image/webp,image/svg+xml"
+                  accept="image/png,image/jpeg,image/webp"
                   className="hidden"
                   onChange={handleLogoUpload}
                 />
@@ -251,7 +251,7 @@ export default function FranchiseAyarlarPage() {
                   )}
                 </Button>
                 <p className="text-xs text-muted-foreground">
-                  Supabase Storage bucket: tenant-logos
+                  PNG, JPEG veya WebP · Maksimum 2 MB
                 </p>
               </div>
             </div>
