@@ -7,7 +7,7 @@ import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/com
 import { Badge } from '@/components/ui/badge'
 import { Input } from '@/components/ui/input'
 import { Label } from '@/components/ui/label'
-import { Loader2, Plus, ArrowLeft, Bell, CheckSquare, Square } from 'lucide-react'
+import { Loader2, Plus, ArrowLeft, Bell, CheckSquare, Square, CreditCard } from 'lucide-react'
 
 type Athlete = { id: string; name: string; surname?: string | null }
 type PaymentItem = {
@@ -48,6 +48,7 @@ export default function FranchiseAidatlarPage() {
   })
   const [selectedIds, setSelectedIds] = useState<Set<string>>(new Set())
   const [remindLoading, setRemindLoading] = useState(false)
+  const [checkoutLoading, setCheckoutLoading] = useState<string | null>(null)
 
   const fetchTenantAndAthletes = useCallback(async () => {
     const [tenantRes, athletesRes] = await Promise.all([
@@ -210,6 +211,27 @@ export default function FranchiseAidatlarPage() {
     }
   }
 
+  const handleStripeCheckout = async (paymentId: string) => {
+    setCheckoutLoading(paymentId)
+    try {
+      const res = await fetch('/api/payments/create-checkout', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ payment_id: paymentId }),
+      })
+      const data = await res.json() as { ok?: boolean; url?: string; error?: string }
+      if (data.ok && data.url) {
+        window.open(data.url, '_blank')
+      } else {
+        alert(data.error ?? 'Stripe checkout oluşturulamadı.')
+      }
+    } catch {
+      alert('Bağlantı hatası.')
+    } finally {
+      setCheckoutLoading(null)
+    }
+  }
+
   const statusBadge = (s: string) => {
     if (s === 'paid') return <Badge className="bg-green-500/20 text-green-600">Ödendi</Badge>
     if (s === 'overdue') return <Badge className="bg-red-500/20 text-red-600">Gecikmiş</Badge>
@@ -347,7 +369,13 @@ export default function FranchiseAidatlarPage() {
                       <td className="px-4 py-3">{statusBadge(p.status)}</td>
                       <td className="px-4 py-3">
                         {p.status === 'pending' || p.status === 'overdue' ? (
-                          <Button size="sm" variant="outline" onClick={() => handleMarkPaid(p.id)} disabled={sending}>Ödendi Yap</Button>
+                          <div className="flex gap-1">
+                            <Button size="sm" variant="outline" onClick={() => handleMarkPaid(p.id)} disabled={sending}>Ödendi Yap</Button>
+                            <Button size="sm" onClick={() => handleStripeCheckout(p.id)} disabled={checkoutLoading !== null}>
+                              {checkoutLoading === p.id ? <Loader2 className="h-3 w-3 animate-spin mr-1" /> : <CreditCard className="h-3 w-3 mr-1" />}
+                              Online Ödeme
+                            </Button>
+                          </div>
                         ) : (
                           <span className="text-muted-foreground text-sm">{p.paid_date ? new Date(p.paid_date).toLocaleDateString('tr-TR') : '—'}</span>
                         )}

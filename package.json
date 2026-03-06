@@ -17,6 +17,7 @@
     "snippets:list": "node scripts/supabase-snippets-list.js",
     "test": "vitest run",
     "test:watch": "vitest",
+    "test:coverage": "vitest run --coverage",
     "test:e2e": "playwright test",
     "test:e2e:install": "playwright install --with-deps chromium"
   },
@@ -45,6 +46,7 @@
     "react-dom": "^18.2.0",
     "react-markdown": "^10.1.0",
     "recharts": "^3.7.0",
+    "stripe": "^20.4.0",
     "tailwind-merge": "^3.4.0"
   },
   "devDependencies": {
@@ -55,6 +57,7 @@
     "@types/react": "^18.2.0",
     "@types/react-dom": "^18.2.0",
     "@vitejs/plugin-react": "^5.1.4",
+    "@vitest/coverage-v8": "^4.0.18",
     "autoprefixer": "^10.4.0",
     "eslint": "^9.39.2",
     "eslint-config-next": "^16.1.6",

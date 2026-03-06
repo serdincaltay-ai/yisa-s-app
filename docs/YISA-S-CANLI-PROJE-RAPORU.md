@@ -4,7 +4,8 @@
 >
 > **Güncelleme kuralı:** İşi tamamladığınızda ilgili satırda **Durum** → Yapıldı veya Düzeltildi; **Son güncelleme** → bugünün tarihi (GG.AA.YYYY); **Not** → kısa açıklama yazın.
 
-**Son rapor güncellemesi:** 05.03.2026 — Veli paneli canlı veri testi (BJK users + parent bağlantısı) tamamlandı; tüm kaynak belgelerden yapılmayan iş maddeleri güncellendi.
+**Son rapor güncellemesi:** 05.03.2026 — Kullanıcı paneli tasarım kilidi (koyu tema + alt nav) ve Tesis sayfaları (3 şablon, ders programı grid, fiyat kartları, premium özellikler) tamamlandı.
+**Son rapor güncellemesi:** 05.03.2026 — 3 şablon sistemi, haftalık GRID, robot karşılama, paket fiyat güncellemesi, feneratasehir subdomain, veli canlı veri testi, Faz 3+7 tamamlama güncellemeleri eklendi.
 
 ---
 
@@ -82,7 +83,7 @@
 | Faz 5 | — | Ders programı | Yapıldı | 05.03.2026 | panel/program, api/franchise/schedule |
 | Faz 5 | — | Personel yönetimi | Yapıldı | 05.03.2026 | api/franchise/personel, api/franchise/staff |
 
-### Faz 6 — Veli Paneli MVP (~%90)
+### Faz 6 — Veli Paneli MVP (~%95)
 
 | Faz | Adım | Madde / iş | Durum | Son güncelleme | Not |
 |-----|-------|------------|--------|----------------|-----|
@@ -90,6 +91,8 @@
 | Faz 6 | — | Veli API'leri | Yapıldı | 05.03.2026 | api/veli: children, attendance, payments, messages, health, gelisim, schedule, movements, ai-insights |
 | Faz 6 | — | Bildirim / push notification | Yapılacak | 05.03.2026 | Push notification altyapısı yok |
 | Faz 6 | — | Veli paneli canlı veri testi (BJK parent bağlantısı + auth) | **Yapıldı** | 05.03.2026 | 2 test veli kullanıcısı oluşturuldu; 3 sporcu parent_user_id ile bağlandı; demo auth → gerçek signInWithPassword; user_tenants role='veli' eklendi |
+| Faz 6 | — | Kullanıcı paneli tasarım kilidi (Veli + Antrenör koyu tema, kutucuk layout, alt nav) | **Yapıldı** | 05.03.2026 | PanelBottomNav + PanelHeader shared bileşenler; tüm veli/antrenör sayfaları zinc-950 koyu tema; Antrenör sidebar→bottom nav; Veli ders programı sayfası |
+| Faz 6 | — | Tesis web sayfaları (BJK Tuzla + Fener Atasehir) | **Yapıldı** | 05.03.2026 | 3 şablon (standart/orta/premium); haftalık ders programı grid; paket fiyatları; premium: robot karşılama + randevu modal |
 
 ### Faz 7 — CELF Zinciri + Başlangıç Görevleri (~%80)
 
