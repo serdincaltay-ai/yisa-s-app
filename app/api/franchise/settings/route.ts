@@ -125,14 +125,27 @@ export async function PATCH(req: NextRequest) {
       }
     }
 
-    // working_hours: JSONB olarak saklanır — string geldiyse de kabul et
+    // working_hours: JSONB olarak saklanır — string geldiyse "Gün: Saat" formatından objeye çevir
     if (body.working_hours != null) {
       if (typeof body.working_hours === 'string') {
         const val = body.working_hours.trim()
         if (val.length > MAX_TEXT_LEN) {
           return NextResponse.json({ error: `working_hours çok uzun. Maksimum ${MAX_TEXT_LEN} karakter.` }, { status: 400 })
         }
-        update.working_hours = val
+        // "Pazartesi: 09:00-21:00\nSalı: ..." formatını JSONB objesine çevir
+        const lines = val.split('\n').filter((l: string) => l.includes(':'))
+        if (lines.length > 0) {
+          const obj: Record<string, string> = {}
+          for (const line of lines) {
+            const idx = line.indexOf(':')
+            const k = line.slice(0, idx).trim()
+            const v = line.slice(idx + 1).trim()
+            if (k) obj[k] = v
+          }
+          update.working_hours = obj
+        } else {
+          update.working_hours = val || null
+        }
       } else if (typeof body.working_hours === 'object') {
         update.working_hours = body.working_hours
       }
