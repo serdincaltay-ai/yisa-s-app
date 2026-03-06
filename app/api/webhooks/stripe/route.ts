@@ -79,10 +79,13 @@ export async function POST(req: NextRequest) {
       const tenantId = session.metadata?.tenant_id
 
       if (paymentId && tenantId) {
+        // Orijinal durumu metadata'dan oku (pending veya overdue olabilir)
+        const revertStatus = session.metadata?.original_status || 'pending'
+
         // Sadece 'processing' durumundakileri geri al
         const { error: revertError } = await service
           .from('payments')
-          .update({ status: 'pending', payment_method: null })
+          .update({ status: revertStatus, payment_method: null })
           .eq('id', paymentId)
           .eq('tenant_id', tenantId)
           .eq('status', 'processing')
