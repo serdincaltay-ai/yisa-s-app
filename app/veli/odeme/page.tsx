@@ -82,10 +82,10 @@ export default function VeliOdemePage() {
       if (data?.url) {
         window.location.href = data.url
       } else {
-        alert(data?.error ?? 'Stripe checkout olusturulamadi')
+        alert(data?.error ?? 'Stripe checkout oluşturulamadı')
       }
     } catch {
-      alert('Istek gonderilemedi')
+      alert('İstek gönderilemedi')
     } finally {
       setCheckoutLoading(false)
     }
@@ -108,8 +108,8 @@ export default function VeliOdemePage() {
           <CardContent className="p-4 flex items-center gap-3">
             <CheckCircle2 className="h-6 w-6 text-green-600" />
             <div>
-              <p className="font-medium text-green-800">Odeme basariyla tamamlandi!</p>
-              <p className="text-sm text-green-700">Odemeniz islendi. Aidat durumunuz kisa surede guncellenecektir.</p>
+              <p className="font-medium text-green-800">Ödeme başarıyla tamamlandı!</p>
+              <p className="text-sm text-green-700">Ödemeniz işlendi. Aidat durumunuz kısa sürede güncellenecektir.</p>
             </div>
           </CardContent>
         </Card>
@@ -120,15 +120,15 @@ export default function VeliOdemePage() {
           <CardContent className="p-4 flex items-center gap-3">
             <XCircle className="h-6 w-6 text-amber-600" />
             <div>
-              <p className="font-medium text-amber-800">Odeme iptal edildi</p>
-              <p className="text-sm text-amber-700">Odeme islemi tamamlanmadi. Tekrar deneyebilirsiniz.</p>
+              <p className="font-medium text-amber-800">Ödeme iptal edildi</p>
+              <p className="text-sm text-amber-700">Ödeme işlemi tamamlanmadı. Tekrar deneyebilirsiniz.</p>
             </div>
           </CardContent>
         </Card>
       )}
 
-      <h1 className="text-xl font-bold text-gray-900 mb-2">Online Aidat Odeme</h1>
-      <p className="text-sm text-gray-600 mb-6">Stripe ile guvenli online odeme. Bekleyen aidatlarinizi kartinizla odeyebilirsiniz.</p>
+      <h1 className="text-xl font-bold text-gray-900 mb-2">Online Aidat Ödeme</h1>
+      <p className="text-sm text-gray-600 mb-6">Stripe ile güvenli online ödeme. Bekleyen aidatlarınızı kartınızla ödeyebilirsiniz.</p>
 
       {loading ? (
         <div className="flex justify-center py-12"><Loader2 className="h-8 w-8 animate-spin text-[#2563eb]" /></div>
@@ -138,17 +138,17 @@ export default function VeliOdemePage() {
             <CardHeader>
               <CreditCard className="h-8 w-8 text-[#2563eb]" />
               <CardTitle>Bekleyen aidatlar</CardTitle>
-              <CardDescription>Odeme yapilmamis aidatlar listelenir. Stripe ile online odeyebilirsiniz.</CardDescription>
+              <CardDescription>Ödeme yapılmamış aidatlar listelenir. Stripe ile online ödeyebilirsiniz.</CardDescription>
             </CardHeader>
             <CardContent className="space-y-4">
               {pending.length === 0 ? (
-                <p className="text-sm text-gray-600">Bekleyen aidatiniz yok.</p>
+                <p className="text-sm text-gray-600">Bekleyen aidatınız yok.</p>
               ) : (
                 <>
                   <div className="flex items-center justify-between">
-                    <p className="text-sm font-medium text-gray-900">Toplam borc: {totalDebt.toLocaleString('tr-TR')} TL</p>
+                    <p className="text-sm font-medium text-gray-900">Toplam borç: {totalDebt.toLocaleString('tr-TR')} TL</p>
                     <Button variant="ghost" size="sm" onClick={selectAll}>
-                      {selectedIds.size >= pending.length ? 'Secimi kaldir' : 'Tumunu sec'}
+                      {selectedIds.size >= pending.length ? 'Seçimi kaldır' : 'Tümünü seç'}
                     </Button>
                   </div>
                   <ul className="space-y-2">
@@ -175,7 +175,7 @@ export default function VeliOdemePage() {
                           </div>
                         </div>
                         <div className="flex items-center gap-2">
-                          {p.status === 'overdue' && <Badge className="bg-red-500/20 text-red-600 text-xs">Gecikmis</Badge>}
+                          {p.status === 'overdue' && <Badge className="bg-red-500/20 text-red-600 text-xs">Gecikmiş</Badge>}
                           <span className="font-medium">{p.amount.toLocaleString('tr-TR')} TL</span>
                         </div>
                       </li>
@@ -184,7 +184,7 @@ export default function VeliOdemePage() {
 
                   {selectedIds.size > 0 && (
                     <div className="flex items-center justify-between pt-2 border-t">
-                      <p className="text-sm font-medium">{selectedIds.size} aidat secili: {selectedTotal.toLocaleString('tr-TR')} TL</p>
+                      <p className="text-sm font-medium">{selectedIds.size} aidat seçili: {selectedTotal.toLocaleString('tr-TR')} TL</p>
                     </div>
                   )}
 
@@ -199,8 +199,8 @@ export default function VeliOdemePage() {
                       <CreditCard className="h-4 w-4 mr-2" />
                     )}
                     {selectedIds.size > 0
-                      ? `Secilenleri ode (${selectedTotal.toLocaleString('tr-TR')} TL)`
-                      : `Tumunu ode (${totalDebt.toLocaleString('tr-TR')} TL)`
+                      ? `Seçilenleri öde (${selectedTotal.toLocaleString('tr-TR')} TL)`
+                      : `Tümünü öde (${totalDebt.toLocaleString('tr-TR')} TL)`
                     }
                   </Button>
                 </>
@@ -209,7 +209,7 @@ export default function VeliOdemePage() {
           </Card>
 
           <p className="text-xs text-gray-500">
-            Stripe uzerinden guvenli odeme. Kart bilgileriniz Stripe tarafindan korunur, sunucularimizda saklanmaz.
+            Stripe üzerinden güvenli ödeme. Kart bilgileriniz Stripe tarafından korunur, sunucularımızda saklanmaz.
           </p>
         </>
       )}

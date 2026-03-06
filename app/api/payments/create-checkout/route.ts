@@ -81,7 +81,14 @@ export async function POST(req: NextRequest) {
       .in('status', ['pending', 'overdue'])
 
     if (fetchErr) {
-      // franchise_payments tablosu yoksa package_payments dene
+      // Sadece tablo bulunamadi hatasinda package_payments'a gec
+      // Diger hatalar (RLS, network, timeout) icin 500 don
+      const isTableNotFound = fetchErr.code === '42P01' || fetchErr.message?.includes('relation')
+      if (!isTableNotFound) {
+        console.error('[create-checkout] franchise_payments sorgu hatasi:', fetchErr)
+        return NextResponse.json({ error: 'Veritabani hatasi' }, { status: 500 })
+      }
+
       const { data: altPayments, error: altErr } = await service
         .from('package_payments')
         .select('id, athlete_id, amount, taksit_no, status, athletes(name, surname)')
