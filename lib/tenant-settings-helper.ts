@@ -26,7 +26,7 @@ interface TenantBrandingRow {
   phone: string | null
   email: string | null
   address: string | null
-  working_hours: string | null
+  working_hours: Record<string, string> | string | null
 }
 
 /**
@@ -70,7 +70,11 @@ function mergeTenantConfig(base: TenantConfig, row: TenantBrandingRow): TenantCo
     telefon: row.phone ?? base.telefon,
     email: row.email ?? base.email,
     adres: row.address ?? base.adres,
-    calisma: row.working_hours ?? base.calisma,
+    calisma: row.working_hours != null
+      ? (typeof row.working_hours === 'object'
+        ? Object.entries(row.working_hours).map(([k, v]) => `${k}: ${v}`).join(', ')
+        : row.working_hours)
+      : base.calisma,
 
     // Sosyal medya (DB varsa override — null ise fallback, boş string korunur)
     instagramUrl: row.instagram_url ?? base.instagramUrl,

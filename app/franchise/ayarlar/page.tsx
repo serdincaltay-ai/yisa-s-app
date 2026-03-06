@@ -42,7 +42,7 @@ type TenantSettings = {
   phone: string | null
   email: string | null
   address: string | null
-  working_hours: string | null
+  working_hours: Record<string, string> | string | null
 }
 
 const DEFAULT_COLORS = {
@@ -95,7 +95,9 @@ export default function FranchiseAyarlarPage() {
           phone: t.phone ?? '',
           email: t.email ?? '',
           address: t.address ?? '',
-          working_hours: typeof t.working_hours === 'string' ? t.working_hours : '',
+          working_hours: typeof t.working_hours === 'object' && t.working_hours !== null
+            ? Object.entries(t.working_hours as Record<string, string>).map(([k, v]) => `${k}: ${v}`).join('\n')
+            : typeof t.working_hours === 'string' ? t.working_hours : '',
         })
       }
     } catch (e) {

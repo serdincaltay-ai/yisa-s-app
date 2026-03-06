@@ -114,7 +114,7 @@ export async function PATCH(req: NextRequest) {
     }
 
     // Serbest metin alanları (uzunluk sınırlı)
-    const textFields = ['phone', 'email', 'address', 'working_hours'] as const
+    const textFields = ['phone', 'email', 'address'] as const
     for (const field of textFields) {
       if (typeof body[field] === 'string') {
         const val = body[field].trim()
@@ -122,6 +122,19 @@ export async function PATCH(req: NextRequest) {
           return NextResponse.json({ error: `${field} çok uzun. Maksimum ${MAX_TEXT_LEN} karakter.` }, { status: 400 })
         }
         update[field] = val
+      }
+    }
+
+    // working_hours: JSONB olarak saklanır — string geldiyse de kabul et
+    if (body.working_hours != null) {
+      if (typeof body.working_hours === 'string') {
+        const val = body.working_hours.trim()
+        if (val.length > MAX_TEXT_LEN) {
+          return NextResponse.json({ error: `working_hours çok uzun. Maksimum ${MAX_TEXT_LEN} karakter.` }, { status: 400 })
+        }
+        update.working_hours = val
+      } else if (typeof body.working_hours === 'object') {
+        update.working_hours = body.working_hours
       }
     }
 
