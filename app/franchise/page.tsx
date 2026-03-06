@@ -48,6 +48,7 @@ import {
 import { useRouter } from "next/navigation"
 import { supabase } from "@/lib/supabase"
 import { FranchiseIntro } from "@/components/FranchiseIntro"
+import { BRANS_RENK, DEFAULT_BRANS_RENK } from "@/lib/tenant-template-config"
 
 type Athlete = { id: string; name: string; surname?: string | null; birth_date?: string | null; gender?: string | null; branch?: string | null; level?: string | null; status?: string; created_at?: string; parent_email?: string | null; trainer_id?: string | null }
 type StaffMember = {
@@ -694,136 +695,225 @@ function TrainersTab({ staff, onRefresh }: { staff: StaffMember[]; onRefresh: ()
   )
 }
 
-type ScheduleItem = { id: string; gun: string; saat: string; ders_adi: string; brans?: string | null }
+type ScheduleItem = { id: string; gun: string; saat: string; ders_adi: string; brans?: string | null; seviye?: string | null; antrenor_id?: string | null }
+
+const SCHEDULE_DAYS = ["Pazartesi", "Sali", "Carsamba", "Persembe", "Cuma", "Cumartesi", "Pazar"]
+const SCHEDULE_HOURS = ["08:00", "09:00", "10:00", "11:00", "12:00", "13:00", "14:00", "15:00", "16:00", "17:00", "18:00", "19:00"]
+const BRANS_LIST = Object.keys(BRANS_RENK)
+
+type CellEdit = { gun: string; saat: string; brans: string; seviye: string; ders_adi: string }
 
 function ScheduleTab({ staff, hasTenant }: { staff: StaffMember[]; hasTenant: boolean }) {
-  const days = ["Pazartesi", "Sali", "Carsamba", "Persembe", "Cuma", "Cumartesi", "Pazar"]
-  const hours = ["08:00", "09:00", "10:00", "11:00", "12:00", "14:00", "15:00", "16:00", "17:00", "18:00"]
   const [items, setItems] = useState<ScheduleItem[]>([])
-  const [showForm, setShowForm] = useState(false)
-  const [sending, setSending] = useState(false)
-  const [form, setForm] = useState({ gun: "Pazartesi", saat: "09:00", ders_adi: "", brans: "" })
+  const [editMode, setEditMode] = useState(false)
+  const [editingCell, setEditingCell] = useState<string | null>(null)
+  const [cellForm, setCellForm] = useState<CellEdit>({ gun: "", saat: "", brans: "", seviye: "", ders_adi: "" })
+  const [draft, setDraft] = useState<ScheduleItem[]>([])
+  const [saving, setSaving] = useState(false)
 
   const fetchSchedule = useCallback(async () => {
     if (!hasTenant) return
     const res = await fetch("/api/franchise/schedule")
     const data = await res.json()
-    setItems(Array.isArray(data?.items) ? data.items : [])
+    const fetched = Array.isArray(data?.items) ? data.items : []
+    setItems(fetched)
+    setDraft(fetched)
   }, [hasTenant])
 
   useEffect(() => {
     fetchSchedule()
   }, [fetchSchedule])
 
-  const getSlot = (gun: string, saat: string) => items.find((i) => i.gun === gun && i.saat === saat)
+  const getSlot = (list: ScheduleItem[], gun: string, saat: string) => list.find((i) => i.gun === gun && i.saat === saat)
+  const cellKey = (gun: string, saat: string) => `${gun}-${saat}`
 
-  const handleAdd = async (e: React.FormEvent) => {
-    e.preventDefault()
-    if (!form.ders_adi.trim() || sending || !hasTenant) return
-    setSending(true)
+  const handleCellClick = (gun: string, saat: string) => {
+    if (!editMode) return
+    const key = cellKey(gun, saat)
+    if (editingCell === key) { setEditingCell(null); return }
+    const existing = getSlot(draft, gun, saat)
+    setCellForm({
+      gun,
+      saat,
+      brans: existing?.brans ?? "",
+      seviye: existing?.seviye ?? "",
+      ders_adi: existing?.ders_adi ?? "",
+    })
+    setEditingCell(key)
+  }
+
+  const handleCellSave = () => {
+    if (!cellForm.brans && !cellForm.ders_adi) {
+      setDraft((prev) => prev.filter((i) => !(i.gun === cellForm.gun && i.saat === cellForm.saat)))
+    } else {
+      setDraft((prev) => {
+        const filtered = prev.filter((i) => !(i.gun === cellForm.gun && i.saat === cellForm.saat))
+        return [
+          ...filtered,
+          {
+            id: "",
+            gun: cellForm.gun,
+            saat: cellForm.saat,
+            ders_adi: cellForm.ders_adi || cellForm.brans,
+            brans: cellForm.brans || null,
+            seviye: cellForm.seviye || null,
+          },
+        ]
+      })
+    }
+    setEditingCell(null)
+  }
+
+  const handleCellClear = () => {
+    setDraft((prev) => prev.filter((i) => !(i.gun === cellForm.gun && i.saat === cellForm.saat)))
+    setEditingCell(null)
+  }
+
+  const handleSaveAll = async () => {
+    if (saving) return
+    setSaving(true)
     try {
+      const payload = draft.map((item) => ({
+        gun: item.gun,
+        saat: item.saat,
+        ders_adi: item.ders_adi,
+        brans: item.brans ?? null,
+        seviye: item.seviye ?? null,
+        antrenor_id: item.antrenor_id ?? null,
+      }))
       const res = await fetch("/api/franchise/schedule", {
-        method: "POST",
+        method: "PUT",
         headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ ...form, brans: form.brans || null }),
+        body: JSON.stringify({ items: payload }),
       })
       const data = await res.json()
       if (data?.ok) {
-        setForm({ gun: "Pazartesi", saat: "09:00", ders_adi: "", brans: "" })
-        setShowForm(false)
+        setEditMode(false)
+        setEditingCell(null)
         fetchSchedule()
-      } else alert(data?.error ?? "Kayit basarisiz")
+      } else {
+        alert(data?.error ?? "Kayit basarisiz")
+      }
     } catch {
       alert("Istek gonderilemedi")
     } finally {
-      setSending(false)
+      setSaving(false)
     }
   }
 
-  const handleDelete = async (id: string) => {
-    if (!confirm("Bu dersi silmek istiyor musunuz?")) return
-    const res = await fetch(`/api/franchise/schedule?id=${id}`, { method: "DELETE" })
-    const data = await res.json()
-    if (data?.ok) fetchSchedule()
-    else alert(data?.error ?? "Silinemedi")
+  const handleCancel = () => {
+    setEditMode(false)
+    setEditingCell(null)
+    setDraft(items)
   }
+
+  const handleEnterEdit = () => {
+    setDraft(items)
+    setEditMode(true)
+  }
+
+  const bransColor = (brans: string | null | undefined) => {
+    if (!brans) return DEFAULT_BRANS_RENK
+    return BRANS_RENK[brans] ?? DEFAULT_BRANS_RENK
+  }
+
+  const displayItems = editMode ? draft : items
 
   return (
     <div className="space-y-6">
       <div className="flex items-center justify-between">
         <div>
           <h2 className="text-2xl font-bold text-foreground">Ders Programi</h2>
-          <p className="text-muted-foreground">Haftalik ders plani — gun ve saate gore ders ekleyin</p>
+          <p className="text-muted-foreground">
+            {editMode ? "Hucreye tiklayarak ders ekleyin veya duzenleyin" : "Haftalik ders plani"}
+          </p>
         </div>
         {hasTenant && (
-          <Button onClick={() => setShowForm(!showForm)}>
-            <Plus className="mr-2 h-4 w-4" />Ders Ekle
-          </Button>
+          <div className="flex gap-2">
+            {editMode ? (
+              <>
+                <Button variant="outline" onClick={handleCancel} disabled={saving}>Iptal</Button>
+                <Button onClick={handleSaveAll} disabled={saving}>
+                  {saving ? <><Loader2 className="mr-2 h-4 w-4 animate-spin" />Kaydediliyor…</> : <><CheckCircle2 className="mr-2 h-4 w-4" />Kaydet</>}
+                </Button>
+              </>
+            ) : (
+              <Button onClick={handleEnterEdit}>
+                <Calendar className="mr-2 h-4 w-4" />Duzenle
+              </Button>
+            )}
+          </div>
         )}
       </div>
-      {showForm && hasTenant && (
-        <Card>
-          <CardHeader>
-            <CardTitle>Yeni Ders</CardTitle>
-          </CardHeader>
-          <CardContent>
-            <form onSubmit={handleAdd} className="grid gap-4 md:grid-cols-4">
-              <div className="space-y-2">
-                <Label>Gun</Label>
-                <select className="flex h-10 w-full rounded-md border border-input bg-background px-3 py-2 text-sm" value={form.gun} onChange={(e) => setForm({ ...form, gun: e.target.value })}>
-                  {days.map((d) => (
-                    <option key={d} value={d}>{d}</option>
-                  ))}
-                </select>
-              </div>
-              <div className="space-y-2">
-                <Label>Saat</Label>
-                <select className="flex h-10 w-full rounded-md border border-input bg-background px-3 py-2 text-sm" value={form.saat} onChange={(e) => setForm({ ...form, saat: e.target.value })}>
-                  {hours.map((h) => (
-                    <option key={h} value={h}>{h}</option>
-                  ))}
-                </select>
-              </div>
-              <div className="space-y-2">
-                <Label>Ders Adi</Label>
-                <Input value={form.ders_adi} onChange={(e) => setForm({ ...form, ders_adi: e.target.value })} placeholder="Orn. Baslangic Grubu" required />
-              </div>
-              <div className="space-y-2">
-                <Label>Brans</Label>
-                <Input value={form.brans} onChange={(e) => setForm({ ...form, brans: e.target.value })} placeholder="Orn. Artistik Cimnastik" />
-              </div>
-              <div className="md:col-span-4">
-                <Button type="submit" disabled={sending}>{sending ? "Kaydediliyor…" : "Ekle"}</Button>
-              </div>
-            </form>
-          </CardContent>
-        </Card>
-      )}
+
       <Card>
         <CardContent className="overflow-x-auto p-4">
-          <div className="min-w-[800px]">
-            <div className="grid gap-2" style={{ gridTemplateColumns: `80px repeat(${days.length}, 1fr)` }}>
+          <div className="min-w-[900px]">
+            <div className="grid gap-1" style={{ gridTemplateColumns: `80px repeat(${SCHEDULE_DAYS.length}, 1fr)` }}>
               <div className="p-2" />
-              {days.map((day) => (
+              {SCHEDULE_DAYS.map((day) => (
                 <div key={day} className="rounded-lg bg-muted p-2 text-center font-medium text-foreground text-sm">{day}</div>
               ))}
-              {hours.map((hour) => (
+              {SCHEDULE_HOURS.map((hour) => (
                 <React.Fragment key={hour}>
-                  <div className="flex items-center justify-center p-2 text-sm text-muted-foreground">{hour}</div>
-                  {days.map((day) => {
-                    const slot = getSlot(day, hour)
+                  <div className="flex items-center justify-center p-2 text-sm text-muted-foreground font-mono">{hour}</div>
+                  {SCHEDULE_DAYS.map((day) => {
+                    const slot = getSlot(displayItems, day, hour)
+                    const key = cellKey(day, hour)
+                    const isEditing = editingCell === key
+                    const colors = bransColor(slot?.brans)
+
+                    if (isEditing) {
+                      return (
+                        <div key={key} className="rounded-lg border-2 border-primary p-2 text-xs min-h-[80px] flex flex-col gap-1 bg-muted/50">
+                          <select
+                            className="w-full rounded border border-input bg-background px-1 py-0.5 text-xs"
+                            value={cellForm.brans}
+                            onChange={(e) => setCellForm({ ...cellForm, brans: e.target.value, ders_adi: e.target.value || cellForm.ders_adi })}
+                          >
+                            <option value="">Brans sec…</option>
+                            {BRANS_LIST.map((b) => (
+                              <option key={b} value={b}>{b}</option>
+                            ))}
+                          </select>
+                          <input
+                            className="w-full rounded border border-input bg-background px-1 py-0.5 text-xs"
+                            placeholder="Seviye"
+                            value={cellForm.seviye}
+                            onChange={(e) => setCellForm({ ...cellForm, seviye: e.target.value })}
+                          />
+                          <input
+                            className="w-full rounded border border-input bg-background px-1 py-0.5 text-xs"
+                            placeholder="Ders adi"
+                            value={cellForm.ders_adi}
+                            onChange={(e) => setCellForm({ ...cellForm, ders_adi: e.target.value })}
+                          />
+                          <div className="flex gap-1 mt-0.5">
+                            <button type="button" onClick={handleCellSave} className="flex-1 rounded bg-primary px-1 py-0.5 text-primary-foreground text-[10px] hover:bg-primary/90">Tamam</button>
+                            <button type="button" onClick={handleCellClear} className="flex-1 rounded bg-destructive px-1 py-0.5 text-destructive-foreground text-[10px] hover:bg-destructive/90">Temizle</button>
+                          </div>
+                        </div>
+                      )
+                    }
+
                     return (
-                      <div key={`${hour}-${day}`} className="rounded-lg border border-[hsl(var(--border))] p-2 text-center text-xs min-h-[48px] flex flex-col items-center justify-center gap-1">
+                      <div
+                        key={key}
+                        onClick={() => handleCellClick(day, hour)}
+                        className={`rounded-lg border p-2 text-center text-xs min-h-[48px] flex flex-col items-center justify-center gap-0.5 transition-colors ${
+                          editMode ? "cursor-pointer hover:border-primary hover:bg-muted/30" : ""
+                        } ${slot ? `${colors.bg} ${colors.border}` : "border-[hsl(var(--border))]"}`}
+                      >
                         {slot ? (
                           <>
-                            <span className="font-medium truncate w-full">{slot.ders_adi}</span>
-                            {slot.brans && <span className="text-muted-foreground truncate w-full">{slot.brans}</span>}
-                            {hasTenant && (
-                              <button type="button" onClick={() => handleDelete(slot.id)} className="text-red-500 hover:underline text-[10px]">Sil</button>
+                            <span className={`font-medium truncate w-full ${colors.text}`}>{slot.brans || slot.ders_adi}</span>
+                            {slot.seviye && <span className="text-muted-foreground truncate w-full text-[10px]">{slot.seviye}</span>}
+                            {slot.ders_adi && slot.brans && slot.ders_adi !== slot.brans && (
+                              <span className="text-muted-foreground truncate w-full text-[10px]">{slot.ders_adi}</span>
                             )}
                           </>
                         ) : (
-                          <span className="text-muted-foreground">—</span>
+                          <span className="text-muted-foreground">{editMode ? "+" : "—"}</span>
                         )}
                       </div>
                     )

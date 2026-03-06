@@ -54,6 +54,7 @@ export async function POST(req: NextRequest) {
     const dersAdi = typeof body.ders_adi === 'string' ? body.ders_adi.trim() : 'Ders'
     const antrenorId = typeof body.antrenor_id === 'string' ? body.antrenor_id : null
     const brans = typeof body.brans === 'string' ? body.brans : null
+    const seviye = typeof body.seviye === 'string' ? body.seviye : null
 
     const url = process.env.NEXT_PUBLIC_SUPABASE_URL ?? process.env.SUPABASE_URL
     const key = process.env.SUPABASE_SERVICE_ROLE_KEY ?? process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY
@@ -63,7 +64,7 @@ export async function POST(req: NextRequest) {
     const { data, error } = await service
       .from('tenant_schedule')
       .upsert(
-        { tenant_id: tenantId, gun, saat, ders_adi: dersAdi, antrenor_id: antrenorId, brans },
+        { tenant_id: tenantId, gun, saat, ders_adi: dersAdi, antrenor_id: antrenorId, brans, seviye },
         { onConflict: 'tenant_id,gun,saat' }
       )
       .select('id')
@@ -73,6 +74,52 @@ export async function POST(req: NextRequest) {
     return NextResponse.json({ ok: true, id: data?.id })
   } catch (e) {
     console.error('[franchise/schedule]', e)
+    return NextResponse.json({ error: 'Sunucu hatası' }, { status: 500 })
+  }
+}
+
+export async function PUT(req: NextRequest) {
+  try {
+    const supabase = await createClient()
+    const { data: { user } } = await supabase.auth.getUser()
+    if (!user) return NextResponse.json({ error: 'Giriş gerekli' }, { status: 401 })
+
+    const tenantId = await getTenantIdWithFallback(user.id, req)
+    if (!tenantId) return NextResponse.json({ error: 'Tesis atanmamış' }, { status: 403 })
+
+    const body = await req.json()
+    const items = Array.isArray(body.items) ? body.items : []
+    if (items.length === 0) return NextResponse.json({ error: 'items boş olamaz' }, { status: 400 })
+    if (items.length > 200) return NextResponse.json({ error: 'Maksimum 200 kayıt' }, { status: 400 })
+
+    const url = process.env.NEXT_PUBLIC_SUPABASE_URL ?? process.env.SUPABASE_URL
+    const key = process.env.SUPABASE_SERVICE_ROLE_KEY ?? process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY
+    if (!url || !key) return NextResponse.json({ error: 'Sunucu hatası' }, { status: 500 })
+    const service = createServiceClient(url, key)
+
+    // Mevcut programı sil, yenisini ekle (replace all)
+    const { error: delErr } = await service
+      .from('tenant_schedule')
+      .delete()
+      .eq('tenant_id', tenantId)
+    if (delErr) return NextResponse.json({ error: delErr.message }, { status: 500 })
+
+    const rows = items.map((item: Record<string, unknown>) => ({
+      tenant_id: tenantId,
+      gun: GUNLER.includes(String(item.gun) as (typeof GUNLER)[number]) ? String(item.gun) : 'Pazartesi',
+      saat: typeof item.saat === 'string' ? item.saat : '09:00',
+      ders_adi: typeof item.ders_adi === 'string' ? item.ders_adi.trim() : 'Ders',
+      brans: typeof item.brans === 'string' ? item.brans : null,
+      seviye: typeof item.seviye === 'string' ? item.seviye : null,
+      antrenor_id: typeof item.antrenor_id === 'string' ? item.antrenor_id : null,
+    }))
+
+    const { error: insErr } = await service.from('tenant_schedule').insert(rows)
+    if (insErr) return NextResponse.json({ error: insErr.message }, { status: 500 })
+
+    return NextResponse.json({ ok: true, count: rows.length })
+  } catch (e) {
+    console.error('[franchise/schedule PUT]', e)
     return NextResponse.json({ error: 'Sunucu hatası' }, { status: 500 })
   }
 }

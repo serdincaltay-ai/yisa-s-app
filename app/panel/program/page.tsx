@@ -3,7 +3,8 @@
 import React, { useEffect, useState, useCallback } from 'react'
 import { Button } from '@/components/ui/button'
 import { Card, CardContent } from '@/components/ui/card'
-import { Loader2, Plus, Trash2 } from 'lucide-react'
+import { Loader2, Calendar, CheckCircle2, X } from 'lucide-react'
+import { BRANS_RENK, DEFAULT_BRANS_RENK } from '@/lib/tenant-template-config'
 
 type ScheduleRow = {
   id: string
@@ -11,45 +12,45 @@ type ScheduleRow = {
   saat: string
   ders_adi: string
   brans: string | null
+  seviye: string | null
   antrenor_id?: string | null
 }
 
 const GUNLER = ['Pazartesi', 'Sali', 'Carsamba', 'Persembe', 'Cuma', 'Cumartesi', 'Pazar'] as const
+const SAATLER = ['08:00', '09:00', '10:00', '11:00', '12:00', '13:00', '14:00', '15:00', '16:00', '17:00', '18:00', '19:00']
+const BRANS_LIST = Object.keys(BRANS_RENK)
 
-const BRANSLAR = [
-  'Artistik Cimnastik',
-  'Ritmik Cimnastik',
-  'Trampolin',
-  'Genel Jimnastik',
-  'Temel Hareket Eğitimi',
-  'Diğer',
-]
+type CellEdit = { gun: string; saat: string; brans: string; seviye: string; ders_adi: string }
 
 export default function ProgramPage() {
   const [items, setItems] = useState<ScheduleRow[]>([])
   const [loading, setLoading] = useState(true)
   const [toast, setToast] = useState<{ message: string; type: 'success' | 'error' } | null>(null)
-  const [showModal, setShowModal] = useState(false)
+  const [editMode, setEditMode] = useState(false)
+  const [editingCell, setEditingCell] = useState<string | null>(null)
+  const [cellForm, setCellForm] = useState<CellEdit>({ gun: '', saat: '', brans: '', seviye: '', ders_adi: '' })
+  const [draft, setDraft] = useState<ScheduleRow[]>([])
   const [saving, setSaving] = useState(false)
-  const [form, setForm] = useState({ gun: 'Pazartesi', saat: '09:00', ders_adi: '', brans: '' })
 
   const fetchData = useCallback(async () => {
     setLoading(true)
     try {
       const res = await fetch('/api/franchise/schedule')
       const data = await res.json()
-      const rows = (data.items ?? []).map((r: Record<string, unknown>) => ({
-        id: r.id,
-        gun: r.gun ?? '',
-        saat: r.saat ?? '',
-        ders_adi: r.ders_adi ?? '',
-        brans: r.brans ?? null,
-        antrenor_id: r.antrenor_id ?? null,
+      const rows: ScheduleRow[] = (data.items ?? []).map((r: Record<string, unknown>) => ({
+        id: String(r.id ?? ''),
+        gun: String(r.gun ?? ''),
+        saat: String(r.saat ?? ''),
+        ders_adi: String(r.ders_adi ?? ''),
+        brans: typeof r.brans === 'string' ? r.brans : null,
+        seviye: typeof r.seviye === 'string' ? r.seviye : null,
+        antrenor_id: typeof r.antrenor_id === 'string' ? r.antrenor_id : null,
       }))
       setItems(rows)
+      setDraft(rows)
     } catch {
       setItems([])
-      setToast({ message: 'Program yüklenemedi', type: 'error' })
+      setToast({ message: 'Program yuklenemedi', type: 'error' })
     } finally {
       setLoading(false)
     }
@@ -65,70 +66,134 @@ export default function ProgramPage() {
     return () => clearTimeout(t)
   }, [toast])
 
-  const handleDersEkle = async (e: React.FormEvent) => {
-    e.preventDefault()
+  const cellKey = (gun: string, saat: string) => `${gun}-${saat}`
+  const getSlot = (list: ScheduleRow[], gun: string, saat: string) =>
+    list.find((i) => i.gun === gun && i.saat === saat)
+
+  const bransColor = (brans: string | null | undefined) => {
+    if (!brans) return DEFAULT_BRANS_RENK
+    return BRANS_RENK[brans] ?? DEFAULT_BRANS_RENK
+  }
+
+  const handleCellClick = (gun: string, saat: string) => {
+    if (!editMode) return
+    const key = cellKey(gun, saat)
+    if (editingCell === key) { setEditingCell(null); return }
+    const existing = getSlot(draft, gun, saat)
+    setCellForm({
+      gun,
+      saat,
+      brans: existing?.brans ?? '',
+      seviye: existing?.seviye ?? '',
+      ders_adi: existing?.ders_adi ?? '',
+    })
+    setEditingCell(key)
+  }
+
+  const handleCellSave = () => {
+    if (!cellForm.brans && !cellForm.ders_adi) {
+      setDraft((prev) => prev.filter((i) => !(i.gun === cellForm.gun && i.saat === cellForm.saat)))
+    } else {
+      setDraft((prev) => {
+        const filtered = prev.filter((i) => !(i.gun === cellForm.gun && i.saat === cellForm.saat))
+        return [
+          ...filtered,
+          {
+            id: '',
+            gun: cellForm.gun,
+            saat: cellForm.saat,
+            ders_adi: cellForm.ders_adi || cellForm.brans,
+            brans: cellForm.brans || null,
+            seviye: cellForm.seviye || null,
+          },
+        ]
+      })
+    }
+    setEditingCell(null)
+  }
+
+  const handleCellClear = () => {
+    setDraft((prev) => prev.filter((i) => !(i.gun === cellForm.gun && i.saat === cellForm.saat)))
+    setEditingCell(null)
+  }
+
+  const handleSaveAll = async () => {
+    if (saving) return
     setSaving(true)
     try {
+      const payload = draft.map((item) => ({
+        gun: item.gun,
+        saat: item.saat,
+        ders_adi: item.ders_adi,
+        brans: item.brans ?? null,
+        seviye: item.seviye ?? null,
+        antrenor_id: item.antrenor_id ?? null,
+      }))
       const res = await fetch('/api/franchise/schedule', {
-        method: 'POST',
+        method: 'PUT',
         headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({
-          gun: form.gun,
-          saat: form.saat,
-          ders_adi: form.ders_adi || 'Ders',
-          brans: form.brans || null,
-        }),
+        body: JSON.stringify({ items: payload }),
       })
       const data = await res.json()
-      if (res.ok && data.ok) {
-        setToast({ message: 'Ders eklendi', type: 'success' })
-        setShowModal(false)
-        setForm({ gun: 'Pazartesi', saat: '09:00', ders_adi: '', brans: '' })
+      if (data?.ok) {
+        setEditMode(false)
+        setEditingCell(null)
+        setToast({ message: `Program kaydedildi (${data.count} ders)`, type: 'success' })
         fetchData()
       } else {
-        setToast({ message: data.error ?? 'Kayıt başarısız', type: 'error' })
+        setToast({ message: data?.error ?? 'Kayit basarisiz', type: 'error' })
       }
     } catch {
-      setToast({ message: 'Bağlantı hatası', type: 'error' })
+      setToast({ message: 'Baglanti hatasi', type: 'error' })
     } finally {
       setSaving(false)
     }
   }
 
-  const handleDersSil = async (id: string) => {
-    if (!confirm('Bu dersi silmek istediğinize emin misiniz?')) return
-    try {
-      const res = await fetch(`/api/franchise/schedule?id=${id}`, { method: 'DELETE' })
-      const data = await res.json()
-      if (res.ok && data.ok) {
-        setToast({ message: 'Ders silindi', type: 'success' })
-        fetchData()
-      } else {
-        setToast({ message: data.error ?? 'Silme başarısız', type: 'error' })
-      }
-    } catch {
-      setToast({ message: 'Bağlantı hatası', type: 'error' })
-    }
+  const handleCancel = () => {
+    setEditMode(false)
+    setEditingCell(null)
+    setDraft(items)
   }
 
-  const grid = new Map<string, ScheduleRow>()
-  for (const r of items) {
-    grid.set(`${r.gun}|${r.saat}`, r)
+  const handleEnterEdit = () => {
+    setDraft(items)
+    setEditMode(true)
   }
 
-  const saatler = Array.from(new Set(items.map((r) => r.saat))).sort()
+  const displayItems = editMode ? draft : items
 
   return (
     <div className="p-6 space-y-6">
       <header className="flex flex-col gap-4 sm:flex-row sm:items-center sm:justify-between">
         <div>
-          <h1 className="text-2xl font-bold text-foreground">Ders Programı</h1>
-          <p className="text-muted-foreground">Haftalık ders programınız</p>
+          <h1 className="text-2xl font-bold text-foreground">Ders Programi</h1>
+          <p className="text-muted-foreground">
+            {editMode ? 'Hucreye tiklayarak ders ekleyin veya duzenleyin' : 'Haftalik ders programiniz'}
+          </p>
         </div>
-        <Button onClick={() => setShowModal(true)}>
-          <Plus className="h-4 w-4 mr-2" />
-          Ders Ekle
-        </Button>
+        <div className="flex gap-2">
+          {editMode ? (
+            <>
+              <Button variant="outline" onClick={handleCancel} disabled={saving}>
+                <X className="h-4 w-4 mr-2" />
+                Iptal
+              </Button>
+              <Button onClick={handleSaveAll} disabled={saving}>
+                {saving ? (
+                  <><Loader2 className="h-4 w-4 animate-spin mr-2" />Kaydediliyor…</>
+                ) : (
+                  <><CheckCircle2 className="h-4 w-4 mr-2" />Kaydet</>
+                )}
+              </Button>
+            </>
+          ) : (
+            <Button onClick={handleEnterEdit}>
+              <Calendar className="h-4 w-4 mr-2" />
+              Duzenle
+            </Button>
+          )}
+        </div>
       </header>
 
       {loading ? (
@@ -136,124 +201,84 @@ export default function ProgramPage() {
           <Loader2 className="h-8 w-8 animate-spin text-muted-foreground" />
         </div>
       ) : (
-        <div className="rounded-lg border overflow-x-auto">
-          <table className="w-full text-sm min-w-[640px]">
-            <thead>
-              <tr className="border-b bg-muted/50">
-                <th className="h-12 px-3 text-left font-medium w-20">Saat</th>
-                {GUNLER.map((g) => (
-                  <th key={g} className="h-12 px-3 text-left font-medium min-w-[120px]">{g}</th>
+        <Card>
+          <CardContent className="overflow-x-auto p-4">
+            <div className="min-w-[900px]">
+              <div className="grid gap-1" style={{ gridTemplateColumns: `80px repeat(${GUNLER.length}, 1fr)` }}>
+                <div className="p-2" />
+                {GUNLER.map((day) => (
+                  <div key={day} className="rounded-lg bg-muted p-2 text-center font-medium text-foreground text-sm">{day}</div>
                 ))}
-              </tr>
-            </thead>
-            <tbody>
-              {saatler.length === 0 ? (
-                <tr>
-                  <td colSpan={8} className="p-8 text-center text-muted-foreground">
-                    Henüz ders eklenmemiş. &quot;Ders Ekle&quot; ile başlayın.
-                  </td>
-                </tr>
-              ) : (
-                saatler.map((saat) => (
-                  <tr key={saat} className="border-b last:border-0 hover:bg-muted/20">
-                    <td className="p-3 font-medium text-muted-foreground">{saat}</td>
-                    {GUNLER.map((gun) => {
-                      const cell = grid.get(`${gun}|${saat}`)
+                {SAATLER.map((hour) => (
+                  <React.Fragment key={hour}>
+                    <div className="flex items-center justify-center p-2 text-sm text-muted-foreground font-mono">{hour}</div>
+                    {GUNLER.map((day) => {
+                      const slot = getSlot(displayItems, day, hour)
+                      const key = cellKey(day, hour)
+                      const isEditing = editingCell === key
+                      const colors = bransColor(slot?.brans)
+
+                      if (isEditing) {
+                        return (
+                          <div key={key} className="rounded-lg border-2 border-primary p-2 text-xs min-h-[80px] flex flex-col gap-1 bg-muted/50">
+                            <select
+                              className="w-full rounded border border-input bg-background px-1 py-0.5 text-xs"
+                              value={cellForm.brans}
+                              onChange={(e) => setCellForm({ ...cellForm, brans: e.target.value, ders_adi: e.target.value || cellForm.ders_adi })}
+                            >
+                              <option value="">Brans sec…</option>
+                              {BRANS_LIST.map((b) => (
+                                <option key={b} value={b}>{b}</option>
+                              ))}
+                            </select>
+                            <input
+                              className="w-full rounded border border-input bg-background px-1 py-0.5 text-xs"
+                              placeholder="Seviye"
+                              value={cellForm.seviye}
+                              onChange={(e) => setCellForm({ ...cellForm, seviye: e.target.value })}
+                            />
+                            <input
+                              className="w-full rounded border border-input bg-background px-1 py-0.5 text-xs"
+                              placeholder="Ders adi"
+                              value={cellForm.ders_adi}
+                              onChange={(e) => setCellForm({ ...cellForm, ders_adi: e.target.value })}
+                            />
+                            <div className="flex gap-1 mt-0.5">
+                              <button type="button" onClick={handleCellSave} className="flex-1 rounded bg-primary px-1 py-0.5 text-primary-foreground text-[10px] hover:bg-primary/90">Tamam</button>
+                              <button type="button" onClick={handleCellClear} className="flex-1 rounded bg-destructive px-1 py-0.5 text-destructive-foreground text-[10px] hover:bg-destructive/90">Temizle</button>
+                            </div>
+                          </div>
+                        )
+                      }
+
                       return (
-                        <td key={gun} className="p-2 align-top">
-                          {cell ? (
-                            <Card className="border-[#00d4ff]/20">
-                              <CardContent className="p-3">
-                                <p className="font-medium text-foreground">{cell.ders_adi}</p>
-                                <p className="text-xs text-muted-foreground mt-0.5">{cell.brans ?? '—'}</p>
-                                <Button
-                                  variant="ghost"
-                                  size="sm"
-                                  className="mt-2 h-8 px-2 text-destructive hover:text-destructive"
-                                  onClick={() => handleDersSil(cell.id)}
-                                >
-                                  <Trash2 className="h-3 w-3 mr-1" />
-                                  Sil
-                                </Button>
-                              </CardContent>
-                            </Card>
+                        <div
+                          key={key}
+                          onClick={() => handleCellClick(day, hour)}
+                          className={`rounded-lg border p-2 text-center text-xs min-h-[48px] flex flex-col items-center justify-center gap-0.5 transition-colors ${
+                            editMode ? 'cursor-pointer hover:border-primary hover:bg-muted/30' : ''
+                          } ${slot ? `${colors.bg} ${colors.border}` : 'border-[hsl(var(--border))]'}`}
+                        >
+                          {slot ? (
+                            <>
+                              <span className={`font-medium truncate w-full ${colors.text}`}>{slot.brans || slot.ders_adi}</span>
+                              {slot.seviye && <span className="text-muted-foreground truncate w-full text-[10px]">{slot.seviye}</span>}
+                              {slot.ders_adi && slot.brans && slot.ders_adi !== slot.brans && (
+                                <span className="text-muted-foreground truncate w-full text-[10px]">{slot.ders_adi}</span>
+                              )}
+                            </>
                           ) : (
-                            <span className="text-muted-foreground/50 text-xs">—</span>
+                            <span className="text-muted-foreground">{editMode ? '+' : '—'}</span>
                           )}
-                        </td>
+                        </div>
                       )
                     })}
-                  </tr>
-                ))
-              )}
-            </tbody>
-          </table>
-        </div>
-      )}
-
-      {showModal && (
-        <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-black/60">
-          <div className="rounded-lg border bg-card p-6 max-w-md w-full shadow-lg">
-            <h3 className="text-lg font-semibold">Ders Ekle</h3>
-            <form onSubmit={handleDersEkle} className="mt-4 space-y-4">
-              <div>
-                <label className="block text-sm font-medium mb-1">Gün</label>
-                <select
-                  value={form.gun}
-                  onChange={(e) => setForm((f) => ({ ...f, gun: e.target.value }))}
-                  className="flex h-10 w-full rounded-md border border-input bg-background px-3 py-2 text-sm"
-                  required
-                >
-                  {GUNLER.map((g) => (
-                    <option key={g} value={g}>{g}</option>
-                  ))}
-                </select>
+                  </React.Fragment>
+                ))}
               </div>
-              <div>
-                <label className="block text-sm font-medium mb-1">Saat</label>
-                <input
-                  type="time"
-                  value={form.saat}
-                  onChange={(e) => setForm((f) => ({ ...f, saat: e.target.value }))}
-                  className="flex h-10 w-full rounded-md border border-input bg-background px-3 py-2 text-sm"
-                  required
-                />
-              </div>
-              <div>
-                <label className="block text-sm font-medium mb-1">Ders Adı</label>
-                <input
-                  type="text"
-                  value={form.ders_adi}
-                  onChange={(e) => setForm((f) => ({ ...f, ders_adi: e.target.value }))}
-                  placeholder="Örn: Başlangıç Grubu"
-                  className="flex h-10 w-full rounded-md border border-input bg-background px-3 py-2 text-sm"
-                />
-              </div>
-              <div>
-                <label className="block text-sm font-medium mb-1">Branş</label>
-                <select
-                  value={form.brans}
-                  onChange={(e) => setForm((f) => ({ ...f, brans: e.target.value }))}
-                  className="flex h-10 w-full rounded-md border border-input bg-background px-3 py-2 text-sm"
-                >
-                  <option value="">Seçiniz</option>
-                  {BRANSLAR.map((b) => (
-                    <option key={b} value={b}>{b}</option>
-                  ))}
-                </select>
-              </div>
-              <div className="flex gap-2 justify-end pt-2">
-                <Button type="button" variant="outline" onClick={() => setShowModal(false)}>
-                  İptal
-                </Button>
-                <Button type="submit" disabled={saving}>
-                  {saving && <Loader2 className="h-4 w-4 animate-spin" />}
-                  Kaydet
-                </Button>
-              </div>
-            </form>
-          </div>
-        </div>
+            </div>
+          </CardContent>
+        </Card>
       )}
 
       {toast && (
