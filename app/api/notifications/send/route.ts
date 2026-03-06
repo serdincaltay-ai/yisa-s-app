@@ -46,7 +46,10 @@ export async function POST(req: NextRequest) {
     }
 
     // Kullanıcının bildirim tercihlerini kontrol et
-    const { data: prefs } = await getNotificationPreferences(userId)
+    const { data: prefs, error: prefsError } = await getNotificationPreferences(userId)
+    if (prefsError) {
+      return NextResponse.json({ error: 'Bildirim tercihleri kontrol edilemedi.' }, { status: 500 })
+    }
     if (prefs && !prefs[notificationType]) {
       return NextResponse.json(
         { ok: false, error: 'Kullanıcı bu bildirim türünü devre dışı bırakmış.' },
