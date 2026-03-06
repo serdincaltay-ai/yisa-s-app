@@ -37,6 +37,7 @@ const NAV = [
   { href: '/dashboard/sablonlar', label: 'Şablonlar', icon: LayoutTemplate },
   { href: '/dashboard/reports', label: 'Raporlar', icon: BarChart3 },
   { href: '/dashboard/guvenlik', label: 'Güvenlik', icon: Shield },
+  { href: '/dashboard/security', label: 'Güvenlik Logları', icon: Shield },
 ]
 
 export default function DashboardSidebar() {
