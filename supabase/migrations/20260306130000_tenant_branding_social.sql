@@ -15,7 +15,21 @@ ALTER TABLE tenants ADD COLUMN IF NOT EXISTS twitter_url TEXT;
 ALTER TABLE tenants ADD COLUMN IF NOT EXISTS phone TEXT;
 ALTER TABLE tenants ADD COLUMN IF NOT EXISTS email TEXT;
 ALTER TABLE tenants ADD COLUMN IF NOT EXISTS address TEXT;
-ALTER TABLE tenants ADD COLUMN IF NOT EXISTS working_hours TEXT;
+-- working_hours zaten JSONB olarak mevcut olabilir (önceki migration'lardan)
+-- TEXT'e dönüştür ki düz metin olarak kullanılabilsin
+DO $$
+BEGIN
+  IF EXISTS (
+    SELECT 1 FROM information_schema.columns
+    WHERE table_name = 'tenants' AND column_name = 'working_hours' AND data_type = 'jsonb'
+  ) THEN
+    ALTER TABLE tenants ALTER COLUMN working_hours TYPE TEXT USING working_hours::TEXT;
+    ALTER TABLE tenants ALTER COLUMN working_hours SET DEFAULT NULL;
+  ELSE
+    ALTER TABLE tenants ADD COLUMN IF NOT EXISTS working_hours TEXT;
+  END IF;
+END
+$$;
 
 -- Supabase Storage bucket for tenant logos (idempotent — skip if exists)
 -- Note: Bu bucket'ı Supabase Dashboard'dan da oluşturabilirsiniz:

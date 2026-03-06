@@ -95,7 +95,7 @@ export default function FranchiseAyarlarPage() {
           phone: t.phone ?? '',
           email: t.email ?? '',
           address: t.address ?? '',
-          working_hours: t.working_hours ?? '',
+          working_hours: typeof t.working_hours === 'string' ? t.working_hours : '',
         })
       }
     } catch (e) {
@@ -146,7 +146,9 @@ export default function FranchiseAyarlarPage() {
       })
       const data = await res.json()
       if (data?.ok && data.logo_url) {
-        setTenant((prev) => prev ? { ...prev, logo_url: data.logo_url } : prev)
+        // Cache-busting: tarayıcı önbelleği atlasın diye timestamp ekle (sadece client-side)
+        const freshUrl = `${data.logo_url}?t=${Date.now()}`
+        setTenant((prev) => prev ? { ...prev, logo_url: freshUrl } : prev)
       } else {
         alert(data?.error ?? 'Logo yüklenemedi')
       }
