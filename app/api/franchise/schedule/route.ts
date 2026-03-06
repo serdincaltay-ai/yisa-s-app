@@ -89,7 +89,6 @@ export async function PUT(req: NextRequest) {
 
     const body = await req.json()
     const items = Array.isArray(body.items) ? body.items : []
-    if (items.length === 0) return NextResponse.json({ error: 'items boş olamaz' }, { status: 400 })
     if (items.length > 200) return NextResponse.json({ error: 'Maksimum 200 kayıt' }, { status: 400 })
 
     const url = process.env.NEXT_PUBLIC_SUPABASE_URL ?? process.env.SUPABASE_URL
@@ -97,13 +96,17 @@ export async function PUT(req: NextRequest) {
     if (!url || !key) return NextResponse.json({ error: 'Sunucu hatası' }, { status: 500 })
     const service = createServiceClient(url, key)
 
-    // Mevcut programı sil, yenisini ekle (replace all)
-    const { error: delErr } = await service
-      .from('tenant_schedule')
-      .delete()
-      .eq('tenant_id', tenantId)
-    if (delErr) return NextResponse.json({ error: delErr.message }, { status: 500 })
+    // Boş program → tüm dersleri sil
+    if (items.length === 0) {
+      const { error: delErr } = await service
+        .from('tenant_schedule')
+        .delete()
+        .eq('tenant_id', tenantId)
+      if (delErr) return NextResponse.json({ error: delErr.message }, { status: 500 })
+      return NextResponse.json({ ok: true, count: 0 })
+    }
 
+    // Atomik güncelleme: önce upsert, sonra eski kayıtları sil
     const rows = items.map((item: Record<string, unknown>) => ({
       tenant_id: tenantId,
       gun: GUNLER.includes(String(item.gun) as (typeof GUNLER)[number]) ? String(item.gun) : 'Pazartesi',
@@ -114,8 +117,28 @@ export async function PUT(req: NextRequest) {
       antrenor_id: typeof item.antrenor_id === 'string' ? item.antrenor_id : null,
     }))
 
-    const { error: insErr } = await service.from('tenant_schedule').insert(rows)
-    if (insErr) return NextResponse.json({ error: insErr.message }, { status: 500 })
+    // 1) Upsert: mevcut hücreleri güncelle, yenileri ekle (veri kaybı yok)
+    const { error: upsErr } = await service
+      .from('tenant_schedule')
+      .upsert(rows, { onConflict: 'tenant_id,gun,saat' })
+    if (upsErr) return NextResponse.json({ error: upsErr.message }, { status: 500 })
+
+    // 2) Kaldırılan hücreleri sil (yeni listede olmayan gun+saat çiftleri)
+    const keepKeys = new Set(rows.map((r) => `${r.gun}|${r.saat}`))
+    const { data: existing } = await service
+      .from('tenant_schedule')
+      .select('id, gun, saat')
+      .eq('tenant_id', tenantId)
+    const toDelete = (existing ?? []).filter((row) => !keepKeys.has(`${row.gun}|${row.saat}`))
+    if (toDelete.length > 0) {
+      const ids = toDelete.map((r) => r.id)
+      const { error: delErr } = await service
+        .from('tenant_schedule')
+        .delete()
+        .in('id', ids)
+        .eq('tenant_id', tenantId)
+      if (delErr) return NextResponse.json({ error: delErr.message }, { status: 500 })
+    }
 
     return NextResponse.json({ ok: true, count: rows.length })
   } catch (e) {
