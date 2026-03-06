@@ -106,7 +106,7 @@ const TESISLER: Record<string, TesisData> = {
     adi: 'Demo Spor Akademisi',
     slug: 'demotesis',
     slogan: 'Sporda Mükemmelliği Keşfedin',
-    hakkimizda: 'Demo Spor Akademisi, medium şablon ile oluşturulmuş örnek bir tesis sayfasıdır. Cimnastik, yüzme ve dans branşlarında profesyonel eğitim sunuyoruz. 4-14 yaş arası çocuklarınız için güvenli, eğlenceli ve gelişim odaklı bir ortam sağlıyoruz.',
+    hakkimizda: 'Demo Spor Akademisi, orta şablon ile oluşturulmuş örnek bir tesis sayfasıdır. Cimnastik, yüzme ve dans branşlarında profesyonel eğitim sunuyoruz. 4-14 yaş arası çocuklarınız için güvenli, eğlenceli ve gelişim odaklı bir ortam sağlıyoruz.',
     konum: 'Kadıköy, İstanbul',
     telefon: '+90 (555) 123 45 67',
     email: 'info@demotesis.yisa-s.com',

@@ -261,7 +261,7 @@ export const TENANT_CONFIGS: Record<string, TenantConfig> = {
     slogan: 'Sporda Mükemmelliği Keşfedin',
     altSlogan: 'Cimnastik, yüzme ve dans eğitimi',
     aciklama:
-      'Demo Spor Akademisi, medium şablon ile oluşturulmuş örnek bir tesis sayfasıdır. ' +
+      'Demo Spor Akademisi, orta şablon ile oluşturulmuş örnek bir tesis sayfasıdır. ' +
       'Cimnastik, yüzme ve dans branşlarında profesyonel eğitim sunuyoruz. ' +
       '4-14 yaş arası çocuklarınız için güvenli ve gelişim odaklı bir ortam.',
     telefon: '0555 123 45 67',
