@@ -68,7 +68,7 @@ export async function DELETE(req: NextRequest) {
       )
     }
 
-    const result = await deletePushSubscription(endpoint)
+    const result = await deletePushSubscription(endpoint, auth.user.id)
 
     if (result.error) {
       return NextResponse.json({ error: result.error }, { status: 500 })

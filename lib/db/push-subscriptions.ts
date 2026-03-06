@@ -64,10 +64,11 @@ export async function getUserSubscriptions(
 }
 
 /**
- * Bir push subscription'ı sil (endpoint ile)
+ * Bir push subscription'ı sil (endpoint + user_id ile — IDOR koruması)
  */
 export async function deletePushSubscription(
-  endpoint: string
+  endpoint: string,
+  userId: string
 ): Promise<{ error?: string }> {
   const db = getSupabaseServer()
   if (!db) return { error: 'Supabase bağlantısı yok' }
@@ -76,6 +77,7 @@ export async function deletePushSubscription(
     .from('push_subscriptions')
     .delete()
     .eq('endpoint', endpoint)
+    .eq('user_id', userId)
 
   if (error) return { error: error.message }
   return {}
