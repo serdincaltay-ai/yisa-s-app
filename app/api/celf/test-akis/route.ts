@@ -12,6 +12,7 @@ import { routeToDirector } from '@/lib/robots/ceo-robot'
 import { CELF_DIRECTORATES, type DirectorKey } from '@/lib/robots/celf-center'
 import { createTaskResult } from '@/lib/db/task-results'
 import { createSecurityLog } from '@/lib/db/security-logs'
+import { requirePatronOrFlow } from '@/lib/auth/api-auth'
 
 export const dynamic = 'force-dynamic'
 
@@ -28,6 +29,9 @@ export async function POST(req: NextRequest) {
   const adimlar: TestAdim[] = []
 
   try {
+    const auth = await requirePatronOrFlow()
+    if (auth instanceof NextResponse) return auth
+
     const body = await req.json()
     const command = typeof body.command === 'string' ? body.command.trim() : ''
     const dryRun = body.dry_run !== false // varsayılan: true (gerçek DB yazma yapma)

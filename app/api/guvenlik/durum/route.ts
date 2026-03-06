@@ -6,11 +6,15 @@
 import { NextRequest, NextResponse } from 'next/server'
 import { getSecurityLogs } from '@/lib/db/security-logs'
 import { ucDuvarDurumu } from '@/lib/security/uc-duvar'
+import { requireDashboard } from '@/lib/auth/api-auth'
 
 export const dynamic = 'force-dynamic'
 
 export async function GET(req: NextRequest) {
   try {
+    const auth = await requireDashboard()
+    if (auth instanceof NextResponse) return auth
+
     const { searchParams } = new URL(req.url)
     const limit = Math.min(Number(searchParams.get('limit')) || 100, 500)
 

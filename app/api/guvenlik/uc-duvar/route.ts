@@ -8,11 +8,15 @@ import { NextRequest, NextResponse } from 'next/server'
 import { ucDuvarKontrol, ucDuvarDurumu } from '@/lib/security/uc-duvar'
 import { createSecurityLog } from '@/lib/db/security-logs'
 import type { DirectorKey } from '@/lib/robots/celf-center'
+import { requireDashboard } from '@/lib/auth/api-auth'
 
 export const dynamic = 'force-dynamic'
 
 export async function POST(req: NextRequest) {
   try {
+    const auth = await requireDashboard()
+    if (auth instanceof NextResponse) return auth
+
     const body = await req.json()
     const message = typeof body.message === 'string' ? body.message.trim() : ''
     const action = typeof body.action === 'string' ? body.action : undefined
@@ -61,6 +65,9 @@ export async function POST(req: NextRequest) {
 
 export async function GET() {
   try {
+    const auth = await requireDashboard()
+    if (auth instanceof NextResponse) return auth
+
     const durum = ucDuvarDurumu()
     return NextResponse.json({
       ok: true,
