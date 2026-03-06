@@ -61,6 +61,7 @@ export async function POST(req: NextRequest) {
 
     // --- 1) Veli user_tenants iliskilendirme ---
     let parentUserId: string | null = null
+    let veliGeciciSifre: string | null = null
     if (veliEmail) {
       // Mevcut kullanici var mi kontrol et (sayfalanmis arama)
       try {
@@ -103,6 +104,7 @@ export async function POST(req: NextRequest) {
           })
           if (!authError && authData?.user?.id) {
             parentUserId = authData.user.id
+            veliGeciciSifre = tempPassword
             await service.from('user_tenants').insert({
               user_id: parentUserId,
               tenant_id: tenantId,
@@ -167,6 +169,7 @@ export async function POST(req: NextRequest) {
       athlete,
       payment,
       veli_user_id: parentUserId,
+      veli_gecici_sifre: veliGeciciSifre,
     })
   } catch (e) {
     console.error('[kayit/ogrenci POST]', e)

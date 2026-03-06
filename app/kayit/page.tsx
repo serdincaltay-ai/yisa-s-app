@@ -59,6 +59,7 @@ export default function KayitGorevlisiPage() {
   const [toast, setToast] = useState<{ message: string; type: 'success' | 'error' } | null>(null)
   const toastTimerRef = useRef<NodeJS.Timeout | null>(null)
   const [sonKayitlar, setSonKayitlar] = useState<{ ad: string; soyad: string; brans: string; tarih: string }[]>([])
+  const [veliGeciciSifre, setVeliGeciciSifre] = useState<string | null>(null)
 
   const [ogrenci, setOgrenci] = useState<OgrenciForm>({
     ad: '',
@@ -140,6 +141,7 @@ export default function KayitGorevlisiPage() {
       const data = await res.json()
       if (data.ok) {
         setToast({ message: `${ogrenci.ad} ${ogrenci.soyad} başarıyla kaydedildi!`, type: 'success' })
+        setVeliGeciciSifre(data.veli_gecici_sifre ?? null)
         setSonKayitlar((prev) => [
           {
             ad: ogrenci.ad,
@@ -200,6 +202,35 @@ export default function KayitGorevlisiPage() {
           >
             {toast.type === 'success' && <CheckCircle className="inline h-4 w-4 mr-1" />}
             {toast.message}
+          </div>
+        )}
+
+        {/* veli gecici sifre bildirimi */}
+        {veliGeciciSifre && (
+          <div className="rounded-lg border border-amber-500/30 bg-amber-500/10 p-4 space-y-2">
+            <p className="text-sm font-semibold text-amber-700">
+              Yeni veli hesabı oluşturuldu — geçici şifreyi veliye iletin:
+            </p>
+            <div className="flex items-center gap-2">
+              <code className="rounded bg-amber-100 px-3 py-1.5 text-sm font-mono font-bold text-amber-900 select-all">
+                {veliGeciciSifre}
+              </code>
+              <Button
+                type="button"
+                variant="outline"
+                size="sm"
+                className="text-xs"
+                onClick={() => {
+                  navigator.clipboard.writeText(veliGeciciSifre)
+                  setToast({ message: 'Şifre panoya kopyalandı', type: 'success' })
+                }}
+              >
+                Kopyala
+              </Button>
+            </div>
+            <p className="text-xs text-amber-600">
+              Veli ilk girişte şifresini değiştirmelidir.
+            </p>
           </div>
         )}
 
