@@ -135,7 +135,7 @@ export async function updateSession(request: NextRequest) {
 
   supabaseResponse.headers.set('x-yisa-panel', panel)
 
-  const protectedPaths = ['/patron', '/franchise', '/tesis', '/antrenor', '/veli', '/dashboard', '/panel', '/kurulum', '/magaza', '/personel', '/sozlesme', '/temizlik']
+  const protectedPaths = ['/patron', '/franchise', '/tesis', '/antrenor', '/veli', '/dashboard', '/panel', '/kurulum', '/magaza', '/personel', '/sozlesme', '/temizlik', '/kayit']
   const isProtected = protectedPaths.some((p) => request.nextUrl.pathname.startsWith(p))
   if (isProtected && !user) {
     const url = request.nextUrl.clone()

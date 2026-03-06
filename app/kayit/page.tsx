@@ -1,612 +1,418 @@
-"use client"
+'use client'
 
-import { useState } from "react"
+import React, { useEffect, useState, useCallback } from 'react'
+import { useRouter } from 'next/navigation'
+import { supabase } from '@/lib/supabase'
+import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card'
+import { Button } from '@/components/ui/button'
+import { Input } from '@/components/ui/input'
+import { Label } from '@/components/ui/label'
+import { Badge } from '@/components/ui/badge'
 import {
-  ArrowRight,
-  ArrowLeft,
+  Loader2,
+  UserPlus,
+  Save,
+  CheckCircle,
   User,
   Baby,
-  BarChart3,
-  CheckCircle2,
   Phone,
   Mail,
-  MapPin,
   Calendar,
   Trophy,
-  Ruler,
-  Weight,
-  Activity,
-  Star,
-} from "lucide-react"
+  Banknote,
+} from 'lucide-react'
 
-/* ================================================================
-   Veli Kayıt — Mobile-First Registration Flow
-   Step 1: Hoş geldiniz (welcome)
-   Step 2: Veli profil formu
-   Step 3: Çocuk profil formu
-   Step 4: Gelişim grafikleri (boy, kilo, performans)
-   Step 5: Tamamlandı
-   ================================================================ */
-
-type Step = 1 | 2 | 3 | 4 | 5
-
-interface VeliProfile {
-  name: string
-  email: string
-  phone: string
-  address: string
-  city: string
+/* ---------- Tip tanimlari ---------- */
+interface OgrenciForm {
+  ad: string
+  soyad: string
+  dogum_tarihi: string
+  cinsiyet: string
+  brans: string
 }
 
-interface ChildProfile {
-  name: string
-  birthdate: string
-  gender: string
-  sport: string
-  level: string
-  height: string
-  weight: string
+interface VeliForm {
+  veli_ad: string
+  veli_telefon: string
+  veli_email: string
 }
 
-interface DevelopmentData {
-  month: string
-  height: number
-  weight: number
-  performance: number
+interface AidatForm {
+  aidat_tutar: string
 }
 
-const SPORTS = [
-  "Cimnastik",
-  "Basketbol",
-  "Voleybol",
-  "Yüzme",
-  "Futbol",
-  "Tenis",
+const BRANSLAR = [
+  'Artistik Cimnastik',
+  'Ritmik Cimnastik',
+  'Basketbol',
+  'Voleybol',
+  'Yuzme',
+  'Futbol',
+  'Tenis',
+  'Atletizm',
 ]
 
-const LEVELS = ["Başlangıç", "Orta", "İleri", "Yarışmacı"]
+export default function KayitGorevlisiPage() {
+  const router = useRouter()
+  const [loading, setLoading] = useState(true)
+  const [saving, setSaving] = useState(false)
+  const [toast, setToast] = useState<{ message: string; type: 'success' | 'error' } | null>(null)
+  const [sonKayitlar, setSonKayitlar] = useState<{ ad: string; soyad: string; brans: string; tarih: string }[]>([])
 
-/** Ornek gelisim verisi */
-const SAMPLE_DEVELOPMENT: DevelopmentData[] = [
-  { month: "Oca", height: 120, weight: 25, performance: 40 },
-  { month: "Şub", height: 121, weight: 25.5, performance: 45 },
-  { month: "Mar", height: 121.5, weight: 26, performance: 52 },
-  { month: "Nis", height: 122, weight: 26.2, performance: 58 },
-  { month: "May", height: 123, weight: 26.5, performance: 65 },
-  { month: "Haz", height: 124, weight: 27, performance: 72 },
-]
-
-const STEP_CONFIG = [
-  { step: 1 as Step, label: "Hoş Geldiniz", icon: Star },
-  { step: 2 as Step, label: "Veli Bilgileri", icon: User },
-  { step: 3 as Step, label: "Çocuk Profili", icon: Baby },
-  { step: 4 as Step, label: "Gelişim", icon: BarChart3 },
-  { step: 5 as Step, label: "Tamamlandı", icon: CheckCircle2 },
-]
-
-export default function VeliKayitPage() {
-  const [step, setStep] = useState<Step>(1)
-  const [veli, setVeli] = useState<VeliProfile>({
-    name: "",
-    email: "",
-    phone: "",
-    address: "",
-    city: "",
-  })
-  const [child, setChild] = useState<ChildProfile>({
-    name: "",
-    birthdate: "",
-    gender: "",
-    sport: "",
-    level: "",
-    height: "",
-    weight: "",
+  const [ogrenci, setOgrenci] = useState<OgrenciForm>({
+    ad: '',
+    soyad: '',
+    dogum_tarihi: '',
+    cinsiyet: '',
+    brans: '',
   })
 
-  function nextStep() {
-    if (step < 5) setStep((step + 1) as Step)
-  }
-  function prevStep() {
-    if (step > 1) setStep((step - 1) as Step)
-  }
+  const [veli, setVeli] = useState<VeliForm>({
+    veli_ad: '',
+    veli_telefon: '',
+    veli_email: '',
+  })
 
-  async function handleSubmit() {
+  const [aidat, setAidat] = useState<AidatForm>({
+    aidat_tutar: '',
+  })
+
+  /* auth kontrolu */
+  useEffect(() => {
+    const init = async () => {
+      const { data: { user } } = await supabase.auth.getUser()
+      if (!user) {
+        router.push('/auth/login?redirect=/kayit&from=kayit')
+        return
+      }
+      setLoading(false)
+    }
+    init()
+  }, [router])
+
+  /* ogrenci alanlari guncelle */
+  const updateOgrenci = useCallback(
+    (field: keyof OgrenciForm, value: string) => {
+      setOgrenci((prev) => ({ ...prev, [field]: value }))
+    },
+    []
+  )
+
+  /* veli alanlari guncelle */
+  const updateVeli = useCallback(
+    (field: keyof VeliForm, value: string) => {
+      setVeli((prev) => ({ ...prev, [field]: value }))
+    },
+    []
+  )
+
+  /* form temizle */
+  const resetForm = useCallback(() => {
+    setOgrenci({ ad: '', soyad: '', dogum_tarihi: '', cinsiyet: '', brans: '' })
+    setVeli({ veli_ad: '', veli_telefon: '', veli_email: '' })
+    setAidat({ aidat_tutar: '' })
+  }, [])
+
+  /* kaydet */
+  const handleSubmit = async () => {
+    if (!ogrenci.ad.trim()) {
+      setToast({ message: 'Ogrenci adi zorunludur', type: 'error' })
+      return
+    }
+    if (!veli.veli_ad.trim()) {
+      setToast({ message: 'Veli adi zorunludur', type: 'error' })
+      return
+    }
+
+    setSaving(true)
+    setToast(null)
     try {
-      await fetch("/api/demo-requests", {
-        method: "POST",
-        headers: { "Content-Type": "application/json" },
+      const res = await fetch('/api/kayit/ogrenci', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({
-          name: veli.name,
-          email: veli.email,
-          phone: veli.phone,
-          source: "veli_kayit",
-          notes: JSON.stringify({ veli, child }),
+          ...ogrenci,
+          ...veli,
+          aidat_tutar: aidat.aidat_tutar ? parseFloat(aidat.aidat_tutar) : 0,
         }),
       })
+      const data = await res.json()
+      if (data.ok) {
+        setToast({ message: `${ogrenci.ad} ${ogrenci.soyad} basariyla kaydedildi!`, type: 'success' })
+        setSonKayitlar((prev) => [
+          {
+            ad: ogrenci.ad,
+            soyad: ogrenci.soyad,
+            brans: ogrenci.brans || '-',
+            tarih: new Date().toLocaleTimeString('tr-TR', { hour: '2-digit', minute: '2-digit' }),
+          },
+          ...prev.slice(0, 9),
+        ])
+        resetForm()
+      } else {
+        setToast({ message: data.error || 'Kayit basarisiz', type: 'error' })
+      }
     } catch {
-      // continue to success
+      setToast({ message: 'Baglanti hatasi', type: 'error' })
+    } finally {
+      setSaving(false)
+      setTimeout(() => setToast(null), 4000)
     }
-    nextStep()
+  }
+
+  if (loading) {
+    return (
+      <div className="min-h-screen flex items-center justify-center bg-background">
+        <Loader2 className="h-8 w-8 animate-spin text-muted-foreground" />
+      </div>
+    )
   }
 
   return (
-    <div className="min-h-screen bg-zinc-950 text-white font-[Inter] flex flex-col">
-      {/* Step Indicator */}
-      <div className="flex items-center justify-center gap-1 py-4 px-4 bg-zinc-900 border-b border-zinc-800">
-        {STEP_CONFIG.map((s, i) => (
-          <div key={s.step} className="flex items-center">
-            <div
-              className={`flex items-center justify-center w-8 h-8 rounded-full text-xs font-semibold transition-all ${
-                step >= s.step
-                  ? "bg-cyan-600 text-white"
-                  : "bg-zinc-800 text-zinc-500"
-              }`}
-            >
-              {step > s.step ? (
-                <CheckCircle2 className="w-4 h-4" />
-              ) : (
-                <s.icon className="w-4 h-4" />
-              )}
-            </div>
-            {i < STEP_CONFIG.length - 1 && (
-              <div
-                className={`w-6 md:w-12 h-0.5 mx-1 ${
-                  step > s.step ? "bg-cyan-600" : "bg-zinc-800"
-                }`}
-              />
-            )}
+    <div className="min-h-screen bg-background">
+      <div className="mx-auto max-w-2xl p-4 sm:p-6 space-y-6">
+        {/* baslik */}
+        <header className="flex flex-col gap-2 sm:flex-row sm:items-center sm:justify-between">
+          <div>
+            <h1 className="text-2xl font-bold flex items-center gap-2">
+              <UserPlus className="h-6 w-6 text-primary" />
+              Ogrenci Kayit
+            </h1>
+            <p className="text-muted-foreground text-sm">
+              Yeni ogrenci kaydini bu formdan olusturun
+            </p>
           </div>
-        ))}
-      </div>
+          <Badge variant="outline" className="text-xs self-start">
+            Kayit Gorevlisi
+          </Badge>
+        </header>
 
-      {/* Content Area */}
-      <div className="flex-1 flex items-center justify-center p-4 md:p-8">
-        <div className="w-full max-w-md">
-          {/* STEP 1: Welcome */}
-          {step === 1 && (
-            <div className="text-center space-y-6">
-              <div className="w-20 h-20 mx-auto rounded-full bg-cyan-500/20 flex items-center justify-center">
-                <Star className="w-10 h-10 text-cyan-400" />
-              </div>
-              <h1 className="text-3xl font-bold">
-                YiSA-S&apos;e Hoş Geldiniz!
-              </h1>
-              <p className="text-zinc-400 leading-relaxed">
-                Çocuğunuzun spor gelişimini takip etmek, ders programını
-                görüntülemek ve ödemelerinizi kolayca yönetmek için kayıt
-                olun.
-              </p>
-              <div className="grid grid-cols-3 gap-3 text-center">
-                <div className="p-3 bg-zinc-900 rounded-xl border border-zinc-800">
-                  <Calendar className="w-5 h-5 text-cyan-400 mx-auto mb-1" />
-                  <span className="text-xs text-zinc-400">
-                    Ders Programı
-                  </span>
-                </div>
-                <div className="p-3 bg-zinc-900 rounded-xl border border-zinc-800">
-                  <BarChart3 className="w-5 h-5 text-orange-400 mx-auto mb-1" />
-                  <span className="text-xs text-zinc-400">
-                    Gelişim Takibi
-                  </span>
-                </div>
-                <div className="p-3 bg-zinc-900 rounded-xl border border-zinc-800">
-                  <Trophy className="w-5 h-5 text-emerald-400 mx-auto mb-1" />
-                  <span className="text-xs text-zinc-400">
-                    Başarılar
-                  </span>
-                </div>
-              </div>
-              <button
-                onClick={nextStep}
-                className="w-full py-3 bg-cyan-600 hover:bg-cyan-500 rounded-xl font-semibold text-sm flex items-center justify-center gap-2 transition-colors"
-              >
-                Kayıt Ol
-                <ArrowRight className="w-4 h-4" />
-              </button>
-            </div>
-          )}
+        {/* toast */}
+        {toast && (
+          <div
+            className={`rounded-lg p-3 text-sm ${
+              toast.type === 'success'
+                ? 'bg-green-500/10 text-green-600 border border-green-500/30'
+                : 'bg-red-500/10 text-red-600 border border-red-500/30'
+            }`}
+          >
+            {toast.type === 'success' && <CheckCircle className="inline h-4 w-4 mr-1" />}
+            {toast.message}
+          </div>
+        )}
 
-          {/* STEP 2: Veli Profile */}
-          {step === 2 && (
-            <div className="space-y-5">
-              <div>
-                <h2 className="text-xl font-bold mb-1">Veli Bilgileri</h2>
-                <p className="text-sm text-zinc-400">
-                  İletişim bilgilerinizi girin
-                </p>
-              </div>
-              <div className="space-y-3">
+        {/* ogrenci bilgileri */}
+        <Card>
+          <CardHeader className="pb-3">
+            <CardTitle className="flex items-center gap-2 text-lg">
+              <Baby className="h-5 w-5 text-blue-500" />
+              Ogrenci Bilgileri
+            </CardTitle>
+          </CardHeader>
+          <CardContent className="space-y-4">
+            <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
+              <div className="space-y-1.5">
+                <Label htmlFor="ad">Ad *</Label>
                 <div className="relative">
-                  <User className="absolute left-3 top-3 w-4 h-4 text-zinc-500" />
-                  <input
-                    type="text"
-                    placeholder="Ad Soyad"
-                    value={veli.name}
-                    onChange={(e) =>
-                      setVeli((p) => ({ ...p, name: e.target.value }))
-                    }
-                    className="w-full pl-10 pr-4 py-2.5 bg-zinc-900 border border-zinc-800 rounded-xl text-sm text-white placeholder-zinc-500 focus:outline-none focus:border-cyan-500"
-                  />
-                </div>
-                <div className="relative">
-                  <Mail className="absolute left-3 top-3 w-4 h-4 text-zinc-500" />
-                  <input
-                    type="email"
-                    placeholder="E-posta"
-                    value={veli.email}
-                    onChange={(e) =>
-                      setVeli((p) => ({ ...p, email: e.target.value }))
-                    }
-                    className="w-full pl-10 pr-4 py-2.5 bg-zinc-900 border border-zinc-800 rounded-xl text-sm text-white placeholder-zinc-500 focus:outline-none focus:border-cyan-500"
-                  />
-                </div>
-                <div className="relative">
-                  <Phone className="absolute left-3 top-3 w-4 h-4 text-zinc-500" />
-                  <input
-                    type="tel"
-                    placeholder="Telefon"
-                    value={veli.phone}
-                    onChange={(e) =>
-                      setVeli((p) => ({ ...p, phone: e.target.value }))
-                    }
-                    className="w-full pl-10 pr-4 py-2.5 bg-zinc-900 border border-zinc-800 rounded-xl text-sm text-white placeholder-zinc-500 focus:outline-none focus:border-cyan-500"
-                  />
-                </div>
-                <div className="relative">
-                  <MapPin className="absolute left-3 top-3 w-4 h-4 text-zinc-500" />
-                  <input
-                    type="text"
-                    placeholder="Adres"
-                    value={veli.address}
-                    onChange={(e) =>
-                      setVeli((p) => ({ ...p, address: e.target.value }))
-                    }
-                    className="w-full pl-10 pr-4 py-2.5 bg-zinc-900 border border-zinc-800 rounded-xl text-sm text-white placeholder-zinc-500 focus:outline-none focus:border-cyan-500"
-                  />
-                </div>
-                <div className="relative">
-                  <MapPin className="absolute left-3 top-3 w-4 h-4 text-zinc-500" />
-                  <input
-                    type="text"
-                    placeholder="Şehir"
-                    value={veli.city}
-                    onChange={(e) =>
-                      setVeli((p) => ({ ...p, city: e.target.value }))
-                    }
-                    className="w-full pl-10 pr-4 py-2.5 bg-zinc-900 border border-zinc-800 rounded-xl text-sm text-white placeholder-zinc-500 focus:outline-none focus:border-cyan-500"
+                  <User className="absolute left-3 top-2.5 h-4 w-4 text-muted-foreground" />
+                  <Input
+                    id="ad"
+                    placeholder="Ogrenci adi"
+                    value={ogrenci.ad}
+                    onChange={(e) => updateOgrenci('ad', e.target.value)}
+                    className="pl-9"
                   />
                 </div>
               </div>
-              <div className="flex gap-3">
-                <button
-                  onClick={prevStep}
-                  className="flex-1 py-3 bg-zinc-800 hover:bg-zinc-700 rounded-xl font-medium text-sm flex items-center justify-center gap-2 transition-colors"
-                >
-                  <ArrowLeft className="w-4 h-4" />
-                  Geri
-                </button>
-                <button
-                  onClick={nextStep}
-                  className="flex-1 py-3 bg-cyan-600 hover:bg-cyan-500 rounded-xl font-semibold text-sm flex items-center justify-center gap-2 transition-colors"
-                >
-                  Devam
-                  <ArrowRight className="w-4 h-4" />
-                </button>
+              <div className="space-y-1.5">
+                <Label htmlFor="soyad">Soyad</Label>
+                <Input
+                  id="soyad"
+                  placeholder="Ogrenci soyadi"
+                  value={ogrenci.soyad}
+                  onChange={(e) => updateOgrenci('soyad', e.target.value)}
+                />
               </div>
             </div>
-          )}
-
-          {/* STEP 3: Child Profile */}
-          {step === 3 && (
-            <div className="space-y-5">
-              <div>
-                <h2 className="text-xl font-bold mb-1">Çocuk Profili</h2>
-                <p className="text-sm text-zinc-400">
-                  Çocuğunuzun bilgilerini girin
-                </p>
-              </div>
-              <div className="space-y-3">
+            <div className="grid grid-cols-1 sm:grid-cols-3 gap-4">
+              <div className="space-y-1.5">
+                <Label htmlFor="dogum_tarihi">Dogum Tarihi</Label>
                 <div className="relative">
-                  <Baby className="absolute left-3 top-3 w-4 h-4 text-zinc-500" />
-                  <input
-                    type="text"
-                    placeholder="Çocuk Adı"
-                    value={child.name}
-                    onChange={(e) =>
-                      setChild((p) => ({ ...p, name: e.target.value }))
-                    }
-                    className="w-full pl-10 pr-4 py-2.5 bg-zinc-900 border border-zinc-800 rounded-xl text-sm text-white placeholder-zinc-500 focus:outline-none focus:border-cyan-500"
-                  />
-                </div>
-                <div className="relative">
-                  <Calendar className="absolute left-3 top-3 w-4 h-4 text-zinc-500" />
-                  <input
+                  <Calendar className="absolute left-3 top-2.5 h-4 w-4 text-muted-foreground" />
+                  <Input
+                    id="dogum_tarihi"
                     type="date"
-                    value={child.birthdate}
-                    onChange={(e) =>
-                      setChild((p) => ({
-                        ...p,
-                        birthdate: e.target.value,
-                      }))
-                    }
-                    className="w-full pl-10 pr-4 py-2.5 bg-zinc-900 border border-zinc-800 rounded-xl text-sm text-white placeholder-zinc-500 focus:outline-none focus:border-cyan-500"
+                    value={ogrenci.dogum_tarihi}
+                    onChange={(e) => updateOgrenci('dogum_tarihi', e.target.value)}
+                    className="pl-9"
                   />
                 </div>
-                <select
-                  value={child.gender}
-                  onChange={(e) =>
-                    setChild((p) => ({ ...p, gender: e.target.value }))
-                  }
-                  className="w-full px-4 py-2.5 bg-zinc-900 border border-zinc-800 rounded-xl text-sm text-white focus:outline-none focus:border-cyan-500"
-                >
-                  <option value="">Cinsiyet</option>
-                  <option value="erkek">Erkek</option>
-                  <option value="kiz">Kız</option>
-                </select>
-                <select
-                  value={child.sport}
-                  onChange={(e) =>
-                    setChild((p) => ({ ...p, sport: e.target.value }))
-                  }
-                  className="w-full px-4 py-2.5 bg-zinc-900 border border-zinc-800 rounded-xl text-sm text-white focus:outline-none focus:border-cyan-500"
-                >
-                  <option value="">Branş Seçin</option>
-                  {SPORTS.map((s) => (
-                    <option key={s} value={s}>
-                      {s}
-                    </option>
-                  ))}
-                </select>
-                <select
-                  value={child.level}
-                  onChange={(e) =>
-                    setChild((p) => ({ ...p, level: e.target.value }))
-                  }
-                  className="w-full px-4 py-2.5 bg-zinc-900 border border-zinc-800 rounded-xl text-sm text-white focus:outline-none focus:border-cyan-500"
-                >
-                  <option value="">Seviye</option>
-                  {LEVELS.map((l) => (
-                    <option key={l} value={l}>
-                      {l}
-                    </option>
-                  ))}
-                </select>
-                <div className="grid grid-cols-2 gap-3">
-                  <div className="relative">
-                    <Ruler className="absolute left-3 top-3 w-4 h-4 text-zinc-500" />
-                    <input
-                      type="text"
-                      placeholder="Boy (cm)"
-                      value={child.height}
-                      onChange={(e) =>
-                        setChild((p) => ({
-                          ...p,
-                          height: e.target.value,
-                        }))
-                      }
-                      className="w-full pl-10 pr-4 py-2.5 bg-zinc-900 border border-zinc-800 rounded-xl text-sm text-white placeholder-zinc-500 focus:outline-none focus:border-cyan-500"
-                    />
-                  </div>
-                  <div className="relative">
-                    <Weight className="absolute left-3 top-3 w-4 h-4 text-zinc-500" />
-                    <input
-                      type="text"
-                      placeholder="Kilo (kg)"
-                      value={child.weight}
-                      onChange={(e) =>
-                        setChild((p) => ({
-                          ...p,
-                          weight: e.target.value,
-                        }))
-                      }
-                      className="w-full pl-10 pr-4 py-2.5 bg-zinc-900 border border-zinc-800 rounded-xl text-sm text-white placeholder-zinc-500 focus:outline-none focus:border-cyan-500"
-                    />
-                  </div>
-                </div>
               </div>
-              <div className="flex gap-3">
-                <button
-                  onClick={prevStep}
-                  className="flex-1 py-3 bg-zinc-800 hover:bg-zinc-700 rounded-xl font-medium text-sm flex items-center justify-center gap-2 transition-colors"
+              <div className="space-y-1.5">
+                <Label htmlFor="cinsiyet">Cinsiyet</Label>
+                <select
+                  id="cinsiyet"
+                  value={ogrenci.cinsiyet}
+                  onChange={(e) => updateOgrenci('cinsiyet', e.target.value)}
+                  className="flex h-10 w-full rounded-md border border-input bg-background px-3 py-2 text-sm ring-offset-background focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring"
                 >
-                  <ArrowLeft className="w-4 h-4" />
-                  Geri
-                </button>
-                <button
-                  onClick={nextStep}
-                  className="flex-1 py-3 bg-cyan-600 hover:bg-cyan-500 rounded-xl font-semibold text-sm flex items-center justify-center gap-2 transition-colors"
-                >
-                  Devam
-                  <ArrowRight className="w-4 h-4" />
-                </button>
+                  <option value="">Seciniz</option>
+                  <option value="E">Erkek</option>
+                  <option value="K">Kiz</option>
+                </select>
+              </div>
+              <div className="space-y-1.5">
+                <Label htmlFor="brans">Brans</Label>
+                <div className="relative">
+                  <Trophy className="absolute left-3 top-2.5 h-4 w-4 text-muted-foreground" />
+                  <select
+                    id="brans"
+                    value={ogrenci.brans}
+                    onChange={(e) => updateOgrenci('brans', e.target.value)}
+                    className="flex h-10 w-full rounded-md border border-input bg-background pl-9 pr-3 py-2 text-sm ring-offset-background focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring"
+                  >
+                    <option value="">Brans seciniz</option>
+                    {BRANSLAR.map((b) => (
+                      <option key={b} value={b}>{b}</option>
+                    ))}
+                  </select>
+                </div>
               </div>
             </div>
-          )}
+          </CardContent>
+        </Card>
 
-          {/* STEP 4: Development Graphs */}
-          {step === 4 && (
-            <div className="space-y-5">
-              <div>
-                <h2 className="text-xl font-bold mb-1">Gelişim Takibi</h2>
-                <p className="text-sm text-zinc-400">
-                  Kayıt sonrası çocuğunuzun gelişimini buradan takip
-                  edebileceksiniz
-                </p>
-              </div>
-
-              {/* Height Graph */}
-              <div className="bg-zinc-900 border border-zinc-800 rounded-xl p-4">
-                <div className="flex items-center gap-2 mb-3">
-                  <Ruler className="w-4 h-4 text-cyan-400" />
-                  <h3 className="text-sm font-semibold">Boy Gelişimi (cm)</h3>
-                </div>
-                <div className="flex items-end gap-2 h-32">
-                  {SAMPLE_DEVELOPMENT.map((d) => {
-                    const pct = ((d.height - 118) / 8) * 100
-                    return (
-                      <div
-                        key={d.month}
-                        className="flex-1 flex flex-col items-center gap-1"
-                      >
-                        <span className="text-[10px] text-zinc-400">
-                          {d.height}
-                        </span>
-                        <div
-                          className="w-full bg-cyan-500/30 rounded-t-md"
-                          style={{ height: `${Math.max(pct, 10)}%` }}
-                        >
-                          <div
-                            className="w-full h-full bg-cyan-500 rounded-t-md opacity-70"
-                            style={{ height: "100%" }}
-                          />
-                        </div>
-                        <span className="text-[10px] text-zinc-500">
-                          {d.month}
-                        </span>
-                      </div>
-                    )
-                  })}
-                </div>
-              </div>
-
-              {/* Weight Graph */}
-              <div className="bg-zinc-900 border border-zinc-800 rounded-xl p-4">
-                <div className="flex items-center gap-2 mb-3">
-                  <Weight className="w-4 h-4 text-orange-400" />
-                  <h3 className="text-sm font-semibold">Kilo Takibi (kg)</h3>
-                </div>
-                <div className="flex items-end gap-2 h-32">
-                  {SAMPLE_DEVELOPMENT.map((d) => {
-                    const pct = ((d.weight - 24) / 4) * 100
-                    return (
-                      <div
-                        key={d.month}
-                        className="flex-1 flex flex-col items-center gap-1"
-                      >
-                        <span className="text-[10px] text-zinc-400">
-                          {d.weight}
-                        </span>
-                        <div
-                          className="w-full bg-orange-500/30 rounded-t-md"
-                          style={{ height: `${Math.max(pct, 10)}%` }}
-                        >
-                          <div
-                            className="w-full h-full bg-orange-500 rounded-t-md opacity-70"
-                            style={{ height: "100%" }}
-                          />
-                        </div>
-                        <span className="text-[10px] text-zinc-500">
-                          {d.month}
-                        </span>
-                      </div>
-                    )
-                  })}
-                </div>
-              </div>
-
-              {/* Performance Graph */}
-              <div className="bg-zinc-900 border border-zinc-800 rounded-xl p-4">
-                <div className="flex items-center gap-2 mb-3">
-                  <Activity className="w-4 h-4 text-emerald-400" />
-                  <h3 className="text-sm font-semibold">
-                    Performans Puanı (0-100)
-                  </h3>
-                </div>
-                <div className="flex items-end gap-2 h-32">
-                  {SAMPLE_DEVELOPMENT.map((d) => {
-                    return (
-                      <div
-                        key={d.month}
-                        className="flex-1 flex flex-col items-center gap-1"
-                      >
-                        <span className="text-[10px] text-zinc-400">
-                          {d.performance}
-                        </span>
-                        <div
-                          className="w-full bg-emerald-500/30 rounded-t-md"
-                          style={{
-                            height: `${Math.max(d.performance, 5)}%`,
-                          }}
-                        >
-                          <div
-                            className="w-full h-full bg-emerald-500 rounded-t-md opacity-70"
-                            style={{ height: "100%" }}
-                          />
-                        </div>
-                        <span className="text-[10px] text-zinc-500">
-                          {d.month}
-                        </span>
-                      </div>
-                    )
-                  })}
-                </div>
-              </div>
-
-              <div className="flex gap-3">
-                <button
-                  onClick={prevStep}
-                  className="flex-1 py-3 bg-zinc-800 hover:bg-zinc-700 rounded-xl font-medium text-sm flex items-center justify-center gap-2 transition-colors"
-                >
-                  <ArrowLeft className="w-4 h-4" />
-                  Geri
-                </button>
-                <button
-                  onClick={handleSubmit}
-                  className="flex-1 py-3 bg-cyan-600 hover:bg-cyan-500 rounded-xl font-semibold text-sm flex items-center justify-center gap-2 transition-colors"
-                >
-                  Kaydı Tamamla
-                  <CheckCircle2 className="w-4 h-4" />
-                </button>
+        {/* veli bilgileri */}
+        <Card>
+          <CardHeader className="pb-3">
+            <CardTitle className="flex items-center gap-2 text-lg">
+              <User className="h-5 w-5 text-emerald-500" />
+              Veli Bilgileri
+            </CardTitle>
+          </CardHeader>
+          <CardContent className="space-y-4">
+            <div className="space-y-1.5">
+              <Label htmlFor="veli_ad">Veli Adi Soyadi *</Label>
+              <div className="relative">
+                <User className="absolute left-3 top-2.5 h-4 w-4 text-muted-foreground" />
+                <Input
+                  id="veli_ad"
+                  placeholder="Veli adi soyadi"
+                  value={veli.veli_ad}
+                  onChange={(e) => updateVeli('veli_ad', e.target.value)}
+                  className="pl-9"
+                />
               </div>
             </div>
-          )}
-
-          {/* STEP 5: Success */}
-          {step === 5 && (
-            <div className="text-center space-y-6">
-              <div className="w-20 h-20 mx-auto rounded-full bg-emerald-500/20 flex items-center justify-center">
-                <CheckCircle2 className="w-10 h-10 text-emerald-400" />
+            <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
+              <div className="space-y-1.5">
+                <Label htmlFor="veli_telefon">Telefon</Label>
+                <div className="relative">
+                  <Phone className="absolute left-3 top-2.5 h-4 w-4 text-muted-foreground" />
+                  <Input
+                    id="veli_telefon"
+                    type="tel"
+                    placeholder="05XX XXX XX XX"
+                    value={veli.veli_telefon}
+                    onChange={(e) => updateVeli('veli_telefon', e.target.value)}
+                    className="pl-9"
+                  />
+                </div>
               </div>
-              <h1 className="text-2xl font-bold">Kayıt Tamamlandı!</h1>
-              <p className="text-zinc-400 leading-relaxed">
-                Teşekkürler! Kaydınız başarıyla oluşturuldu. En kısa
-                sürede sizinle iletişime geçeceğiz.
+              <div className="space-y-1.5">
+                <Label htmlFor="veli_email">E-posta</Label>
+                <div className="relative">
+                  <Mail className="absolute left-3 top-2.5 h-4 w-4 text-muted-foreground" />
+                  <Input
+                    id="veli_email"
+                    type="email"
+                    placeholder="veli@email.com"
+                    value={veli.veli_email}
+                    onChange={(e) => updateVeli('veli_email', e.target.value)}
+                    className="pl-9"
+                  />
+                </div>
+              </div>
+            </div>
+            <p className="text-xs text-muted-foreground">
+              E-posta girilirse veli otomatik olarak sisteme kaydedilir ve veli paneline erisim saglanir.
+            </p>
+          </CardContent>
+        </Card>
+
+        {/* ilk aidat */}
+        <Card>
+          <CardHeader className="pb-3">
+            <CardTitle className="flex items-center gap-2 text-lg">
+              <Banknote className="h-5 w-5 text-amber-500" />
+              Ilk Aidat
+            </CardTitle>
+          </CardHeader>
+          <CardContent>
+            <div className="space-y-1.5">
+              <Label htmlFor="aidat_tutar">Aidat Tutari (TRY)</Label>
+              <div className="relative">
+                <Banknote className="absolute left-3 top-2.5 h-4 w-4 text-muted-foreground" />
+                <Input
+                  id="aidat_tutar"
+                  type="number"
+                  min="0"
+                  step="0.01"
+                  placeholder="0.00"
+                  value={aidat.aidat_tutar}
+                  onChange={(e) => setAidat({ aidat_tutar: e.target.value })}
+                  className="pl-9"
+                />
+              </div>
+              <p className="text-xs text-muted-foreground">
+                Bos birakilirsa aidat kaydedilmez. Tutar girilirse &quot;bekliyor&quot; durumunda olusturulur.
               </p>
-              <div className="bg-zinc-900 border border-zinc-800 rounded-xl p-4 text-left space-y-2">
-                {veli.name && (
-                  <div className="flex justify-between text-sm">
-                    <span className="text-zinc-500">Veli</span>
-                    <span className="text-white">{veli.name}</span>
-                  </div>
-                )}
-                {child.name && (
-                  <div className="flex justify-between text-sm">
-                    <span className="text-zinc-500">Çocuk</span>
-                    <span className="text-white">{child.name}</span>
-                  </div>
-                )}
-                {child.sport && (
-                  <div className="flex justify-between text-sm">
-                    <span className="text-zinc-500">Branş</span>
-                    <span className="text-white">{child.sport}</span>
-                  </div>
-                )}
-                {veli.phone && (
-                  <div className="flex justify-between text-sm">
-                    <span className="text-zinc-500">Telefon</span>
-                    <span className="text-white">{veli.phone}</span>
-                  </div>
-                )}
-              </div>
-              <a
-                href="/"
-                className="inline-block w-full py-3 bg-cyan-600 hover:bg-cyan-500 rounded-xl font-semibold text-sm text-center transition-colors"
-              >
-                Ana Sayfaya Dön
-              </a>
             </div>
+          </CardContent>
+        </Card>
+
+        {/* kaydet butonu */}
+        <Button
+          onClick={handleSubmit}
+          disabled={saving}
+          className="w-full h-12 text-base"
+          size="lg"
+        >
+          {saving ? (
+            <Loader2 className="mr-2 h-5 w-5 animate-spin" />
+          ) : (
+            <Save className="mr-2 h-5 w-5" />
           )}
-        </div>
+          Ogrenciyi Kaydet
+        </Button>
+
+        {/* son kayitlar */}
+        {sonKayitlar.length > 0 && (
+          <Card>
+            <CardHeader className="pb-3">
+              <CardTitle className="text-sm font-medium text-muted-foreground">
+                Bu Oturumdaki Kayitlar
+              </CardTitle>
+            </CardHeader>
+            <CardContent>
+              <div className="space-y-2">
+                {sonKayitlar.map((k, i) => (
+                  <div
+                    key={`${k.ad}-${k.tarih}-${i}`}
+                    className="flex items-center justify-between rounded-lg border p-2.5 text-sm"
+                  >
+                    <div className="flex items-center gap-2">
+                      <CheckCircle className="h-4 w-4 text-green-500" />
+                      <span className="font-medium">{k.ad} {k.soyad}</span>
+                      <Badge variant="secondary" className="text-xs">{k.brans}</Badge>
+                    </div>
+                    <span className="text-xs text-muted-foreground">{k.tarih}</span>
+                  </div>
+                ))}
+              </div>
+            </CardContent>
+          </Card>
+        )}
       </div>
     </div>
   )
