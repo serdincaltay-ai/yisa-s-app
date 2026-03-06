@@ -113,11 +113,16 @@ export async function DELETE(req: NextRequest) {
     }
 
     // Soft-delete: mark as inactive (IDOR koruması: user_id filtresi)
-    await supabase
+    const { error: deleteErr } = await supabase
       .from('push_subscriptions')
       .update({ is_active: false })
       .eq('endpoint', endpoint)
       .eq('user_id', auth.user.id)
+
+    if (deleteErr) {
+      console.error('[notifications/subscribe] DELETE update error:', deleteErr)
+      return NextResponse.json({ error: 'Abonelik kaldırma sırasında hata.' }, { status: 500 })
+    }
 
     return NextResponse.json({ ok: true, message: 'Push aboneliği kaldırıldı.' })
   } catch (e) {
