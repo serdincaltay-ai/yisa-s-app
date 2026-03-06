@@ -125,15 +125,20 @@ export async function POST(req: NextRequest) {
             .map((m: { athlete_id: string }) => m.athlete_id)
         )
 
+        const smsPromises: Promise<unknown>[] = []
         for (const athlete of (athletes ?? []) as Array<{ id: string; name: string; surname?: string; parent_phone?: string }>) {
           if (athlete.parent_phone && !oncekiAbsent.has(athlete.id)) {
             const cocukAdi = [athlete.name, athlete.surname].filter(Boolean).join(' ')
-            // Arka planda gönder — yoklama yanıtını bekletme
-            yoklamaGelmediSMS(athlete.parent_phone, cocukAdi, bugun, {
-              tenant_id: tenantId,
-              athlete_id: athlete.id,
-            }).catch((err) => console.error('[yoklama SMS]', err))
+            smsPromises.push(
+              yoklamaGelmediSMS(athlete.parent_phone, cocukAdi, bugun, {
+                tenant_id: tenantId,
+                athlete_id: athlete.id,
+              })
+            )
           }
+        }
+        if (smsPromises.length > 0) {
+          await Promise.allSettled(smsPromises)
         }
       }
     }

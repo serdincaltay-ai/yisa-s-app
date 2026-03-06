@@ -20,7 +20,7 @@ export async function POST(req: NextRequest) {
 
     if (!isSmsConfigured()) {
       return NextResponse.json(
-        { error: 'SMS servisi yapılandırılmamış. TWILIO_ACCOUNT_SID, TWILIO_AUTH_TOKEN ve TWILIO_PHONE_NUMBER gerekli.' },
+        { error: 'SMS servisi yapılandırılmamış. Lütfen sistem yöneticinize başvurun.' },
         { status: 503 }
       )
     }
