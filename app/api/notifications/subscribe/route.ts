@@ -41,45 +41,25 @@ export async function POST(req: NextRequest) {
       return NextResponse.json({ error: 'Sunucu yapılandırma hatası.' }, { status: 500 })
     }
 
-    // Upsert: same endpoint = update, new endpoint = insert
-    const { data: existing } = await supabase
+    // Upsert: aynı endpoint varsa güncelle (kullanıcı değişse bile), yoksa ekle
+    const { error: upsertErr } = await supabase
       .from('push_subscriptions')
-      .select('id')
-      .eq('endpoint', subscription.endpoint)
-      .eq('user_id', userId)
-      .maybeSingle()
-
-    if (existing) {
-      // Update existing subscription
-      const { error: updateErr } = await supabase
-        .from('push_subscriptions')
-        .update({
+      .upsert(
+        {
+          user_id: userId,
+          tenant_id: tenantId,
+          endpoint: subscription.endpoint,
           keys_p256dh: subscription.keys.p256dh,
           keys_auth: subscription.keys.auth,
           is_active: true,
           updated_at: new Date().toISOString(),
-        })
-        .eq('id', existing.id)
+        },
+        { onConflict: 'endpoint' }
+      )
 
-      if (updateErr) {
-        console.error('[notifications/subscribe] Update error:', updateErr)
-        return NextResponse.json({ error: 'Abonelik güncelleme sırasında hata.' }, { status: 500 })
-      }
-    } else {
-      // Insert new subscription
-      const { error: insertErr } = await supabase.from('push_subscriptions').insert({
-        user_id: userId,
-        tenant_id: tenantId,
-        endpoint: subscription.endpoint,
-        keys_p256dh: subscription.keys.p256dh,
-        keys_auth: subscription.keys.auth,
-        is_active: true,
-      })
-
-      if (insertErr) {
-        console.error('[notifications/subscribe] Insert error:', insertErr)
-        return NextResponse.json({ error: 'Abonelik kaydı sırasında hata.' }, { status: 500 })
-      }
+    if (upsertErr) {
+      console.error('[notifications/subscribe] Upsert error:', upsertErr)
+      return NextResponse.json({ error: 'Abonelik kaydı sırasında hata.' }, { status: 500 })
     }
 
     return NextResponse.json({ ok: true, message: 'Push aboneliği kaydedildi.' })
