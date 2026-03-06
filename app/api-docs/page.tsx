@@ -20,7 +20,7 @@ export default function ApiDocsPage() {
           Yisa-S API Dokümantasyonu
         </h1>
         <p className="mb-6 text-gray-600">
-          Tüm endpoint&apos;lerin detaylı açıklamaları, request/response şemaları ve örnek değerler.
+          Tüm endpoint&apos;lerin detaylı açıklamaları, istek/yanıt şemaları ve örnek değerler.
         </p>
         <SwaggerUI url="/api/openapi" />
       </div>
