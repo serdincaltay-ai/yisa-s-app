@@ -138,6 +138,15 @@ export async function POST(req: NextRequest) {
 
     if (athleteError) {
       console.error('[kayit/ogrenci] athleteError:', athleteError.message)
+      // Yeni oluşturulan veli auth user'ı geri al (orphan önleme)
+      if (veliGeciciSifre && parentUserId) {
+        try {
+          await service.from('user_tenants').delete().eq('user_id', parentUserId).eq('tenant_id', tenantId)
+          await service.auth.admin.deleteUser(parentUserId)
+        } catch {
+          console.error('[kayit/ogrenci] veli rollback başarısız, user_id:', parentUserId)
+        }
+      }
       return NextResponse.json({ error: 'Sporcu kaydı oluşturulamadı' }, { status: 500 })
     }
 

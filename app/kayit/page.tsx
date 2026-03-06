@@ -224,6 +224,8 @@ export default function KayitGorevlisiPage() {
                 onClick={() => {
                   navigator.clipboard.writeText(veliGeciciSifre)
                   setToast({ message: 'Şifre panoya kopyalandı', type: 'success' })
+                  if (toastTimerRef.current) clearTimeout(toastTimerRef.current)
+                  toastTimerRef.current = setTimeout(() => setToast(null), 4000)
                 }}
               >
                 Kopyala
