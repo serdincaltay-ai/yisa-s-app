@@ -825,23 +825,23 @@ function ScheduleTab({ staff, hasTenant }: { staff: StaffMember[]; hasTenant: bo
     <div className="space-y-6">
       <div className="flex items-center justify-between">
         <div>
-          <h2 className="text-2xl font-bold text-foreground">Ders Programi</h2>
+          <h2 className="text-2xl font-bold text-foreground">Ders Programı</h2>
           <p className="text-muted-foreground">
-            {editMode ? "Hucreye tiklayarak ders ekleyin veya duzenleyin" : "Haftalik ders plani"}
+            {editMode ? "Hücreye tıklayarak ders ekleyin veya düzenleyin" : "Haftalık ders planı"}
           </p>
         </div>
         {hasTenant && (
           <div className="flex gap-2">
             {editMode ? (
               <>
-                <Button variant="outline" onClick={handleCancel} disabled={saving}>Iptal</Button>
+                <Button variant="outline" onClick={handleCancel} disabled={saving}>İptal</Button>
                 <Button onClick={handleSaveAll} disabled={saving}>
                   {saving ? <><Loader2 className="mr-2 h-4 w-4 animate-spin" />Kaydediliyor…</> : <><CheckCircle2 className="mr-2 h-4 w-4" />Kaydet</>}
                 </Button>
               </>
             ) : (
               <Button onClick={handleEnterEdit}>
-                <Calendar className="mr-2 h-4 w-4" />Duzenle
+                <Calendar className="mr-2 h-4 w-4" />Düzenle
               </Button>
             )}
           </div>
@@ -873,7 +873,7 @@ function ScheduleTab({ staff, hasTenant }: { staff: StaffMember[]; hasTenant: bo
                             value={cellForm.brans}
                             onChange={(e) => setCellForm({ ...cellForm, brans: e.target.value, ders_adi: e.target.value || cellForm.ders_adi })}
                           >
-                            <option value="">Brans sec…</option>
+                            <option value="">Branş seç…</option>
                             {BRANS_LIST.map((b) => (
                               <option key={b} value={b}>{b}</option>
                             ))}
@@ -886,7 +886,7 @@ function ScheduleTab({ staff, hasTenant }: { staff: StaffMember[]; hasTenant: bo
                           />
                           <input
                             className="w-full rounded border border-input bg-background px-1 py-0.5 text-xs"
-                            placeholder="Ders adi"
+                            placeholder="Ders adı"
                             value={cellForm.ders_adi}
                             onChange={(e) => setCellForm({ ...cellForm, ders_adi: e.target.value })}
                           />

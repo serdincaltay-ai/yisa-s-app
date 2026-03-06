@@ -50,7 +50,7 @@ export default function ProgramPage() {
       setDraft(rows)
     } catch {
       setItems([])
-      setToast({ message: 'Program yuklenemedi', type: 'error' })
+      setToast({ message: 'Program yüklenemedi', type: 'error' })
     } finally {
       setLoading(false)
     }
@@ -143,10 +143,10 @@ export default function ProgramPage() {
         setToast({ message: `Program kaydedildi (${data.count} ders)`, type: 'success' })
         fetchData()
       } else {
-        setToast({ message: data?.error ?? 'Kayit basarisiz', type: 'error' })
+        setToast({ message: data?.error ?? 'Kayıt başarısız', type: 'error' })
       }
     } catch {
-      setToast({ message: 'Baglanti hatasi', type: 'error' })
+      setToast({ message: 'Bağlantı hatası', type: 'error' })
     } finally {
       setSaving(false)
     }
@@ -169,9 +169,9 @@ export default function ProgramPage() {
     <div className="p-6 space-y-6">
       <header className="flex flex-col gap-4 sm:flex-row sm:items-center sm:justify-between">
         <div>
-          <h1 className="text-2xl font-bold text-foreground">Ders Programi</h1>
+          <h1 className="text-2xl font-bold text-foreground">Ders Programı</h1>
           <p className="text-muted-foreground">
-            {editMode ? 'Hucreye tiklayarak ders ekleyin veya duzenleyin' : 'Haftalik ders programiniz'}
+            {editMode ? 'Hücreye tıklayarak ders ekleyin veya düzenleyin' : 'Haftalık ders programınız'}
           </p>
         </div>
         <div className="flex gap-2">
@@ -179,7 +179,7 @@ export default function ProgramPage() {
             <>
               <Button variant="outline" onClick={handleCancel} disabled={saving}>
                 <X className="h-4 w-4 mr-2" />
-                Iptal
+                İptal
               </Button>
               <Button onClick={handleSaveAll} disabled={saving}>
                 {saving ? (
@@ -192,7 +192,7 @@ export default function ProgramPage() {
           ) : (
             <Button onClick={handleEnterEdit}>
               <Calendar className="h-4 w-4 mr-2" />
-              Duzenle
+              Düzenle
             </Button>
           )}
         </div>
@@ -228,7 +228,7 @@ export default function ProgramPage() {
                               value={cellForm.brans}
                               onChange={(e) => setCellForm({ ...cellForm, brans: e.target.value, ders_adi: e.target.value || cellForm.ders_adi })}
                             >
-                              <option value="">Brans sec…</option>
+                              <option value="">Branş seç…</option>
                               {BRANS_LIST.map((b) => (
                                 <option key={b} value={b}>{b}</option>
                               ))}
@@ -241,7 +241,7 @@ export default function ProgramPage() {
                             />
                             <input
                               className="w-full rounded border border-input bg-background px-1 py-0.5 text-xs"
-                              placeholder="Ders adi"
+                              placeholder="Ders adı"
                               value={cellForm.ders_adi}
                               onChange={(e) => setCellForm({ ...cellForm, ders_adi: e.target.value })}
                             />
