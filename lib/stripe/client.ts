@@ -36,6 +36,7 @@ export async function createCheckoutSession(params: {
   currency?: string
   tenantId: string
   userId: string
+  originalStatus: string
   successUrl: string
   cancelUrl: string
 }): Promise<{ sessionId?: string; url?: string | null; error?: string }> {
@@ -65,6 +66,7 @@ export async function createCheckoutSession(params: {
         payment_id: params.paymentId,
         tenant_id: params.tenantId,
         user_id: params.userId,
+        original_status: params.originalStatus,
       },
       success_url: params.successUrl,
       cancel_url: params.cancelUrl,

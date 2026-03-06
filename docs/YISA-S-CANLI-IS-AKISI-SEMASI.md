@@ -2,6 +2,7 @@
 
 > **CANLI DOSYA:** Projede herhangi bir değişiklik olduğunda bu dosya **aynı gün** güncellenir. Planlanan, devam eden ve tamamlanan işler burada takip edilir.
 >
+> **Son güncelleme:** 05.03.2026 — Kullanıcı paneli tasarım kilidi (koyu tema, alt nav) + Tesis sayfaları (3 şablon, ders programı grid, fiyat kartları) tamamlandı.
 > **Son güncelleme:** 05.03.2026 — 3 Duvar entegrasyonu, güvenlik dashboard, CELF uçtan uca test, görev→dashboard yansıması tamamlandı. Genel ilerleme ~%93.
 
 ---
@@ -38,9 +39,12 @@
 | Faz 3 | Güvenlik robotu MVP | Büyük oranda tamam | ~%95 |
 | Faz 4 | Veri robotu / Şablon havuzu | Büyük oranda tamam | ~%90 |
 | Faz 5 | Franchise paneli | Büyük oranda tamam | ~%90 |
+| Faz 6 | Veli paneli MVP | Büyük oranda tamam | ~%95 |
+| Faz 7 | CELF zinciri + Başlangıç görevleri | Büyük oranda tamam | ~%75 |
 | Faz 6 | Veli paneli MVP | Büyük oranda tamam | ~%90 |
 | Faz 7 | CELF zinciri + Başlangıç görevleri | Büyük oranda tamam | ~%90 |
 
+**Genel ilerleme:** ~%89 (ağırlıklı ortalama)
 **Genel ilerleme:** ~%93 (ağırlıklı ortalama)
 
 ---
@@ -76,6 +80,13 @@
 | 23 | 137 öğrenci veri kontrolü: **140 sporcu, 1575 ödeme, 3022 yoklama** (BJK tenant) | Veri | 05.03.2026 |
 | 24 | Veli paneli canlı veri: 2 test veli + 3 sporcu parent bağlantısı + gerçek auth (signInWithPassword) | Faz 6 | 05.03.2026 |
 | 25 | Kırık trigger düzeltmesi (trg_update_athletes → guncelleme_tarihi) | Düzeltme | 05.03.2026 |
+| 26 | Kullanıcı paneli tasarım kilidi: Veli + Antrenör paneli koyu tema, kutucuk layout, alt navigasyon | Faz 6 | 05.03.2026 |
+| 27 | Antrenör paneli sidebar → bottom nav dönüşümü | Faz 6 | 05.03.2026 |
+| 28 | Veli ders programı sayfası (gün seçici, ders kartları, haftalık özet) | Faz 6 | 05.03.2026 |
+| 29 | Tesis web sayfaları: 2 tesis (BJK Tuzla=premium, Fener Atasehir=orta) + 3 şablon | Faz 1 | 05.03.2026 |
+| 30 | Haftalık ders programı grid (PZT-PAZ, 08:00-19:00, renk kodlu branşlar) | Faz 1 | 05.03.2026 |
+| 31 | Paket fiyatları kartları (24/48/60 ders — 30.000/52.800/60.000 TL) | Faz 1 | 05.03.2026 |
+| 32 | Premium özellikler: Robot karşılama widget + Randevu sistemi modal | Faz 1 | 05.03.2026 |
 | 26 | 3 şablon sistemi (standard/medium/premium) + tenant config | Faz 1 | 05.03.2026 |
 | 27 | Haftalık ders programı GRID bileşeni (08:00-19:00, PZT-PAZ, renk kodlu) | Faz 1 | 05.03.2026 |
 | 28 | Robot karşılama + randevu sistemi (premium şablon) | Faz 1 | 05.03.2026 |
@@ -93,6 +104,10 @@
 
 | # | İş | Faz | Başlangıç | Engel / Not |
 |---|-----|-----|-----------|-------------|
+| ~~1~~ | ~~CELF otomatik tetikleme (provisionTenant -> CELF)~~ | ~~Faz 2~~ | ~~Şubat 2026~~ | **Yapıldı** — provisionTenant → triggerCelfStartup |
+| 2 | 3 Duvar sistemi tam entegrasyonu | Faz 3 | Şubat 2026 | Parçalar mevcut; entegrasyon tamamlanacak |
+| 3 | Patron onay -> CELF tetik uçtan uca test | Faz 7 | Şubat 2026 | Her parça var; tam akış test edilmeli |
+| 4 | Görev sonuçlarının dashboard'a yansıması | Faz 7 | Şubat 2026 | task_results arşivleme var; gösterim kısmen |
 | ~~1~~ | ~~CELF otomatik tetikleme (provisionTenant -> CELF)~~ | ~~Faz 2~~ | ~~Şubat 2026~~ | **Yapıldı 05.03.2026** — provisionTenant Step 7 triggerCelfStartup ile bağlandı (Bkz. 3.1 #19) |
 | ~~2~~ | ~~3 Duvar sistemi tam entegrasyonu~~ | ~~Faz 3~~ | ~~Şubat 2026~~ | **Yapıldı 05.03.2026** — uc-duvar.ts birleşik middleware: 3 duvar kontrol, API, dashboard (Bkz. 3.1 #32-34) |
 | ~~3~~ | ~~Patron onay -> CELF tetik uçtan uca test~~ | ~~Faz 7~~ | ~~Şubat 2026~~ | **Yapıldı 05.03.2026** — /api/celf/test-akis: 7 adımlı e2e doğrulama (Bkz. 3.1 #35) |
@@ -129,6 +144,8 @@
 
 | Tarih | Değişiklik | Etkileyen Dosya(lar) |
 |-------|-----------|----------------------|
+| 05.03.2026 | **Kullanıcı paneli tasarım kilidi:** Veli + Antrenör panelleri koyu tema (zinc-950), kutucuk layout, alt navigasyon (5 öğe); Antrenör sidebar→bottom nav; Veli ders programı sayfası; PanelBottomNav + PanelHeader shared bileşenler | components/PanelBottomNav.tsx, PanelHeader.tsx, app/veli/*, app/antrenor/* |
+| 05.03.2026 | **Tesis sayfaları:** 2 tesis (BJK Tuzla=premium, Fener Atasehir=orta); 3 şablon (standart/orta/premium); haftalık ders programı grid; paket fiyatları (3 kart); premium: robot karşılama + randevu modal; shared bileşenler (DersProgramiGrid, PaketFiyatlari, TesisNavbar, TesisFooter) | app/tesis/[slug]/page.tsx, components/tesis/* |
 | 05.03.2026 | **Faz 3 + Faz 7 tamamlandı:** 3 Duvar birleşik middleware (uc-duvar.ts); güvenlik dashboard (/dashboard/guvenlik); CELF uçtan uca test endpoint; raporlar sayfası genişletildi; sidebar güvenlik linki | lib/security/uc-duvar.ts, app/dashboard/guvenlik/page.tsx, app/api/guvenlik/*, app/api/celf/test-akis/route.ts, app/dashboard/reports/page.tsx, app/components/DashboardSidebar.tsx |
 | 05.03.2026 | **Veli paneli canlı veri:** 2 test veli (veli1@bjktuzla.test, veli2@bjktuzla.test) oluşturuldu; 3 sporcu parent_user_id ile bağlandı; demo→gerçek auth; kırık trigger düzeltildi; user_tenants role='veli' eklendi | app/veli/giris/page.tsx, app/veli/dashboard/page.tsx, scripts/013_veli_canli_veri_setup.sql |
 | 05.03.2026 | **137 öğrenci veri kontrolü:** BJK tenant (8cc3ea1d) — athletes=140, payments=1575, attendance=3022. Hedef aşıldı. Eksik: athlete_measurements=0, users=0 (parent_user_id bağlı değil). | docs/YISA-S-CANLI-PROJE-RAPORU.md, docs/YISA-S-CANLI-IS-AKISI-SEMASI.md |
