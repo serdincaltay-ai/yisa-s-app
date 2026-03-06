@@ -191,9 +191,9 @@ self.addEventListener('push', (event) => {
       vibrate: [100, 50, 100],
       tag: notifType + '-' + Date.now(),
       data: {
+        ...data.data,
         url: data.url || defaults.url,
         notification_type: notifType,
-        ...data.data
       },
       actions: notifType === 'odeme_hatirlama'
         ? [{ action: 'pay', title: 'Ödemeye Git' }]
