@@ -159,19 +159,48 @@ self.addEventListener('fetch', (event) => {
   )
 })
 
-// Push bildirimleri (ileride kullanılabilir)
+// Push bildirimleri — bildirim türlerine göre ikon ve renk
+const NOTIFICATION_ICONS = {
+  yoklama_sonucu: '/icon-192.png',
+  odeme_hatirlatma: '/icon-192.png',
+  duyuru: '/icon-192.png'
+}
+
+const NOTIFICATION_DEFAULTS = {
+  yoklama_sonucu: { title: 'Yoklama Sonucu', body: 'Yoklama bilgisi güncellendi.', url: '/veli/dashboard' },
+  odeme_hatirlatma: { title: 'Ödeme Hatırlatma', body: 'Ödeme tarihiniz yaklaşıyor.', url: '/veli/odeme' },
+  duyuru: { title: 'Yeni Duyuru', body: 'Yeni bir duyuru yayınlandı.', url: '/veli/duyurular' }
+}
+
 self.addEventListener('push', (event) => {
   if (event.data) {
-    const data = event.data.json()
+    let data
+    try {
+      data = event.data.json()
+    } catch (e) {
+      data = { title: 'YİSA-S', body: event.data.text() }
+    }
+
+    const notifType = data.notification_type || 'duyuru'
+    const defaults = NOTIFICATION_DEFAULTS[notifType] || NOTIFICATION_DEFAULTS.duyuru
+
     const options = {
-      body: data.body || 'YİSA-S bildirimi',
-      icon: '/icon-192.png',
+      body: data.body || defaults.body,
+      icon: NOTIFICATION_ICONS[notifType] || '/icon-192.png',
       badge: '/icon-192.png',
       vibrate: [100, 50, 100],
-      data: { url: data.url || '/dashboard' }
+      tag: notifType + '-' + Date.now(),
+      data: {
+        ...data.data,
+        url: data.url || defaults.url,
+        notification_type: notifType,
+      },
+      actions: notifType === 'odeme_hatirlatma'
+        ? [{ action: 'pay', title: 'Ödemeye Git' }]
+        : [{ action: 'open', title: 'Aç' }]
     }
     event.waitUntil(
-      self.registration.showNotification(data.title || 'YİSA-S', options)
+      self.registration.showNotification(data.title || defaults.title, options)
     )
   }
 })
