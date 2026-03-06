@@ -2,9 +2,7 @@
 
 import { useEffect, useState } from 'react'
 import { useRouter } from 'next/navigation'
-import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card'
-import { Button } from '@/components/ui/button'
-import { CheckCircle, XCircle, Clock, Save } from 'lucide-react'
+import { CheckCircle, XCircle, Clock, Save, Loader2 } from 'lucide-react'
 
 type Schedule = { id: string; gun: string; saat: string; ders_adi: string; brans?: string }
 type Sporcu = { id: string; name: string; surname?: string; level?: string; group?: string; mevcutDurum: string | null }
@@ -80,10 +78,10 @@ export default function AntrenorYoklamaPage() {
         })
         setDurumMap(m)
       } else {
-        alert(j.error ?? 'Kaydetme başarısız')
-      }
-    } catch {
-      alert('Kaydetme başarısız')
+            alert(j.error ?? 'Kaydetme başarısız')
+          }
+        } catch {
+          alert('Kaydetme başarısız')
     } finally {
       setSaving(false)
     }
@@ -92,102 +90,100 @@ export default function AntrenorYoklamaPage() {
   const hasChanges = Object.values(durumMap).some((d) => d)
 
   return (
-    <div className="p-6 space-y-6">
+    <main className="p-4 space-y-4">
       <div>
-        <h1 className="text-2xl font-bold">Yoklama Al</h1>
-        <p className="text-muted-foreground">Ders seçin ve sporcuların devam durumunu işaretleyin.</p>
+        <h1 className="text-xl font-bold text-white">Yoklama Al</h1>
+        <p className="text-sm text-zinc-400">Ders seçin ve sporcuların devam durumunu işaretleyin.</p>
       </div>
 
-      <Card>
-        <CardHeader>
-          <CardTitle>Ders Seçimi</CardTitle>
-          <CardDescription>Yoklama alacağınız dersi seçin</CardDescription>
-        </CardHeader>
-        <CardContent>
-          <select
-            value={selectedSchedule}
-            onChange={(e) => setSelectedSchedule(e.target.value)}
-            className="w-full max-w-md rounded-lg border border-input bg-background px-4 py-2"
-          >
-            <option value="">Ders seçin</option>
-            {schedules.map((s) => (
-              <option key={s.id} value={s.id}>
-                {s.ders_adi} — {s.gun} {s.saat} {s.brans ? `(${s.brans})` : ''}
-              </option>
-            ))}
-          </select>
-        </CardContent>
-      </Card>
+      {/* Ders Secimi */}
+      <div className="bg-zinc-900 border border-zinc-800 rounded-2xl p-4">
+                <h3 className="text-sm font-semibold text-white mb-2">Ders Seçimi</h3>
+                <p className="text-xs text-zinc-500 mb-3">Yoklama alacağınız dersi seçin</p>
+        <select
+          value={selectedSchedule}
+          onChange={(e) => setSelectedSchedule(e.target.value)}
+          className="w-full rounded-xl border border-zinc-700 bg-zinc-800 px-4 py-2.5 text-white text-sm focus:border-cyan-400 focus:outline-none"
+        >
+          <option value="">Ders seçin</option>
+          {schedules.map((s) => (
+            <option key={s.id} value={s.id}>
+              {s.ders_adi} — {s.gun} {s.saat} {s.brans ? `(${s.brans})` : ''}
+            </option>
+          ))}
+        </select>
+      </div>
 
       {loading && selectedSchedule ? (
-        <p className="text-muted-foreground">Yükleniyor...</p>
+        <div className="flex justify-center py-8">
+          <Loader2 className="h-8 w-8 animate-spin text-cyan-400" />
+        </div>
       ) : sporcular.length > 0 ? (
-        <Card>
-          <CardHeader>
-            <CardTitle>Sporcular</CardTitle>
-            <CardDescription>
-              Her sporcu için durum seçin: Geldi / Gelmedi / İzinli
-            </CardDescription>
-          </CardHeader>
-          <CardContent className="space-y-3">
+        <div className="bg-zinc-900 border border-zinc-800 rounded-2xl p-4">
+          <h3 className="text-sm font-semibold text-white mb-1">Sporcular</h3>
+          <p className="text-xs text-zinc-500 mb-3">Her sporcu için durum seçin: Geldi / Gelmedi / İzinli</p>
+          <div className="space-y-3">
             {sporcular.map((s) => (
-              <div
-                key={s.id}
-                className="flex items-center justify-between rounded-lg border p-3"
-              >
-                <div>
-                  <p className="font-medium">
-                    {s.name} {s.surname ?? ''}
-                  </p>
-                  {(s.level || s.group) && (
-                    <p className="text-xs text-muted-foreground">
-                      {[s.level, s.group].filter(Boolean).join(' • ')}
-                    </p>
-                  )}
+              <div key={s.id} className="rounded-xl border border-zinc-700 p-3">
+                <div className="flex items-center justify-between mb-2">
+                  <div>
+                    <p className="font-medium text-white">{s.name} {s.surname ?? ''}</p>
+                    {(s.level || s.group) && (
+                      <p className="text-xs text-zinc-500">{[s.level, s.group].filter(Boolean).join(' · ')}</p>
+                    )}
+                  </div>
                 </div>
                 <div className="flex gap-2">
-                  <Button
-                    size="sm"
-                    variant={durumMap[s.id] === 'geldi' ? 'default' : 'outline'}
+                  <button
                     onClick={() => setDurum(s.id, 'geldi')}
+                    className={`flex-1 flex items-center justify-center gap-1.5 rounded-xl py-2 text-xs font-medium transition-all ${
+                      durumMap[s.id] === 'geldi'
+                        ? 'bg-emerald-500/20 text-emerald-400 border border-emerald-500/30'
+                        : 'bg-zinc-800 text-zinc-400 border border-zinc-700 hover:border-zinc-600'
+                    }`}
                   >
-                    <CheckCircle className="h-4 w-4 mr-1" />
-                    Geldi
-                  </Button>
-                  <Button
-                    size="sm"
-                    variant={durumMap[s.id] === 'gelmedi' ? 'destructive' : 'outline'}
+                    <CheckCircle className="h-4 w-4" strokeWidth={1.5} /> Geldi
+                  </button>
+                  <button
                     onClick={() => setDurum(s.id, 'gelmedi')}
+                    className={`flex-1 flex items-center justify-center gap-1.5 rounded-xl py-2 text-xs font-medium transition-all ${
+                      durumMap[s.id] === 'gelmedi'
+                        ? 'bg-red-500/20 text-red-400 border border-red-500/30'
+                        : 'bg-zinc-800 text-zinc-400 border border-zinc-700 hover:border-zinc-600'
+                    }`}
                   >
-                    <XCircle className="h-4 w-4 mr-1" />
-                    Gelmedi
-                  </Button>
-                  <Button
-                    size="sm"
-                    variant={durumMap[s.id] === 'izinli' ? 'secondary' : 'outline'}
+                    <XCircle className="h-4 w-4" strokeWidth={1.5} /> Gelmedi
+                  </button>
+                  <button
                     onClick={() => setDurum(s.id, 'izinli')}
+                    className={`flex-1 flex items-center justify-center gap-1.5 rounded-xl py-2 text-xs font-medium transition-all ${
+                      durumMap[s.id] === 'izinli'
+                        ? 'bg-amber-500/20 text-amber-400 border border-amber-500/30'
+                        : 'bg-zinc-800 text-zinc-400 border border-zinc-700 hover:border-zinc-600'
+                    }`}
                   >
-                    <Clock className="h-4 w-4 mr-1" />
-                    İzinli
-                  </Button>
+                    <Clock className="h-4 w-4" strokeWidth={1.5} /> İzinli
+                  </button>
                 </div>
               </div>
             ))}
-            {hasChanges && (
-              <Button onClick={handleKaydet} disabled={saving} className="mt-4">
-                <Save className="h-4 w-4 mr-2" />
-                {saving ? 'Kaydediliyor...' : 'Kaydet'}
-              </Button>
-            )}
-          </CardContent>
-        </Card>
+          </div>
+          {hasChanges && (
+            <button
+              onClick={handleKaydet}
+              disabled={saving}
+              className="w-full mt-4 rounded-xl bg-gradient-to-r from-cyan-500 to-cyan-400 px-4 py-3 text-sm font-medium text-zinc-950 hover:shadow-[0_0_20px_rgba(34,211,238,0.3)] transition-all disabled:opacity-50 flex items-center justify-center gap-2"
+            >
+              <Save className="h-4 w-4" strokeWidth={1.5} />
+              {saving ? 'Kaydediliyor...' : 'Kaydet'}
+            </button>
+          )}
+        </div>
       ) : selectedSchedule ? (
-        <Card>
-          <CardContent className="py-8 text-center text-muted-foreground">
-            Bu derse atanmış sporcu bulunamadı.
-          </CardContent>
-        </Card>
+        <div className="bg-zinc-900 border border-zinc-800 rounded-2xl p-8 text-center">
+          <p className="text-sm text-zinc-400">Bu derse atanmış sporcu bulunamadı.</p>
+        </div>
       ) : null}
-    </div>
+    </main>
   )
 }
