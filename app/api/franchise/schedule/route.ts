@@ -124,14 +124,14 @@ export async function PUT(req: NextRequest) {
     if (upsErr) return NextResponse.json({ error: upsErr.message }, { status: 500 })
 
     // 2) Kaldırılan hücreleri sil (yeni listede olmayan gun+saat çiftleri)
-    const keepKeys = new Set(rows.map((r) => `${r.gun}|${r.saat}`))
+    const keepKeys = new Set(rows.map((r: { gun: string; saat: string }) => `${r.gun}|${r.saat}`))
     const { data: existing } = await service
       .from('tenant_schedule')
       .select('id, gun, saat')
       .eq('tenant_id', tenantId)
-    const toDelete = (existing ?? []).filter((row) => !keepKeys.has(`${row.gun}|${row.saat}`))
+    const toDelete = (existing ?? []).filter((row: { id: string; gun: string; saat: string }) => !keepKeys.has(`${row.gun}|${row.saat}`))
     if (toDelete.length > 0) {
-      const ids = toDelete.map((r) => r.id)
+      const ids = toDelete.map((r: { id: string }) => r.id)
       const { error: delErr } = await service
         .from('tenant_schedule')
         .delete()

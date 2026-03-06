@@ -747,16 +747,18 @@ function ScheduleTab({ staff, hasTenant }: { staff: StaffMember[]; hasTenant: bo
       setDraft((prev) => prev.filter((i) => !(i.gun === cellForm.gun && i.saat === cellForm.saat)))
     } else {
       setDraft((prev) => {
+        const existing = prev.find((i) => i.gun === cellForm.gun && i.saat === cellForm.saat)
         const filtered = prev.filter((i) => !(i.gun === cellForm.gun && i.saat === cellForm.saat))
         return [
           ...filtered,
           {
-            id: "",
+            id: existing?.id ?? "",
             gun: cellForm.gun,
             saat: cellForm.saat,
             ders_adi: cellForm.ders_adi || cellForm.brans,
             brans: cellForm.brans || null,
             seviye: cellForm.seviye || null,
+            antrenor_id: existing?.antrenor_id ?? null,
           },
         ]
       })
