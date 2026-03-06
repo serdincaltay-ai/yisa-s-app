@@ -34,6 +34,8 @@ export async function upsertPushSubscription(params: {
         endpoint: params.endpoint,
         keys_p256dh: params.keys_p256dh,
         keys_auth: params.keys_auth,
+        is_active: true,
+        updated_at: new Date().toISOString(),
       },
       { onConflict: 'endpoint' }
     )
