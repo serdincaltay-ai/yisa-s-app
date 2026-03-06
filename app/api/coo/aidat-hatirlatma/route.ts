@@ -5,7 +5,7 @@
  * ilgili velilere push notification gönderir ve reminder_logs'a kayıt yazar.
  */
 
-import { NextResponse } from 'next/server'
+import { NextRequest, NextResponse } from 'next/server'
 import { createClient as createServiceClient } from '@supabase/supabase-js'
 import {
   sendPushNotification,
@@ -41,8 +41,17 @@ interface PreferenceRow {
   odeme_hatirlatma: boolean
 }
 
-export async function GET() {
+export async function GET(req: NextRequest) {
   try {
+    // Cron secret doğrulaması (varsa)
+    const cronSecret = process.env.CRON_SECRET?.trim()
+    if (cronSecret) {
+      const auth = req.headers.get('authorization')
+      if (auth !== `Bearer ${cronSecret}`) {
+        return NextResponse.json({ error: 'Unauthorized' }, { status: 401 })
+      }
+    }
+
     const url = process.env.NEXT_PUBLIC_SUPABASE_URL ?? process.env.SUPABASE_URL
     const key = process.env.SUPABASE_SERVICE_ROLE_KEY
     if (!url || !key) {
