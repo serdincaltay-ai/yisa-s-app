@@ -11,7 +11,7 @@ import { createClient as createServiceClient } from '@supabase/supabase-js'
 export const dynamic = 'force-dynamic'
 
 const MAX_FILE_SIZE = 2 * 1024 * 1024 // 2 MB
-const ALLOWED_TYPES = ['image/png', 'image/jpeg', 'image/webp', 'image/svg+xml']
+const ALLOWED_TYPES = ['image/png', 'image/jpeg', 'image/webp']
 
 async function getTenantId(userId: string): Promise<string | null> {
   const url = process.env.NEXT_PUBLIC_SUPABASE_URL ?? process.env.SUPABASE_URL
@@ -41,7 +41,7 @@ export async function POST(req: NextRequest) {
 
     if (!ALLOWED_TYPES.includes(file.type)) {
       return NextResponse.json(
-        { error: `Desteklenmeyen dosya türü: ${file.type}. İzin verilen: PNG, JPEG, WebP, SVG` },
+        { error: `Desteklenmeyen dosya türü: ${file.type}. İzin verilen: PNG, JPEG, WebP` },
         { status: 400 }
       )
     }
@@ -58,9 +58,15 @@ export async function POST(req: NextRequest) {
     if (!url || !key) return NextResponse.json({ error: 'Sunucu yapılandırma hatası' }, { status: 500 })
     const service = createServiceClient(url, key)
 
-    // Dosya adı: tenant_id + uzantı (üzerine yazar)
-    const ext = file.name.split('.').pop() ?? 'png'
-    const filePath = `${tenantId}/logo.${ext}`
+    // Sabit dosya adı: tenant_id/logo — eski dosyaları temizle
+    const filePath = `${tenantId}/logo`
+
+    // Önceki logo dosyalarını temizle (farklı uzantılı dosyalar kalmasın)
+    const { data: existingFiles } = await service.storage.from('tenant-logos').list(tenantId)
+    if (existingFiles?.length) {
+      const filesToRemove = existingFiles.map((f: { name: string }) => `${tenantId}/${f.name}`)
+      await service.storage.from('tenant-logos').remove(filesToRemove)
+    }
 
     const buffer = Buffer.from(await file.arrayBuffer())
 

@@ -24,23 +24,42 @@ INSERT INTO storage.buckets (id, name, public)
 VALUES ('tenant-logos', 'tenant-logos', true)
 ON CONFLICT (id) DO NOTHING;
 
--- Storage policy: Authenticated users can upload to tenant-logos
+-- Storage policy: Tenant-scoped — kullanıcılar sadece kendi tenant klasörüne erişebilir
+-- INSERT: Kullanıcı sadece kendi tenant klasörüne yükleyebilir
 CREATE POLICY IF NOT EXISTS "tenant_logos_insert"
   ON storage.objects FOR INSERT
   TO authenticated
-  WITH CHECK (bucket_id = 'tenant-logos');
+  WITH CHECK (
+    bucket_id = 'tenant-logos'
+    AND (storage.foldername(name))[1] IN (
+      SELECT tenant_id::text FROM user_tenants WHERE user_id = auth.uid()
+    )
+  );
 
+-- SELECT: Public — logolar herkese açık
 CREATE POLICY IF NOT EXISTS "tenant_logos_select"
   ON storage.objects FOR SELECT
   TO public
   USING (bucket_id = 'tenant-logos');
 
+-- UPDATE: Kullanıcı sadece kendi tenant klasöründekileri güncelleyebilir
 CREATE POLICY IF NOT EXISTS "tenant_logos_update"
   ON storage.objects FOR UPDATE
   TO authenticated
-  USING (bucket_id = 'tenant-logos');
+  USING (
+    bucket_id = 'tenant-logos'
+    AND (storage.foldername(name))[1] IN (
+      SELECT tenant_id::text FROM user_tenants WHERE user_id = auth.uid()
+    )
+  );
 
+-- DELETE: Kullanıcı sadece kendi tenant klasöründekileri silebilir
 CREATE POLICY IF NOT EXISTS "tenant_logos_delete"
   ON storage.objects FOR DELETE
   TO authenticated
-  USING (bucket_id = 'tenant-logos');
+  USING (
+    bucket_id = 'tenant-logos'
+    AND (storage.foldername(name))[1] IN (
+      SELECT tenant_id::text FROM user_tenants WHERE user_id = auth.uid()
+    )
+  );

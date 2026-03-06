@@ -70,14 +70,60 @@ export async function PATCH(req: NextRequest) {
     if (body.aidat_tiers != null && typeof body.aidat_tiers === 'object') update.aidat_tiers = body.aidat_tiers
     if (Array.isArray(body.kredi_paketleri)) update.kredi_paketleri = body.kredi_paketleri
 
-    // Branding & renk paleti
-    const stringFields = [
-      'logo_url', 'primary_color', 'secondary_color', 'accent_color',
-      'instagram_url', 'whatsapp_number', 'google_maps_url', 'facebook_url', 'twitter_url',
-      'phone', 'email', 'address', 'working_hours',
-    ] as const
-    for (const field of stringFields) {
-      if (typeof body[field] === 'string') update[field] = body[field]
+    // Branding & renk paleti — doğrulama ile
+    const HEX_COLOR_RE = /^#[0-9a-fA-F]{6}$/
+    const MAX_TEXT_LEN = 500
+
+    const colorFields = ['primary_color', 'secondary_color', 'accent_color'] as const
+    for (const field of colorFields) {
+      if (typeof body[field] === 'string') {
+        if (!HEX_COLOR_RE.test(body[field])) {
+          return NextResponse.json({ error: `Geçersiz renk formatı: ${field}. #RRGGBB formatında olmalı.` }, { status: 400 })
+        }
+        update[field] = body[field]
+      }
+    }
+
+    const urlFields = ['instagram_url', 'google_maps_url', 'facebook_url', 'twitter_url'] as const
+    for (const field of urlFields) {
+      if (typeof body[field] === 'string') {
+        const val = body[field].trim()
+        if (val !== '' && !val.startsWith('https://')) {
+          return NextResponse.json({ error: `Geçersiz URL: ${field}. https:// ile başlamalı.` }, { status: 400 })
+        }
+        update[field] = val
+      }
+    }
+
+    // logo_url yalnızca /api/franchise/logo endpoint'i tarafından güncellenir
+    // Doğrudan PATCH ile logo_url göndermek engellenmiştir
+    if (typeof body.logo_url === 'string') {
+      const logoVal = body.logo_url.trim()
+      if (logoVal !== '' && !logoVal.startsWith('https://')) {
+        return NextResponse.json({ error: 'Geçersiz logo URL. https:// ile başlamalı.' }, { status: 400 })
+      }
+      update.logo_url = logoVal
+    }
+
+    // WhatsApp: + ve rakam
+    if (typeof body.whatsapp_number === 'string') {
+      const wVal = body.whatsapp_number.trim()
+      if (wVal !== '' && !/^\+?[0-9\s\-()]+$/.test(wVal)) {
+        return NextResponse.json({ error: 'Geçersiz WhatsApp numarası. Sadece rakam, +, boşluk, tire.' }, { status: 400 })
+      }
+      update.whatsapp_number = wVal
+    }
+
+    // Serbest metin alanları (uzunluk sınırlı)
+    const textFields = ['phone', 'email', 'address', 'working_hours'] as const
+    for (const field of textFields) {
+      if (typeof body[field] === 'string') {
+        const val = body[field].trim()
+        if (val.length > MAX_TEXT_LEN) {
+          return NextResponse.json({ error: `${field} çok uzun. Maksimum ${MAX_TEXT_LEN} karakter.` }, { status: 400 })
+        }
+        update[field] = val
+      }
     }
 
     if (Object.keys(update).length === 0) return NextResponse.json({ error: 'Güncellenecek alan yok' }, { status: 400 })
