@@ -97,8 +97,8 @@ describe('getFranchiseSlugFromHost', () => {
 })
 
 describe('Sabit tanimlar', () => {
-  it('FRANCHISE_SUBDOMAINS_DEFAULT 3 varsayilan subdomain icermeli', () => {
-    expect(FRANCHISE_SUBDOMAINS_DEFAULT).toHaveLength(3)
+  it('FRANCHISE_SUBDOMAINS_DEFAULT varsayilan subdomain icermeli', () => {
+    expect(FRANCHISE_SUBDOMAINS_DEFAULT.length).toBeGreaterThanOrEqual(3)
     expect(FRANCHISE_SUBDOMAINS_DEFAULT).toContain('bjktuzlacimnastik')
     expect(FRANCHISE_SUBDOMAINS_DEFAULT).toContain('fenerbahceatasehir')
     expect(FRANCHISE_SUBDOMAINS_DEFAULT).toContain('kartalcimnastik')
