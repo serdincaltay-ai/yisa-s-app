@@ -2,9 +2,9 @@
 
 import React, { useEffect, useState, useCallback } from 'react'
 import Link from 'next/link'
-import { Card, CardContent } from '@/components/ui/card'
-import { VeliIntro } from '@/components/VeliIntro'
-import { Activity, Users, Calendar, Loader2, Coins, TrendingUp } from 'lucide-react'
+import { PanelHeader } from '@/components/PanelHeader'
+import { VeliBottomNav } from '@/components/PanelBottomNav'
+import { Users, Calendar, Loader2, TrendingUp, Wallet } from 'lucide-react'
 
 type Child = {
   id: string
@@ -54,102 +54,84 @@ export default function VeliDashboardPage() {
   }
 
   return (
-    <div className="min-h-screen bg-white pb-20">
-      <VeliIntro />
-      <header className="sticky top-0 z-40 border-b border-gray-200 bg-white">
-        <div className="flex h-14 items-center justify-between px-4">
-          <div className="flex items-center gap-2">
-            <div className="flex h-9 w-9 items-center justify-center rounded-lg bg-[#2563eb] text-white">
-              <Activity className="h-5 w-5" />
-            </div>
-            <span className="font-bold text-gray-900">YİSA-S Veli</span>
-          </div>
-        </div>
-      </header>
+    <div className="min-h-screen bg-zinc-950 pb-20">
+      <PanelHeader panelName="VELİ PANELİ" />
 
-      <main className="p-4">
+      <main className="p-4 space-y-4">
         {loading ? (
           <div className="flex justify-center py-16">
-            <Loader2 className="h-8 w-8 animate-spin text-[#2563eb]" />
+            <Loader2 className="h-8 w-8 animate-spin text-cyan-400" />
           </div>
         ) : children.length === 0 ? (
           <div className="flex flex-col items-center justify-center py-16 text-center">
-            <Users className="h-16 w-16 text-gray-400 mb-4" />
-            <h2 className="text-lg font-semibold text-gray-900 mb-2">Çocuk Kaydı Yok</h2>
-            <p className="text-sm text-gray-600 max-w-sm">
+            <Users className="h-16 w-16 text-zinc-600 mb-4" />
+            <h2 className="text-lg font-semibold text-white mb-2">Çocuk Kaydı Yok</h2>
+            <p className="text-sm text-zinc-400 max-w-sm">
               Hesabınıza bağlı çocuk bulunamadı. Tesisinizle iletişime geçin — çocuğunuzu kaydettiklerinde e-posta adresinizi veli olarak tanımlamaları gerekir.
             </p>
           </div>
         ) : (
-          <div className="space-y-4">
-            <h2 className="text-lg font-semibold text-gray-900">Çocuklarım</h2>
-            <p className="text-sm text-gray-600">Her kartta devamsızlık özeti (son yoklama, devam %, kalan ders) görünür; detay için karta tıklayın.</p>
+          <>
+            <h2 className="text-lg font-semibold text-white">Çocuklarım</h2>
+            <p className="text-sm text-zinc-400">Her kartta devamsızlık özeti görünür; detay için karta tıklayın.</p>
             <div className="grid gap-4 sm:grid-cols-2">
               {children.map((c) => {
                 const att = attendanceMap[c.id]
                 return (
                   <Link key={c.id} href={`/veli/cocuk/${c.id}`}>
-                    <Card className="border-gray-200 bg-white hover:border-[#2563eb]/50 hover:shadow-md transition-all cursor-pointer min-h-[120px]">
-                      <CardContent className="p-4">
-                        <div className="flex items-start gap-3">
-                          <div className="flex h-12 w-12 shrink-0 items-center justify-center rounded-full bg-[#2563eb]/10 text-[#2563eb] font-semibold">
-                            {(c.name?.[0] ?? '?') + (c.surname?.[0] ?? '')}
-                          </div>
-                          <div className="min-w-0 flex-1">
-                            <p className="font-semibold text-gray-900 truncate">
-                              {c.name} {c.surname ?? ''}
-                            </p>
-                            <p className="text-sm text-gray-600">
-                              {ageFromBirth(c.birth_date) ?? '—'} yaş · {c.branch ?? '—'}
-                            </p>
-                            <div className="mt-2 flex items-center gap-3 text-xs">
-                              <span className="text-gray-500">
-                                Son yoklama: {att?.lastDate ? new Date(att.lastDate).toLocaleDateString('tr-TR') : '—'}
-                              </span>
-                              <span className={`font-medium ${att && att.rate >= 80 ? 'text-green-600' : att && att.rate > 0 ? 'text-amber-600' : 'text-gray-500'}`}>
-                                Devam: %{att?.rate ?? 0}
-                              </span>
-                              <span className="font-medium text-[#2563eb]">
-                                Kalan ders: {(c.ders_kredisi ?? 0)}
-                              </span>
-                            </div>
-                          </div>
-                          <Calendar className="h-5 w-5 shrink-0 text-gray-400" />
+                    <div className="bg-zinc-900 border border-zinc-800 rounded-2xl p-4 hover:border-cyan-400/30 hover:shadow-[0_0_15px_rgba(34,211,238,0.05)] transition-all duration-300 cursor-pointer min-h-[120px]">
+                      <div className="flex items-start gap-3">
+                        <div className="flex h-12 w-12 shrink-0 items-center justify-center rounded-full bg-cyan-400/10 text-cyan-400 font-semibold">
+                          {(c.name?.[0] ?? '?') + (c.surname?.[0] ?? '')}
                         </div>
-                      </CardContent>
-                    </Card>
+                        <div className="min-w-0 flex-1">
+                          <p className="font-semibold text-white truncate">
+                            {c.name} {c.surname ?? ''}
+                          </p>
+                          <p className="text-sm text-zinc-400">
+                            {ageFromBirth(c.birth_date) ?? '—'} yaş · {c.branch ?? '—'}
+                          </p>
+                          <div className="mt-2 flex items-center gap-3 text-xs">
+                            <span className="text-zinc-500">
+                              Son yoklama: {att?.lastDate ? new Date(att.lastDate).toLocaleDateString('tr-TR') : '—'}
+                            </span>
+                            <span className={`font-medium ${att && att.rate >= 80 ? 'text-emerald-400' : att && att.rate > 0 ? 'text-amber-400' : 'text-zinc-500'}`}>
+                              Devam: %{att?.rate ?? 0}
+                            </span>
+                            <span className="font-medium text-cyan-400">
+                              Kalan: {(c.ders_kredisi ?? 0)}
+                            </span>
+                          </div>
+                        </div>
+                        <Calendar className="h-5 w-5 shrink-0 text-zinc-600" />
+                      </div>
+                    </div>
                   </Link>
                 )
               })}
             </div>
-          </div>
+
+            <div className="grid grid-cols-2 gap-3 mt-2">
+              <Link href="/veli/odeme">
+                <div className="bg-zinc-900 border border-zinc-800 rounded-2xl p-4 hover:border-cyan-400/30 transition-all duration-300">
+                  <Wallet className="h-6 w-6 text-cyan-400 mb-2" strokeWidth={1.5} />
+                  <p className="text-sm font-medium text-white">Aidat & Ödemeler</p>
+                  <p className="text-xs text-zinc-500 mt-1">Borç durumu ve geçmiş</p>
+                </div>
+              </Link>
+              <Link href="/veli/gelisim">
+                <div className="bg-zinc-900 border border-zinc-800 rounded-2xl p-4 hover:border-cyan-400/30 transition-all duration-300">
+                  <TrendingUp className="h-6 w-6 text-cyan-400 mb-2" strokeWidth={1.5} />
+                  <p className="text-sm font-medium text-white">Gelişim Takibi</p>
+                  <p className="text-xs text-zinc-500 mt-1">Boy, kilo, esneklik</p>
+                </div>
+              </Link>
+            </div>
+          </>
         )}
       </main>
 
-      <nav className="fixed bottom-0 left-0 right-0 z-40 border-t border-gray-200 bg-white">
-        <div className="flex items-center justify-around py-2 min-h-[56px]">
-          <Link href="/veli/dashboard" className="flex flex-col items-center gap-1 px-4 py-2 text-[#2563eb]">
-            <Activity className="h-5 w-5" />
-            <span className="text-xs font-medium">Dashboard</span>
-          </Link>
-          <Link href="/veli/dashboard" className="flex flex-col items-center gap-1 px-4 py-2 text-gray-500 hover:text-gray-700">
-            <Users className="h-5 w-5" />
-            <span className="text-xs">Çocuklarım</span>
-          </Link>
-          <Link href="/veli/kredi" className="flex flex-col items-center gap-1 px-4 py-2 text-gray-500 hover:text-gray-700">
-            <Coins className="h-5 w-5" />
-            <span className="text-xs">Kredi</span>
-          </Link>
-          <Link href="/veli/gelisim" className="flex flex-col items-center gap-1 px-4 py-2 text-gray-500 hover:text-gray-700">
-            <TrendingUp className="h-5 w-5" />
-            <span className="text-xs">Gelişim</span>
-          </Link>
-          <Link href="/veli/duyurular" className="flex flex-col items-center gap-1 px-4 py-2 text-gray-500 hover:text-gray-700">
-            <Calendar className="h-5 w-5" />
-            <span className="text-xs">Duyurular</span>
-          </Link>
-        </div>
-      </nav>
+      <VeliBottomNav />
     </div>
   )
 }

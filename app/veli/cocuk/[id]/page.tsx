@@ -3,10 +3,9 @@
 import React, { useEffect, useState, useCallback } from 'react'
 import Link from 'next/link'
 import { useParams } from 'next/navigation'
-import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card'
-import { Badge } from '@/components/ui/badge'
-import { Button } from '@/components/ui/button'
-import { ArrowLeft, Loader2, Calendar, Activity, Users, Megaphone } from 'lucide-react'
+import { PanelHeader } from '@/components/PanelHeader'
+import { VeliBottomNav } from '@/components/PanelBottomNav'
+import { ArrowLeft, Loader2, Calendar } from 'lucide-react'
 
 type ChildDetail = {
   id: string
@@ -19,11 +18,10 @@ type ChildDetail = {
 
 type AttendanceItem = { lesson_date: string; status: string }
 type PaymentItem = { period_month?: number; period_year?: number; amount: number; status: string; due_date?: string; paid_date?: string }
-type ScheduleItem = { gun: string; saat: string; ders_adi: string; brans?: string | null }
 
 const AYLAR: Record<number, string> = {
-  1: 'Ocak', 2: 'Şubat', 3: 'Mart', 4: 'Nisan', 5: 'Mayıs', 6: 'Haziran',
-  7: 'Temmuz', 8: 'Ağustos', 9: 'Eylül', 10: 'Ekim', 11: 'Kasım', 12: 'Aralık',
+    1: 'Ocak', 2: 'Şubat', 3: 'Mart', 4: 'Nisan', 5: 'Mayıs', 6: 'Haziran',
+    7: 'Temmuz', 8: 'Ağustos', 9: 'Eylül', 10: 'Ekim', 11: 'Kasım', 12: 'Aralık',
 }
 
 export default function VeliCocukPage() {
@@ -37,9 +35,9 @@ export default function VeliCocukPage() {
   const fetchData = useCallback(async () => {
     if (!id) return
     const [childrenRes, attRes, payRes] = await Promise.all([
-      fetch('/api/veli/demo/children'),
-      fetch(`/api/veli/demo/attendance?athlete_id=${id}&days=30`),
-      fetch(`/api/veli/demo/payments?athlete_id=${id}`),
+      fetch('/api/veli/children'),
+      fetch(`/api/veli/attendance?athlete_id=${id}&days=30`),
+      fetch(`/api/veli/payments?athlete_id=${id}`),
     ])
     const childrenData = await childrenRes.json()
     const attData = await attRes.json()
@@ -69,124 +67,110 @@ export default function VeliCocukPage() {
 
   if (loading) {
     return (
-      <div className="min-h-screen flex items-center justify-center bg-white">
-        <Loader2 className="h-8 w-8 animate-spin text-[#2563eb]" />
+      <div className="min-h-screen flex items-center justify-center bg-zinc-950">
+        <Loader2 className="h-8 w-8 animate-spin text-cyan-400" />
       </div>
     )
   }
 
   if (!child) {
     return (
-      <div className="min-h-screen bg-white p-4">
-        <Button variant="ghost" asChild>
-          <Link href="/veli/dashboard"><ArrowLeft className="h-4 w-4 mr-2" />Geri</Link>
-        </Button>
-        <p className="text-gray-600 mt-4">Çocuk bulunamadı.</p>
+      <div className="min-h-screen bg-zinc-950 p-4">
+        <Link href="/veli/dashboard" className="inline-flex items-center gap-2 text-sm text-zinc-400 hover:text-white">
+          <ArrowLeft className="h-4 w-4" /> Geri
+        </Link>
+        <p className="text-zinc-400 mt-4">Çocuk bulunamadı.</p>
       </div>
     )
   }
 
   return (
-    <div className="min-h-screen bg-white pb-24">
-      <header className="sticky top-0 z-40 border-b border-gray-200 bg-white">
-        <div className="flex h-14 items-center gap-2 px-4">
-          <Button variant="ghost" size="sm" asChild>
-            <Link href="/veli/dashboard"><ArrowLeft className="h-4 w-4" /></Link>
-          </Button>
-          <div>
-            <h1 className="font-bold text-gray-900">{child.name} {child.surname ?? ''}</h1>
-            <p className="text-xs text-gray-600">{ageFromBirth(child.birth_date) ?? '—'} yaş · {child.branch ?? '—'} · {child.level ?? '—'}</p>
+    <div className="min-h-screen bg-zinc-950 pb-20">
+      <PanelHeader panelName="VELİ PANELİ" />
+
+      <main className="p-4 space-y-4">
+        {/* Ust Bilgi */}
+        <div className="flex items-center gap-3">
+          <Link href="/veli/dashboard" className="text-zinc-400 hover:text-white transition-colors">
+            <ArrowLeft className="h-5 w-5" strokeWidth={1.5} />
+          </Link>
+          <div className="flex items-center gap-3 flex-1">
+            <div className="flex h-12 w-12 shrink-0 items-center justify-center rounded-full bg-cyan-400/10 text-cyan-400 font-semibold">
+              {(child.name?.[0] ?? '?') + (child.surname?.[0] ?? '')}
+            </div>
+            <div>
+              <h1 className="font-bold text-white">{child.name} {child.surname ?? ''}</h1>
+              <p className="text-xs text-zinc-400">{ageFromBirth(child.birth_date) ?? '—'} yaş · {child.branch ?? '—'} · {child.level ?? '—'}</p>
+            </div>
           </div>
         </div>
-      </header>
 
-      <main className="p-4 space-y-6">
-        <Card className="border-gray-200">
-          <CardHeader className="pb-2">
-            <CardTitle className="text-base">Devamsızlık görüntüleme — Yoklama takvimi (Son 30 gün)</CardTitle>
-            <p className="text-xs text-gray-500 mt-1">Günlük durum: Geldi / Gelmedi / İzinli</p>
-          </CardHeader>
-          <CardContent>
-            <div className="grid grid-cols-5 sm:grid-cols-10 gap-1">
-              {last30Days.map((d) => {
-                const status = attByDate.get(d)
-                const bg = status === 'present' ? 'bg-green-500' : status === 'absent' ? 'bg-red-500' : status === 'excused' || status === 'late' ? 'bg-amber-500' : 'bg-gray-200'
-                return (
-                  <div
-                    key={d}
-                    className={`aspect-square rounded flex items-center justify-center text-[10px] ${status ? `${bg} text-white` : 'bg-gray-100 text-gray-500'}`}
-                    title={`${new Date(d).toLocaleDateString('tr-TR')}: ${status === 'present' ? 'Geldi' : status === 'absent' ? 'Gelmedi' : status || '—'}`}
-                  >
-                    {new Date(d).getDate()}
+        {/* Yoklama Takvimi */}
+        <div className="bg-zinc-900 border border-zinc-800 rounded-2xl p-4">
+          <h3 className="text-sm font-semibold text-white mb-1">Yoklama Takvimi (Son 30 Gün)</h3>
+          <p className="text-xs text-zinc-500 mb-3">Günlük durum: Geldi / Gelmedi / İzinli</p>
+          <div className="grid grid-cols-5 sm:grid-cols-10 gap-1.5">
+            {last30Days.map((d) => {
+              const status = attByDate.get(d)
+              const bg = status === 'present' ? 'bg-emerald-500' : status === 'absent' ? 'bg-red-500' : status === 'excused' || status === 'late' ? 'bg-amber-500' : 'bg-zinc-800'
+              return (
+                <div
+                  key={d}
+                  className={`aspect-square rounded-lg flex items-center justify-center text-[10px] font-medium ${
+                    status ? `${bg} text-white` : 'bg-zinc-800 text-zinc-500'
+                  }`}
+                  title={`${new Date(d).toLocaleDateString('tr-TR')}: ${status === 'present' ? 'Geldi' : status === 'absent' ? 'Gelmedi' : status || '—'}`}
+                >
+                  {new Date(d).getDate()}
+                </div>
+              )
+            })}
+          </div>
+          <div className="mt-3 flex gap-4 text-xs text-zinc-400">
+            <span className="flex items-center gap-1"><span className="w-3 h-3 rounded bg-emerald-500" /> Geldi</span>
+            <span className="flex items-center gap-1"><span className="w-3 h-3 rounded bg-red-500" /> Gelmedi</span>
+            <span className="flex items-center gap-1"><span className="w-3 h-3 rounded bg-amber-500" /> İzinli</span>
+          </div>
+        </div>
+
+        {/* Aidat Durumu */}
+        <div className="bg-zinc-900 border border-zinc-800 rounded-2xl p-4">
+          <h3 className="text-sm font-semibold text-white mb-3">Aidat Durumu (Son 3 Ay)</h3>
+          {payments.length === 0 ? (
+            <p className="text-sm text-zinc-500">Ödeme kaydı yok.</p>
+          ) : (
+            <div className="space-y-2">
+              {payments.slice(0, 6).map((p, i) => (
+                <div key={i} className="flex items-center justify-between rounded-xl border border-zinc-700 p-3">
+                  <div>
+                    <p className="font-medium text-white">
+                      {AYLAR[p.period_month ?? 0]} {p.period_year} · {p.amount.toLocaleString('tr-TR')} TL
+                    </p>
+                    <p className="text-xs text-zinc-500">Vade: {p.due_date ? new Date(p.due_date).toLocaleDateString('tr-TR') : '—'}</p>
                   </div>
-                )
-              })}
+                  <span className={`rounded-full px-3 py-1 text-xs font-medium ${
+                    p.status === 'paid' ? 'bg-emerald-500/20 text-emerald-400' :
+                    p.status === 'overdue' ? 'bg-red-500/20 text-red-400' :
+                    'bg-amber-500/20 text-amber-400'
+                  }`}>
+                    {p.status === 'paid' ? 'Ödendi' : p.status === 'overdue' ? 'Gecikmiş' : 'Bekleyen'}
+                  </span>
+                </div>
+              ))}
             </div>
-            <div className="mt-2 flex gap-4 text-xs text-gray-600">
-              <span className="flex items-center gap-1"><span className="w-3 h-3 rounded bg-green-500" /> Geldi</span>
-              <span className="flex items-center gap-1"><span className="w-3 h-3 rounded bg-red-500" /> Gelmedi</span>
-              <span className="flex items-center gap-1"><span className="w-3 h-3 rounded bg-amber-500" /> İzinli/Gecikti</span>
-            </div>
-          </CardContent>
-        </Card>
+          )}
+        </div>
 
-        <Card className="border-gray-200">
-          <CardHeader className="pb-2">
-            <CardTitle className="text-base">Aidat Durumu (Son 3 Ay)</CardTitle>
-          </CardHeader>
-          <CardContent>
-            {payments.length === 0 ? (
-              <p className="text-sm text-gray-600">Ödeme kaydı yok.</p>
-            ) : (
-              <div className="space-y-2">
-                {payments.slice(0, 6).map((p, i) => (
-                  <div key={i} className="flex items-center justify-between rounded-lg border border-gray-200 p-3">
-                    <div>
-                      <p className="font-medium text-gray-900">
-                        {AYLAR[p.period_month ?? 0]} {p.period_year} · {p.amount.toLocaleString('tr-TR')} TL
-                      </p>
-                      <p className="text-xs text-gray-500">Vade: {p.due_date ? new Date(p.due_date).toLocaleDateString('tr-TR') : '—'}</p>
-                    </div>
-                    <Badge
-                      className={p.status === 'paid' ? 'bg-green-100 text-green-800' : p.status === 'overdue' ? 'bg-red-100 text-red-800' : 'bg-amber-100 text-amber-800'}
-                    >
-                      {p.status === 'paid' ? 'Ödendi' : p.status === 'overdue' ? 'Gecikmiş' : 'Bekleyen'}
-                    </Badge>
-                  </div>
-                ))}
-              </div>
-            )}
-          </CardContent>
-        </Card>
-
-        <Card className="border-gray-200">
-          <CardHeader className="pb-2">
-            <CardTitle className="text-base flex items-center gap-2">
-              <Calendar className="h-4 w-4" /> Ders Programı
-            </CardTitle>
-          </CardHeader>
-          <CardContent>
-            <p className="text-sm text-gray-600">Haftalık program tesisiniz tarafından yönetilmektedir. Detay için tesisinizle iletişime geçin.</p>
-          </CardContent>
-        </Card>
+        {/* Ders Programi */}
+        <div className="bg-zinc-900 border border-zinc-800 rounded-2xl p-4">
+          <h3 className="text-sm font-semibold text-white flex items-center gap-2 mb-2">
+            <Calendar className="h-4 w-4 text-cyan-400" strokeWidth={1.5} /> Ders Programı
+          </h3>
+          <p className="text-sm text-zinc-400">Haftalık program tesisiniz tarafından yönetilmektedir. Detay için <Link href="/veli/program" className="text-cyan-400 hover:underline">Program</Link> sayfasına bakın.</p>
+        </div>
       </main>
 
-      <nav className="fixed bottom-0 left-0 right-0 z-40 border-t border-gray-200 bg-white">
-        <div className="flex items-center justify-around py-2 min-h-[56px]">
-          <Link href="/veli/dashboard" className="flex flex-col items-center gap-1 px-4 py-2 text-gray-500">
-            <Activity className="h-5 w-5" />
-            <span className="text-xs">Dashboard</span>
-          </Link>
-          <Link href="/veli/dashboard" className="flex flex-col items-center gap-1 px-4 py-2 text-[#2563eb]">
-            <Users className="h-5 w-5" />
-            <span className="text-xs font-medium">Çocuklarım</span>
-          </Link>
-          <Link href="/veli/duyurular" className="flex flex-col items-center gap-1 px-4 py-2 text-gray-500">
-            <Megaphone className="h-5 w-5" />
-            <span className="text-xs">Duyurular</span>
-          </Link>
-        </div>
-      </nav>
+      <VeliBottomNav />
     </div>
   )
 }

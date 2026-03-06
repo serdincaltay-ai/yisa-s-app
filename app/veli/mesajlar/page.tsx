@@ -2,9 +2,8 @@
 
 import React, { useEffect, useState } from 'react'
 import Link from 'next/link'
-import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card'
-import { Button } from '@/components/ui/button'
-import { Input } from '@/components/ui/input'
+import { PanelHeader } from '@/components/PanelHeader'
+import { VeliBottomNav } from '@/components/PanelBottomNav'
 import { ArrowLeft, MessageSquare, Send, Loader2 } from 'lucide-react'
 
 type Thread = { id: string; title: string; last_at?: string }
@@ -51,7 +50,11 @@ export default function VeliMesajlarPage() {
       const data = await res.json()
       if (data?.ok) {
         setInput('')
-        if (selectedThreadId) fetch(`/api/veli/messages?thread_id=${encodeURIComponent(selectedThreadId)}`).then((r) => r.json()).then((d) => setMessages(Array.isArray(d?.messages) ? d.messages : []))
+        if (selectedThreadId) {
+          fetch(`/api/veli/messages?thread_id=${encodeURIComponent(selectedThreadId)}`)
+            .then((r) => r.json())
+            .then((d) => setMessages(Array.isArray(d?.messages) ? d.messages : []))
+        }
       }
     } catch {
       // ignore
@@ -61,76 +64,94 @@ export default function VeliMesajlarPage() {
   }
 
   return (
-    <div className="min-h-screen bg-white flex flex-col pb-24">
-      <header className="sticky top-0 z-40 border-b border-gray-200 bg-white">
-        <div className="flex h-14 items-center gap-2 px-4">
-          <Button variant="ghost" size="sm" asChild>
-            <Link href="/veli/dashboard"><ArrowLeft className="h-4 w-4" /></Link>
-          </Button>
-          <h1 className="font-bold text-gray-900">Mesajlaşma</h1>
-        </div>
-      </header>
+    <div className="min-h-screen bg-zinc-950 pb-20">
+      <PanelHeader panelName="VELİ PANELİ" />
 
-      <main className="flex-1 p-4 flex flex-col">
-        <p className="text-sm text-gray-600 mb-4">Antrenör ile iletişim — çocuğunuzun antrenörüyle mesajlaşın.</p>
+      <main className="p-4 space-y-4">
+        <div className="flex items-center gap-2">
+          <Link href="/veli/dashboard" className="text-zinc-400 hover:text-white transition-colors">
+            <ArrowLeft className="h-5 w-5" strokeWidth={1.5} />
+          </Link>
+          <h1 className="text-xl font-bold text-white">Mesajlaşma</h1>
+        </div>
+
+        <p className="text-sm text-zinc-400">Antrenör ile iletişim — çocuğunuzun antrenörüyle mesajlaşın.</p>
 
         {loading && !selectedThreadId ? (
-          <div className="flex justify-center py-12"><Loader2 className="h-8 w-8 animate-spin text-[#2563eb]" /></div>
+          <div className="flex justify-center py-12">
+            <Loader2 className="h-8 w-8 animate-spin text-cyan-400" />
+          </div>
         ) : selectedThreadId ? (
           <>
-            <div className="flex justify-between items-center mb-2">
-              <Button variant="ghost" size="sm" onClick={() => setSelectedThreadId(null)}>← Konuşma listesi</Button>
-            </div>
-            <Card className="flex-1 flex flex-col border-gray-200 min-h-[200px]">
-              <CardContent className="flex-1 overflow-y-auto p-4 space-y-3">
+            <button
+              onClick={() => setSelectedThreadId(null)}
+              className="text-sm text-cyan-400 hover:text-cyan-300 transition-colors"
+            >
+              ← Konuşma listesi
+            </button>
+            <div className="bg-zinc-900 border border-zinc-800 rounded-2xl flex flex-col min-h-[300px]">
+              <div className="flex-1 overflow-y-auto p-4 space-y-3">
                 {messages.length === 0 ? (
-                  <p className="text-sm text-gray-500 text-center py-8">Henüz mesaj yok. Aşağıdan yazıp gönderin (mesaj kaydı ileride aktif olacak).</p>
+                  <p className="text-sm text-zinc-500 text-center py-8">Henüz mesaj yok.</p>
                 ) : (
                   messages.map((m) => (
                     <div key={m.id} className={`flex ${m.from_veli ? 'justify-end' : 'justify-start'}`}>
-                      <div className={`max-w-[80%] rounded-lg px-3 py-2 text-sm ${m.from_veli ? 'bg-[#2563eb] text-white' : 'bg-gray-100 text-gray-900'}`}>
+                      <div className={`max-w-[80%] rounded-2xl px-4 py-2.5 text-sm ${
+                        m.from_veli
+                          ? 'bg-cyan-400/20 text-cyan-100 border border-cyan-400/20'
+                          : 'bg-zinc-800 text-zinc-200 border border-zinc-700'
+                      }`}>
                         {m.body}
-                        <p className="text-xs opacity-80 mt-1">{new Date(m.created_at).toLocaleString('tr-TR')}</p>
+                        <p className="text-[10px] opacity-60 mt-1">{new Date(m.created_at).toLocaleString('tr-TR')}</p>
                       </div>
                     </div>
                   ))
                 )}
-              </CardContent>
-              <div className="p-3 border-t flex gap-2">
-                <Input value={input} onChange={(e) => setInput(e.target.value)} placeholder="Mesajınız..." onKeyDown={(e) => e.key === 'Enter' && handleSend()} />
-                <Button onClick={handleSend} disabled={sending || !input.trim()}>
-                  {sending ? <Loader2 className="h-4 w-4 animate-spin" /> : <Send className="h-4 w-4" />}
-                </Button>
               </div>
-            </Card>
+              <div className="p-3 border-t border-zinc-800 flex gap-2">
+                <input
+                  value={input}
+                  onChange={(e) => setInput(e.target.value)}
+                  placeholder="Mesajınız..."
+                  onKeyDown={(e) => e.key === 'Enter' && handleSend()}
+                  className="flex-1 rounded-xl border border-zinc-700 bg-zinc-800 px-4 py-2.5 text-white text-sm placeholder:text-zinc-500 focus:border-cyan-400 focus:outline-none"
+                />
+                <button
+                  onClick={handleSend}
+                  disabled={sending || !input.trim()}
+                  className="rounded-xl bg-gradient-to-r from-cyan-500 to-cyan-400 px-4 py-2.5 text-zinc-950 disabled:opacity-50"
+                >
+                  {sending ? <Loader2 className="h-4 w-4 animate-spin" /> : <Send className="h-4 w-4" />}
+                </button>
+              </div>
+            </div>
           </>
         ) : (
-          <Card className="border-gray-200">
-            <CardHeader>
-              <MessageSquare className="h-8 w-8 text-[#2563eb]" />
-              <CardTitle>Antrenör ile iletişim</CardTitle>
-              <CardDescription>Çocuğunuzun antrenörüyle mesajlaşın. Konuşma listesi ileride veli–antrenör eşleşmesine göre doldurulacak.</CardDescription>
-            </CardHeader>
-            <CardContent className="space-y-4">
-              {threads.length === 0 ? (
-                <p className="text-sm text-gray-600">Henüz konuşma yok. Tesis tarafından antrenör atandığında veya siz ilk mesajı gönderdiğinizde burada görünecek.</p>
-              ) : (
-                <ul className="space-y-2">
-                  {threads.map((t) => (
-                    <li key={t.id}>
-                      <button type="button" onClick={() => setSelectedThreadId(t.id)} className="w-full text-left rounded-lg border p-3 hover:bg-gray-50">
-                        <p className="font-medium">{t.title}</p>
-                        {t.last_at && <p className="text-xs text-gray-500">{new Date(t.last_at).toLocaleDateString('tr-TR')}</p>}
-                      </button>
-                    </li>
-                  ))}
-                </ul>
-              )}
-              <p className="text-xs text-gray-500">Mesajlaşma modülü: Konuşma ve mesaj kayıtları ileride veritabanı tabloları ile bağlanacak.</p>
-            </CardContent>
-          </Card>
+          <div className="bg-zinc-900 border border-zinc-800 rounded-2xl p-6">
+            <MessageSquare className="h-8 w-8 text-cyan-400 mb-3" strokeWidth={1.5} />
+            <h3 className="font-semibold text-white mb-1">Antrenör ile iletişim</h3>
+            <p className="text-sm text-zinc-400 mb-4">Çocuğunuzun antrenörüyle mesajlaşın.</p>
+            {threads.length === 0 ? (
+              <p className="text-sm text-zinc-500">Henüz konuşma yok. Tesis tarafından antrenör atandığında burada görünecek.</p>
+            ) : (
+              <div className="space-y-2">
+                {threads.map((t) => (
+                  <button
+                    key={t.id}
+                    onClick={() => setSelectedThreadId(t.id)}
+                    className="w-full text-left rounded-xl border border-zinc-700 p-3 hover:border-cyan-400/30 transition-all"
+                  >
+                    <p className="font-medium text-white">{t.title}</p>
+                    {t.last_at && <p className="text-xs text-zinc-500">{new Date(t.last_at).toLocaleDateString('tr-TR')}</p>}
+                  </button>
+                ))}
+              </div>
+            )}
+          </div>
         )}
       </main>
+
+      <VeliBottomNav />
     </div>
   )
 }
