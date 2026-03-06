@@ -794,10 +794,10 @@ function ScheduleTab({ staff, hasTenant }: { staff: StaffMember[]; hasTenant: bo
         setEditingCell(null)
         fetchSchedule()
       } else {
-        alert(data?.error ?? "Kayit basarisiz")
+        alert(data?.error ?? "Kayıt başarısız")
       }
     } catch {
-      alert("Istek gonderilemedi")
+      alert("İstek gönderilemedi")
     } finally {
       setSaving(false)
     }
