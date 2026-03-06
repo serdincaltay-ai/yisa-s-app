@@ -45,11 +45,11 @@ export default function VeliLayout({
 
   if (loading && pathname !== '/veli/giris') {
     return (
-      <div className="min-h-screen flex items-center justify-center bg-white">
-        <div className="text-gray-500">Yükleniyor...</div>
+      <div className="min-h-screen flex items-center justify-center bg-zinc-950">
+        <div className="text-zinc-400">Yükleniyor...</div>
       </div>
     )
   }
 
-  return <>{children}</>
+  return <div className="min-h-screen bg-zinc-950">{children}</div>
 }

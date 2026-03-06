@@ -48,6 +48,7 @@ export default function FranchiseAidatlarPage() {
   })
   const [selectedIds, setSelectedIds] = useState<Set<string>>(new Set())
   const [remindLoading, setRemindLoading] = useState(false)
+  const [checkoutLoading, setCheckoutLoading] = useState<string | null>(null)
 
   const fetchTenantAndAthletes = useCallback(async () => {
     const [tenantRes, athletesRes] = await Promise.all([
@@ -377,7 +378,13 @@ export default function FranchiseAidatlarPage() {
                       <td className="px-4 py-3">{statusBadge(p.status)}</td>
                       <td className="px-4 py-3">
                         {p.status === 'pending' || p.status === 'overdue' ? (
-                          <Button size="sm" variant="outline" onClick={() => handleMarkPaid(p.id)} disabled={sending}>Ödendi Yap</Button>
+                          <div className="flex gap-1">
+                            <Button size="sm" variant="outline" onClick={() => handleMarkPaid(p.id)} disabled={sending}>Ödendi Yap</Button>
+                            <Button size="sm" onClick={() => handleStripeCheckout(p.id)} disabled={checkoutLoading !== null}>
+                              {checkoutLoading === p.id ? <Loader2 className="h-3 w-3 animate-spin mr-1" /> : <CreditCard className="h-3 w-3 mr-1" />}
+                              Online Ödeme
+                            </Button>
+                          </div>
                         ) : (
                           <span className="text-muted-foreground text-sm">{p.paid_date ? new Date(p.paid_date).toLocaleDateString('tr-TR') : '—'}</span>
                         )}

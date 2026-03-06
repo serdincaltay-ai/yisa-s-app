@@ -14,7 +14,7 @@ export async function getFranchiseSubdomains(): Promise<string[]> {
   if (cachedList && now - cacheTime < CACHE_TTL_MS) return cachedList
 
   const db = getSupabaseServer()
-  if (!db) return ['bjktuzlacimnastik', 'fenerbahceatasehir', 'kartalcimnastik']
+  if (!db) return ['bjktuzlacimnastik', 'fenerbahceatasehir', 'feneratasehir', 'kartalcimnastik']
 
   const { data } = await db
     .from('franchise_subdomains')
@@ -22,7 +22,7 @@ export async function getFranchiseSubdomains(): Promise<string[]> {
     .order('created_at', { ascending: true })
 
   const list = (data ?? []).map((r) => String(r.subdomain).toLowerCase()).filter(Boolean)
-  cachedList = list.length > 0 ? list : ['bjktuzlacimnastik', 'fenerbahceatasehir', 'kartalcimnastik']
+  cachedList = list.length > 0 ? list : ['bjktuzlacimnastik', 'fenerbahceatasehir', 'feneratasehir', 'kartalcimnastik']
   cacheTime = now
   return cachedList
 }
