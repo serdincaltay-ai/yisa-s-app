@@ -50,12 +50,20 @@ export async function POST(req: NextRequest) {
     // --- 1) Veli user_tenants iliskilendirme ---
     let parentUserId: string | null = null
     if (veliEmail) {
-      // Mevcut kullanici var mi kontrol et
+      // Mevcut kullanici var mi kontrol et (sayfalanmis arama)
       try {
-        const { data: listData } = await service.auth.admin.listUsers({ perPage: 500 })
-        const existingUser = listData?.users?.find(
-          (u) => (u.email ?? '').toLowerCase() === veliEmail.toLowerCase()
-        )
+        let existingUser = null as { id: string; email?: string } | null
+        let page = 1
+        while (!existingUser) {
+          const { data: listData } = await service.auth.admin.listUsers({ page, perPage: 500 })
+          const users = listData?.users ?? []
+          const found = users.find(
+            (u) => (u.email ?? '').toLowerCase() === veliEmail.toLowerCase()
+          )
+          if (found) { existingUser = found; break }
+          if (users.length < 500) break
+          page++
+        }
         if (existingUser) {
           parentUserId = existingUser.id
           // user_tenants'ta kaydi yoksa ekle

@@ -1,6 +1,6 @@
 'use client'
 
-import React, { useEffect, useState, useCallback } from 'react'
+import React, { useEffect, useState, useCallback, useRef } from 'react'
 import { useRouter } from 'next/navigation'
 import { supabase } from '@/lib/supabase'
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card'
@@ -57,6 +57,7 @@ export default function KayitGorevlisiPage() {
   const [loading, setLoading] = useState(true)
   const [saving, setSaving] = useState(false)
   const [toast, setToast] = useState<{ message: string; type: 'success' | 'error' } | null>(null)
+  const toastTimerRef = useRef<NodeJS.Timeout | null>(null)
   const [sonKayitlar, setSonKayitlar] = useState<{ ad: string; soyad: string; brans: string; tarih: string }[]>([])
 
   const [ogrenci, setOgrenci] = useState<OgrenciForm>({
@@ -156,7 +157,8 @@ export default function KayitGorevlisiPage() {
       setToast({ message: 'Baglanti hatasi', type: 'error' })
     } finally {
       setSaving(false)
-      setTimeout(() => setToast(null), 4000)
+      if (toastTimerRef.current) clearTimeout(toastTimerRef.current)
+      toastTimerRef.current = setTimeout(() => setToast(null), 4000)
     }
   }
 
