@@ -240,6 +240,8 @@ export async function GET(req: NextRequest) {
           status: 'sent',
           error_message: null,
         })
+      } else {
+        atlanan++
       }
     }
 
