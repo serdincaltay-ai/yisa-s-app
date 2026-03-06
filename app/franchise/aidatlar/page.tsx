@@ -211,24 +211,29 @@ export default function FranchiseAidatlarPage() {
     }
   }
 
-  const handleStripeCheckout = async (paymentId: string) => {
-    setCheckoutLoading(paymentId)
+  const handleStripeCheckout = async (overrideIds?: string[]) => {
+    const ids = overrideIds ?? Array.from(selectedIds)
+    if (ids.length === 0) {
+      alert('Lütfen online ödeme yapılacak aidatları seçin.')
+      return
+    }
+    setSending(true)
     try {
       const res = await fetch('/api/payments/create-checkout', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ payment_id: paymentId }),
+        body: JSON.stringify({ payment_ids: ids }),
       })
-      const data = await res.json() as { ok?: boolean; url?: string; error?: string }
-      if (data.ok && data.url) {
+      const data = await res.json()
+      if (data?.url) {
         window.open(data.url, '_blank')
       } else {
-        alert(data.error ?? 'Stripe checkout oluşturulamadı.')
+        alert(data?.error ?? 'Stripe checkout oluşturulamadı')
       }
     } catch {
-      alert('Bağlantı hatası.')
+      alert('İstek gönderilemedi')
     } finally {
-      setCheckoutLoading(null)
+      setSending(false)
     }
   }
 
@@ -270,6 +275,10 @@ export default function FranchiseAidatlarPage() {
           <Button size="sm" variant="outline" onClick={() => handleRemind()} disabled={remindLoading} title="Bekleyen ve gecikmiş tüm aidatlar için app-yisa-s hatırlatma tetiklenir">
             {remindLoading ? <Loader2 className="h-4 w-4 animate-spin mr-2" /> : <Bell className="mr-2 h-4 w-4" />}
             Hatırlatma gönder (tümü)
+          </Button>
+          <Button size="sm" variant="outline" className="border-purple-500/50 text-purple-700 hover:bg-purple-50" onClick={() => handleStripeCheckout()} disabled={sending || selectedIds.size === 0} title="Seçili bekleyen aidatlar için Stripe ile online ödeme linki oluştur">
+            <CreditCard className="mr-2 h-4 w-4" />
+            Online Ödeme (Stripe)
           </Button>
         </div>
       )}
@@ -371,8 +380,8 @@ export default function FranchiseAidatlarPage() {
                         {p.status === 'pending' || p.status === 'overdue' ? (
                           <div className="flex gap-1">
                             <Button size="sm" variant="outline" onClick={() => handleMarkPaid(p.id)} disabled={sending}>Ödendi Yap</Button>
-                            <Button size="sm" onClick={() => handleStripeCheckout(p.id)} disabled={checkoutLoading !== null}>
-                              {checkoutLoading === p.id ? <Loader2 className="h-3 w-3 animate-spin mr-1" /> : <CreditCard className="h-3 w-3 mr-1" />}
+                            <Button size="sm" onClick={() => handleStripeCheckout([p.id])} disabled={sending}>
+                              <CreditCard className="h-3 w-3 mr-1" />
                               Online Ödeme
                             </Button>
                           </div>

@@ -1,110 +1,145 @@
 /**
- * POST /api/webhooks/stripe
  * Stripe Webhook Handler
- * checkout.session.completed olayını dinler ve ödeme durumunu günceller
+ * POST /api/webhooks/stripe
+ *
+ * checkout.session.completed eventini dinler,
+ * ilgili odeme kayitlarinin status'unu paid/odendi yapar.
  */
 
 import { NextRequest, NextResponse } from 'next/server'
 import { createClient as createServiceClient } from '@supabase/supabase-js'
-import { verifyWebhookSignature } from '@/lib/stripe/client'
+import Stripe from 'stripe'
 
 export const dynamic = 'force-dynamic'
-
-// Stripe webhook'lar raw body gerektirir — Next.js body parsing'i devre dışı bırak
 export const runtime = 'nodejs'
+
+function getStripe(): Stripe | null {
+  const key = process.env.STRIPE_SECRET_KEY?.trim()
+  if (!key) return null
+  return new Stripe(key, { apiVersion: '2026-02-25.clover' })
+}
+
+function getSupabaseService() {
+  const url = process.env.NEXT_PUBLIC_SUPABASE_URL ?? process.env.SUPABASE_URL
+  const key = process.env.SUPABASE_SERVICE_ROLE_KEY
+  if (!url || !key) return null
+  return createServiceClient(url, key)
+}
 
 export async function POST(req: NextRequest) {
   try {
-    const signature = req.headers.get('stripe-signature')
-    if (!signature) {
+    const stripe = getStripe()
+    if (!stripe) {
+      console.error('[stripe-webhook] STRIPE_SECRET_KEY eksik')
+      return NextResponse.json({ error: 'Stripe yapilandirilmamis' }, { status: 500 })
+    }
+
+    const body = await req.text()
+    const sig = req.headers.get('stripe-signature')
+    const webhookSecret = process.env.STRIPE_WEBHOOK_SECRET?.trim()
+
+    let event: Stripe.Event
+
+    if (webhookSecret && sig) {
+      try {
+        event = stripe.webhooks.constructEvent(body, sig, webhookSecret)
+      } catch (err) {
+        console.error('[stripe-webhook] Imza dogrulanamadi:', err)
+        return NextResponse.json({ error: 'Webhook imza hatasi' }, { status: 400 })
+      }
+    } else if (!webhookSecret) {
+      // Production'da STRIPE_WEBHOOK_SECRET zorunlu
+      console.error('[stripe-webhook] STRIPE_WEBHOOK_SECRET ayarlanmamis — guvenlik riski, istek reddedildi')
+      return NextResponse.json({ error: 'Webhook yapilandirma hatasi' }, { status: 500 })
+    } else {
+      // sig yok ama secret var — gecersiz istek
       return NextResponse.json({ error: 'stripe-signature header eksik' }, { status: 400 })
     }
 
-    // Raw body al
-    const rawBody = await req.text()
-
-    // İmzayı doğrula
-    const event = verifyWebhookSignature(rawBody, signature)
-    if (!event) {
-      return NextResponse.json({ error: 'Webhook imza doğrulaması başarısız' }, { status: 400 })
-    }
-
-    // Supabase service client
-    const url = process.env.NEXT_PUBLIC_SUPABASE_URL ?? process.env.SUPABASE_URL
-    const key = process.env.SUPABASE_SERVICE_ROLE_KEY
-    if (!url || !key) {
-      console.error('[Stripe Webhook] Supabase yapılandırması eksik')
-      return NextResponse.json({ error: 'Sunucu yapılandırma hatası' }, { status: 500 })
-    }
-
-    const service = createServiceClient(url, key)
-
-    // checkout.session.completed — ödeme başarılı
     if (event.type === 'checkout.session.completed') {
-      const session = event.data.object
+      const session = event.data.object as Stripe.Checkout.Session
 
-      const paymentId = session.metadata?.payment_id
-      const tenantId = session.metadata?.tenant_id
-
-      if (!paymentId || !tenantId) {
-        console.warn('[Stripe Webhook] Metadata eksik: payment_id veya tenant_id yok.', session.id)
-        return NextResponse.json({ received: true, warning: 'Metadata eksik' })
+      if (session.payment_status !== 'paid') {
+        // Odeme henuz tamamlanmamis, atla
+        return NextResponse.json({ received: true, status: 'payment_not_completed' })
       }
 
-      // Ödeme durumunu 'paid' olarak güncelle (payments tablosu)
-      const { error: updateError } = await service
-        .from('payments')
-        .update({
-          status: 'paid',
-          payment_method: 'kart',
-          paid_date: new Date().toISOString().slice(0, 10),
-          notes: `Stripe checkout #${session.id.substring(0, 20)}`,
-        })
-        .eq('id', paymentId)
-        .eq('tenant_id', tenantId)
+      const metadata = session.metadata ?? {}
+      const tenantId = metadata.tenant_id
+      const paymentIdsStr = metadata.payment_ids
+      const paymentTable = metadata.payment_table || 'franchise_payments'
 
-      if (updateError) {
-        console.error('[Stripe Webhook] Ödeme güncelleme hatası:', updateError.message)
-        return NextResponse.json({ error: 'Ödeme güncelleme hatası' }, { status: 500 })
+      if (!tenantId || !paymentIdsStr) {
+        console.error('[stripe-webhook] metadata eksik:', metadata)
+        return NextResponse.json({ received: true, status: 'missing_metadata' })
       }
 
-      console.log(`[Stripe Webhook] Ödeme başarılı: payment_id=${paymentId}, session=${session.id}`)
-    }
+      const paymentIds = paymentIdsStr.split(',').map((id: string) => id.trim()).filter(Boolean)
+      if (paymentIds.length === 0) {
+        return NextResponse.json({ received: true, status: 'no_payment_ids' })
+      }
 
-    // checkout.session.expired — checkout süresi doldu, durumu geri al
-    if (event.type === 'checkout.session.expired') {
-      const session = event.data.object
+      const service = getSupabaseService()
+      if (!service) {
+        console.error('[stripe-webhook] Supabase baglantisi yapilandirilmamis')
+        return NextResponse.json({ error: 'Sunucu yapilandirma hatasi' }, { status: 500 })
+      }
 
-      const paymentId = session.metadata?.payment_id
-      const tenantId = session.metadata?.tenant_id
+      const now = new Date().toISOString().slice(0, 10)
+      const stripePaymentIntent = typeof session.payment_intent === 'string'
+        ? session.payment_intent
+        : null
 
-      if (paymentId && tenantId) {
-        // Orijinal durumu metadata'dan oku (pending veya overdue olabilir)
-        const revertStatus = session.metadata?.original_status || 'pending'
-
-        // Sadece 'processing' durumundakileri geri al
-        const { error: revertError } = await service
-          .from('payments')
-          .update({ status: revertStatus, payment_method: null })
-          .eq('id', paymentId)
+      if (paymentTable === 'package_payments') {
+        // package_payments tablosunda status: bekliyor -> odendi
+        const { error } = await service
+          .from('package_payments')
+          .update({
+            status: 'odendi',
+            payment_date: now,
+            payment_method: 'kredi_karti',
+            description: stripePaymentIntent
+              ? `Stripe odeme: ${stripePaymentIntent}`
+              : 'Stripe online odeme',
+          })
           .eq('tenant_id', tenantId)
-          .eq('status', 'processing')
+          .in('id', paymentIds)
+          .in('status', ['bekliyor', 'pending', 'overdue', 'gecikmis'])
 
-        if (revertError) {
-          console.error('[Stripe Webhook] Durum geri alma hatası:', revertError.message)
-        } else {
-          console.log(`[Stripe Webhook] Checkout süresi doldu, durum geri alındı: payment_id=${paymentId}`)
+        if (error) {
+          console.error('[stripe-webhook] package_payments guncelleme hatasi:', error)
+          return NextResponse.json({ error: 'Odeme guncelleme hatasi' }, { status: 500 })
+        }
+      } else {
+        // franchise_payments tablosunda status: pending -> paid
+        const { error } = await service
+          .from('franchise_payments')
+          .update({
+            status: 'paid',
+            paid_date: now,
+            payment_method: 'stripe',
+            notes: stripePaymentIntent
+              ? `Stripe odeme: ${stripePaymentIntent}`
+              : 'Stripe online odeme',
+          })
+          .eq('tenant_id', tenantId)
+          .in('id', paymentIds)
+          .in('status', ['pending', 'overdue'])
+
+        if (error) {
+          console.error('[stripe-webhook] franchise_payments guncelleme hatasi:', error)
+          return NextResponse.json({ error: 'Odeme guncelleme hatasi' }, { status: 500 })
         }
       }
+
+      console.log(`[stripe-webhook] ${paymentIds.length} odeme guncellendi (${paymentTable}), tenant: ${tenantId}`)
+      return NextResponse.json({ received: true, status: 'payments_updated', count: paymentIds.length })
     }
 
-    // Diğer olayları sessizce kabul et
-    return NextResponse.json({ received: true })
+    // Diger event tipleri icin sadece onay don
+    return NextResponse.json({ received: true, status: 'event_ignored', type: event.type })
   } catch (e) {
-    console.error('[Stripe Webhook] Hata:', e instanceof Error ? e.message : e)
-    return NextResponse.json(
-      { error: 'Webhook işleme hatası' },
-      { status: 500 }
-    )
+    console.error('[stripe-webhook] Beklenmeyen hata:', e)
+    return NextResponse.json({ error: 'Webhook isleme hatasi' }, { status: 500 })
   }
 }

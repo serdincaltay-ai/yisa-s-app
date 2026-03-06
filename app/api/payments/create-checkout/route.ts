@@ -1,159 +1,192 @@
 /**
+ * Stripe Checkout Session olusturma
  * POST /api/payments/create-checkout
- * Stripe Checkout Session oluştur
- * Veli veya franchise kullanıcısı bekleyen bir aidat için ödeme başlatır
+ * Body: { payment_ids: string[] }
+ *
+ * Secilen bekleyen odemeler icin Stripe Checkout Session olusturur
+ * ve checkout URL'i doner.
+ * Not: success_url ve cancel_url sunucu tarafinda belirlenir (open redirect onlemi).
  */
 
 import { NextRequest, NextResponse } from 'next/server'
 import { createClient } from '@/lib/supabase/server'
 import { createClient as createServiceClient } from '@supabase/supabase-js'
 import { getTenantIdWithFallback } from '@/lib/franchise-tenant'
-import { createCheckoutSession } from '@/lib/stripe/client'
+import Stripe from 'stripe'
 
 export const dynamic = 'force-dynamic'
+export const runtime = 'nodejs'
+
+function getStripe(): Stripe | null {
+  const key = process.env.STRIPE_SECRET_KEY?.trim()
+  if (!key) return null
+  return new Stripe(key, { apiVersion: '2026-02-25.clover' })
+}
+
+function getSupabaseService() {
+  const url = process.env.NEXT_PUBLIC_SUPABASE_URL ?? process.env.SUPABASE_URL
+  const key = process.env.SUPABASE_SERVICE_ROLE_KEY
+  if (!url || !key) return null
+  return createServiceClient(url, key)
+}
 
 export async function POST(req: NextRequest) {
-  // Rollback için dış scope'ta tanımla
-  // eslint-disable-next-line @typescript-eslint/no-explicit-any
-  let service: any = null
-  let paymentId = ''
-  let tenantId = ''
-  let originalStatus = ''
-
   try {
-    // Auth kontrolü
-    const supabase = await createClient()
-    const { data: { user } } = await supabase.auth.getUser()
-    if (!user) {
-      return NextResponse.json({ error: 'Giriş gerekli' }, { status: 401 })
-    }
-
-    const resolvedTenantId = await getTenantIdWithFallback(user.id, req)
-    if (!resolvedTenantId) {
-      return NextResponse.json({ error: 'Tenant atanmamış' }, { status: 403 })
-    }
-    tenantId = resolvedTenantId
-
-    const body = await req.json()
-    paymentId = typeof body.payment_id === 'string' ? body.payment_id.trim() : ''
-
-    if (!paymentId) {
-      return NextResponse.json({ error: 'payment_id alanı gerekli.' }, { status: 400 })
-    }
-
-    // Ödeme kaydını getir
-    const url = process.env.NEXT_PUBLIC_SUPABASE_URL ?? process.env.SUPABASE_URL
-    const key = process.env.SUPABASE_SERVICE_ROLE_KEY
-    if (!url || !key) {
-      return NextResponse.json({ error: 'Sunucu yapılandırma hatası' }, { status: 500 })
-    }
-
-    service = createServiceClient(url, key)
-
-    const { data: rawPayment, error: paymentError } = await service
-      .from('payments')
-      .select('id, amount, status, athlete_id, athletes(name, surname)')
-      .eq('id', paymentId)
-      .eq('tenant_id', tenantId)
-      .single()
-
-    const payment = rawPayment as {
-      id: string
-      amount: number
-      status: string
-      athlete_id: string
-      athletes: { name?: string; surname?: string } | null
-    } | null
-
-    if (paymentError || !payment) {
+    const stripe = getStripe()
+    if (!stripe) {
       return NextResponse.json(
-        { error: 'Ödeme kaydı bulunamadı veya bu tenant\'a ait değil.' },
-        { status: 404 }
+        { error: 'Stripe yapilandirilmamis. STRIPE_SECRET_KEY eksik.' },
+        { status: 500 }
       )
     }
 
-    if (payment.status === 'paid') {
+    const supabase = await createClient()
+    const { data: { user } } = await supabase.auth.getUser()
+    if (!user) {
+      return NextResponse.json({ error: 'Giris gerekli' }, { status: 401 })
+    }
+
+    const tenantId = await getTenantIdWithFallback(user.id, req)
+    if (!tenantId) {
+      return NextResponse.json({ error: 'Tenant bulunamadi' }, { status: 403 })
+    }
+
+    const body = await req.json()
+    const paymentIds: string[] = Array.isArray(body.payment_ids) ? body.payment_ids : []
+
+    if (paymentIds.length === 0) {
+      return NextResponse.json({ error: 'Odeme secilmedi (payment_ids bos)' }, { status: 400 })
+    }
+
+    // Stripe metadata 500 karakter limiti: UUID (36 char) + virgul = ~37 char, max ~13 odeme
+    const MAX_PAYMENTS_PER_CHECKOUT = 13
+    if (paymentIds.length > MAX_PAYMENTS_PER_CHECKOUT) {
       return NextResponse.json(
-        { error: 'Bu ödeme zaten tamamlanmış.' },
+        { error: `Tek seferde en fazla ${MAX_PAYMENTS_PER_CHECKOUT} odeme secebilirsiniz.` },
         { status: 400 }
       )
     }
 
-    if (payment.status === 'processing') {
-      return NextResponse.json(
-        { error: 'Bu ödeme için zaten bir checkout işlemi başlatılmış. Lütfen mevcut ödemeyi tamamlayın veya biraz bekleyin.' },
-        { status: 409 }
-      )
+    const service = getSupabaseService()
+    if (!service) {
+      return NextResponse.json({ error: 'Sunucu yapilandirma hatasi' }, { status: 500 })
     }
 
-    // Sporcu adını al
-    const athlete = payment.athletes
-    const athleteName = athlete
-      ? [athlete.name, athlete.surname].filter(Boolean).join(' ').trim() || 'Sporcu'
-      : 'Sporcu'
-
-    // Atomik olarak durumu 'processing' yap — race condition önlemi
-    // Sadece pending/overdue olan ödemeleri güncelle
-    originalStatus = payment.status
-    const { data: updated, error: lockError } = await service
-      .from('payments')
-      .update({ status: 'processing', payment_method: 'kart' })
-      .eq('id', paymentId)
+    // Secilen odemeleri getir — sadece bu tenant'a ait ve bekleyen/gecikmis olanlar
+    const { data: payments, error: fetchErr } = await service
+      .from('franchise_payments')
+      .select('id, athlete_id, amount, period_month, period_year, status, athletes(name, surname)')
       .eq('tenant_id', tenantId)
+      .in('id', paymentIds)
       .in('status', ['pending', 'overdue'])
-      .select('id')
 
-    if (lockError || !updated || updated.length === 0) {
+    if (fetchErr) {
+      // Sadece tablo bulunamadi hatasinda package_payments'a gec
+      // Diger hatalar (RLS, network, timeout) icin 500 don
+      const isTableNotFound = fetchErr.code === '42P01' || fetchErr.message?.includes('relation')
+      if (!isTableNotFound) {
+        console.error('[create-checkout] franchise_payments sorgu hatasi:', fetchErr)
+        return NextResponse.json({ error: 'Veritabani hatasi' }, { status: 500 })
+      }
+
+      const { data: altPayments, error: altErr } = await service
+        .from('package_payments')
+        .select('id, athlete_id, amount, taksit_no, status, athletes(name, surname)')
+        .eq('tenant_id', tenantId)
+        .in('id', paymentIds)
+        .in('status', ['bekliyor', 'pending', 'overdue', 'gecikmis'])
+
+      if (altErr || !altPayments || altPayments.length === 0) {
+        return NextResponse.json(
+          { error: 'Odeme kaydi bulunamadi veya zaten odenmis' },
+          { status: 404 }
+        )
+      }
+
+      // package_payments icin checkout session olustur
+      const lineItems: Stripe.Checkout.SessionCreateParams.LineItem[] = altPayments.map((p) => {
+        const ath = p.athletes as { name?: string; surname?: string } | null
+        const athleteName = ath ? [ath.name, ath.surname].filter(Boolean).join(' ') : 'Sporcu'
+        const desc = `Aidat - ${athleteName}`
+        return {
+          price_data: {
+            currency: 'try',
+            product_data: { name: desc },
+            unit_amount: Math.round(Number(p.amount) * 100),
+          },
+          quantity: 1,
+        }
+      })
+
+      const allowedOrigins = [process.env.NEXT_PUBLIC_SITE_URL, 'https://app.yisa-s.com', 'https://yisa-s.com'].filter(Boolean)
+      const rawOrigin = req.headers.get('origin') || req.headers.get('referer')?.replace(/\/[^/]*$/, '')
+      const origin = (rawOrigin && allowedOrigins.includes(rawOrigin)) ? rawOrigin : 'https://app.yisa-s.com'
+      const successUrl = `${origin}/veli/odeme?status=success`
+      const cancelUrl = `${origin}/veli/odeme?status=cancel`
+
+      const session = await stripe.checkout.sessions.create({
+        mode: 'payment',
+        payment_method_types: ['card'],
+        line_items: lineItems,
+        success_url: successUrl,
+        cancel_url: cancelUrl,
+        metadata: {
+          tenant_id: tenantId,
+          payment_ids: altPayments.map((p) => p.id).join(','),
+          payment_table: 'package_payments',
+        },
+      })
+
+      return NextResponse.json({ url: session.url, session_id: session.id })
+    }
+
+    if (!payments || payments.length === 0) {
       return NextResponse.json(
-        { error: 'Bu ödeme için işlem başlatılamadı. Başka bir checkout devam ediyor olabilir.' },
-        { status: 409 }
+        { error: 'Odeme kaydi bulunamadi veya zaten odenmis' },
+        { status: 404 }
       )
     }
 
-    // Site URL'ini belirle
-    const siteUrl = process.env.NEXT_PUBLIC_SITE_URL ?? `${req.nextUrl.protocol}//${req.nextUrl.host}`
-
-    // Stripe Checkout Session oluştur
-    const result = await createCheckoutSession({
-      paymentId: payment.id as string,
-      athleteName,
-      amount: Number(payment.amount),
-      currency: 'try',
-      tenantId,
-      userId: user.id,
-      originalStatus,
-      successUrl: `${siteUrl}/veli/odeme?success=true&payment_id=${paymentId}`,
-      cancelUrl: `${siteUrl}/veli/odeme?cancelled=true`,
+    // franchise_payments icin checkout session olustur
+    const lineItems: Stripe.Checkout.SessionCreateParams.LineItem[] = payments.map((p) => {
+      const ath = p.athletes as { name?: string; surname?: string } | null
+      const athleteName = ath ? [ath.name, ath.surname].filter(Boolean).join(' ') : 'Sporcu'
+      const periodLabel = p.period_month && p.period_year
+        ? ` (${p.period_month}/${p.period_year})`
+        : ''
+      const desc = `Aidat - ${athleteName}${periodLabel}`
+      return {
+        price_data: {
+          currency: 'try',
+          product_data: { name: desc },
+          unit_amount: Math.round(Number(p.amount) * 100),
+        },
+        quantity: 1,
+      }
     })
 
-    if (result.error) {
-      // Stripe başarısız oldu — durumu geri al
-      await service
-        .from('payments')
-        .update({ status: originalStatus, payment_method: null })
-        .eq('id', paymentId)
-        .eq('tenant_id', tenantId)
-      return NextResponse.json({ error: result.error }, { status: 500 })
-    }
+    const allowedOrigins = [process.env.NEXT_PUBLIC_SITE_URL, 'https://app.yisa-s.com', 'https://yisa-s.com'].filter(Boolean)
+    const rawOrigin = req.headers.get('origin') || req.headers.get('referer')?.replace(/\/[^/]*$/, '')
+    const origin = (rawOrigin && allowedOrigins.includes(rawOrigin)) ? rawOrigin : 'https://app.yisa-s.com'
+    const successUrl = `${origin}/veli/odeme?status=success`
+    const cancelUrl = `${origin}/veli/odeme?status=cancel`
 
-    return NextResponse.json({
-      ok: true,
-      sessionId: result.sessionId,
-      url: result.url,
+    const session = await stripe.checkout.sessions.create({
+      mode: 'payment',
+      payment_method_types: ['card'],
+      line_items: lineItems,
+      success_url: successUrl,
+      cancel_url: cancelUrl,
+      metadata: {
+        tenant_id: tenantId,
+        payment_ids: payments.map((p) => p.id).join(','),
+        payment_table: 'franchise_payments',
+      },
     })
+
+    return NextResponse.json({ url: session.url, session_id: session.id })
   } catch (e) {
-    // Rollback: status zaten 'processing' yapıldıysa geri al
-    if (service && paymentId && tenantId && originalStatus) {
-      await service
-        .from('payments')
-        .update({ status: originalStatus, payment_method: null })
-        .eq('id', paymentId)
-        .eq('tenant_id', tenantId)
-        .eq('status', 'processing')
-        .catch(() => {}) // Rollback hatası orijinal hatayı maskelemesin
-    }
     console.error('[create-checkout]', e)
-    const err = e instanceof Error ? e.message : String(e)
-    return NextResponse.json({ error: 'Checkout oluşturma hatası', detail: err }, { status: 500 })
+    return NextResponse.json({ error: 'Stripe checkout olusturulamadi' }, { status: 500 })
   }
 }

@@ -1,5 +1,6 @@
 /**
- * Franchise tesis ayarları: personel hedefleri, aidat kademeleri
+ * Franchise tesis ayarları: personel hedefleri, aidat kademeleri,
+ * branding (logo, renkler), sosyal medya, iletişim bilgileri
  */
 
 import { NextRequest, NextResponse } from 'next/server'
@@ -35,7 +36,7 @@ export async function GET() {
 
     const { data: tenant, error } = await service
       .from('tenants')
-      .select('id, name, slug, package_type, antrenor_hedef, temizlik_hedef, mudur_hedef, aidat_tiers, kredi_paketleri')
+      .select('id, name, slug, package_type, antrenor_hedef, temizlik_hedef, mudur_hedef, aidat_tiers, kredi_paketleri, logo_url, primary_color, secondary_color, accent_color, instagram_url, whatsapp_number, google_maps_url, facebook_url, twitter_url, phone, email, address, working_hours')
       .eq('id', tenantId)
       .single()
 
@@ -68,6 +69,87 @@ export async function PATCH(req: NextRequest) {
     if (typeof body.mudur_hedef === 'number') update.mudur_hedef = body.mudur_hedef
     if (body.aidat_tiers != null && typeof body.aidat_tiers === 'object') update.aidat_tiers = body.aidat_tiers
     if (Array.isArray(body.kredi_paketleri)) update.kredi_paketleri = body.kredi_paketleri
+
+    // Branding & renk paleti — doğrulama ile
+    const HEX_COLOR_RE = /^#[0-9a-fA-F]{6}$/
+    const MAX_TEXT_LEN = 500
+
+    const colorFields = ['primary_color', 'secondary_color', 'accent_color'] as const
+    for (const field of colorFields) {
+      if (typeof body[field] === 'string') {
+        if (!HEX_COLOR_RE.test(body[field])) {
+          return NextResponse.json({ error: `Geçersiz renk formatı: ${field}. #RRGGBB formatında olmalı.` }, { status: 400 })
+        }
+        update[field] = body[field]
+      }
+    }
+
+    const urlFields = ['instagram_url', 'google_maps_url', 'facebook_url', 'twitter_url'] as const
+    for (const field of urlFields) {
+      if (typeof body[field] === 'string') {
+        const val = body[field].trim()
+        if (val !== '' && !val.startsWith('https://')) {
+          return NextResponse.json({ error: `Geçersiz URL: ${field}. https:// ile başlamalı.` }, { status: 400 })
+        }
+        update[field] = val
+      }
+    }
+
+    // logo_url: Normalde /api/franchise/logo ile yüklenir, ama PATCH ile de https:// URL gönderilebilir
+    if (typeof body.logo_url === 'string') {
+      const logoVal = body.logo_url.trim()
+      if (logoVal !== '' && !logoVal.startsWith('https://')) {
+        return NextResponse.json({ error: 'Geçersiz logo URL. https:// ile başlamalı.' }, { status: 400 })
+      }
+      update.logo_url = logoVal
+    }
+
+    // WhatsApp: + ve rakam
+    if (typeof body.whatsapp_number === 'string') {
+      const wVal = body.whatsapp_number.trim()
+      if (wVal !== '' && !/^\+?[0-9\s\-()]+$/.test(wVal)) {
+        return NextResponse.json({ error: 'Geçersiz WhatsApp numarası. Sadece rakam, +, boşluk, tire.' }, { status: 400 })
+      }
+      update.whatsapp_number = wVal
+    }
+
+    // Serbest metin alanları (uzunluk sınırlı)
+    const textFields = ['phone', 'email', 'address'] as const
+    for (const field of textFields) {
+      if (typeof body[field] === 'string') {
+        const val = body[field].trim()
+        if (val.length > MAX_TEXT_LEN) {
+          return NextResponse.json({ error: `${field} çok uzun. Maksimum ${MAX_TEXT_LEN} karakter.` }, { status: 400 })
+        }
+        update[field] = val
+      }
+    }
+
+    // working_hours: JSONB olarak saklanır — string geldiyse "Gün: Saat" formatından objeye çevir
+    if (body.working_hours != null) {
+      if (typeof body.working_hours === 'string') {
+        const val = body.working_hours.trim()
+        if (val.length > MAX_TEXT_LEN) {
+          return NextResponse.json({ error: `working_hours çok uzun. Maksimum ${MAX_TEXT_LEN} karakter.` }, { status: 400 })
+        }
+        // "Pazartesi: 09:00-21:00\nSalı: ..." formatını JSONB objesine çevir
+        const lines = val.split('\n').filter((l: string) => l.includes(':'))
+        if (lines.length > 0) {
+          const obj: Record<string, string> = {}
+          for (const line of lines) {
+            const idx = line.indexOf(':')
+            const k = line.slice(0, idx).trim()
+            const v = line.slice(idx + 1).trim()
+            if (k) obj[k] = v
+          }
+          update.working_hours = obj
+        } else {
+          update.working_hours = val || null
+        }
+      } else if (typeof body.working_hours === 'object') {
+        update.working_hours = body.working_hours
+      }
+    }
 
     if (Object.keys(update).length === 0) return NextResponse.json({ error: 'Güncellenecek alan yok' }, { status: 400 })
 
