@@ -159,36 +159,76 @@ self.addEventListener('fetch', (event) => {
   )
 })
 
-// Push bildirimleri (ileride kullanılabilir)
+// ─── Push Bildirimleri ─────────────────────────────────────────────────────
+// Bildirim turleri: yoklama_sonucu, odeme_hatirlatma, duyuru
+const NOTIFICATION_TAGS = {
+  yoklama_sonucu: 'yoklama',
+  odeme_hatirlatma: 'odeme',
+  duyuru: 'duyuru',
+}
+
 self.addEventListener('push', (event) => {
-  if (event.data) {
-    const data = event.data.json()
-    const options = {
-      body: data.body || 'YİSA-S bildirimi',
-      icon: '/icon-192.png',
-      badge: '/icon-192.png',
-      vibrate: [100, 50, 100],
-      data: { url: data.url || '/dashboard' }
-    }
-    event.waitUntil(
-      self.registration.showNotification(data.title || 'YİSA-S', options)
-    )
+  if (!event.data) return
+
+  let data
+  try {
+    data = event.data.json()
+  } catch (e) {
+    // Fallback for plain text push
+    data = { title: 'YiSA-S', body: event.data.text() }
   }
+
+  const type = data.type || 'duyuru'
+  const tag = NOTIFICATION_TAGS[type] || 'genel'
+
+  const options = {
+    body: data.body || 'YiSA-S bildirimi',
+    icon: data.icon || '/icon-192.png',
+    badge: data.badge || '/icon-192.png',
+    vibrate: [100, 50, 100],
+    tag: tag,
+    renotify: true,
+    data: {
+      url: data.url || '/veli/dashboard',
+      type: type,
+    },
+    actions: type === 'yoklama_sonucu'
+      ? [{ action: 'view', title: 'Detay Gor' }]
+      : type === 'odeme_hatirlatma'
+        ? [{ action: 'pay', title: 'Odeme Yap' }]
+        : [{ action: 'open', title: 'Ac' }],
+  }
+
+  event.waitUntil(
+    self.registration.showNotification(data.title || 'YiSA-S', options)
+  )
 })
 
-// Bildirime tıklama
+// Bildirime tiklama + action butonlari
 self.addEventListener('notificationclick', (event) => {
   event.notification.close()
-  const url = event.notification.data?.url || '/dashboard'
+
+  let targetUrl = event.notification.data?.url || '/veli/dashboard'
+
+  // Handle action button clicks
+  if (event.action === 'pay') {
+    targetUrl = '/veli/odeme'
+  } else if (event.action === 'view') {
+    // Use the notification data URL (e.g. /veli/cocuk/{id})
+    targetUrl = event.notification.data?.url || '/veli/dashboard'
+  }
+
   event.waitUntil(
-    clients.matchAll({ type: 'window' }).then((windowClients) => {
+    clients.matchAll({ type: 'window', includeUncontrolled: true }).then((windowClients) => {
+      // Try to focus an existing window
       for (const client of windowClients) {
-        if (client.url.includes(url) && 'focus' in client) {
+        if (client.url.includes(targetUrl) && 'focus' in client) {
           return client.focus()
         }
       }
+      // Open new window
       if (clients.openWindow) {
-        return clients.openWindow(url)
+        return clients.openWindow(targetUrl)
       }
     })
   )
