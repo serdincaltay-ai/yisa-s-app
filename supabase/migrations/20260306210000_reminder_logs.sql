@@ -20,7 +20,6 @@ CREATE POLICY "Tenant patron can view reminder_logs" ON reminder_logs FOR SELECT
   tenant_id IN (SELECT tenant_id FROM user_tenants WHERE user_id = auth.uid())
   OR tenant_id IN (SELECT id FROM tenants WHERE owner_id = auth.uid())
 );
-
 -- Performans indeksleri
 CREATE INDEX IF NOT EXISTS idx_reminder_logs_payment ON reminder_logs(payment_id);
 CREATE INDEX IF NOT EXISTS idx_reminder_logs_veli ON reminder_logs(veli_user_id);
