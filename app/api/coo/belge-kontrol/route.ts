@@ -107,6 +107,7 @@ export async function GET(req: NextRequest) {
       .from('user_tenants')
       .select('user_id')
       .eq('role', 'patron')
+      .in('tenant_id', tenantIds)
 
     const patronUserIds = [...new Set((patronUsers ?? []).map((p: { user_id: string }) => p.user_id))]
 

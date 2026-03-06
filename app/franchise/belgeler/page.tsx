@@ -38,7 +38,7 @@ function GecerlilikBadge({ durumu, gecerlilik }: { durumu: string; gecerlilik: s
     return (
       <span className="inline-flex items-center gap-1 rounded-full px-2 py-0.5 text-xs font-medium bg-red-100 text-red-700 dark:bg-red-900/30 dark:text-red-400">
         <AlertCircle className="h-3 w-3" />
-        Suresi dolmus {gecerlilik && `(${new Date(gecerlilik + 'T00:00:00').toLocaleDateString('tr-TR')})`}
+        Süresi dolmuş {gecerlilik && `(${new Date(gecerlilik + 'T00:00:00').toLocaleDateString('tr-TR')})`}
       </span>
     )
   }
@@ -46,7 +46,7 @@ function GecerlilikBadge({ durumu, gecerlilik }: { durumu: string; gecerlilik: s
     return (
       <span className="inline-flex items-center gap-1 rounded-full px-2 py-0.5 text-xs font-medium bg-amber-100 text-amber-700 dark:bg-amber-900/30 dark:text-amber-400">
         <AlertTriangle className="h-3 w-3" />
-        Yakinda dolacak {gecerlilik && `(${new Date(gecerlilik + 'T00:00:00').toLocaleDateString('tr-TR')})`}
+        Yakında dolacak {gecerlilik && `(${new Date(gecerlilik + 'T00:00:00').toLocaleDateString('tr-TR')})`}
       </span>
     )
   }
@@ -54,7 +54,7 @@ function GecerlilikBadge({ durumu, gecerlilik }: { durumu: string; gecerlilik: s
     return (
       <span className="inline-flex items-center gap-1 rounded-full px-2 py-0.5 text-xs font-medium bg-green-100 text-green-700 dark:bg-green-900/30 dark:text-green-400">
         <CheckCircle2 className="h-3 w-3" />
-        Gecerli {gecerlilik && `(${new Date(gecerlilik + 'T00:00:00').toLocaleDateString('tr-TR')})`}
+        Geçerli {gecerlilik && `(${new Date(gecerlilik + 'T00:00:00').toLocaleDateString('tr-TR')})`}
       </span>
     )
   }
@@ -121,10 +121,10 @@ export default function FranchiseBelgelerPage() {
         setShowUpload(false)
         fetchData()
       } else {
-        alert(data?.error ?? 'Kayit basarisiz')
+        alert(data?.error ?? 'Kayıt başarısız')
       }
     } catch {
-      alert('Istek gonderilemedi')
+      alert('İstek gönderilemedi')
     } finally {
       setSending(false)
     }
@@ -140,19 +140,19 @@ export default function FranchiseBelgelerPage() {
         body: JSON.stringify({
           user_id: w.parent_user_id,
           notification_type: 'belge_uyari',
-          title: 'Belge Gecerlilik Uyarisi',
-          body: `${w.athlete_name} icin ${w.message.toLowerCase()}. Lutfen saglik raporunu yenileyiniz.`,
+          title: 'Belge Geçerlilik Uyarısı',
+          body: `${w.athlete_name} için ${w.message.toLowerCase()}. Lütfen sağlık raporunu yenileyiniz.`,
           url: '/veli/cocuk',
         }),
       })
       const data = await res.json()
       if (data?.ok) {
-        alert('Bildirim basariyla gonderildi')
+        alert('Bildirim başarıyla gönderildi')
       } else {
-        alert(data?.error ?? 'Bildirim gonderilemedi')
+        alert(data?.error ?? 'Bildirim gönderilemedi')
       }
     } catch {
-      alert('Bildirim gonderme hatasi')
+      alert('Bildirim gönderme hatası')
     } finally {
       setSendingNotif(null)
     }
@@ -167,14 +167,14 @@ export default function FranchiseBelgelerPage() {
         <Button variant="ghost" size="sm" asChild>
           <Link href="/franchise">
             <ArrowLeft className="h-4 w-4 mr-1" />
-            Tesis paneline don
+            Tesis paneline dön
           </Link>
         </Button>
       </div>
 
       <header>
-        <h1 className="text-2xl font-bold text-foreground">Belge Yonetimi</h1>
-        <p className="text-muted-foreground">Saglik raporu, gecerlilik uyarilari, veli/egitmen yukleme</p>
+        <h1 className="text-2xl font-bold text-foreground">Belge Yönetimi</h1>
+        <p className="text-muted-foreground">Sağlık raporu, geçerlilik uyarıları, veli/eğitmen yükleme</p>
       </header>
 
       {/* Kirmizi uyarilar — suresi dolmus */}
@@ -183,9 +183,9 @@ export default function FranchiseBelgelerPage() {
           <CardHeader>
             <CardTitle className="flex items-center gap-2 text-red-700 dark:text-red-400">
               <AlertCircle className="h-5 w-5" />
-              Suresi dolmus belgeler ({redWarnings.length})
+              Süresi dolmuş belgeler ({redWarnings.length})
             </CardTitle>
-            <CardDescription>Bu belgelerin suresi dolmus — yenileme zorunludur</CardDescription>
+            <CardDescription>Bu belgelerin süresi dolmuş — yenileme zorunludur</CardDescription>
           </CardHeader>
           <CardContent>
             <ul className="space-y-3">
@@ -195,7 +195,7 @@ export default function FranchiseBelgelerPage() {
                     <span className="font-medium">{w.athlete_name}</span>
                     <span className="text-muted-foreground"> — {w.message}</span>
                     {w.saglik_raporu_gecerlilik && (
-                      <span className="text-muted-foreground"> (Gecerlilik: {new Date(w.saglik_raporu_gecerlilik + 'T00:00:00').toLocaleDateString('tr-TR')})</span>
+                      <span className="text-muted-foreground"> (Geçerlilik: {new Date(w.saglik_raporu_gecerlilik + 'T00:00:00').toLocaleDateString('tr-TR')})</span>
                     )}
                   </div>
                   {w.parent_user_id && (
@@ -210,7 +210,7 @@ export default function FranchiseBelgelerPage() {
                       ) : (
                         <Bell className="h-3 w-3 mr-1" />
                       )}
-                      Uyari gonder
+                      Uyarı gönder
                     </Button>
                   )}
                 </li>
@@ -220,15 +220,15 @@ export default function FranchiseBelgelerPage() {
         </Card>
       )}
 
-      {/* Sari uyarilar — yakinda dolacak */}
+      {/* Sarı uyarılar — yakında dolacak */}
       {yellowWarnings.length > 0 && (
         <Card className="border-amber-500/50 bg-amber-500/5">
           <CardHeader>
             <CardTitle className="flex items-center gap-2 text-amber-700 dark:text-amber-400">
               <AlertTriangle className="h-5 w-5" />
-              Gecerlilik uyarilari ({yellowWarnings.length})
+              Geçerlilik uyarıları ({yellowWarnings.length})
             </CardTitle>
-            <CardDescription>Saglik raporu 30 gun icinde dolacak veya kaydi eski — yenileme onerilir</CardDescription>
+            <CardDescription>Sağlık raporu 30 gün içinde dolacak veya kaydı eski — yenileme önerilir</CardDescription>
           </CardHeader>
           <CardContent>
             <ul className="space-y-3">
@@ -238,7 +238,7 @@ export default function FranchiseBelgelerPage() {
                     <span className="font-medium">{w.athlete_name}</span>
                     <span className="text-muted-foreground"> — {w.message}</span>
                     {w.saglik_raporu_gecerlilik && (
-                      <span className="text-muted-foreground"> (Gecerlilik: {new Date(w.saglik_raporu_gecerlilik + 'T00:00:00').toLocaleDateString('tr-TR')})</span>
+                      <span className="text-muted-foreground"> (Geçerlilik: {new Date(w.saglik_raporu_gecerlilik + 'T00:00:00').toLocaleDateString('tr-TR')})</span>
                     )}
                     {!w.saglik_raporu_gecerlilik && w.recorded_at && (
                       <span className="text-muted-foreground"> (Son: {new Date(w.recorded_at).toLocaleDateString('tr-TR')})</span>
@@ -257,7 +257,7 @@ export default function FranchiseBelgelerPage() {
                       ) : (
                         <Bell className="h-3 w-3 mr-1" />
                       )}
-                      Uyari gonder
+                      Uyarı gönder
                     </Button>
                   )}
                 </li>
@@ -272,66 +272,66 @@ export default function FranchiseBelgelerPage() {
           <div>
             <CardTitle className="flex items-center gap-2">
               <FileText className="h-5 w-5" />
-              Saglik raporu / kayitlar
+              Sağlık raporu / kayıtlar
             </CardTitle>
-            <CardDescription>Ogrenci saglik kayitlari, gecerlilik takibi</CardDescription>
+            <CardDescription>Öğrenci sağlık kayıtları, geçerlilik takibi</CardDescription>
           </div>
           <Button size="sm" onClick={() => setShowUpload(!showUpload)}>
             <Plus className="h-4 w-4 mr-1" />
-            Kayit ekle
+            Kayıt ekle
           </Button>
         </CardHeader>
         <CardContent className="space-y-4">
           {showUpload && (
             <form onSubmit={handleUpload} className="rounded-lg border p-4 space-y-3">
               <div>
-                <Label>Ogrenci</Label>
+                <Label>Öğrenci</Label>
                 <select className="flex h-10 w-full rounded-md border border-input bg-background px-3 py-2" value={form.athlete_id} onChange={(e) => setForm((f) => ({ ...f, athlete_id: e.target.value }))} required>
-                  <option value="">Secin</option>
+                  <option value="">Seçin</option>
                   {athletes.map((a) => <option key={a.id} value={a.id}>{a.name} {a.surname ?? ''}</option>)}
                 </select>
               </div>
               <div>
-                <Label>Kayit turu</Label>
+                <Label>Kayıt türü</Label>
                 <select className="flex h-10 w-full rounded-md border border-input bg-background px-3 py-2" value={form.record_type} onChange={(e) => setForm((f) => ({ ...f, record_type: e.target.value }))}>
                   <option value="genel">Genel</option>
-                  <option value="saglik_raporu">Saglik raporu</option>
+                  <option value="saglik_raporu">Sağlık raporu</option>
                   <option value="kontrol">Kontrol</option>
                 </select>
               </div>
               <div>
-                <Label>Son gecerlilik tarihi</Label>
+                <Label>Son geçerlilik tarihi</Label>
                 <Input
                   type="date"
                   value={form.saglik_raporu_gecerlilik}
                   onChange={(e) => setForm((f) => ({ ...f, saglik_raporu_gecerlilik: e.target.value }))}
                   placeholder="YYYY-MM-DD"
                 />
-                <p className="text-xs text-muted-foreground mt-1">Saglik raporunun son gecerlilik tarihini girin (istege bagli)</p>
+                <p className="text-xs text-muted-foreground mt-1">Sağlık raporunun son geçerlilik tarihini girin (isteğe bağlı)</p>
               </div>
               <div>
-                <Label>Not / aciklama</Label>
-                <Textarea value={form.notes} onChange={(e) => setForm((f) => ({ ...f, notes: e.target.value }))} placeholder="Istege bagli" rows={2} />
+                <Label>Not / açıklama</Label>
+                <Textarea value={form.notes} onChange={(e) => setForm((f) => ({ ...f, notes: e.target.value }))} placeholder="İsteğe bağlı" rows={2} />
               </div>
               <div className="flex gap-2">
                 <Button type="submit" disabled={sending}>{sending ? <Loader2 className="h-4 w-4 animate-spin" /> : 'Kaydet'}</Button>
-                <Button type="button" variant="outline" onClick={() => setShowUpload(false)}>Iptal</Button>
+                <Button type="button" variant="outline" onClick={() => setShowUpload(false)}>İptal</Button>
               </div>
             </form>
           )}
           {loading ? (
             <div className="flex justify-center py-8"><Loader2 className="h-8 w-8 animate-spin text-muted-foreground" /></div>
           ) : items.length === 0 ? (
-            <p className="text-sm text-muted-foreground py-4">Henuz saglik kaydi yok. Kayit ekleyebilir veya veli/egitmen yuklemesi icin tesis ayarlarini kullanabilirsiniz.</p>
+            <p className="text-sm text-muted-foreground py-4">Henüz sağlık kaydı yok. Kayıt ekleyebilir veya veli/eğitmen yüklemesi için tesis ayarlarını kullanabilirsiniz.</p>
           ) : (
             <div className="overflow-x-auto">
               <table className="w-full text-sm">
                 <thead>
                   <tr className="border-b">
-                    <th className="text-left py-2 font-medium">Ogrenci</th>
-                    <th className="text-left py-2 font-medium">Tur</th>
+                    <th className="text-left py-2 font-medium">Öğrenci</th>
+                    <th className="text-left py-2 font-medium">Tür</th>
                     <th className="text-left py-2 font-medium">Tarih</th>
-                    <th className="text-left py-2 font-medium">Gecerlilik</th>
+                    <th className="text-left py-2 font-medium">Geçerlilik</th>
                     <th className="text-left py-2 font-medium">Not</th>
                   </tr>
                 </thead>
@@ -356,9 +356,9 @@ export default function FranchiseBelgelerPage() {
         <CardHeader>
           <CardTitle className="flex items-center gap-2">
             <Upload className="h-5 w-5" />
-            Veli / egitmen yukleme
+            Veli / eğitmen yükleme
           </CardTitle>
-          <CardDescription>Belge yukleme (dosya) ileride depolama entegrasyonu ile eklenecek. Su an saglik kaydi metin olarak yukaridan eklenebilir.</CardDescription>
+          <CardDescription>Belge yükleme (dosya) ileride depolama entegrasyonu ile eklenecek. Şu an sağlık kaydı metin olarak yukarıdan eklenebilir.</CardDescription>
         </CardHeader>
       </Card>
     </div>
