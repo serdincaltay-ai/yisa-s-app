@@ -30,7 +30,7 @@ export interface YoklamaHatirlatmaProps {
 }
 
 export function YoklamaHatirlatma({
-  aliciAd = 'Sayin Kullanici',
+  aliciAd = 'Sayın Kullanıcı',
   tesisAdi = 'YiSA-S Tesis',
   dersAdi = 'Genel Cimnastik',
   dersTarihi = '',
@@ -39,15 +39,15 @@ export function YoklamaHatirlatma({
   return (
     <Html lang="tr">
       <Head />
-      <Preview>Yoklama Hatirlatmasi - {dersAdi}</Preview>
+      <Preview>Yoklama Hatırlatması - {dersAdi}</Preview>
       <Body style={bodyStyle}>
         <Container style={containerStyle}>
-          <Heading style={headingStyle}>Yoklama Hatirlatmasi</Heading>
+          <Heading style={headingStyle}>Yoklama Hatırlatması</Heading>
           <Hr style={hrStyle} />
           <Text style={textStyle}>Merhaba {aliciAd},</Text>
           <Text style={textStyle}>
-            <strong>{tesisAdi}</strong> bunyesindeki dersiniz icin yoklama
-            hatirlatmasi:
+            <strong>{tesisAdi}</strong> bünyesindeki dersiniz için yoklama
+            hatırlatması:
           </Text>
           <Section style={infoBoxStyle}>
             <Text style={infoTextStyle}>
@@ -61,12 +61,12 @@ export function YoklamaHatirlatma({
             </Text>
           </Section>
           <Text style={textStyle}>
-            Lutfen yoklama kaydini zamaninda tamamlayin.
+            Lütfen yoklama kaydını zamanında tamamlayın.
           </Text>
           <Hr style={hrStyle} />
           <Text style={footerStyle}>
-            Bu email {tesisAdi} tarafindan YiSA-S platformu uzerinden
-            gonderilmistir.
+            Bu email {tesisAdi} tarafından YiSA-S platformu üzerinden
+            gönderilmiştir.
           </Text>
         </Container>
       </Body>

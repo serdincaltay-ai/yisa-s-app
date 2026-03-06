@@ -32,7 +32,7 @@ export interface AidatHatirlatmaProps {
 }
 
 export function AidatHatirlatma({
-  veliAd = 'Sayin Veli',
+  veliAd = 'Sayın Veli',
   sporcuAd = 'Sporcu',
   tesisAdi = 'YiSA-S Tesis',
   aidatTutari = '',
@@ -42,35 +42,35 @@ export function AidatHatirlatma({
   return (
     <Html lang="tr">
       <Head />
-      <Preview>Aidat Hatirlatmasi - {donem}</Preview>
+      <Preview>Aidat Hatırlatması - {donem}</Preview>
       <Body style={bodyStyle}>
         <Container style={containerStyle}>
-          <Heading style={headingStyle}>Aidat Odeme Hatirlatmasi</Heading>
+          <Heading style={headingStyle}>Aidat Ödeme Hatırlatması</Heading>
           <Hr style={hrStyle} />
           <Text style={textStyle}>Merhaba {veliAd},</Text>
           <Text style={textStyle}>
-            <strong>{sporcuAd}</strong> icin <strong>{tesisAdi}</strong>{' '}
-            bunyesindeki aidat odemeniz hakkinda hatirlatma:
+            <strong>{sporcuAd}</strong> için <strong>{tesisAdi}</strong>{' '}
+            bünyesindeki aidat ödemeniz hakkında hatırlatma:
           </Text>
           <Section style={infoBoxStyle}>
             <Text style={infoTextStyle}>
-              <strong>Donem:</strong> {donem}
+              <strong>Dönem:</strong> {donem}
             </Text>
             <Text style={infoTextStyle}>
               <strong>Tutar:</strong> {aidatTutari}
             </Text>
             <Text style={infoTextStyle}>
-              <strong>Son Odeme Tarihi:</strong> {sonOdemeTarihi}
+              <strong>Son Ödeme Tarihi:</strong> {sonOdemeTarihi}
             </Text>
           </Section>
           <Text style={textStyle}>
-            Odemenizi zamaninda gerceklestirmenizi rica ederiz. Sorulariniz icin
-            tesis yonetimiyle iletisime gecebilirsiniz.
+            Ödemenizi zamanında gerçekleştirmenizi rica ederiz. Sorularınız için
+            tesis yönetimiyle iletişime geçebilirsiniz.
           </Text>
           <Hr style={hrStyle} />
           <Text style={footerStyle}>
-            Bu email {tesisAdi} tarafindan YiSA-S platformu uzerinden
-            gonderilmistir.
+            Bu email {tesisAdi} tarafından YiSA-S platformu üzerinden
+            gönderilmiştir.
           </Text>
         </Container>
       </Body>

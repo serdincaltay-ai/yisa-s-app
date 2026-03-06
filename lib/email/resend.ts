@@ -12,7 +12,7 @@ function getResend(): Resend {
   if (!resendInstance) {
     const apiKey = process.env.RESEND_API_KEY
     if (!apiKey) {
-      throw new Error('RESEND_API_KEY ortam degiskeni tanimlanmamis.')
+      throw new Error('RESEND_API_KEY ortam değişkeni tanımlanmamış.')
     }
     resendInstance = new Resend(apiKey)
   }
@@ -60,7 +60,7 @@ export async function sendEmail(
     })
 
     if (error) {
-      console.error('[email/resend] Gonderim hatasi:', error)
+      console.error('[email/resend] Gönderim hatası:', error)
       return { ok: false, error: error.message }
     }
 

@@ -33,7 +33,7 @@ export interface HosgeldinizProps {
 }
 
 export function Hosgeldiniz({
-  ownerAd = 'Sayin Isletme Sahibi',
+  ownerAd = 'Sayın İşletme Sahibi',
   tesisAdi = 'Yeni Tesis',
   loginEmail = '',
   tempPassword,
@@ -47,18 +47,18 @@ export function Hosgeldiniz({
   return (
     <Html lang="tr">
       <Head />
-      <Preview>YiSA-S&apos;e Hosgeldiniz - {tesisAdi}</Preview>
+      <Preview>YiSA-S&apos;e Hoşgeldiniz - {tesisAdi}</Preview>
       <Body style={bodyStyle}>
         <Container style={containerStyle}>
           <Section style={logoBannerStyle}>
             <Text style={logoTextStyle}>YiSA-S</Text>
           </Section>
-          <Heading style={headingStyle}>Hosgeldiniz!</Heading>
+          <Heading style={headingStyle}>Hoşgeldiniz!</Heading>
           <Hr style={hrStyle} />
           <Text style={textStyle}>Merhaba {ownerAd},</Text>
           <Text style={textStyle}>
-            <strong>{tesisAdi}</strong> icin YiSA-S platformunda yeriniz
-            hazir! Spor tesisi yonetim panelinize hemen erisebilirsiniz.
+            <strong>{tesisAdi}</strong> için YiSA-S platformunda yeriniz
+            hazır! Spor tesisi yönetim panelinize hemen erişebilirsiniz.
           </Text>
 
           <Section style={infoBoxStyle}>
@@ -70,7 +70,7 @@ export function Hosgeldiniz({
             </Text>
             {tempPassword ? (
               <Text style={infoTextStyle}>
-                <strong>Gecici Sifre:</strong> {tempPassword}
+                <strong>Geçici Şifre:</strong> {tempPassword}
               </Text>
             ) : null}
             {subdomain ? (
@@ -85,15 +85,15 @@ export function Hosgeldiniz({
 
           {tempPassword ? (
             <Text style={warningStyle}>
-              Guvenliginiz icin ilk girisinizdeki sifrenizi degistirmenizi
-              oneririz.
+              Güvenliğiniz için ilk girişinizde şifrenizi değiştirmenizi
+              öneririz.
             </Text>
           ) : null}
 
           <Text style={textStyle}>
-            Panelinizdeki kurulum sihirbazi ile tesisinizi hizlica
-            yapilandirabilirsiniz. Sorulariniz icin destek ekibimize
-            ulasabilirsiniz.
+            Panelinizdeki kurulum sihirbazı ile tesisinizi hızlıca
+            yapılandırabilirsiniz. Sorularınız için destek ekibimize
+            ulaşabilirsiniz.
           </Text>
 
           <Section style={ctaBoxStyle}>
@@ -104,8 +104,8 @@ export function Hosgeldiniz({
 
           <Hr style={hrStyle} />
           <Text style={footerStyle}>
-            Bu email YiSA-S platformu tarafindan otomatik olarak
-            gonderilmistir.
+            Bu email YiSA-S platformu tarafından otomatik olarak
+            gönderilmiştir.
           </Text>
           <Text style={footerStyle}>
             <Link href={platformUrl} style={footerLinkStyle}>

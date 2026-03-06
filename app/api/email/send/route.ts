@@ -47,7 +47,7 @@ export async function POST(req: NextRequest) {
 
     if (!to || !subject) {
       return NextResponse.json(
-        { error: 'to ve subject alanlari zorunludur.' },
+        { error: 'to ve subject alanları zorunludur.' },
         { status: 400 }
       )
     }
@@ -61,7 +61,7 @@ export async function POST(req: NextRequest) {
       const validTemplates: TemplateName[] = ['hosgeldiniz', 'yoklama-hatirlatma', 'aidat-hatirlatma', 'duyuru']
       if (!validTemplates.includes(templateName)) {
         return NextResponse.json(
-          { error: `Gecersiz template. Gecerli degerler: ${validTemplates.join(', ')}` },
+          { error: `Geçersiz template. Geçerli değerler: ${validTemplates.join(', ')}` },
           { status: 400 }
         )
       }
@@ -70,7 +70,7 @@ export async function POST(req: NextRequest) {
       html = body.html as string | undefined ?? ''
       if (!html) {
         return NextResponse.json(
-          { error: 'html veya template alani gerekli.' },
+          { error: 'html veya template alanı gerekli.' },
           { status: 400 }
         )
       }
@@ -80,7 +80,7 @@ export async function POST(req: NextRequest) {
 
     if (!result.ok) {
       return NextResponse.json(
-        { error: result.error ?? 'Email gonderilemedi.' },
+        { error: result.error ?? 'Email gönderilemedi.' },
         { status: 500 }
       )
     }
@@ -89,6 +89,6 @@ export async function POST(req: NextRequest) {
   } catch (e) {
     console.error('[api/email/send] Error:', e)
     const msg = e instanceof Error ? e.message : String(e)
-    return NextResponse.json({ error: `Sunucu hatasi: ${msg}` }, { status: 500 })
+    return NextResponse.json({ error: `Sunucu hatası: ${msg}` }, { status: 500 })
   }
 }

@@ -31,7 +31,7 @@ export interface DuyuruProps {
 }
 
 export function Duyuru({
-  aliciAd = 'Sayin Kullanici',
+  aliciAd = 'Sayın Kullanıcı',
   tesisAdi = 'YiSA-S Tesis',
   baslik = 'Duyuru',
   icerik = '',
@@ -69,8 +69,8 @@ export function Duyuru({
           ) : null}
           <Hr style={hrStyle} />
           <Text style={footerStyle}>
-            Bu email {tesisAdi} tarafindan YiSA-S platformu uzerinden
-            gonderilmistir.
+            Bu email {tesisAdi} tarafından YiSA-S platformu üzerinden
+            gönderilmiştir.
           </Text>
         </Container>
       </Body>
