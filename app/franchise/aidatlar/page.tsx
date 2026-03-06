@@ -7,7 +7,7 @@ import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/com
 import { Badge } from '@/components/ui/badge'
 import { Input } from '@/components/ui/input'
 import { Label } from '@/components/ui/label'
-import { Loader2, Plus, ArrowLeft, Bell, CheckSquare, Square } from 'lucide-react'
+import { Loader2, Plus, ArrowLeft, Bell, CheckSquare, Square, CreditCard } from 'lucide-react'
 
 type Athlete = { id: string; name: string; surname?: string | null }
 type PaymentItem = {
@@ -210,6 +210,32 @@ export default function FranchiseAidatlarPage() {
     }
   }
 
+  const handleStripeCheckout = async () => {
+    const ids = Array.from(selectedIds)
+    if (ids.length === 0) {
+      alert('Lütfen online ödeme yapılacak aidatları seçin.')
+      return
+    }
+    setSending(true)
+    try {
+      const res = await fetch('/api/payments/create-checkout', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ payment_ids: ids }),
+      })
+      const data = await res.json()
+      if (data?.url) {
+        window.open(data.url, '_blank')
+      } else {
+        alert(data?.error ?? 'Stripe checkout oluşturulamadı')
+      }
+    } catch {
+      alert('İstek gönderilemedi')
+    } finally {
+      setSending(false)
+    }
+  }
+
   const statusBadge = (s: string) => {
     if (s === 'paid') return <Badge className="bg-green-500/20 text-green-600">Ödendi</Badge>
     if (s === 'overdue') return <Badge className="bg-red-500/20 text-red-600">Gecikmiş</Badge>
@@ -248,6 +274,10 @@ export default function FranchiseAidatlarPage() {
           <Button size="sm" variant="outline" onClick={() => handleRemind()} disabled={remindLoading} title="Bekleyen ve gecikmiş tüm aidatlar için app-yisa-s hatırlatma tetiklenir">
             {remindLoading ? <Loader2 className="h-4 w-4 animate-spin mr-2" /> : <Bell className="mr-2 h-4 w-4" />}
             Hatırlatma gönder (tümü)
+          </Button>
+          <Button size="sm" variant="outline" className="border-purple-500/50 text-purple-700 hover:bg-purple-50" onClick={() => handleStripeCheckout()} disabled={sending || selectedIds.size === 0} title="Seçili bekleyen aidatlar için Stripe ile online ödeme linki oluştur">
+            <CreditCard className="mr-2 h-4 w-4" />
+            Online Ödeme (Stripe)
           </Button>
         </div>
       )}

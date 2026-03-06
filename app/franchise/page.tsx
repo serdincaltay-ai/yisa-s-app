@@ -43,7 +43,8 @@ import {
   UserPlus,
   Wallet,
   Loader2,
-  ClipboardCheck
+  ClipboardCheck,
+  CreditCard
 } from "lucide-react"
 import { useRouter } from "next/navigation"
 import { supabase } from "@/lib/supabase"
@@ -949,6 +950,27 @@ function AidatTab({ athletes, hasTenant }: { athletes: Athlete[]; hasTenant: boo
     }
   }
 
+  const handleStripeCheckout = async (paymentId: string) => {
+    setSending(true)
+    try {
+      const res = await fetch("/api/payments/create-checkout", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ payment_ids: [paymentId] }),
+      })
+      const data = await res.json()
+      if (data?.url) {
+        window.open(data.url, "_blank")
+      } else {
+        alert(data?.error ?? "Stripe checkout olusturulamadi")
+      }
+    } catch {
+      alert("Istek gonderilemedi")
+    } finally {
+      setSending(false)
+    }
+  }
+
   const statusBadge = (s: string) => {
     if (s === "paid") return <Badge className="bg-green-500/20 text-green-600">Odendi</Badge>
     if (s === "overdue") return <Badge className="bg-red-500/20 text-red-600">Gecikmis</Badge>
@@ -1030,7 +1052,7 @@ function AidatTab({ athletes, hasTenant }: { athletes: Athlete[]; hasTenant: boo
                     <td className="px-4 py-3">{p.amount.toLocaleString("tr-TR")} TL</td>
                     <td className="px-4 py-3">{p.period_month}/{p.period_year}</td>
                     <td className="px-4 py-3">{statusBadge(p.status)}</td>
-                    <td className="px-4 py-3">{p.status === "pending" || p.status === "overdue" ? <Button size="sm" variant="outline" onClick={() => handleMarkPaid(p.id)} disabled={sending}>Odendi Yap</Button> : <span className="text-muted-foreground text-sm">{p.paid_date ? new Date(p.paid_date).toLocaleDateString("tr-TR") : "—"}</span>}</td>
+                    <td className="px-4 py-3">{p.status === "pending" || p.status === "overdue" ? <div className="flex gap-1"><Button size="sm" variant="outline" onClick={() => handleMarkPaid(p.id)} disabled={sending}>Odendi Yap</Button><Button size="sm" variant="outline" className="border-purple-500/50 text-purple-700 hover:bg-purple-50" onClick={() => handleStripeCheckout(p.id)} disabled={sending}><CreditCard className="h-3 w-3 mr-1" />Online Ode</Button></div> : <span className="text-muted-foreground text-sm">{p.paid_date ? new Date(p.paid_date).toLocaleDateString("tr-TR") : "—"}</span>}</td>
                   </tr>
                 ))}
               </tbody>
