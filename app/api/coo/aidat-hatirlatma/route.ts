@@ -2,7 +2,7 @@
  * GET /api/coo/aidat-hatirlatma
  * Cron ile günlük çağrılır (09:00 UTC — vercel.json)
  * Yaklaşan (7 gün içinde) veya gecikmiş pending ödemeleri bulur,
- * ilgili velilere push notification gönderir ve reminder_logs'a kayıt yazar.
+ * ilgili velilere push notification + email gönderir ve reminder_logs'a kayıt yazar.
  */
 
 import { NextRequest, NextResponse } from 'next/server'
@@ -11,6 +11,9 @@ import {
   sendPushNotification,
   type PushSubscriptionData,
 } from '@/lib/notifications/web-push'
+import { sendEmail } from '@/lib/email/resend'
+import { render } from '@react-email/components'
+import { AidatHatirlatma } from '@/lib/email/templates/aidat-hatirlatma'
 
 export const dynamic = 'force-dynamic'
 
@@ -30,6 +33,8 @@ interface AthleteRow {
   name: string
   surname: string | null
   parent_user_id: string | null
+  parent_email: string | null
+  parent_name: string | null
 }
 
 interface SubscriptionRow {
@@ -101,11 +106,11 @@ export async function GET(req: NextRequest) {
 
     const typedPayments = payments as PaymentRow[]
 
-    // Sporcu bilgilerini al (parent_user_id ile veli bağlantısı)
+    // Sporcu bilgilerini al (parent_user_id ile veli bağlantısı + email bilgisi)
     const athleteIds = [...new Set(typedPayments.map((p) => p.athlete_id))]
     const { data: athletes } = await service
       .from('athletes')
-      .select('id, name, surname, parent_user_id')
+      .select('id, name, surname, parent_user_id, parent_email, parent_name')
       .in('id', athleteIds)
 
     const typedAthletes = (athletes ?? []) as AthleteRow[]
@@ -114,9 +119,25 @@ export async function GET(req: NextRequest) {
     // Velilerin push subscription'larını al
     const parentUserIds = [...new Set(typedAthletes.filter((a) => a.parent_user_id).map((a) => a.parent_user_id!))]
 
+    // Tenant isimlerini al (email template için)
+    const tenantIds = [...new Set(typedPayments.map((p) => p.tenant_id).filter(Boolean))]
+    const tenantNameMap = new Map<string, string>()
+    if (tenantIds.length > 0) {
+      const { data: tenants } = await service
+        .from('tenants')
+        .select('id, name')
+        .in('id', tenantIds)
+      for (const t of (tenants ?? []) as Array<{ id: string; name: string }>) {
+        tenantNameMap.set(t.id, t.name)
+      }
+    }
+
     if (parentUserIds.length === 0) {
       return NextResponse.json({ ok: true, hatirlatilan: 0, mesaj: 'Veli bağlantısı olan sporcu yok' })
     }
+
+    // RESEND_API_KEY tanımlı mı kontrol et (email göndermek için)
+    const emailConfigured = !!process.env.RESEND_API_KEY
 
     // Bildirim tercihlerini kontrol et
     const { data: allPrefs } = await service
@@ -183,7 +204,20 @@ export async function GET(req: NextRequest) {
         continue
       }
 
-      // Push bildirim gönder
+      const cocukAdi = [athlete.name, athlete.surname].filter(Boolean).join(' ')
+      const gecikmisMi = payment.due_date < bugunStr
+      const tutarStr = Number(payment.amount).toLocaleString('tr-TR')
+      const dueDateStr = formatTarih(payment.due_date)
+      const tesisAdi = tenantNameMap.get(payment.tenant_id) ?? 'YiSA-S Tesis'
+
+      const title = gecikmisMi ? 'Gecikmiş Aidat Hatırlatması' : 'Aidat Hatırlatması'
+      const pushBody = gecikmisMi
+        ? `${cocukAdi} için ${tutarStr} TL tutarında ödemenizin son tarihi (${dueDateStr}) geçmiştir. Lütfen en kısa sürede ödeme yapınız.`
+        : `${cocukAdi} için ${tutarStr} TL tutarında ödemenizin son tarihi: ${dueDateStr}. Veli panelinizden ödeme yapabilirsiniz.`
+
+      let anySent = false
+
+      // ─── Push bildirim gönder ─────────────────────────────────
       const subs = subsMap.get(veliId)
       if (!subs || subs.length === 0) {
         logRows.push({
@@ -194,58 +228,117 @@ export async function GET(req: NextRequest) {
           error_message: 'Aktif push aboneliği yok',
           tenant_id: payment.tenant_id,
         })
-        atlanan++
-        continue
-      }
+      } else {
+        let pushSent = false
+        for (const sub of subs) {
+          const pushSub: PushSubscriptionData = {
+            endpoint: sub.endpoint,
+            keys: { p256dh: sub.keys_p256dh, auth: sub.keys_auth },
+          }
 
-      const cocukAdi = [athlete.name, athlete.surname].filter(Boolean).join(' ')
-      const gecikmisMi = payment.due_date < bugunStr
-      const tutarStr = Number(payment.amount).toLocaleString('tr-TR')
-      const dueDateStr = formatTarih(payment.due_date)
+          const result = await sendPushNotification(pushSub, {
+            title,
+            body: pushBody,
+            notification_type: 'odeme_hatirlatma',
+            url: '/veli/odeme',
+          })
 
-      const title = gecikmisMi ? 'Gecikmiş Aidat Hatırlatması' : 'Aidat Hatırlatması'
-      const body = gecikmisMi
-        ? `${cocukAdi} için ${tutarStr} TL tutarında ödemenizin son tarihi (${dueDateStr}) geçmiştir. Lütfen en kısa sürede ödeme yapınız.`
-        : `${cocukAdi} için ${tutarStr} TL tutarında ödemenizin son tarihi: ${dueDateStr}. Veli panelinizden ödeme yapabilirsiniz.`
-
-      let pushSent = false
-      for (const sub of subs) {
-        const pushSub: PushSubscriptionData = {
-          endpoint: sub.endpoint,
-          keys: { p256dh: sub.keys_p256dh, auth: sub.keys_auth },
+          if (result.ok) {
+            pushSent = true
+          } else {
+            logRows.push({
+              payment_id: payment.id,
+              veli_user_id: veliId,
+              channel: 'push',
+              status: 'failed',
+              error_message: result.error ?? 'Bilinmeyen hata',
+              tenant_id: payment.tenant_id,
+            })
+          }
         }
 
-        const result = await sendPushNotification(pushSub, {
-          title,
-          body,
-          notification_type: 'odeme_hatirlatma',
-          url: '/veli/odeme',
-        })
-
-        if (result.ok) {
-          pushSent = true
-        } else {
+        if (pushSent) {
+          anySent = true
           logRows.push({
             payment_id: payment.id,
             veli_user_id: veliId,
             channel: 'push',
-            status: 'failed',
-            error_message: result.error ?? 'Bilinmeyen hata',
+            status: 'sent',
+            error_message: null,
             tenant_id: payment.tenant_id,
           })
         }
       }
 
-      if (pushSent) {
-        gonderilen++
+      // ─── Email gönder ─────────────────────────────────────────
+      const veliEmail = athlete.parent_email
+      if (!veliEmail || !emailConfigured) {
         logRows.push({
           payment_id: payment.id,
           veli_user_id: veliId,
-          channel: 'push',
-          status: 'sent',
-          error_message: null,
+          channel: 'email',
+          status: 'skipped',
+          error_message: !veliEmail ? 'Veli email adresi yok' : 'Email servisi yapılandırılmamış',
           tenant_id: payment.tenant_id,
         })
+      } else {
+        try {
+          const veliAd = athlete.parent_name ?? 'Sayın Veli'
+          const donem = payment.period_month && payment.period_year
+            ? `${AY_ISIMLERI[payment.period_month - 1] ?? ''} ${payment.period_year}`
+            : ''
+
+          const emailHtml = await render(
+            AidatHatirlatma({
+              veliAd,
+              sporcuAd: cocukAdi,
+              tesisAdi,
+              aidatTutari: `${tutarStr} TL`,
+              sonOdemeTarihi: dueDateStr,
+              donem,
+            })
+          )
+
+          const emailResult = await sendEmail(
+            veliEmail,
+            `${title} — ${cocukAdi}`,
+            emailHtml
+          )
+
+          if (emailResult.ok) {
+            anySent = true
+            logRows.push({
+              payment_id: payment.id,
+              veli_user_id: veliId,
+              channel: 'email',
+              status: 'sent',
+              error_message: null,
+              tenant_id: payment.tenant_id,
+            })
+          } else {
+            logRows.push({
+              payment_id: payment.id,
+              veli_user_id: veliId,
+              channel: 'email',
+              status: 'failed',
+              error_message: emailResult.error ?? 'Bilinmeyen hata',
+              tenant_id: payment.tenant_id,
+            })
+          }
+        } catch (emailErr) {
+          logRows.push({
+            payment_id: payment.id,
+            veli_user_id: veliId,
+            channel: 'email',
+            status: 'failed',
+            error_message: emailErr instanceof Error ? emailErr.message : String(emailErr),
+            tenant_id: payment.tenant_id,
+          })
+        }
+      }
+
+      if (anySent) {
+        gonderilen++
       } else {
         atlanan++
       }
@@ -271,6 +364,11 @@ export async function GET(req: NextRequest) {
     return NextResponse.json({ error: 'Sunucu hatası' }, { status: 500 })
   }
 }
+
+const AY_ISIMLERI = [
+  'Ocak', 'Şubat', 'Mart', 'Nisan', 'Mayıs', 'Haziran',
+  'Temmuz', 'Ağustos', 'Eylül', 'Ekim', 'Kasım', 'Aralık',
+]
 
 /** YYYY-MM-DD → "5 Mart 2026" formatına çevir */
 function formatTarih(tarih: string): string {
