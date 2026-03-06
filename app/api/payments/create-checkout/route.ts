@@ -75,6 +75,24 @@ export async function POST(req: NextRequest) {
       ? [athlete.name, athlete.surname].filter(Boolean).join(' ').trim() || 'Sporcu'
       : 'Sporcu'
 
+    // Atomik olarak durumu 'processing' yap — race condition önlemi
+    // Sadece bekliyor/gecikmis olan ödemeleri güncelle
+    const originalStatus = payment.status as string
+    const { data: updated, error: lockError } = await service
+      .from('package_payments')
+      .update({ status: 'processing', payment_method: 'kredi_karti_online' })
+      .eq('id', paymentId)
+      .eq('tenant_id', tenantId)
+      .in('status', ['bekliyor', 'gecikmis'])
+      .select('id')
+
+    if (lockError || !updated || updated.length === 0) {
+      return NextResponse.json(
+        { error: 'Bu ödeme için işlem başlatılamadı. Başka bir checkout devam ediyor olabilir.' },
+        { status: 409 }
+      )
+    }
+
     // Site URL'ini belirle
     const siteUrl = process.env.NEXT_PUBLIC_SITE_URL ?? `${req.nextUrl.protocol}//${req.nextUrl.host}`
 
@@ -91,15 +109,14 @@ export async function POST(req: NextRequest) {
     })
 
     if (result.error) {
+      // Stripe başarısız oldu — durumu geri al
+      await service
+        .from('package_payments')
+        .update({ status: originalStatus, payment_method: null })
+        .eq('id', paymentId)
+        .eq('tenant_id', tenantId)
       return NextResponse.json({ error: result.error }, { status: 500 })
     }
-
-    // Ödeme durumunu 'processing' olarak güncelle
-    await service
-      .from('package_payments')
-      .update({ status: 'processing', payment_method: 'stripe' })
-      .eq('id', paymentId)
-      .eq('tenant_id', tenantId)
 
     return NextResponse.json({
       ok: true,

@@ -56,7 +56,7 @@ export async function POST(req: NextRequest) {
         .from('package_payments')
         .update({
           status: 'odendi',
-          payment_method: 'stripe',
+          payment_method: 'kredi_karti_online',
           payment_date: new Date().toISOString().slice(0, 10),
           description: `Stripe checkout #${session.id.substring(0, 20)}`,
           receipt_no: (session.payment_intent as string | null) ?? session.id,
