@@ -13,6 +13,8 @@ CREATE TABLE IF NOT EXISTS sms_logs (
   created_at TIMESTAMPTZ NOT NULL DEFAULT now()
 );
 
+ALTER TABLE sms_logs ENABLE ROW LEVEL SECURITY;
+
 -- Performans indeksleri
 CREATE INDEX IF NOT EXISTS idx_sms_logs_tenant ON sms_logs(tenant_id);
 CREATE INDEX IF NOT EXISTS idx_sms_logs_created ON sms_logs(created_at DESC);

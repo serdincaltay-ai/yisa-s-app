@@ -18,7 +18,7 @@ function getTwilioClient() {
   const accountSid = process.env.TWILIO_ACCOUNT_SID
   const authToken = process.env.TWILIO_AUTH_TOKEN
   if (!accountSid || !authToken) {
-    throw new Error('TWILIO_ACCOUNT_SID ve TWILIO_AUTH_TOKEN ortam değişkenleri gerekli')
+    throw new Error('Twilio kimlik bilgileri yapılandırılmamış')
   }
   return twilio(accountSid, authToken)
 }
@@ -44,7 +44,7 @@ export async function sendSMS(
 ): Promise<SmsResult> {
   const fromNumber = process.env.TWILIO_PHONE_NUMBER
   if (!fromNumber) {
-    return { ok: false, error: 'TWILIO_PHONE_NUMBER ortam değişkeni gerekli' }
+    return { ok: false, error: 'SMS gönderici numarası yapılandırılmamış' }
   }
 
   // Numara temizle — sadece rakam ve + kalsın
