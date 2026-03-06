@@ -1,5 +1,6 @@
 /**
- * Franchise tesis ayarları: personel hedefleri, aidat kademeleri
+ * Franchise tesis ayarları: personel hedefleri, aidat kademeleri,
+ * branding (logo, renkler), sosyal medya, iletişim bilgileri
  */
 
 import { NextRequest, NextResponse } from 'next/server'
@@ -35,7 +36,7 @@ export async function GET() {
 
     const { data: tenant, error } = await service
       .from('tenants')
-      .select('id, name, slug, package_type, antrenor_hedef, temizlik_hedef, mudur_hedef, aidat_tiers, kredi_paketleri')
+      .select('id, name, slug, package_type, antrenor_hedef, temizlik_hedef, mudur_hedef, aidat_tiers, kredi_paketleri, logo_url, primary_color, secondary_color, accent_color, instagram_url, whatsapp_number, google_maps_url, facebook_url, twitter_url, phone, email, address, working_hours')
       .eq('id', tenantId)
       .single()
 
@@ -68,6 +69,16 @@ export async function PATCH(req: NextRequest) {
     if (typeof body.mudur_hedef === 'number') update.mudur_hedef = body.mudur_hedef
     if (body.aidat_tiers != null && typeof body.aidat_tiers === 'object') update.aidat_tiers = body.aidat_tiers
     if (Array.isArray(body.kredi_paketleri)) update.kredi_paketleri = body.kredi_paketleri
+
+    // Branding & renk paleti
+    const stringFields = [
+      'logo_url', 'primary_color', 'secondary_color', 'accent_color',
+      'instagram_url', 'whatsapp_number', 'google_maps_url', 'facebook_url', 'twitter_url',
+      'phone', 'email', 'address', 'working_hours',
+    ] as const
+    for (const field of stringFields) {
+      if (typeof body[field] === 'string') update[field] = body[field]
+    }
 
     if (Object.keys(update).length === 0) return NextResponse.json({ error: 'Güncellenecek alan yok' }, { status: 400 })
 

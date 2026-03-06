@@ -142,7 +142,7 @@ export default function FranchiseDashboard() {
           <SidebarItem icon={UserPlus} label="Personel (IK)" active={activeTab === "personel"} onClick={() => router.push("/personel")} />
           <SidebarItem icon={FileText} label="Raporlar" active={activeTab === "reports"} onClick={() => setActiveTab("reports")} />
           <SidebarItem icon={ShoppingCart} label="Magaza" active={activeTab === "magaza"} onClick={() => router.push("/magaza")} />
-          <SidebarItem icon={Settings} label="Ayarlar" active={activeTab === "settings"} onClick={() => setActiveTab("settings")} />
+          <SidebarItem icon={Settings} label="Ayarlar" active={activeTab === "settings"} onClick={() => router.push("/franchise/ayarlar")} />
         </nav>
 
         <div className="border-t border-sidebar-border p-4 space-y-2">
