@@ -18,7 +18,7 @@ const spec: Record<string, any> = {
   },
   servers: [
     { url: 'http://localhost:3000', description: 'Geliştirme' },
-    { url: 'https://app.yisa-s.com', description: 'Prodüksiyon' },
+    { url: 'https://{slug}.yisa-s.com', description: 'Prodüksiyon (Franchise)' },
   ],
   tags: [
     { name: 'Demo', description: 'Demo talepleri' },
