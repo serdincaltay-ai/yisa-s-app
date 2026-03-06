@@ -4,7 +4,7 @@ import React, { useEffect, useState, useCallback } from 'react'
 import Link from 'next/link'
 import { Card, CardContent } from '@/components/ui/card'
 import { VeliIntro } from '@/components/VeliIntro'
-import { Activity, Users, Calendar, Loader2, Coins, TrendingUp } from 'lucide-react'
+import { Activity, Users, Calendar, Loader2, Coins, TrendingUp, Bell } from 'lucide-react'
 
 type Child = {
   id: string
@@ -147,6 +147,10 @@ export default function VeliDashboardPage() {
           <Link href="/veli/duyurular" className="flex flex-col items-center gap-1 px-4 py-2 text-gray-500 hover:text-gray-700">
             <Calendar className="h-5 w-5" />
             <span className="text-xs">Duyurular</span>
+          </Link>
+          <Link href="/veli/bildirimler" className="flex flex-col items-center gap-1 px-4 py-2 text-gray-500 hover:text-gray-700">
+            <Bell className="h-5 w-5" />
+            <span className="text-xs">Bildirimler</span>
           </Link>
         </div>
       </nav>
