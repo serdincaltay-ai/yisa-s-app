@@ -72,6 +72,10 @@ export async function GET() {
     supabase.from('crm_contacts').select('id', { count: 'exact', head: true }).eq('source', 'manychat'),
   ])
 
+  if (demoCount.error || crmCount.error) {
+    return NextResponse.json({ status: 'error', message: 'Veri alınamadı.' }, { status: 500 })
+  }
+
   return NextResponse.json({
     status: 'ok',
     webhook: '/api/webhooks/manychat',

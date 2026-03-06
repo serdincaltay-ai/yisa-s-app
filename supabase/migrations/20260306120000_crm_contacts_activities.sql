@@ -29,12 +29,12 @@ CREATE INDEX IF NOT EXISTS idx_crm_contacts_created_at ON crm_contacts(created_a
 
 ALTER TABLE crm_contacts ENABLE ROW LEVEL SECURITY;
 
--- Herkes insert yapabilir (webhook, anon). SELECT: sadece service_role (RLS bypass).
+-- Herkes insert yapabilir (webhook, anon). SELECT/UPDATE/DELETE: sadece service_role.
 DROP POLICY IF EXISTS "Anyone can insert crm_contacts" ON crm_contacts;
 CREATE POLICY "Anyone can insert crm_contacts" ON crm_contacts FOR INSERT WITH CHECK (true);
 
 DROP POLICY IF EXISTS "Service can manage crm_contacts" ON crm_contacts;
-CREATE POLICY "Service can manage crm_contacts" ON crm_contacts FOR ALL USING (true) WITH CHECK (true);
+CREATE POLICY "Service can manage crm_contacts" ON crm_contacts FOR ALL USING (auth.role() = 'service_role') WITH CHECK (auth.role() = 'service_role');
 
 -- Trigger: updated_at
 CREATE OR REPLACE FUNCTION update_crm_contacts_updated_at() RETURNS TRIGGER AS $$
@@ -64,9 +64,9 @@ CREATE INDEX IF NOT EXISTS idx_crm_activities_created_at ON crm_activities(creat
 
 ALTER TABLE crm_activities ENABLE ROW LEVEL SECURITY;
 
--- Herkes insert yapabilir (webhook). SELECT: sadece service_role (RLS bypass).
+-- Herkes insert yapabilir (webhook). SELECT/UPDATE/DELETE: sadece service_role.
 DROP POLICY IF EXISTS "Anyone can insert crm_activities" ON crm_activities;
 CREATE POLICY "Anyone can insert crm_activities" ON crm_activities FOR INSERT WITH CHECK (true);
 
 DROP POLICY IF EXISTS "Service can manage crm_activities" ON crm_activities;
-CREATE POLICY "Service can manage crm_activities" ON crm_activities FOR ALL USING (true) WITH CHECK (true);
+CREATE POLICY "Service can manage crm_activities" ON crm_activities FOR ALL USING (auth.role() = 'service_role') WITH CHECK (auth.role() = 'service_role');
