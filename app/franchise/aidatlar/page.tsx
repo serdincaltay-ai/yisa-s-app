@@ -380,8 +380,8 @@ export default function FranchiseAidatlarPage() {
                         {p.status === 'pending' || p.status === 'overdue' ? (
                           <div className="flex gap-1">
                             <Button size="sm" variant="outline" onClick={() => handleMarkPaid(p.id)} disabled={sending}>Ödendi Yap</Button>
-                            <Button size="sm" onClick={() => handleStripeCheckout(p.id)} disabled={checkoutLoading !== null}>
-                              {checkoutLoading === p.id ? <Loader2 className="h-3 w-3 animate-spin mr-1" /> : <CreditCard className="h-3 w-3 mr-1" />}
+                            <Button size="sm" onClick={() => { setSelectedIds(new Set([p.id])); handleStripeCheckout() }} disabled={sending}>
+                              <CreditCard className="h-3 w-3 mr-1" />
                               Online Ödeme
                             </Button>
                           </div>

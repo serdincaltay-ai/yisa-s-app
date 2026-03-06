@@ -96,8 +96,12 @@ export default function VeliOdemePage() {
     .reduce((sum, p) => sum + p.amount, 0)
 
   return (
-    <div className="min-h-screen bg-zinc-950 pb-20">
-      <PanelHeader panelName="VELİ PANELİ" />
+    <div className="min-h-screen bg-white p-4 pb-24">
+      <header className="flex items-center gap-2 mb-6">
+        <Button variant="ghost" size="sm" asChild>
+          <Link href="/veli/dashboard"><ArrowLeft className="h-4 w-4" /> Geri</Link>
+        </Button>
+      </header>
 
       {callbackStatus === 'success' && (
         <Card className="border-green-500/50 bg-green-50 mb-6">
