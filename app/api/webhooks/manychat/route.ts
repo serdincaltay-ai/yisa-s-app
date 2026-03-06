@@ -193,12 +193,16 @@ export async function POST(req: NextRequest) {
 
     // ── 4. crm_activities: demo_created kaydı ──────────────────────────────
     if (contact?.id && demoData?.id) {
-      await supabase.from('crm_activities').insert({
+      const { error: demoActivityErr } = await supabase.from('crm_activities').insert({
         contact_id: contact.id,
         activity_type: 'demo_created',
         description: `Demo talebi otomatik oluşturuldu: ${demoData.id}`,
         meta: { demo_request_id: demoData.id },
       })
+
+      if (demoActivityErr) {
+        console.error('[manychat] crm_activities demo_created insert error:', demoActivityErr)
+      }
     }
 
     return NextResponse.json({
