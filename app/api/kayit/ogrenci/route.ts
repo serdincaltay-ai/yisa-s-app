@@ -104,12 +104,18 @@ export async function POST(req: NextRequest) {
           })
           if (!authError && authData?.user?.id) {
             parentUserId = authData.user.id
-            veliGeciciSifre = tempPassword
-            await service.from('user_tenants').insert({
+            const { error: utError } = await service.from('user_tenants').insert({
               user_id: parentUserId,
               tenant_id: tenantId,
               role: 'veli',
             })
+            if (!utError) {
+              veliGeciciSifre = tempPassword
+            } else {
+              // user_tenants insert başarısız — orphan önlemek için auth user sil
+              await service.auth.admin.deleteUser(parentUserId).catch(() => {})
+              parentUserId = null
+            }
           }
         }
       } catch {
