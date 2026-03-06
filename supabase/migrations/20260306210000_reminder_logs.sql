@@ -9,6 +9,9 @@ CREATE TABLE IF NOT EXISTS reminder_logs (
   sent_at TIMESTAMPTZ NOT NULL DEFAULT now()
 );
 
+-- RLS etkinleştir (sadece service role erişebilir)
+ALTER TABLE reminder_logs ENABLE ROW LEVEL SECURITY;
+
 -- Performans indeksleri
 CREATE INDEX IF NOT EXISTS idx_reminder_logs_payment ON reminder_logs(payment_id);
 CREATE INDEX IF NOT EXISTS idx_reminder_logs_veli ON reminder_logs(veli_user_id);

@@ -82,6 +82,8 @@ export async function GET(req: NextRequest) {
     )
 
     // pending + due_date <= bugün+7 olan ödemeleri bul
+    // TODO: Multi-tenant yapıda tenant_id filtresi eklenmeli.
+    // Şu an tek tenant olduğu için tüm ödemeler tek geçişte işleniyor.
     const { data: payments, error: payErr } = await service
       .from('payments')
       .select('id, athlete_id, amount, due_date, status, period_month, period_year')
