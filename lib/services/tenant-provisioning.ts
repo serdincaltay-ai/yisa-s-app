@@ -7,6 +7,9 @@
 import { createClient, type SupabaseClient } from '@supabase/supabase-js'
 import { generateTenantSlug, subdomainSlug } from '@/lib/utils/slug'
 import { CELF_DIRECTORATE_KEYS } from '@/lib/robots/celf-center'
+import { sendEmail } from '@/lib/email/resend'
+import { render } from '@react-email/components'
+import { Hosgeldiniz } from '@/lib/email/templates/hosgeldiniz'
 
 // ─── Types ───────────────────────────────────────────────────────────────────
 
@@ -359,6 +362,56 @@ async function triggerCelfStartup(ctx: ProvisioningContext): Promise<void> {
   }
 }
 
+// ─── Step 8: Send Welcome Email ──────────────────────────────────────────────
+
+/**
+ * Yeni tenant oluşturulduktan sonra franchise sahibine hoşgeldiniz emaili gönderir.
+ * RESEND_API_KEY tanımlı değilse sessizce atlar (non-fatal).
+ */
+async function sendWelcomeEmail(ctx: ProvisioningContext): Promise<void> {
+  const { demoRequest, subdomain, tempPassword } = ctx
+  const email = (demoRequest.email ?? '').trim().toLowerCase()
+  if (!email) {
+    ctx.stepsCompleted.push('welcome_email_skipped_no_email')
+    return
+  }
+
+  // RESEND_API_KEY yoksa sessizce atla
+  if (!process.env.RESEND_API_KEY) {
+    console.warn('[tenant-provisioning] RESEND_API_KEY yok, hoşgeldiniz emaili atlanıyor.')
+    ctx.stepsCompleted.push('welcome_email_skipped_no_key')
+    return
+  }
+
+  const ownerAd = demoRequest.name?.trim() || 'Sayın İşletme Sahibi'
+  const tesisAdi = demoRequest.name?.trim() || demoRequest.facility_type || 'Yeni Tesis'
+
+  try {
+    const html = await render(
+      Hosgeldiniz({
+        ownerAd,
+        tesisAdi,
+        loginEmail: email,
+        tempPassword: tempPassword ?? undefined,
+        subdomain: subdomain ?? undefined,
+      })
+    )
+
+    const result = await sendEmail(email, `YiSA-S'e Hoşgeldiniz - ${tesisAdi}`, html)
+
+    if (result.ok) {
+      ctx.stepsCompleted.push('welcome_email_sent')
+    } else {
+      console.error('[tenant-provisioning] Welcome email error:', result.error)
+      ctx.stepsCompleted.push('welcome_email_failed')
+    }
+  } catch (e) {
+    // Email gönderimi non-fatal — tenant hala kullanılabilir
+    console.error('[tenant-provisioning] Welcome email error:', e)
+    ctx.stepsCompleted.push('welcome_email_error')
+  }
+}
+
 // ─── Compensating Transaction (Rollback) ────────────────────────────────────
 
 async function rollback(ctx: ProvisioningContext, failedStep: string): Promise<void> {
@@ -449,6 +502,7 @@ export async function provisionTenant(demoRequestId: string): Promise<Provisioni
     { name: 'seed_data', fn: seedTenantData },
     { name: 'update_status', fn: markDemoRequestConverted },
     { name: 'celf_trigger', fn: triggerCelfStartup },
+    { name: 'welcome_email', fn: sendWelcomeEmail },
   ]
 
   for (const step of steps) {
