@@ -65,7 +65,7 @@ export async function POST(req: NextRequest) {
       const gecerlilikTarih = new Date(gecerlilik + 'T00:00:00').toLocaleDateString('tr-TR', {
         day: 'numeric', month: 'long', year: 'numeric',
       })
-      const bugun = new Date()
+      const bugun = new Date(new Date().toISOString().slice(0, 10) + 'T00:00:00')
       const gecerlilikDate = new Date(gecerlilik + 'T00:00:00')
       if (gecerlilikDate < bugun) {
         bodyText = `${cocukAdi} adlı sporcunuzun sağlık raporunun süresi ${gecerlilikTarih} tarihinde dolmuştur. Lütfen en kısa sürede yeni sağlık raporu temin ediniz.`
@@ -74,6 +74,17 @@ export async function POST(req: NextRequest) {
       }
     } else {
       bodyText = `${cocukAdi} adlı sporcunuz için güncel sağlık raporu gereklidir. Lütfen en kısa sürede sağlık raporu temin ediniz.`
+    }
+
+    // Velinin bildirim tercihini kontrol et
+    const { data: pref } = await service
+      .from('notification_preferences')
+      .select('belge_uyari')
+      .eq('user_id', veliId)
+      .maybeSingle()
+
+    if (pref && pref.belge_uyari === false) {
+      return NextResponse.json({ ok: false, error: 'Veli belge uyarı bildirimlerini devre dışı bırakmış.' })
     }
 
     // Velinin push subscription'larını getir
