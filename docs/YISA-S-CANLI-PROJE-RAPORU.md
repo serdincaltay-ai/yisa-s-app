@@ -4,7 +4,7 @@
 >
 > **Güncelleme kuralı:** İşi tamamladığınızda ilgili satırda **Durum** → Yapıldı veya Düzeltildi; **Son güncelleme** → bugünün tarihi (GG.AA.YYYY); **Not** → kısa açıklama yazın.
 
-**Son rapor güncellemesi:** 05.03.2026 — Veli paneli canlı veri testi (BJK users + parent bağlantısı) tamamlandı; tüm kaynak belgelerden yapılmayan iş maddeleri güncellendi.
+**Son rapor güncellemesi:** 05.03.2026 — 3 şablon sistemi, haftalık GRID, robot karşılama, paket fiyat güncellemesi, feneratasehir subdomain, veli canlı veri testi, Faz 3+7 tamamlama güncellemeleri eklendi.
 
 ---
 
