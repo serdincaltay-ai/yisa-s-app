@@ -59,6 +59,19 @@ export async function GET() {
     const bugunStr = bugun.toISOString().slice(0, 10)
     const yediGunStr = yediGunSonra.toISOString().slice(0, 10)
 
+    // Son 3 gün içinde hatırlatma gönderilmiş payment_id'leri bul (deduplication)
+    const ucGunOnce = new Date(bugun)
+    ucGunOnce.setDate(ucGunOnce.getDate() - 3)
+    const { data: recentLogs } = await service
+      .from('reminder_logs')
+      .select('payment_id')
+      .eq('status', 'sent')
+      .gte('sent_at', ucGunOnce.toISOString())
+
+    const recentlyRemindedIds = new Set(
+      (recentLogs ?? []).map((r: { payment_id: string }) => r.payment_id)
+    )
+
     // pending + due_date <= bugün+7 olan ödemeleri bul
     const { data: payments, error: payErr } = await service
       .from('payments')
@@ -130,6 +143,12 @@ export async function GET() {
     }> = []
 
     for (const payment of typedPayments) {
+      // Deduplication: son 3 günde zaten hatırlatma gönderilmişse atla
+      if (recentlyRemindedIds.has(payment.id)) {
+        atlanan++
+        continue
+      }
+
       const athlete = athleteMap.get(payment.athlete_id)
       if (!athlete?.parent_user_id) {
         atlanan++
