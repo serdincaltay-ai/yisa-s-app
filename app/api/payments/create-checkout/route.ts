@@ -1,10 +1,11 @@
 /**
  * Stripe Checkout Session olusturma
  * POST /api/payments/create-checkout
- * Body: { payment_ids: string[], success_url?: string, cancel_url?: string }
+ * Body: { payment_ids: string[] }
  *
  * Secilen bekleyen odemeler icin Stripe Checkout Session olusturur
  * ve checkout URL'i doner.
+ * Not: success_url ve cancel_url sunucu tarafinda belirlenir (open redirect onlemi).
  */
 
 import { NextRequest, NextResponse } from 'next/server'
@@ -57,6 +58,15 @@ export async function POST(req: NextRequest) {
       return NextResponse.json({ error: 'Odeme secilmedi (payment_ids bos)' }, { status: 400 })
     }
 
+    // Stripe metadata 500 karakter limiti: UUID (36 char) + virgul = ~37 char, max ~13 odeme
+    const MAX_PAYMENTS_PER_CHECKOUT = 13
+    if (paymentIds.length > MAX_PAYMENTS_PER_CHECKOUT) {
+      return NextResponse.json(
+        { error: `Tek seferde en fazla ${MAX_PAYMENTS_PER_CHECKOUT} odeme secebilirsiniz.` },
+        { status: 400 }
+      )
+    }
+
     const service = getSupabaseService()
     if (!service) {
       return NextResponse.json({ error: 'Sunucu yapilandirma hatasi' }, { status: 500 })
@@ -102,8 +112,8 @@ export async function POST(req: NextRequest) {
       })
 
       const origin = req.headers.get('origin') || req.headers.get('referer')?.replace(/\/[^/]*$/, '') || 'https://app.yisa-s.com'
-      const successUrl = body.success_url || `${origin}/veli/odeme?status=success`
-      const cancelUrl = body.cancel_url || `${origin}/veli/odeme?status=cancel`
+      const successUrl = `${origin}/veli/odeme?status=success`
+      const cancelUrl = `${origin}/veli/odeme?status=cancel`
 
       const session = await stripe.checkout.sessions.create({
         mode: 'payment',
@@ -147,8 +157,8 @@ export async function POST(req: NextRequest) {
     })
 
     const origin = req.headers.get('origin') || req.headers.get('referer')?.replace(/\/[^/]*$/, '') || 'https://app.yisa-s.com'
-    const successUrl = body.success_url || `${origin}/veli/odeme?status=success`
-    const cancelUrl = body.cancel_url || `${origin}/veli/odeme?status=cancel`
+    const successUrl = `${origin}/veli/odeme?status=success`
+    const cancelUrl = `${origin}/veli/odeme?status=cancel`
 
     const session = await stripe.checkout.sessions.create({
       mode: 'payment',

@@ -47,13 +47,13 @@ export async function POST(req: NextRequest) {
         console.error('[stripe-webhook] Imza dogrulanamadi:', err)
         return NextResponse.json({ error: 'Webhook imza hatasi' }, { status: 400 })
       }
+    } else if (!webhookSecret) {
+      // Production'da STRIPE_WEBHOOK_SECRET zorunlu
+      console.error('[stripe-webhook] STRIPE_WEBHOOK_SECRET ayarlanmamis — guvenlik riski, istek reddedildi')
+      return NextResponse.json({ error: 'Webhook yapilandirma hatasi' }, { status: 500 })
     } else {
-      // Webhook secret yoksa (dev ortami) raw parse
-      try {
-        event = JSON.parse(body) as Stripe.Event
-      } catch {
-        return NextResponse.json({ error: 'Gecersiz JSON' }, { status: 400 })
-      }
+      // sig yok ama secret var — gecersiz istek
+      return NextResponse.json({ error: 'stripe-signature header eksik' }, { status: 400 })
     }
 
     if (event.type === 'checkout.session.completed') {
@@ -104,6 +104,7 @@ export async function POST(req: NextRequest) {
           })
           .eq('tenant_id', tenantId)
           .in('id', paymentIds)
+          .in('status', ['bekliyor', 'pending', 'overdue', 'gecikmis'])
 
         if (error) {
           console.error('[stripe-webhook] package_payments guncelleme hatasi:', error)
@@ -123,6 +124,7 @@ export async function POST(req: NextRequest) {
           })
           .eq('tenant_id', tenantId)
           .in('id', paymentIds)
+          .in('status', ['pending', 'overdue'])
 
         if (error) {
           console.error('[stripe-webhook] franchise_payments guncelleme hatasi:', error)
