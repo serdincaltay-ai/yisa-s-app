@@ -89,7 +89,7 @@ export async function deletePushSubscription(
 export async function upsertNotificationPreferences(params: {
   user_id: string
   yoklama_sonucu: boolean
-  odeme_hatirlama: boolean
+  odeme_hatirlatma: boolean
   duyuru: boolean
 }): Promise<{ error?: string }> {
   const db = getSupabaseServer()
@@ -101,7 +101,7 @@ export async function upsertNotificationPreferences(params: {
       {
         user_id: params.user_id,
         yoklama_sonucu: params.yoklama_sonucu,
-        odeme_hatirlama: params.odeme_hatirlama,
+        odeme_hatirlatma: params.odeme_hatirlatma,
         duyuru: params.duyuru,
       },
       { onConflict: 'user_id' }
@@ -115,7 +115,7 @@ export async function upsertNotificationPreferences(params: {
  * Kullanıcının bildirim tercihlerini getir
  */
 export async function getNotificationPreferences(userId: string): Promise<{
-  data?: { yoklama_sonucu: boolean; odeme_hatirlama: boolean; duyuru: boolean }
+  data?: { yoklama_sonucu: boolean;  odeme_hatirlatma: boolean; duyuru: boolean }
   error?: string
 }> {
   const db = getSupabaseServer()
@@ -123,14 +123,14 @@ export async function getNotificationPreferences(userId: string): Promise<{
 
   const { data, error } = await db
     .from('notification_preferences')
-    .select('yoklama_sonucu, odeme_hatirlama, duyuru')
+    .select('yoklama_sonucu, odeme_hatirlatma, duyuru')
     .eq('user_id', userId)
     .single()
 
   if (error && error.code !== 'PGRST116') return { error: error.message }
   return {
     data: data
-      ? { yoklama_sonucu: data.yoklama_sonucu, odeme_hatirlama: data.odeme_hatirlama, duyuru: data.duyuru }
-      : { yoklama_sonucu: true, odeme_hatirlama: true, duyuru: true },
+      ? { yoklama_sonucu: data.yoklama_sonucu, odeme_hatirlatma: data.odeme_hatirlatma, duyuru: data.duyuru }
+      : { yoklama_sonucu: true, odeme_hatirlatma: true, duyuru: true },
   }
 }

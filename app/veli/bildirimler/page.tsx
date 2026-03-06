@@ -7,7 +7,7 @@ import { Bell, BellOff, BellRing, CheckCircle, AlertCircle, Loader2 } from 'luci
 
 interface Preferences {
   yoklama_sonucu: boolean
-  odeme_hatirlama: boolean
+  odeme_hatirlatma: boolean
   duyuru: boolean
 }
 
@@ -20,7 +20,7 @@ const NOTIF_CONFIG: { key: NotifKey; label: string; description: string }[] = [
     description: 'Çocuğunuzun yoklama bilgisi güncellendiğinde bildirim alın.',
   },
   {
-    key: 'odeme_hatirlama',
+    key: 'odeme_hatirlatma',
     label: 'Ödeme Hatırlatma',
     description: 'Ödeme tarihiniz yaklaştığında hatırlatma bildirimi alın.',
   },
@@ -51,7 +51,7 @@ export default function VeliBildirimlerPage() {
   const [subscribed, setSubscribed] = useState(false)
   const [preferences, setPreferences] = useState<Preferences>({
     yoklama_sonucu: true,
-    odeme_hatirlama: true,
+    odeme_hatirlatma: true,
     duyuru: true,
   })
   const [loading, setLoading] = useState(true)

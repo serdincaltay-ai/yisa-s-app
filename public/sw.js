@@ -162,13 +162,13 @@ self.addEventListener('fetch', (event) => {
 // Push bildirimleri — bildirim türlerine göre ikon ve renk
 const NOTIFICATION_ICONS = {
   yoklama_sonucu: '/icon-192.png',
-  odeme_hatirlama: '/icon-192.png',
+  odeme_hatirlatma: '/icon-192.png',
   duyuru: '/icon-192.png'
 }
 
 const NOTIFICATION_DEFAULTS = {
   yoklama_sonucu: { title: 'Yoklama Sonucu', body: 'Yoklama bilgisi güncellendi.', url: '/veli/dashboard' },
-  odeme_hatirlama: { title: 'Ödeme Hatırlatma', body: 'Ödeme tarihiniz yaklaşıyor.', url: '/veli/odeme' },
+  odeme_hatirlatma: { title: 'Ödeme Hatırlatma', body: 'Ödeme tarihiniz yaklaşıyor.', url: '/veli/odeme' },
   duyuru: { title: 'Yeni Duyuru', body: 'Yeni bir duyuru yayınlandı.', url: '/veli/duyurular' }
 }
 
@@ -195,7 +195,7 @@ self.addEventListener('push', (event) => {
         url: data.url || defaults.url,
         notification_type: notifType,
       },
-      actions: notifType === 'odeme_hatirlama'
+      actions: notifType === 'odeme_hatirlatma'
         ? [{ action: 'pay', title: 'Ödemeye Git' }]
         : [{ action: 'open', title: 'Aç' }]
     }

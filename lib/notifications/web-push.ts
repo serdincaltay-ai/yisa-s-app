@@ -22,11 +22,11 @@ export interface PushSubscriptionData {
   }
 }
 
-export type NotificationType = 'yoklama_sonucu' | 'odeme_hatirlama' | 'duyuru'
+export type NotificationType = 'yoklama_sonucu' | 'odeme_hatirlatma' | 'duyuru'
 
 export const NOTIFICATION_TYPE_LABELS: Record<NotificationType, string> = {
   yoklama_sonucu: 'Yoklama Sonucu',
-  odeme_hatirlama: 'Ödeme Hatırlatma',
+  odeme_hatirlatma: 'Ödeme Hatırlatma',
   duyuru: 'Duyuru',
 }
 
