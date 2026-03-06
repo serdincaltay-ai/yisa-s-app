@@ -164,6 +164,21 @@ const FENER_DERS_PROGRAMI: DersProgramiItem[] = [
   { gun: 'Cumartesi', saat: '13:00', brans: 'Basketbol', seviye: 'U14' },
 ]
 
+/** Kartal Cimnastik ders programı */
+const KARTAL_DERS_PROGRAMI: DersProgramiItem[] = [
+  { gun: 'Pazartesi', saat: '15:00', brans: 'Artistik Cimnastik', seviye: 'Mini (5-7)' },
+  { gun: 'Pazartesi', saat: '17:00', brans: 'Ritmik Cimnastik', seviye: 'Başlangıç' },
+  { gun: 'Salı', saat: '15:00', brans: 'Artistik Cimnastik', seviye: 'Midi (8-12)' },
+  { gun: 'Salı', saat: '17:00', brans: 'Ritmik Cimnastik', seviye: 'İleri' },
+  { gun: 'Çarşamba', saat: '15:00', brans: 'Artistik Cimnastik', seviye: 'Mini (5-7)' },
+  { gun: 'Çarşamba', saat: '17:00', brans: 'Artistik Cimnastik', seviye: 'İleri' },
+  { gun: 'Perşembe', saat: '15:00', brans: 'Ritmik Cimnastik', seviye: 'Mini (5-7)' },
+  { gun: 'Perşembe', saat: '17:00', brans: 'Artistik Cimnastik', seviye: 'Midi (8-12)' },
+  { gun: 'Cuma', saat: '15:00', brans: 'Ritmik Cimnastik', seviye: 'Midi (8-12)' },
+  { gun: 'Cumartesi', saat: '10:00', brans: 'Artistik Cimnastik', seviye: 'Tüm Gruplar' },
+  { gun: 'Cumartesi', saat: '13:00', brans: 'Ritmik Cimnastik', seviye: 'Tüm Gruplar' },
+]
+
 /** Tenant konfigürasyonları */
 export const TENANT_CONFIGS: Record<string, TenantConfig> = {
   bjktuzlacimnastik: {
@@ -272,6 +287,8 @@ export function getDersProgrami(slug: string): DersProgramiItem[] {
     case 'feneratasehir':
     case 'fenerbahceatasehir':
       return FENER_DERS_PROGRAMI
+    case 'kartalcimnastik':
+      return KARTAL_DERS_PROGRAMI
     default:
       return BJK_DERS_PROGRAMI
   }
