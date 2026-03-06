@@ -94,6 +94,7 @@ export async function upsertNotificationPreferences(params: {
   yoklama_sonucu: boolean
   odeme_hatirlatma: boolean
   duyuru: boolean
+  belge_uyari?: boolean
 }): Promise<{ error?: string }> {
   const db = getSupabaseServer()
   if (!db) return { error: 'Supabase bağlantısı yok' }
@@ -106,6 +107,7 @@ export async function upsertNotificationPreferences(params: {
         yoklama_sonucu: params.yoklama_sonucu,
         odeme_hatirlatma: params.odeme_hatirlatma,
         duyuru: params.duyuru,
+        belge_uyari: params.belge_uyari ?? true,
       },
       { onConflict: 'user_id' }
     )
@@ -118,7 +120,7 @@ export async function upsertNotificationPreferences(params: {
  * Kullanıcının bildirim tercihlerini getir
  */
 export async function getNotificationPreferences(userId: string): Promise<{
-  data?: { yoklama_sonucu: boolean;  odeme_hatirlatma: boolean; duyuru: boolean }
+  data?: { yoklama_sonucu: boolean; odeme_hatirlatma: boolean; duyuru: boolean; belge_uyari: boolean }
   error?: string
 }> {
   const db = getSupabaseServer()
@@ -126,14 +128,14 @@ export async function getNotificationPreferences(userId: string): Promise<{
 
   const { data, error } = await db
     .from('notification_preferences')
-    .select('yoklama_sonucu, odeme_hatirlatma, duyuru')
+    .select('yoklama_sonucu, odeme_hatirlatma, duyuru, belge_uyari')
     .eq('user_id', userId)
     .single()
 
   if (error && error.code !== 'PGRST116') return { error: error.message }
   return {
     data: data
-      ? { yoklama_sonucu: data.yoklama_sonucu, odeme_hatirlatma: data.odeme_hatirlatma, duyuru: data.duyuru }
-      : { yoklama_sonucu: true, odeme_hatirlatma: true, duyuru: true },
+      ? { yoklama_sonucu: data.yoklama_sonucu, odeme_hatirlatma: data.odeme_hatirlatma, duyuru: data.duyuru, belge_uyari: data.belge_uyari ?? true }
+      : { yoklama_sonucu: true, odeme_hatirlatma: true, duyuru: true, belge_uyari: true },
   }
 }
