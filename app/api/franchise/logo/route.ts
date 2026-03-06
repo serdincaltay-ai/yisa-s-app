@@ -92,7 +92,7 @@ export async function POST(req: NextRequest) {
       .from('tenant-logos')
       .getPublicUrl(filePath)
 
-    const logoUrl = publicUrlData.publicUrl
+    const logoUrl = `${publicUrlData.publicUrl}?t=${Date.now()}`
 
     // tenants tablosunu güncelle
     const { error: updateError } = await service
