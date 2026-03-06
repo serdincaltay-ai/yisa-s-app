@@ -128,6 +128,7 @@ export default function KayitGorevlisiPage() {
 
     setSaving(true)
     setToast(null)
+    setVeliGeciciSifre(null)
     try {
       const res = await fetch('/api/kayit/ogrenci', {
         method: 'POST',

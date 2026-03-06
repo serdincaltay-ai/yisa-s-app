@@ -95,7 +95,7 @@ export async function POST(req: NextRequest) {
           }
         } else {
           // Yeni auth kullanici olustur (gecici sifre ile)
-          const tempPassword = `Yisa${Date.now().toString(36)}`
+          const tempPassword = `Yisa${crypto.randomUUID().slice(0, 8)}`
           const { data: authData, error: authError } = await service.auth.admin.createUser({
             email: veliEmail,
             password: tempPassword,
