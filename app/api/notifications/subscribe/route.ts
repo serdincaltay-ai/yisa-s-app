@@ -51,7 +51,7 @@ export async function POST(req: NextRequest) {
 
     if (existing) {
       // Update existing subscription
-      await supabase
+      const { error: updateErr } = await supabase
         .from('push_subscriptions')
         .update({
           keys_p256dh: subscription.keys.p256dh,
@@ -60,6 +60,11 @@ export async function POST(req: NextRequest) {
           updated_at: new Date().toISOString(),
         })
         .eq('id', existing.id)
+
+      if (updateErr) {
+        console.error('[notifications/subscribe] Update error:', updateErr)
+        return NextResponse.json({ error: 'Abonelik güncelleme sırasında hata.' }, { status: 500 })
+      }
     } else {
       // Insert new subscription
       const { error: insertErr } = await supabase.from('push_subscriptions').insert({

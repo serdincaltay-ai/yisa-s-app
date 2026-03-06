@@ -39,7 +39,7 @@ export interface SendNotificationPayload {
 
 export const NOTIFICATION_TYPE_LABELS: Record<NotificationType, string> = {
   yoklama_sonucu: 'Yoklama Sonucu',
-  odeme_hatirlatma: 'Odeme Hatirlatma',
+  odeme_hatirlatma: 'Ödeme Hatırlatma',
   duyuru: 'Duyuru',
 }
 
