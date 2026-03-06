@@ -6,6 +6,10 @@
     {
       "path": "/api/coo/run-due",
       "schedule": "0 2 * * *"
+    },
+    {
+      "path": "/api/coo/aidat-hatirlatma",
+      "schedule": "0 9 * * *"
     }
   ]
 }
