@@ -42,7 +42,7 @@ test.describe('Demo Formu (/demo)', () => {
     await page.locator('button[type="submit"]').click()
 
     // Basari mesaji goruntulenmeli
-    await expect(page.locator('text=Basvurunuz alindi')).toBeVisible({ timeout: 10_000 })
+    await expect(page.locator('text=Ba\u015fvurunuz al\u0131nd\u0131')).toBeVisible({ timeout: 10_000 })
   })
 
   test('API hatasi durumunda alert gosterilmeli', async ({ page }) => {
