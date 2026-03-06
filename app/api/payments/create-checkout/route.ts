@@ -35,7 +35,7 @@ export async function POST(req: NextRequest) {
 
     // Ödeme kaydını getir
     const url = process.env.NEXT_PUBLIC_SUPABASE_URL ?? process.env.SUPABASE_URL
-    const key = process.env.SUPABASE_SERVICE_ROLE_KEY ?? process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY
+    const key = process.env.SUPABASE_SERVICE_ROLE_KEY
     if (!url || !key) {
       return NextResponse.json({ error: 'Sunucu yapılandırma hatası' }, { status: 500 })
     }
@@ -59,6 +59,13 @@ export async function POST(req: NextRequest) {
       return NextResponse.json(
         { error: 'Bu ödeme zaten tamamlanmış.' },
         { status: 400 }
+      )
+    }
+
+    if (payment.status === 'processing') {
+      return NextResponse.json(
+        { error: 'Bu ödeme için zaten bir checkout işlemi başlatılmış. Lütfen mevcut ödemeyi tamamlayın veya biraz bekleyin.' },
+        { status: 409 }
       )
     }
 

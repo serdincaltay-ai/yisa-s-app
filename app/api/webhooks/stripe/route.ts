@@ -43,7 +43,7 @@ export async function POST(req: NextRequest) {
 
       // Supabase service client
       const url = process.env.NEXT_PUBLIC_SUPABASE_URL ?? process.env.SUPABASE_URL
-      const key = process.env.SUPABASE_SERVICE_ROLE_KEY ?? process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY
+      const key = process.env.SUPABASE_SERVICE_ROLE_KEY
       if (!url || !key) {
         console.error('[Stripe Webhook] Supabase yapılandırması eksik')
         return NextResponse.json({ error: 'Sunucu yapılandırma hatası' }, { status: 500 })
@@ -59,7 +59,7 @@ export async function POST(req: NextRequest) {
           payment_method: 'stripe',
           payment_date: new Date().toISOString().slice(0, 10),
           description: `Stripe checkout #${session.id.substring(0, 20)}`,
-          receipt_no: session.payment_intent as string ?? session.id,
+          receipt_no: (session.payment_intent as string | null) ?? session.id,
         })
         .eq('id', paymentId)
         .eq('tenant_id', tenantId)
