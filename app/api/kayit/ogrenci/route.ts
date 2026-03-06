@@ -137,7 +137,8 @@ export async function POST(req: NextRequest) {
       .single()
 
     if (athleteError) {
-      return NextResponse.json({ error: athleteError.message }, { status: 500 })
+      console.error('[kayit/ogrenci] athleteError:', athleteError.message)
+      return NextResponse.json({ error: 'Sporcu kaydı oluşturulamadı' }, { status: 500 })
     }
 
     // --- 3) Ilk aidat kaydi (package_payments) ---
