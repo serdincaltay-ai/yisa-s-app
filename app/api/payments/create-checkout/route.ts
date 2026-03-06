@@ -13,6 +13,13 @@ import { createCheckoutSession } from '@/lib/stripe/client'
 export const dynamic = 'force-dynamic'
 
 export async function POST(req: NextRequest) {
+  // Rollback için dış scope'ta tanımla
+  // eslint-disable-next-line @typescript-eslint/no-explicit-any
+  let service: any = null
+  let paymentId = ''
+  let tenantId = ''
+  let originalStatus = ''
+
   try {
     // Auth kontrolü
     const supabase = await createClient()
@@ -21,13 +28,14 @@ export async function POST(req: NextRequest) {
       return NextResponse.json({ error: 'Giriş gerekli' }, { status: 401 })
     }
 
-    const tenantId = await getTenantIdWithFallback(user.id, req)
-    if (!tenantId) {
+    const resolvedTenantId = await getTenantIdWithFallback(user.id, req)
+    if (!resolvedTenantId) {
       return NextResponse.json({ error: 'Tenant atanmamış' }, { status: 403 })
     }
+    tenantId = resolvedTenantId
 
     const body = await req.json()
-    const paymentId = typeof body.payment_id === 'string' ? body.payment_id.trim() : ''
+    paymentId = typeof body.payment_id === 'string' ? body.payment_id.trim() : ''
 
     if (!paymentId) {
       return NextResponse.json({ error: 'payment_id alanı gerekli.' }, { status: 400 })
@@ -40,13 +48,22 @@ export async function POST(req: NextRequest) {
       return NextResponse.json({ error: 'Sunucu yapılandırma hatası' }, { status: 500 })
     }
 
-    const service = createServiceClient(url, key)
-    const { data: payment, error: paymentError } = await service
+    service = createServiceClient(url, key)
+
+    const { data: rawPayment, error: paymentError } = await service
       .from('payments')
       .select('id, amount, status, athlete_id, athletes(name, surname)')
       .eq('id', paymentId)
       .eq('tenant_id', tenantId)
       .single()
+
+    const payment = rawPayment as {
+      id: string
+      amount: number
+      status: string
+      athlete_id: string
+      athletes: { name?: string; surname?: string } | null
+    } | null
 
     if (paymentError || !payment) {
       return NextResponse.json(
@@ -70,14 +87,14 @@ export async function POST(req: NextRequest) {
     }
 
     // Sporcu adını al
-    const athlete = payment.athletes as { name?: string; surname?: string } | null
+    const athlete = payment.athletes
     const athleteName = athlete
       ? [athlete.name, athlete.surname].filter(Boolean).join(' ').trim() || 'Sporcu'
       : 'Sporcu'
 
     // Atomik olarak durumu 'processing' yap — race condition önlemi
     // Sadece pending/overdue olan ödemeleri güncelle
-    const originalStatus = payment.status as string
+    originalStatus = payment.status
     const { data: updated, error: lockError } = await service
       .from('payments')
       .update({ status: 'processing', payment_method: 'kart' })
@@ -104,6 +121,7 @@ export async function POST(req: NextRequest) {
       currency: 'try',
       tenantId,
       userId: user.id,
+      originalStatus,
       successUrl: `${siteUrl}/veli/odeme?success=true&payment_id=${paymentId}`,
       cancelUrl: `${siteUrl}/veli/odeme?cancelled=true`,
     })
@@ -124,6 +142,16 @@ export async function POST(req: NextRequest) {
       url: result.url,
     })
   } catch (e) {
+    // Rollback: status zaten 'processing' yapıldıysa geri al
+    if (service && paymentId && tenantId && originalStatus) {
+      await service
+        .from('payments')
+        .update({ status: originalStatus, payment_method: null })
+        .eq('id', paymentId)
+        .eq('tenant_id', tenantId)
+        .eq('status', 'processing')
+        .catch(() => {}) // Rollback hatası orijinal hatayı maskelemesin
+    }
     console.error('[create-checkout]', e)
     const err = e instanceof Error ? e.message : String(e)
     return NextResponse.json({ error: 'Checkout oluşturma hatası', detail: err }, { status: 500 })
