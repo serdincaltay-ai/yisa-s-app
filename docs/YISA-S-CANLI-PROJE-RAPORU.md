@@ -6,6 +6,7 @@
 
 **Son rapor güncellemesi:** 05.03.2026 — Kullanıcı paneli tasarım kilidi (koyu tema + alt nav) ve Tesis sayfaları (3 şablon, ders programı grid, fiyat kartları, premium özellikler) tamamlandı.
 **Son rapor güncellemesi:** 05.03.2026 — 3 şablon sistemi, haftalık GRID, robot karşılama, paket fiyat güncellemesi, feneratasehir subdomain, veli canlı veri testi, Faz 3+7 tamamlama güncellemeleri eklendi.
+**Son rapor güncellemesi:** 06.03.2026 — ManyChat webhook + CRM tabloları (PR #59), Vitest test altyapısı + 140 E2E test (PR #60), Stripe ödeme entegrasyonu (PR #62+#64), Backup stratejisi (PR #84). Genel ilerleme ~%95.
 
 ---
 
@@ -25,7 +26,7 @@
 
 *Kaynak: YISA_S_V0_YOL_HARITASI.md. Kod tabanı (tenant-yisa-s, app-yisa-s, yisa-s-com) incelenerek adım adım değerlendirildi. Detay: YISA-S-7-FAZ-DURUMU.md.*
 
-### Faz 1 — Vitrin + Demo + Tesis Sayfaları (~%95)
+### Faz 1 — Vitrin + Demo + Tesis Sayfaları + ManyChat (~%97)
 
 | Faz | Adım | Madde / iş | Durum | Son güncelleme | Not |
 |-----|-------|------------|--------|----------------|-----|
@@ -35,7 +36,7 @@
 | Faz 1 | 1.4 | GET /api/demo-requests (patron listesi) | Yapıldı | 05.03.2026 | tenant-yisa-s/app/api/demo-requests/route.ts |
 | Faz 1 | 1.5 | Onay/Red (approve/reject) | Yapıldı | 05.03.2026 | POST action=decide → provisionTenant() / rejectDemoRequest() |
 | Faz 1 | 1.6 | Onay kuyruğu sayfası | Yapıldı | 05.03.2026 | patron/onay-kuyrugu + api/onay-kuyrugu |
-| Faz 1 | — | ManyChat entegrasyonu | Yapılacak | 05.03.2026 | Webhook/bot bağlantısı kodda yok |
+| ~~Faz 1~~ | ~~—~~ | ~~ManyChat entegrasyonu~~ | **Yapıldı** | 06.03.2026 | **PR #59** — /api/webhooks/manychat: HMAC-SHA256, crm_contacts + crm_activities + demo_requests, RLS service_role |
 | Faz 1 | — | Vitrin sayfaları (ozellikler, fiyatlandirma, hakkimizda vb.) | Yapıldı | 05.03.2026 | yisa-s-com/app: 10+ sayfa mevcut |
 | Faz 1 | — | Tesis sayfaları 3 şablon sistemi (standard/medium/premium) | **Yapıldı** | 05.03.2026 | tenant-yisa-s: 3 şablon + config + GRID + robot |
 | Faz 1 | — | Haftalık ders programı GRID bileşeni | **Yapıldı** | 05.03.2026 | WeeklyScheduleGrid.tsx: saatler×günler, renk kodlu |
@@ -52,14 +53,14 @@
 | Faz 2 | — | feneratasehir subdomain desteği | **Yapıldı** | 05.03.2026 | FRANCHISE_SUBDOMAINS_DEFAULT'a eklendi |
 | Faz 2 | — | Rollback / compensating transaction | Yapıldı | 05.03.2026 | rollback() fonksiyonu mevcut |
 
-### Faz 3 — Güvenlik Robotu MVP (~%80)
+### Faz 3 — Güvenlik Robotu MVP (~%85)
 
 | Faz | Adım | Madde / iş | Durum | Son güncelleme | Not |
 |-----|-------|------------|--------|----------------|-----|
 | Faz 3 | 3.1 | Audit log tablosu + API | Yapıldı | 05.03.2026 | security_logs, createSecurityLog(), api/security |
 | Faz 3 | 3.2 | RLS politikaları (tüm tablolar) | Yapıldı | 05.03.2026 | 006_rls_policies.sql (1539 satır) — kapsamlı |
-| Faz 3 | 3.3 | Güvenlik paneli (dashboard UI) | Yapılacak | 05.03.2026 | API endpoint var; ayrı güvenlik dashboard sayfası yok |
-| Faz 3 | — | 3 Duvar sistemi tam entegrasyonu | İşleniyor | 05.03.2026 | forbidden-zones.ts, patron-lock.ts, siber-guvenlik.ts mevcut; tam entegrasyon eksik |
+| Faz 3 | 3.3 | Güvenlik paneli (dashboard UI) | **Yapıldı** | 05.03.2026 | /dashboard/guvenlik sayfası oluşturuldu (3 duvar kartları, alarm istatistikleri, log listesi) |
+| Faz 3 | — | 3 Duvar sistemi tam entegrasyonu | **Yapıldı** | 05.03.2026 | uc-duvar.ts birleşik middleware: 3 duvar kontrol, API, dashboard |
 
 ### Faz 4 — Veri Robotu / Şablon Havuzu (~%90)
 
@@ -83,18 +84,19 @@
 | Faz 5 | — | Ders programı | Yapıldı | 05.03.2026 | panel/program, api/franchise/schedule |
 | Faz 5 | — | Personel yönetimi | Yapıldı | 05.03.2026 | api/franchise/personel, api/franchise/staff |
 
-### Faz 6 — Veli Paneli MVP (~%95)
+### Faz 6 — Veli Paneli MVP + Stripe Ödeme (~%97)
 
 | Faz | Adım | Madde / iş | Durum | Son güncelleme | Not |
 |-----|-------|------------|--------|----------------|-----|
 | Faz 6 | 6.1 | Veli paneli sayfaları | Yapıldı | 05.03.2026 | app/veli: dashboard, cocuk, gelisim, mesajlar, odeme, duyurular, kredi, giris |
 | Faz 6 | — | Veli API'leri | Yapıldı | 05.03.2026 | api/veli: children, attendance, payments, messages, health, gelisim, schedule, movements, ai-insights |
+| Faz 6 | — | Stripe ödeme entegrasyonu (Checkout Session + Webhook) | **Yapıldı** | 06.03.2026 | **PR #62+#64** — lib/stripe/client.ts, create-checkout, webhook (completed+expired), processing status lock, veli/franchise UI |
 | Faz 6 | — | Bildirim / push notification | Yapılacak | 05.03.2026 | Push notification altyapısı yok |
 | Faz 6 | — | Veli paneli canlı veri testi (BJK parent bağlantısı + auth) | **Yapıldı** | 05.03.2026 | 2 test veli kullanıcısı oluşturuldu; 3 sporcu parent_user_id ile bağlandı; demo auth → gerçek signInWithPassword; user_tenants role='veli' eklendi |
 | Faz 6 | — | Kullanıcı paneli tasarım kilidi (Veli + Antrenör koyu tema, kutucuk layout, alt nav) | **Yapıldı** | 05.03.2026 | PanelBottomNav + PanelHeader shared bileşenler; tüm veli/antrenör sayfaları zinc-950 koyu tema; Antrenör sidebar→bottom nav; Veli ders programı sayfası |
 | Faz 6 | — | Tesis web sayfaları (BJK Tuzla + Fener Atasehir) | **Yapıldı** | 05.03.2026 | 3 şablon (standart/orta/premium); haftalık ders programı grid; paket fiyatları; premium: robot karşılama + randevu modal |
 
-### Faz 7 — CELF Zinciri + Başlangıç Görevleri (~%80)
+### Faz 7 — CELF Zinciri + Başlangıç Görevleri + E2E Testler (~%90)
 
 | Faz | Adım | Madde / iş | Durum | Son güncelleme | Not |
 |-----|-------|------------|--------|----------------|-----|
@@ -102,7 +104,8 @@
 | Faz 7 | — | 15 direktörlük CELF yapısı | Yapıldı | 05.03.2026 | celf-center.ts, celf-config-merged.ts, hierarchy.ts |
 | Faz 7 | — | CEO/COO/CIO robot | Yapıldı | 05.03.2026 | ceo-robot.ts, coo-robot.ts, cio-robot.ts |
 | Faz 7 | — | Patron onay → CELF tetik uçtan uca akış | Yapıldı | 05.03.2026 | provisionTenant zincirinde Step 7 (triggerCelfStartup) ile sim_updates → CELF tetikleme bağlandı |
-| Faz 7 | — | Görev sonuçlarının dashboard'a yansıması | İşleniyor | 05.03.2026 | task_results arşivleme var; dashboard gösterimi kısmen |
+| Faz 7 | — | Görev sonuçlarının dashboard'a yansıması | **Yapıldı** | 05.03.2026 | Raporlar sayfası genişletildi: özet, dağılım, filtre |
+| Faz 7 | — | Vitest test altyapısı + CELF E2E testler (140 test) | **Yapıldı** | 06.03.2026 | **PR #60** — 3 suite: provisioning (7), patron chain (10), directorate routing (123); mock Supabase client |
 
 ---
 
@@ -113,7 +116,7 @@
 | # | Kaynak dosya | Madde / iş | Durum | Son güncelleme | Not |
 |---|---------------|-------------|--------|----------------|-----|
 | 1.1 | YISA_S_V0_YOL_HARITASI | 7 faz tanımı ve adım planı | Mevcut | 05.03.2026 | 7 faz docs/ içinde tanımlı; adım bazlı değerlendirme yukarıda |
-| 1.2 | YISA_S_V0_YOL_HARITASI | ManyChat / WhatsApp bot entegrasyonu | Yapılacak | 05.03.2026 | Vitrin chat bot bağlantısı henüz yok |
+| 1.2 | YISA_S_V0_YOL_HARITASI | ManyChat / WhatsApp bot entegrasyonu | **Yapıldı** | 06.03.2026 | **PR #59** — ManyChat webhook + crm_contacts + crm_activities |
 | 1.3 | YISA_S_V0_YOL_HARITASI_v2 | Gelişim ölçüm sistemi (referans değerler, yaş bazlı analiz) | **Yapıldı** | 05.03.2026 | Faz 4 tamamlandı — 3 tablo, 3 API, WHO/TGF seed |
 | 1.4 | YISA_S_VIZYON_HARITASI | CELF zinciri tam otomasyon (boşta robot yok) | İşleniyor | 05.03.2026 | Başlangıç görev motoru var; uçtan uca otomasyon test edilmeli |
 | 1.5 | YISA_S_TAM_YOL_HARITASI_DEGERLENDIRME | Mobil uygulama / PWA optimizasyonu | Yapılacak | 05.03.2026 | icon.svg PWA var; native mobil uygulama planlanmamış |
@@ -153,7 +156,7 @@
 | 3.10 | TENANT_YAPILACAKLAR | Aidat hatırlatma / toplu düzenleme | Yapılacak | 05.03.2026 | franchise/aidatlar sayfası mevcut; hatırlatma mekanizması eksik |
 | 3.11 | TENANT_YAPILACAKLAR | İletişim modülü (duyurular, anketler, eğitmen-veli mesajlaşma) | İşleniyor | 05.03.2026 | franchise/iletisim ve mesajlar var; anket yok |
 | 3.12 | TENANT_YAPILACAKLAR | Belge yönetimi (sağlık raporu geçerlilik uyarıları, veli yükleme) | İşleniyor | 05.03.2026 | franchise/belgeler mevcut; geçerlilik uyarı mekanizması eksik |
-| 3.13 | TENANT_YAPILACAKLAR | Veli online aidat ödeme (İyzico/Paratika entegrasyonu) | Yapılacak | 05.03.2026 | Ödeme UI var; payment gateway entegrasyonu yok |
+| 3.13 | TENANT_YAPILACAKLAR | Veli online aidat ödeme (Stripe entegrasyonu) | **Yapıldı** | 06.03.2026 | **PR #62+#64** — Stripe Checkout Session + Webhook + expired handler; processing status lock; veli + franchise UI |
 | 3.14 | GOREV_SONLANDIRMA | API anahtarları .env'de tanımlı (AI asistanlar çalışsın) | İşleniyor | 05.03.2026 | Supabase anahtarları mevcut; AI provider anahtarları ortamda kontrol edilmeli |
 | 3.15 | MIGRATION_EKSIK | Eksik kolonlar ve migration uyumu | İşleniyor | 05.03.2026 | Bazı eksik kolonlar raporlanmış; TEK_SEFERDE ile giderilmesi önerilmiş |
 | 3.16 | ROL_PANEL_ANAYASA | 13 rol tanımı ve panel eşlemesi | Yapıldı | 05.03.2026 | resolve-role.ts + panel yönlendirmesi mevcut |

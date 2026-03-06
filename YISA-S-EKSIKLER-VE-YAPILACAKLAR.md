@@ -91,21 +91,23 @@
 
 ## B. EKSIKLER VE SORUNLAR
 
-### B1. Test Altyapisi (KRITIK - HIC YOK)
-- **Hicbir repoda test dosyasi yok** (unit test, integration test, e2e test)
-- Test framework'u kurulmamis (Jest, Vitest, Playwright, Cypress)
-- `package.json`'larda test script'i yok
-- CI/CD pipeline'da test asamasi yok
-- **Etki:** Refactoring ve yeni ozellik eklerken regresyon riski cok yuksek
+### B1. Test Altyapisi (KISMEN COZULDU — PR #60)
+- ~~**Hicbir repoda test dosyasi yok**~~ → **tenant-yisa-s'de Vitest kuruldu, 140 test yazildi**
+- ~~Test framework'u kurulmamis~~ → **Vitest + v8 coverage + mock Supabase client eklendi**
+- ~~`package.json`'larda test script'i yok~~ → **test, test:watch, test:coverage scriptleri eklendi**
+- CI/CD pipeline'da test asamasi yok (hala eksik)
+- **Mevcut testler:** CELF pipeline E2E (3 suite: provisioning 7, patron chain 10, directorate routing 123)
+- **Hala eksik:** app-yisa-s ve yisa-s-com'da test yok; Playwright e2e testleri yok
+- **Etki:** Kismen azaltildi — CELF pipeline regresyon korumasi var; diger modullerde risk devam ediyor
 
-### B2. Odeme Sistemi (KRITIK - ENTEGRASYON YOK)
-- `.env.example`'da Stripe ve PayTR degiskenleri tanimli
-- **Ancak hicbir API route'unda gercek odeme entegrasyonu yok**
-- Stripe webhook handler yok
-- PayTR callback handler yok
-- Odeme onay/iptal akisi implemente edilmemis
-- `payments` tablosu var ama API baglantisi yok
-- **Etki:** Franchise'lardan aidat/odeme tahsilati yapilamiyor
+### B2. Odeme Sistemi (COZULDU — PR #62 + PR #64)
+- ~~`.env.example`'da Stripe ve PayTR degiskenleri tanimli~~ → **Stripe entegrasyonu tamamlandi**
+- ~~**Ancak hicbir API route'unda gercek odeme entegrasyonu yok**~~ → **POST /api/payments/create-checkout + POST /api/webhooks/stripe**
+- ~~Stripe webhook handler yok~~ → **checkout.session.completed + checkout.session.expired handler eklendi**
+- ~~Odeme onay/iptal akisi implemente edilmemis~~ → **processing status lock + atomic rollback + orijinal durum geri yukleme**
+- ~~`payments` tablosu var ama API baglantisi yok~~ → **Veli (/veli/odeme) + Franchise (/franchise/aidatlar) UI entegrasyonu**
+- **Kalan:** PayTR entegrasyonu yapilmadi (sadece Stripe); gercek Stripe hesabi ile uctan uca test yapilmali
+- **Etki:** ~~Franchise'lardan aidat/odeme tahsilati yapilamiyor~~ → **Stripe ile online odeme alinabilir**
 
 ### B3. SMS Sistemi (EKSIK - ENTEGRASYON KISMI)
 - `lib/sms-provider.ts` dosyasi var (TODO iceriyor)
@@ -172,12 +174,13 @@
 - Database query optimizasyonu (index'ler) belirsiz
 - **Etki:** Sayfa yukleme sureleri optimize olmayabilir
 
-### B12. Backup / Disaster Recovery (EKSIK)
-- Veritabani yedekleme stratejisi tanimli degil
-- Supabase otomatik backup konfigurasyonu belirsiz
-- Disaster recovery plani yok
-- Rollback proseduru dokumante edilmemis
-- **Etki:** Veri kaybi durumunda geri donus plani yok
+### B12. Backup / Disaster Recovery (KISMEN COZULDU — PR #84)
+- ~~Veritabani yedekleme stratejisi tanimli degil~~ → **docs/BACKUP-STRATEJISI.md olusturuldu**
+- ~~Supabase otomatik backup konfigurasyonu belirsiz~~ → **Supabase gunluk otomatik backup + haftalik pg_dump stratejisi dokumante edildi**
+- ~~Disaster recovery plani yok~~ → **Rollback proseduru ve migration geri alma adimlari dokumante edildi**
+- ~~Rollback proseduru dokumante edilmemis~~ → **/api/admin/backup-check endpoint + Vercel cron (Pazartesi 03:00 UTC)**
+- **Kalan:** pg_dump scriptinin gercek ortamda kurulumu; backup depolama alaninin yapilandirilmasi
+- **Etki:** ~~Veri kaybi durumunda geri donus plani yok~~ → **Strateji ve izleme mevcut; tam otomasyon icin ek yapilandirma gerekli**
 
 ---
 
@@ -187,8 +190,8 @@
 
 | # | Gorev | Oncelik | Repo | Tahmini Sure |
 |---|-------|---------|------|--------------|
-| 1 | **Odeme entegrasyonu** (Stripe veya PayTR) | P0 | tenant-yisa-s | 3-5 gun |
-| 2 | **Test altyapisi kurulumu** (Vitest + Playwright) | P0 | Tum repolar | 2-3 gun |
+| ~~1~~ | ~~**Odeme entegrasyonu** (Stripe veya PayTR)~~ | ~~P0~~ | ~~tenant-yisa-s~~ | **COZULDU (PR #62+#64)** — Stripe Checkout + Webhook |
+| ~~2~~ | ~~**Test altyapisi kurulumu** (Vitest + Playwright)~~ | ~~P0~~ | ~~tenant-yisa-s~~ | **KISMEN COZULDU (PR #60)** — Vitest + 140 test (diger repolar + Playwright hala eksik) |
 | 3 | **Sentry hata izleme** entegrasyonu | P0 | Tum repolar | 1 gun |
 | 4 | **CI/CD pipeline** (app-yisa-s + yisa-s-com) | P1 | app-yisa-s, yisa-s-com | 1 gun |
 
@@ -207,7 +210,7 @@
 
 | # | Gorev | Oncelik | Repo | Tahmini Sure |
 |---|-------|---------|------|--------------|
-| 11 | **Backup stratejisi** ve disaster recovery plani | P2 | - | 2 gun |
+| ~~11~~ | ~~**Backup stratejisi** ve disaster recovery plani~~ | ~~P2~~ | ~~-~~ | **KISMEN COZULDU (PR #84)** — Dokumantasyon + API + cron (tam otomasyon icin ek yapilandirma gerekli) |
 | 12 | **Performans optimizasyonu** (bundle analysis, lazy loading) | P2 | Tum repolar | 3-5 gun |
 | 13 | **Veli mobil deneyimi** iyilestirme (PWA) | P3 | tenant-yisa-s | 5 gun |
 | 14 | **Raporlama modulu** (franchise performans, gelir/gider) | P3 | tenant-yisa-s | 5-7 gun |
@@ -360,8 +363,8 @@
 #### Kategori 1: KRITIK EKSIKLER (Gelir/Guvenlik Etkili)
 | # | Eksik | Mevcut Durum | Hedef | Oncelik |
 |---|-------|-------------|-------|--------|
-| 1 | **Odeme Entegrasyonu** | .env'de Stripe/PayTR degiskenleri var, API route yok | Stripe webhook + PayTR callback + odeme onay/iptal akisi | P0 |
-| 2 | **Test Altyapisi** | Hicbir repoda test dosyasi yok | Vitest (unit) + Playwright (e2e) + CI'da test | P0 |
+| ~~1~~ | ~~**Odeme Entegrasyonu**~~ | ~~.env'de Stripe/PayTR degiskenleri var, API route yok~~ | **COZULDU (PR #62+#64)** — Stripe Checkout Session + Webhook + Veli/Franchise UI | ~~P0~~ |
+| ~~2~~ | ~~**Test Altyapisi**~~ | ~~Hicbir repoda test dosyasi yok~~ | **KISMEN (PR #60)** — Vitest + 140 CELF E2E test; Playwright + diger repolar hala eksik | ~~P0~~ |
 | 3 | **Hata Izleme** | SENTRY_DSN tanimli ama entegrasyon yok | Sentry gercek entegrasyonu + error boundary + merkezi hata raporlama | P0 |
 | 4 | **CI/CD Pipeline** | Sadece tenant-yisa-s'de workflows var | 3 repoda da lint + build + test + Sentry release | P1 |
 
@@ -379,7 +382,7 @@
 |---|-------|-------------|-------|--------|
 | 10 | **API Dokumantasyonu** | Yok | Swagger/OpenAPI tum endpointler icin | P2 |
 | 11 | **Performans Optimizasyonu** | unoptimized: true (app-yisa-s), bundle analysis yok | Image optimization, lazy loading, code splitting, DB index'ler | P2 |
-| 12 | **Backup / Disaster Recovery** | Yok | Veritabani yedekleme stratejisi + rollback proseduru | P2 |
+| ~~12~~ | ~~**Backup / Disaster Recovery**~~ | ~~Yok~~ | **KISMEN (PR #84)** — Strateji dokumantasyonu + backup-check API + cron; tam otomasyon icin ek yapilandirma gerekli | ~~P2~~ |
 | 13 | **Gelistirici Onboarding** | Kismi (ENV_REHBERI var) | Tam onboarding rehberi + JSDoc/TSDoc + README'ler | P2 |
 
 #### Kategori 4: GELECEK OZELLIKLER
@@ -405,10 +408,10 @@
 | **Vitrin Sitesi** | 75% | 100% | Analytics, SEO iyilestirme, i18n |
 | **Franchise Paneli** | 65% | 100% | Odeme, SMS, push notification |
 | **Veli/Antrenor** | 60% | 100% | Bildirimler, PWA, raporlama |
-| **Test & Kalite** | 5% | 100% | Test altyapisi, CI, monitoring |
+| **Test & Kalite** | 25% | 100% | ~~Test altyapisi~~ Vitest kuruldu; CI, monitoring, Playwright eksik |
 | **Dokumantasyon** | 40% | 100% | API docs, onboarding, JSDoc |
-| **GENEL TAMAMLANMA** | **~62%** | **100%** | **~38% eksik** |
+| **GENEL TAMAMLANMA** | **~68%** | **100%** | **~32% eksik** |
 
 ---
 
-> **Sonuc:** Proje mimarisi ve temel islevler buyuk olcude tamamlanmis durumda. En kritik eksikler odeme entegrasyonu (gelir etkisi), test altyapisi (kalite) ve hata izleme (production guvenilirlik) alanlarindadir. Bu 3 eksik P0 oncelikle kapatilmalidir.
+> **Sonuc:** Proje mimarisi ve temel islevler buyuk olcude tamamlanmis durumda. ~~En kritik eksikler odeme entegrasyonu (gelir etkisi), test altyapisi (kalite) ve hata izleme (production guvenilirlik) alanlarindadir.~~ **Guncelleme (06.03.2026):** Odeme entegrasyonu Stripe ile cozuldu (PR #62+#64), test altyapisi Vitest ile kismen cozuldu (PR #60, 140 test). Kalan en kritik eksik: hata izleme (Sentry), diger repolarda test, ve CI/CD pipeline genisletmesi.
