@@ -42,8 +42,8 @@ export async function POST(req: NextRequest) {
 
     const service = createServiceClient(url, key)
     const { data: payment, error: paymentError } = await service
-      .from('package_payments')
-      .select('id, amount, currency, status, athlete_id, athletes(name, surname)')
+      .from('payments')
+      .select('id, amount, status, athlete_id, athletes(name, surname)')
       .eq('id', paymentId)
       .eq('tenant_id', tenantId)
       .single()
@@ -55,7 +55,7 @@ export async function POST(req: NextRequest) {
       )
     }
 
-    if (payment.status === 'odendi' || payment.status === 'paid') {
+    if (payment.status === 'paid') {
       return NextResponse.json(
         { error: 'Bu ödeme zaten tamamlanmış.' },
         { status: 400 }
@@ -76,14 +76,14 @@ export async function POST(req: NextRequest) {
       : 'Sporcu'
 
     // Atomik olarak durumu 'processing' yap — race condition önlemi
-    // Sadece bekliyor/gecikmis olan ödemeleri güncelle
+    // Sadece pending/overdue olan ödemeleri güncelle
     const originalStatus = payment.status as string
     const { data: updated, error: lockError } = await service
-      .from('package_payments')
-      .update({ status: 'processing', payment_method: 'kredi_karti_online' })
+      .from('payments')
+      .update({ status: 'processing', payment_method: 'kart' })
       .eq('id', paymentId)
       .eq('tenant_id', tenantId)
-      .in('status', ['bekliyor', 'gecikmis'])
+      .in('status', ['pending', 'overdue'])
       .select('id')
 
     if (lockError || !updated || updated.length === 0) {
@@ -101,7 +101,7 @@ export async function POST(req: NextRequest) {
       paymentId: payment.id as string,
       athleteName,
       amount: Number(payment.amount),
-      currency: (payment.currency as string) ?? 'try',
+      currency: 'try',
       tenantId,
       userId: user.id,
       successUrl: `${siteUrl}/veli/odeme?success=true&payment_id=${paymentId}`,
@@ -111,7 +111,7 @@ export async function POST(req: NextRequest) {
     if (result.error) {
       // Stripe başarısız oldu — durumu geri al
       await service
-        .from('package_payments')
+        .from('payments')
         .update({ status: originalStatus, payment_method: null })
         .eq('id', paymentId)
         .eq('tenant_id', tenantId)

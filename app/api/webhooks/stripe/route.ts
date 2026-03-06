@@ -29,7 +29,17 @@ export async function POST(req: NextRequest) {
       return NextResponse.json({ error: 'Webhook imza doğrulaması başarısız' }, { status: 400 })
     }
 
-    // Sadece checkout.session.completed olayını işle
+    // Supabase service client
+    const url = process.env.NEXT_PUBLIC_SUPABASE_URL ?? process.env.SUPABASE_URL
+    const key = process.env.SUPABASE_SERVICE_ROLE_KEY
+    if (!url || !key) {
+      console.error('[Stripe Webhook] Supabase yapılandırması eksik')
+      return NextResponse.json({ error: 'Sunucu yapılandırma hatası' }, { status: 500 })
+    }
+
+    const service = createServiceClient(url, key)
+
+    // checkout.session.completed — ödeme başarılı
     if (event.type === 'checkout.session.completed') {
       const session = event.data.object
 
@@ -41,25 +51,14 @@ export async function POST(req: NextRequest) {
         return NextResponse.json({ received: true, warning: 'Metadata eksik' })
       }
 
-      // Supabase service client
-      const url = process.env.NEXT_PUBLIC_SUPABASE_URL ?? process.env.SUPABASE_URL
-      const key = process.env.SUPABASE_SERVICE_ROLE_KEY
-      if (!url || !key) {
-        console.error('[Stripe Webhook] Supabase yapılandırması eksik')
-        return NextResponse.json({ error: 'Sunucu yapılandırma hatası' }, { status: 500 })
-      }
-
-      const service = createServiceClient(url, key)
-
-      // Ödeme durumunu 'odendi' olarak güncelle
+      // Ödeme durumunu 'paid' olarak güncelle (payments tablosu)
       const { error: updateError } = await service
-        .from('package_payments')
+        .from('payments')
         .update({
-          status: 'odendi',
-          payment_method: 'kredi_karti_online',
-          payment_date: new Date().toISOString().slice(0, 10),
-          description: `Stripe checkout #${session.id.substring(0, 20)}`,
-          receipt_no: (session.payment_intent as string | null) ?? session.id,
+          status: 'paid',
+          payment_method: 'kart',
+          paid_date: new Date().toISOString().slice(0, 10),
+          notes: `Stripe checkout #${session.id.substring(0, 20)}`,
         })
         .eq('id', paymentId)
         .eq('tenant_id', tenantId)
@@ -70,6 +69,30 @@ export async function POST(req: NextRequest) {
       }
 
       console.log(`[Stripe Webhook] Ödeme başarılı: payment_id=${paymentId}, session=${session.id}`)
+    }
+
+    // checkout.session.expired — checkout süresi doldu, durumu geri al
+    if (event.type === 'checkout.session.expired') {
+      const session = event.data.object
+
+      const paymentId = session.metadata?.payment_id
+      const tenantId = session.metadata?.tenant_id
+
+      if (paymentId && tenantId) {
+        // Sadece 'processing' durumundakileri geri al
+        const { error: revertError } = await service
+          .from('payments')
+          .update({ status: 'pending', payment_method: null })
+          .eq('id', paymentId)
+          .eq('tenant_id', tenantId)
+          .eq('status', 'processing')
+
+        if (revertError) {
+          console.error('[Stripe Webhook] Durum geri alma hatası:', revertError.message)
+        } else {
+          console.log(`[Stripe Webhook] Checkout süresi doldu, durum geri alındı: payment_id=${paymentId}`)
+        }
+      }
     }
 
     // Diğer olayları sessizce kabul et
