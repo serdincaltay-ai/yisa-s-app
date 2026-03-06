@@ -16,14 +16,32 @@ export async function POST(req: NextRequest) {
   try {
     const supabase = await createClient()
     const { data: { user } } = await supabase.auth.getUser()
-    if (!user) return NextResponse.json({ error: 'Giris gerekli' }, { status: 401 })
+    if (!user) return NextResponse.json({ error: 'Giriş gerekli' }, { status: 401 })
 
     const tenantId = await getTenantIdWithFallback(user.id, req)
-    if (!tenantId) return NextResponse.json({ error: 'Tenant atanamadi' }, { status: 403 })
+    if (!tenantId) return NextResponse.json({ error: 'Tenant atanamadı' }, { status: 403 })
+
+    const url = process.env.NEXT_PUBLIC_SUPABASE_URL ?? process.env.SUPABASE_URL
+    const key = process.env.SUPABASE_SERVICE_ROLE_KEY ?? process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY
+    if (!url || !key) return NextResponse.json({ error: 'Sunucu hatası' }, { status: 500 })
+
+    const service = createServiceClient(url, key)
+
+    // --- Rol yetki kontrolü ---
+    const { data: userTenant } = await service
+      .from('user_tenants')
+      .select('role')
+      .eq('user_id', user.id)
+      .eq('tenant_id', tenantId)
+      .maybeSingle()
+    const allowedRoles = ['kayit_gorevlisi', 'patron', 'franchise', 'firma_sahibi', 'tesis_sahibi', 'isletme_muduru', 'admin', 'manager']
+    if (!userTenant || !allowedRoles.includes(userTenant.role)) {
+      return NextResponse.json({ error: 'Yetkiniz yok' }, { status: 403 })
+    }
 
     const body = await req.json()
 
-    // --- Ogrenci bilgileri ---
+    // --- Öğrenci bilgileri ---
     const ad = typeof body.ad === 'string' ? body.ad.trim() : ''
     const soyad = typeof body.soyad === 'string' ? body.soyad.trim() : ''
     const dogumTarihi = typeof body.dogum_tarihi === 'string' && body.dogum_tarihi ? body.dogum_tarihi : null
@@ -35,17 +53,11 @@ export async function POST(req: NextRequest) {
     const veliTelefon = typeof body.veli_telefon === 'string' ? body.veli_telefon.trim() : ''
     const veliEmail = typeof body.veli_email === 'string' ? body.veli_email.trim() : ''
 
-    // --- Ilk aidat ---
+    // --- İlk aidat ---
     const aidatTutar = typeof body.aidat_tutar === 'number' ? body.aidat_tutar : (parseFloat(String(body.aidat_tutar ?? 0)) || 0)
 
-    if (!ad) return NextResponse.json({ error: 'Ogrenci adi zorunludur' }, { status: 400 })
-    if (!veliAd) return NextResponse.json({ error: 'Veli adi zorunludur' }, { status: 400 })
-
-    const url = process.env.NEXT_PUBLIC_SUPABASE_URL ?? process.env.SUPABASE_URL
-    const key = process.env.SUPABASE_SERVICE_ROLE_KEY ?? process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY
-    if (!url || !key) return NextResponse.json({ error: 'Sunucu hatasi' }, { status: 500 })
-
-    const service = createServiceClient(url, key)
+    if (!ad) return NextResponse.json({ error: 'Öğrenci adı zorunludur' }, { status: 400 })
+    if (!veliAd) return NextResponse.json({ error: 'Veli adı zorunludur' }, { status: 400 })
 
     // --- 1) Veli user_tenants iliskilendirme ---
     let parentUserId: string | null = null
@@ -142,7 +154,7 @@ export async function POST(req: NextRequest) {
           taksit_no: 1,
           toplam_taksit: 1,
           status: 'bekliyor',
-          description: 'Ilk aidat - kayit',
+          description: 'İlk aidat - kayıt',
         })
         .select('id, amount, status')
         .single()
@@ -158,6 +170,6 @@ export async function POST(req: NextRequest) {
     })
   } catch (e) {
     console.error('[kayit/ogrenci POST]', e)
-    return NextResponse.json({ error: 'Sunucu hatasi' }, { status: 500 })
+    return NextResponse.json({ error: 'Sunucu hatası' }, { status: 500 })
   }
 }

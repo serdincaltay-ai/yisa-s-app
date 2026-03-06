@@ -46,7 +46,7 @@ const BRANSLAR = [
   'Ritmik Cimnastik',
   'Basketbol',
   'Voleybol',
-  'Yuzme',
+  'Yüzme',
   'Futbol',
   'Tenis',
   'Atletizm',
@@ -117,11 +117,11 @@ export default function KayitGorevlisiPage() {
   /* kaydet */
   const handleSubmit = async () => {
     if (!ogrenci.ad.trim()) {
-      setToast({ message: 'Ogrenci adi zorunludur', type: 'error' })
+      setToast({ message: 'Öğrenci adı zorunludur', type: 'error' })
       return
     }
     if (!veli.veli_ad.trim()) {
-      setToast({ message: 'Veli adi zorunludur', type: 'error' })
+      setToast({ message: 'Veli adı zorunludur', type: 'error' })
       return
     }
 
@@ -139,7 +139,7 @@ export default function KayitGorevlisiPage() {
       })
       const data = await res.json()
       if (data.ok) {
-        setToast({ message: `${ogrenci.ad} ${ogrenci.soyad} basariyla kaydedildi!`, type: 'success' })
+        setToast({ message: `${ogrenci.ad} ${ogrenci.soyad} başarıyla kaydedildi!`, type: 'success' })
         setSonKayitlar((prev) => [
           {
             ad: ogrenci.ad,
@@ -151,10 +151,10 @@ export default function KayitGorevlisiPage() {
         ])
         resetForm()
       } else {
-        setToast({ message: data.error || 'Kayit basarisiz', type: 'error' })
+        setToast({ message: data.error || 'Kayıt başarısız', type: 'error' })
       }
     } catch {
-      setToast({ message: 'Baglanti hatasi', type: 'error' })
+      setToast({ message: 'Bağlantı hatası', type: 'error' })
     } finally {
       setSaving(false)
       if (toastTimerRef.current) clearTimeout(toastTimerRef.current)
@@ -178,14 +178,14 @@ export default function KayitGorevlisiPage() {
           <div>
             <h1 className="text-2xl font-bold flex items-center gap-2">
               <UserPlus className="h-6 w-6 text-primary" />
-              Ogrenci Kayit
+              Öğrenci Kayıt
             </h1>
             <p className="text-muted-foreground text-sm">
-              Yeni ogrenci kaydini bu formdan olusturun
+              Yeni öğrenci kaydını bu formdan oluşturun
             </p>
           </div>
           <Badge variant="outline" className="text-xs self-start">
-            Kayit Gorevlisi
+            Kayıt Görevlisi
           </Badge>
         </header>
 
@@ -208,7 +208,7 @@ export default function KayitGorevlisiPage() {
           <CardHeader className="pb-3">
             <CardTitle className="flex items-center gap-2 text-lg">
               <Baby className="h-5 w-5 text-blue-500" />
-              Ogrenci Bilgileri
+              Öğrenci Bilgileri
             </CardTitle>
           </CardHeader>
           <CardContent className="space-y-4">
@@ -219,7 +219,7 @@ export default function KayitGorevlisiPage() {
                   <User className="absolute left-3 top-2.5 h-4 w-4 text-muted-foreground" />
                   <Input
                     id="ad"
-                    placeholder="Ogrenci adi"
+                    placeholder="Öğrenci adı"
                     value={ogrenci.ad}
                     onChange={(e) => updateOgrenci('ad', e.target.value)}
                     className="pl-9"
@@ -230,7 +230,7 @@ export default function KayitGorevlisiPage() {
                 <Label htmlFor="soyad">Soyad</Label>
                 <Input
                   id="soyad"
-                  placeholder="Ogrenci soyadi"
+                  placeholder="Öğrenci soyadı"
                   value={ogrenci.soyad}
                   onChange={(e) => updateOgrenci('soyad', e.target.value)}
                 />
@@ -238,7 +238,7 @@ export default function KayitGorevlisiPage() {
             </div>
             <div className="grid grid-cols-1 sm:grid-cols-3 gap-4">
               <div className="space-y-1.5">
-                <Label htmlFor="dogum_tarihi">Dogum Tarihi</Label>
+                <Label htmlFor="dogum_tarihi">Doğum Tarihi</Label>
                 <div className="relative">
                   <Calendar className="absolute left-3 top-2.5 h-4 w-4 text-muted-foreground" />
                   <Input
@@ -258,13 +258,13 @@ export default function KayitGorevlisiPage() {
                   onChange={(e) => updateOgrenci('cinsiyet', e.target.value)}
                   className="flex h-10 w-full rounded-md border border-input bg-background px-3 py-2 text-sm ring-offset-background focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring"
                 >
-                  <option value="">Seciniz</option>
+                  <option value="">Seçiniz</option>
                   <option value="E">Erkek</option>
-                  <option value="K">Kiz</option>
+                  <option value="K">Kız</option>
                 </select>
               </div>
               <div className="space-y-1.5">
-                <Label htmlFor="brans">Brans</Label>
+                <Label htmlFor="brans">Branş</Label>
                 <div className="relative">
                   <Trophy className="absolute left-3 top-2.5 h-4 w-4 text-muted-foreground" />
                   <select
@@ -273,7 +273,7 @@ export default function KayitGorevlisiPage() {
                     onChange={(e) => updateOgrenci('brans', e.target.value)}
                     className="flex h-10 w-full rounded-md border border-input bg-background pl-9 pr-3 py-2 text-sm ring-offset-background focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring"
                   >
-                    <option value="">Brans seciniz</option>
+                    <option value="">Branş seçiniz</option>
                     {BRANSLAR.map((b) => (
                       <option key={b} value={b}>{b}</option>
                     ))}
@@ -294,12 +294,12 @@ export default function KayitGorevlisiPage() {
           </CardHeader>
           <CardContent className="space-y-4">
             <div className="space-y-1.5">
-              <Label htmlFor="veli_ad">Veli Adi Soyadi *</Label>
+              <Label htmlFor="veli_ad">Veli Adı Soyadı *</Label>
               <div className="relative">
                 <User className="absolute left-3 top-2.5 h-4 w-4 text-muted-foreground" />
                 <Input
                   id="veli_ad"
-                  placeholder="Veli adi soyadi"
+                  placeholder="Veli adı soyadı"
                   value={veli.veli_ad}
                   onChange={(e) => updateVeli('veli_ad', e.target.value)}
                   className="pl-9"
@@ -337,7 +337,7 @@ export default function KayitGorevlisiPage() {
               </div>
             </div>
             <p className="text-xs text-muted-foreground">
-              E-posta girilirse veli otomatik olarak sisteme kaydedilir ve veli paneline erisim saglanir.
+              E-posta girilirse veli otomatik olarak sisteme kaydedilir ve veli paneline erişim sağlanır.
             </p>
           </CardContent>
         </Card>
@@ -347,12 +347,12 @@ export default function KayitGorevlisiPage() {
           <CardHeader className="pb-3">
             <CardTitle className="flex items-center gap-2 text-lg">
               <Banknote className="h-5 w-5 text-amber-500" />
-              Ilk Aidat
+              İlk Aidat
             </CardTitle>
           </CardHeader>
           <CardContent>
             <div className="space-y-1.5">
-              <Label htmlFor="aidat_tutar">Aidat Tutari (TRY)</Label>
+              <Label htmlFor="aidat_tutar">Aidat Tutarı (TRY)</Label>
               <div className="relative">
                 <Banknote className="absolute left-3 top-2.5 h-4 w-4 text-muted-foreground" />
                 <Input
@@ -367,7 +367,7 @@ export default function KayitGorevlisiPage() {
                 />
               </div>
               <p className="text-xs text-muted-foreground">
-                Bos birakilirsa aidat kaydedilmez. Tutar girilirse &quot;bekliyor&quot; durumunda olusturulur.
+                Boş bırakılırsa aidat kaydedilmez. Tutar girilirse &quot;bekliyor&quot; durumunda oluşturulur.
               </p>
             </div>
           </CardContent>
@@ -385,7 +385,7 @@ export default function KayitGorevlisiPage() {
           ) : (
             <Save className="mr-2 h-5 w-5" />
           )}
-          Ogrenciyi Kaydet
+          Öğrenciyi Kaydet
         </Button>
 
         {/* son kayitlar */}
@@ -393,7 +393,7 @@ export default function KayitGorevlisiPage() {
           <Card>
             <CardHeader className="pb-3">
               <CardTitle className="text-sm font-medium text-muted-foreground">
-                Bu Oturumdaki Kayitlar
+                Bu Oturumdaki Kayıtlar
               </CardTitle>
             </CardHeader>
             <CardContent>
