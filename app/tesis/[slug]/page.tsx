@@ -102,6 +102,32 @@ const TESISLER: Record<string, TesisData> = {
             { soru: 'Online ödeme yapabilir miyim?', cevap: 'Evet, veli paneli üzerinden kredi kartı ile ödeme yapabilirsiniz.' },
     ],
   },
+  kartalcimnastik: {
+    adi: 'Kartal Cimnastik',
+    slug: 'kartalcimnastik',
+    slogan: 'Cimnastikte Güç ve Zarafet',
+    hakkimizda: 'Kartal Cimnastik Spor Kulübü, İstanbul Kartal bölgesinde artistik ve ritmik cimnastik dallarında profesyonel eğitim vermektedir. Deneyimli antrenör kadromuz ile 4-16 yaş arası çocuklarınızın sportif gelişimini destekliyoruz.',
+    konum: 'Kartal, İstanbul',
+    telefon: '+90 (530) 000 00 00',
+    email: 'info@kartalcimnastik.com',
+    sablon: 'standart',
+    branslar: [
+            { isim: 'Artistik Cimnastik', icon: 'dumbbell', aciklama: 'Artistik cimnastik eğitimi' },
+            { isim: 'Ritmik Cimnastik', icon: 'dumbbell', aciklama: 'Ritmik cimnastik eğitimi' },
+    ],
+    antrenorler: [
+            { isim: 'Serkan Yılmaz', brans: 'Artistik Cimnastik', deneyim: '10 yıl' },
+            { isim: 'Merve Aydın', brans: 'Ritmik Cimnastik', deneyim: '8 yıl' },
+    ],
+    duyurular: [
+            { tarih: '2026-03-01', baslik: 'Yeni Dönem Kayıtları Başladı', ozet: '2026 bahar dönemi için erken kayıt avantajlarından yararlanın.' },
+    ],
+    sss: [
+            { soru: 'Kayıt için ne gerekiyor?', cevap: 'Kimlik fotokopisi, 2 vesikalık fotoğraf ve sağlık raporu ile kayıt olabilirsiniz.' },
+            { soru: 'Deneme dersi var mı?', cevap: 'Evet, 1 ücretsiz deneme dersi hakkınız bulunmaktadır.' },
+            { soru: 'Kaç yaşından itibaren başlanabilir?', cevap: '4 yaşından itibaren cimnastik eğitimine başlanabilir.' },
+    ],
+  },
 }
 
 const BRANS_ICONS: Record<string, React.ElementType> = {
