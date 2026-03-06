@@ -125,8 +125,10 @@ export default function VeliBildirimlerPage() {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({
-          endpoint: subJson.endpoint,
-          keys: subJson.keys,
+          subscription: {
+            endpoint: subJson.endpoint,
+            keys: subJson.keys,
+          },
         }),
       })
 

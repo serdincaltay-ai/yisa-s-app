@@ -57,6 +57,7 @@ export async function getUserSubscriptions(
     .from('push_subscriptions')
     .select('*')
     .eq('user_id', userId)
+    .eq('is_active', true)
     .order('created_at', { ascending: false })
 
   if (error) return { error: error.message }
