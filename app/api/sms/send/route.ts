@@ -13,6 +13,12 @@ export const dynamic = 'force-dynamic'
 
 const MAX_MESSAGE_LEN = 480 // SMS segment sınırı (Türkçe karakter ile ~2 segment)
 
+// --- Basit in-memory rate limiter ---
+const RATE_LIMIT_WINDOW_MS = 60_000 // 1 dakika pencere
+const RATE_LIMIT_MAX = 10 // Pencere başına maks istek
+const rateBuckets = new Map<string, { count: number; resetAt: number }>()
+let rateBucketCleanCounter = 0
+
 export async function POST(req: NextRequest) {
   try {
     const auth = await requirePatronOrFlow()
@@ -25,7 +31,30 @@ export async function POST(req: NextRequest) {
       )
     }
 
-    const tenantId = await getTenantIdWithFallback(auth.user.id, req)
+    // Rate limiting — kullanıcı başına dakikada maks RATE_LIMIT_MAX istek
+    const userId = auth.user.id
+    const now = Date.now()
+    const bucket = rateBuckets.get(userId)
+    if (bucket && now < bucket.resetAt) {
+      if (bucket.count >= RATE_LIMIT_MAX) {
+        return NextResponse.json(
+          { error: `Çok fazla istek. Lütfen ${Math.ceil((bucket.resetAt - now) / 1000)} saniye bekleyin.` },
+          { status: 429 }
+        )
+      }
+      bucket.count++
+    } else {
+      rateBuckets.set(userId, { count: 1, resetAt: now + RATE_LIMIT_WINDOW_MS })
+    }
+
+    // Süresi dolmuş bucket'ları temizle (her 100 istekte bir)
+    if (++rateBucketCleanCounter % 100 === 0) {
+      for (const [key, val] of rateBuckets) {
+        if (now >= val.resetAt) rateBuckets.delete(key)
+      }
+    }
+
+    const tenantId = await getTenantIdWithFallback(userId, req)
 
     const body = await req.json()
     const to = typeof body.to === 'string' ? body.to.trim() : ''
