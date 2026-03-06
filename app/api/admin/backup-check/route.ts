@@ -95,7 +95,8 @@ export async function GET(req: NextRequest) {
           .limit(1)
           .single()
 
-        const lastRecord = lastError ? null : (lastRow?.[dateColumn] as string | null) ?? null
+        const row = lastRow as Record<string, unknown> | null
+        const lastRecord = lastError ? null : (row?.[dateColumn] as string | null) ?? null
 
         tableResults.push({
           table,
