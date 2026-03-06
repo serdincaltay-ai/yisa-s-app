@@ -35,6 +35,7 @@ export interface TenantConfig {
 export const BRANS_RENK: Record<string, { bg: string; text: string; border: string }> = {
   'Cimnastik': { bg: 'bg-pink-500/20', text: 'text-pink-300', border: 'border-pink-500/30' },
   'Artistik Cimnastik': { bg: 'bg-pink-500/20', text: 'text-pink-300', border: 'border-pink-500/30' },
+  'Ritmik Cimnastik': { bg: 'bg-rose-500/20', text: 'text-rose-300', border: 'border-rose-500/30' },
   'Yüzme': { bg: 'bg-blue-500/20', text: 'text-blue-300', border: 'border-blue-500/30' },
   'Basketbol': { bg: 'bg-amber-500/20', text: 'text-amber-300', border: 'border-amber-500/30' },
   'Voleybol': { bg: 'bg-emerald-500/20', text: 'text-emerald-300', border: 'border-emerald-500/30' },
