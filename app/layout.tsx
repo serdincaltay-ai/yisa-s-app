@@ -8,6 +8,8 @@ import { getPanelFromHost } from '@/lib/subdomain'
 import { getFranchiseSubdomains } from '@/lib/db/franchise-subdomains'
 import ChatWidget from '@/components/ChatWidget'
 import FooterWrapper from '@/components/FooterWrapper'
+import { NextIntlClientProvider } from 'next-intl'
+import { getMessages, getLocale } from 'next-intl/server'
 
 const inter = Inter({
   subsets: ['latin', 'latin-ext'],
@@ -84,13 +86,16 @@ export const viewport = {
   userScalable: true,
 }
 
-export default function RootLayout({
+export default async function RootLayout({
   children,
 }: {
   children: React.ReactNode
 }) {
+  const locale = await getLocale()
+  const messages = await getMessages()
+
   return (
-    <html lang="tr" className={inter.variable}>
+    <html lang={locale} className={inter.variable}>
       <head>
         <link rel="apple-touch-icon" sizes="192x192" href="/icon-192.png" />
         <link rel="icon" type="image/png" sizes="192x192" href="/icon-192.png" />
@@ -105,7 +110,9 @@ export default function RootLayout({
         <meta name="msapplication-TileImage" content="/icon-192.png" />
       </head>
       <body className={`${inter.className} text-white min-h-screen bg-zinc-950`}>
-        {children}
+        <NextIntlClientProvider locale={locale} messages={messages}>
+          {children}
+        </NextIntlClientProvider>
         <FooterWrapper />
         <ChatWidget />
         <SpeedInsights />
