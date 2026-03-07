@@ -58,9 +58,9 @@ export interface KotaSonuc {
 
 /** Varsayilan robot limitleri (Starter paket bazinda) */
 export const ROBOT_LIMITLERI: Record<RobotType, RobotLimit> = {
-  celf: { robotType: 'celf', ad: 'CELF Gorev Robotu', aylikLimit: 100, gunlukLimit: 10 },
+  celf: { robotType: 'celf', ad: 'CELF Görev Robotu', aylikLimit: 100, gunlukLimit: 10 },
   veri: { robotType: 'veri', ad: 'Veri Robotu', aylikLimit: 200, gunlukLimit: 20 },
-  guvenlik: { robotType: 'guvenlik', ad: 'Guvenlik Robotu', aylikLimit: 50, gunlukLimit: 5 },
+  guvenlik: { robotType: 'guvenlik', ad: 'Güvenlik Robotu', aylikLimit: 50, gunlukLimit: 5 },
   sosyal: { robotType: 'sosyal', ad: 'Sosyal Medya Robotu', aylikLimit: 150, gunlukLimit: 15 },
   coo: { robotType: 'coo', ad: 'COO Robotu', aylikLimit: 100, gunlukLimit: 10 },
   whatsapp: { robotType: 'whatsapp', ad: 'WhatsApp Robotu', aylikLimit: 300, gunlukLimit: 30 },
@@ -145,8 +145,8 @@ export async function checkQuota(
     kullanimYuzdesi,
     mesaj: !pirinc
       ? kalanAylik <= 0
-        ? `${limit.ad} aylik kotasi doldu (${aylik}/${aylikLimit})`
-        : `${limit.ad} gunluk kotasi doldu (${gunluk}/${gunlukLimit})`
+        ? `${limit.ad} aylık kotası doldu (${aylik}/${aylikLimit})`
+        : `${limit.ad} günlük kotası doldu (${gunluk}/${gunlukLimit})`
       : undefined,
   }
 }
@@ -160,11 +160,12 @@ export async function recordUsage(
   meta?: Record<string, unknown>,
 ): Promise<void> {
   const supabase = getSupabaseAdmin()
-  await supabase.from('robot_usage').insert({
+  const { error } = await supabase.from('robot_usage').insert({
     tenant_id: tenantId,
     robot_type: robotType,
     meta: meta ?? {},
   })
+  if (error) throw new Error(`Robot kullanım kaydı hatası: ${error.message}`)
 }
 
 /**
