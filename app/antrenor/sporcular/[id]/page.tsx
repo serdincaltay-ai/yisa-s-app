@@ -1,11 +1,11 @@
 'use client'
 
-import { useEffect, useState } from 'react'
+import { useEffect, useState, useCallback } from 'react'
 import { useParams, useRouter } from 'next/navigation'
 import Link from 'next/link'
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card'
 import { Button } from '@/components/ui/button'
-import { ArrowLeft, Save, CheckCircle, XCircle, Clock } from 'lucide-react'
+import { ArrowLeft, Save, CheckCircle, XCircle, Clock, Activity, Plus } from 'lucide-react'
 
 type Athlete = {
   id: string
@@ -19,6 +19,14 @@ type Athlete = {
   birth_date?: string
 }
 type Yoklama = { id: string; tarih: string; durum: string }
+type Movement = {
+  id: string
+  movement_id: string | null
+  tamamlandi: boolean
+  tamamlanma_tarihi: string | null
+  antrenor_notu: string | null
+  created_at: string
+}
 
 export default function AntrenorSporcuDetayPage() {
   const params = useParams()
@@ -26,25 +34,43 @@ export default function AntrenorSporcuDetayPage() {
   const id = params?.id as string
   const [athlete, setAthlete] = useState<Athlete | null>(null)
   const [yoklamalar, setYoklamalar] = useState<Yoklama[]>([])
+  const [movements, setMovements] = useState<Movement[]>([])
   const [notes, setNotes] = useState('')
   const [loading, setLoading] = useState(true)
   const [saving, setSaving] = useState(false)
+  const [movementSaving, setMovementSaving] = useState(false)
+  const [yeniNot, setYeniNot] = useState('')
+  const [showNewMovement, setShowNewMovement] = useState(false)
+
+  const fetchMovements = useCallback(async () => {
+    if (!id) return
+    try {
+      const res = await fetch(`/api/antrenor/movements?athlete_id=${id}`)
+      const d = await res.json()
+      setMovements(d.items ?? [])
+    } catch {
+      setMovements([])
+    }
+  }, [id])
 
   useEffect(() => {
     if (!id) return
-    fetch(`/api/antrenor/sporcular/${id}`)
-      .then((r) => r.json())
-      .then((d) => {
-        setAthlete(d.athlete ?? null)
-        setNotes(d.athlete?.notes ?? '')
-        setYoklamalar(d.yoklamalar ?? [])
-      })
+    Promise.all([
+      fetch(`/api/antrenor/sporcular/${id}`)
+        .then((r) => r.json())
+        .then((d) => {
+          setAthlete(d.athlete ?? null)
+          setNotes(d.athlete?.notes ?? '')
+          setYoklamalar(d.yoklamalar ?? [])
+        }),
+      fetchMovements(),
+    ])
       .catch(() => {
         setAthlete(null)
         setYoklamalar([])
       })
       .finally(() => setLoading(false))
-  }, [id])
+  }, [id, fetchMovements])
 
   const handleNotKaydet = async () => {
     if (!id) return
@@ -65,6 +91,61 @@ export default function AntrenorSporcuDetayPage() {
       alert('Kaydetme başarısız')
     } finally {
       setSaving(false)
+    }
+  }
+
+  const handleMovementTamamla = async (movId: string) => {
+    setMovementSaving(true)
+    try {
+      const res = await fetch('/api/antrenor/movements', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({
+          id: movId,
+          athlete_id: id,
+          tamamlandi: true,
+          tamamlanma_tarihi: new Date().toISOString().slice(0, 10),
+        }),
+      })
+      const j = await res.json()
+      if (res.ok && j.ok) {
+        await fetchMovements()
+      } else {
+        alert(j.error ?? 'İşlem başarısız')
+      }
+    } catch {
+      alert('İşlem başarısız')
+    } finally {
+      setMovementSaving(false)
+    }
+  }
+
+  const handleYeniHareket = async () => {
+    if (!id) return
+    setMovementSaving(true)
+    try {
+      const res = await fetch('/api/antrenor/movements', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({
+          athlete_id: id,
+          tamamlandi: true,
+          tamamlanma_tarihi: new Date().toISOString().slice(0, 10),
+          antrenor_notu: yeniNot.trim() || null,
+        }),
+      })
+      const j = await res.json()
+      if (res.ok && j.ok) {
+        setYeniNot('')
+        setShowNewMovement(false)
+        await fetchMovements()
+      } else {
+        alert(j.error ?? 'Ekleme başarısız')
+      }
+    } catch {
+      alert('Ekleme başarısız')
+    } finally {
+      setMovementSaving(false)
     }
   }
 
@@ -175,6 +256,95 @@ export default function AntrenorSporcuDetayPage() {
                     <span className="flex items-center gap-1 text-blue-600 dark:text-blue-400 text-sm">
                       Geç
                     </span>
+                  )}
+                </div>
+              ))}
+            </div>
+          )}
+        </CardContent>
+      </Card>
+
+      {/* Hareketler */}
+      <Card>
+        <CardHeader>
+          <div className="flex items-center justify-between">
+            <div>
+              <CardTitle className="flex items-center gap-2">
+                <Activity className="h-5 w-5" /> Hareketler
+              </CardTitle>
+              <CardDescription>Sporcunun hareket tamamlama durumu</CardDescription>
+            </div>
+            <Button
+              size="sm"
+              variant="outline"
+              onClick={() => setShowNewMovement(!showNewMovement)}
+            >
+              <Plus className="h-4 w-4 mr-1" />
+              Hareket Ekle
+            </Button>
+          </div>
+        </CardHeader>
+        <CardContent className="space-y-4">
+          {showNewMovement && (
+            <div className="rounded-lg border border-dashed p-4 space-y-3">
+              <p className="text-sm font-medium">Yeni Hareket Tamamla</p>
+              <textarea
+                value={yeniNot}
+                onChange={(e) => setYeniNot(e.target.value)}
+                className="w-full min-h-[60px] rounded-lg border border-input bg-background px-4 py-2 text-sm"
+                placeholder="Antrenör notu (opsiyonel)..."
+              />
+              <div className="flex gap-2">
+                <Button size="sm" onClick={handleYeniHareket} disabled={movementSaving}>
+                  <CheckCircle className="h-4 w-4 mr-1" />
+                  {movementSaving ? 'Kaydediliyor...' : 'Tamamlandı Olarak Ekle'}
+                </Button>
+                <Button size="sm" variant="ghost" onClick={() => setShowNewMovement(false)}>
+                  İptal
+                </Button>
+              </div>
+            </div>
+          )}
+
+          {movements.length === 0 ? (
+            <p className="text-muted-foreground text-sm">Henüz hareket kaydı yok.</p>
+          ) : (
+            <div className="space-y-2">
+              {movements.map((m) => (
+                <div
+                  key={m.id}
+                  className="flex items-center justify-between rounded-lg border p-3"
+                >
+                  <div className="space-y-1">
+                    <div className="flex items-center gap-2">
+                      {m.tamamlandi ? (
+                        <CheckCircle className="h-4 w-4 text-green-600 dark:text-green-400" />
+                      ) : (
+                        <Clock className="h-4 w-4 text-amber-600 dark:text-amber-400" />
+                      )}
+                      <span className="text-sm font-medium">
+                        {m.tamamlandi ? 'Tamamlandı' : 'Bekliyor'}
+                      </span>
+                    </div>
+                    {m.tamamlanma_tarihi && (
+                      <p className="text-xs text-muted-foreground">
+                        Tarih: {new Date(m.tamamlanma_tarihi).toLocaleDateString('tr-TR')}
+                      </p>
+                    )}
+                    {m.antrenor_notu && (
+                      <p className="text-xs text-muted-foreground">Not: {m.antrenor_notu}</p>
+                    )}
+                  </div>
+                  {!m.tamamlandi && (
+                    <Button
+                      size="sm"
+                      variant="outline"
+                      onClick={() => handleMovementTamamla(m.id)}
+                      disabled={movementSaving}
+                    >
+                      <CheckCircle className="h-4 w-4 mr-1" />
+                      Tamamla
+                    </Button>
                   )}
                 </div>
               ))}
