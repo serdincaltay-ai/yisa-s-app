@@ -40,9 +40,10 @@ export async function GET(req: NextRequest) {
       }
     }
 
-    const url = process.env.NEXT_PUBLIC_SUPABASE_URL
-    const serviceKey = process.env.SUPABASE_SERVICE_ROLE_KEY
-    if (!url || !serviceKey) {
+    // Service role key zorunlu — anon key ile RLS nedeniyle yanlis sonuc doner
+    const url = process.env.NEXT_PUBLIC_SUPABASE_URL ?? process.env.SUPABASE_URL
+    const key = process.env.SUPABASE_SERVICE_ROLE_KEY
+    if (!url || !key) {
       return NextResponse.json(
         {
           ok: false,
@@ -52,7 +53,8 @@ export async function GET(req: NextRequest) {
         { status: 500 }
       )
     }
-    const supabase = createClient(url, serviceKey)
+
+    const supabase = createClient(url, key)
 
     // Supabase baglanti testi
     const { error: pingError } = await supabase.from('tenants').select('id').limit(1)

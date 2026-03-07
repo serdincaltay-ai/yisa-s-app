@@ -9,6 +9,7 @@ import { Textarea } from '@/components/ui/textarea'
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card'
 import { Progress } from '@/components/ui/progress'
 import { Activity, ChevronLeft, ChevronRight, Check, Loader2 } from 'lucide-react'
+import Image from 'next/image'
 
 const DAYS = ['Pazartesi', 'Salı', 'Çarşamba', 'Perşembe', 'Cuma', 'Cumartesi', 'Pazar']
 const THEME_COLORS = ['#1a1a2e', '#0f172a', '#1e293b', '#0c4a6e', '#065f46', '#4c1d95', '#7c2d12']
@@ -276,7 +277,7 @@ export default function KurulumPage() {
                 />
                 {form.logo_url && (
                   <div className="mt-4 flex items-center gap-4">
-                    <img src={form.logo_url} alt="Logo önizleme" className="h-16 w-auto object-contain rounded" onError={(e) => (e.currentTarget.style.display = 'none')} />
+                    <Image src={form.logo_url} alt="Logo önizleme" width={64} height={64} className="h-16 w-auto object-contain rounded" unoptimized onError={(e) => (e.currentTarget.style.display = 'none')} />
                   </div>
                 )}
               </div>
