@@ -3,6 +3,22 @@ const { withSentryConfig } = require('@sentry/nextjs')
 /** @type {import('next').NextConfig} */
 const nextConfig = {
   reactStrictMode: true,
+  images: {
+    remotePatterns: [
+      {
+        protocol: 'https',
+        hostname: '**.supabase.co',
+      },
+      {
+        protocol: 'https',
+        hostname: '**.supabase.in',
+      },
+      {
+        protocol: 'https',
+        hostname: '**.yisa-s.com',
+      },
+    ],
+  },
   async rewrites() {
     return [{ source: '/manifest.json', destination: '/api/manifest' }]
   },
