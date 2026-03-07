@@ -35,7 +35,7 @@ export async function GET(req: NextRequest) {
       service.from('athletes').select('id', { count: 'exact', head: true }).eq('tenant_id', tenantId).eq('coach_user_id', user.id),
       service.from('attendance').select('lesson_date, status').eq('tenant_id', tenantId).order('lesson_date', { ascending: false }).limit(50),
       service.from('tenant_schedule').select('id', { count: 'exact', head: true }).eq('tenant_id', tenantId),
-      service.from('athletes').select('id, name, surname, level, group, schedule_id').eq('tenant_id', tenantId).eq('coach_user_id', user.id),
+      service.from('athletes').select('id, name, surname, level, "group", schedule_id').eq('tenant_id', tenantId).eq('coach_user_id', user.id),
     ])
 
     const schedules = schedulesRes.data ?? []
