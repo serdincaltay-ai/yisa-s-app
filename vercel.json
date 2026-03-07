@@ -12,6 +12,10 @@
       "schedule": "0 9 * * *"
     },
     {
+      "path": "/api/admin/backup-check",
+      "schedule": "0 3 * * 1"
+    },
+    {
       "path": "/api/coo/belge-kontrol",
       "schedule": "0 8 * * 1"
     },
