@@ -30,15 +30,34 @@ export async function GET(req: NextRequest) {
     const bugunGun = GUN_MAP[new Date().getDay()] ?? 'Pazartesi'
     const bugunStr = new Date().toISOString().slice(0, 10)
 
-    const [schedulesRes, athletesRes, attendanceRes, weeklyRes] = await Promise.all([
+    const [schedulesRes, athletesRes, attendanceRes, weeklyRes, allAthletesRes] = await Promise.all([
       service.from('tenant_schedule').select('id, gun, saat, ders_adi, brans').eq('tenant_id', tenantId).eq('gun', bugunGun).order('saat'),
       service.from('athletes').select('id', { count: 'exact', head: true }).eq('tenant_id', tenantId).eq('coach_user_id', user.id),
       service.from('attendance').select('lesson_date, status').eq('tenant_id', tenantId).order('lesson_date', { ascending: false }).limit(50),
       service.from('tenant_schedule').select('id', { count: 'exact', head: true }).eq('tenant_id', tenantId),
+      service.from('athletes').select('id, name, surname, level, group, schedule_id').eq('tenant_id', tenantId).eq('coach_user_id', user.id),
     ])
 
     const schedules = schedulesRes.data ?? []
     const sporcuSayisi = athletesRes.count ?? 0
+    const athleteList = allAthletesRes.data ?? []
+
+    // Her ders için öğrenci listesini eşleştir
+    const derslerWithStudents = schedules.map((ders) => {
+      const ogrenciler = athleteList.filter(
+        (a) => a.schedule_id === ders.id || !a.schedule_id
+      )
+      return {
+        ...ders,
+        ogrenciler: ogrenciler.map((o) => ({
+          id: o.id,
+          name: `${o.name ?? ''}${o.surname ? ' ' + o.surname : ''}`.trim(),
+          level: o.level,
+          group: o.group,
+        })),
+      }
+    })
+
     const sonYoklamalar = (attendanceRes.data ?? []).reduce((acc: Record<string, { geldi: number; gelmedi: number }>, r: { lesson_date: string; status: string }) => {
       const d = r.lesson_date as string
       if (!acc[d]) acc[d] = { geldi: 0, gelmedi: 0 }
@@ -48,7 +67,7 @@ export async function GET(req: NextRequest) {
     }, {})
 
     return NextResponse.json({
-      bugunDersleri: schedules,
+      bugunDersleri: derslerWithStudents,
       sporcuSayisi,
       sonYoklamalar: Object.entries(sonYoklamalar).slice(0, 7).map(([tarih, v]) => ({ tarih, ...v })),
       bugunTarih: bugunStr,

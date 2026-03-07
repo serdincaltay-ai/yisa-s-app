@@ -4,7 +4,8 @@ import { useEffect, useState } from 'react'
 import Link from 'next/link'
 import { Users, Calendar, CheckCircle, XCircle, TrendingUp, ClipboardCheck, Ruler, Loader2, Clock, User, CalendarDays, Wallet } from 'lucide-react'
 
-type BugunDers = { id: string; gun: string; saat: string; ders_adi: string; brans?: string }
+type Ogrenci = { id: string; name: string; level?: string; group?: string }
+type BugunDers = { id: string; gun: string; saat: string; ders_adi: string; brans?: string; ogrenciler?: Ogrenci[] }
 type YoklamaOzet = { tarih: string; geldi: number; gelmedi: number }
 
 export default function AntrenorDashboard() {
@@ -153,12 +154,33 @@ export default function AntrenorDashboard() {
         ) : (
           <div className="space-y-2">
             {d.bugunDersleri.map((ders) => (
-              <div key={ders.id} className="flex items-center justify-between rounded-xl border border-zinc-700 p-3">
-                <div>
-                  <p className="font-medium text-white">{ders.ders_adi}</p>
-                  <p className="text-xs text-zinc-400">{ders.saat} {ders.brans ? `· ${ders.brans}` : ''}</p>
+              <div key={ders.id} className="rounded-xl border border-zinc-700 p-3">
+                <div className="flex items-center justify-between">
+                  <div>
+                    <p className="font-medium text-white">{ders.ders_adi}</p>
+                    <p className="text-xs text-zinc-400">{ders.saat} {ders.brans ? `· ${ders.brans}` : ''}</p>
+                  </div>
+                  <span className="rounded-full bg-cyan-400/10 text-cyan-400 text-xs px-3 py-1">
+                    {ders.ogrenciler?.length ?? 0} öğrenci
+                  </span>
                 </div>
-                <span className="rounded-full bg-cyan-400/10 text-cyan-400 text-xs px-3 py-1">Ders</span>
+                {ders.ogrenciler && ders.ogrenciler.length > 0 && (
+                  <div className="mt-2 pt-2 border-t border-zinc-800">
+                    <p className="text-[10px] text-zinc-500 mb-1.5">Öğrenci Listesi</p>
+                    <div className="space-y-1">
+                      {ders.ogrenciler.map((o) => (
+                        <div key={o.id} className="flex items-center gap-2 text-xs">
+                          <div className="flex h-5 w-5 items-center justify-center rounded-full bg-cyan-400/10 text-cyan-400 text-[9px] font-bold shrink-0">
+                            {o.name.split(' ').map((n) => n[0]).join('').slice(0, 2)}
+                          </div>
+                          <span className="text-white">{o.name}</span>
+                          {o.level && <span className="text-zinc-500">· {o.level}</span>}
+                          {o.group && <span className="text-zinc-600">({o.group})</span>}
+                        </div>
+                      ))}
+                    </div>
+                  </div>
+                )}
               </div>
             ))}
           </div>
