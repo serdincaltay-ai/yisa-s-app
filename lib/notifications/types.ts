@@ -5,9 +5,10 @@
  *  - yoklama_sonucu : Cocugun devamsizlik / yoklama sonucu
  *  - odeme_hatirlatma: Aidat / odeme hatirlatmasi
  *  - duyuru          : Genel tesis duyurusu
+ *  - haftalik_rapor  : Veli haftalik gelisim raporu
  */
 
-export type NotificationType = 'yoklama_sonucu' | 'odeme_hatirlatma' | 'duyuru'
+export type NotificationType = 'yoklama_sonucu' | 'odeme_hatirlatma' | 'duyuru' | 'haftalik_rapor'
 
 export interface PushSubscriptionRecord {
   id?: string
@@ -25,6 +26,7 @@ export interface NotificationPreferences {
   yoklama_sonucu: boolean
   odeme_hatirlatma: boolean
   duyuru: boolean
+  haftalik_rapor: boolean
 }
 
 export interface SendNotificationPayload {
@@ -41,10 +43,12 @@ export const NOTIFICATION_TYPE_LABELS: Record<NotificationType, string> = {
   yoklama_sonucu: 'Yoklama Sonucu',
   odeme_hatirlatma: 'Ödeme Hatırlatma',
   duyuru: 'Duyuru',
+  haftalik_rapor: 'Haftalık Rapor',
 }
 
 export const NOTIFICATION_TYPE_ICONS: Record<NotificationType, string> = {
   yoklama_sonucu: '📋',
   odeme_hatirlatma: '💰',
   duyuru: '📢',
+  haftalik_rapor: '📊',
 }
