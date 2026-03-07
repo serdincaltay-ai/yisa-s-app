@@ -6,7 +6,7 @@ import { Award, CheckCircle } from 'lucide-react'
 type AntrenorKart = {
   isim: string
   brans: string
-  deneyim: string
+  deneyim?: string
   lisans?: string
   yarismaciDeneyimi?: boolean
   bio?: string
@@ -42,7 +42,7 @@ export function AntrenorKartlari({ antrenorler, federasyonTemsilcisi, yarismaKul
 
               {/* Detaylar */}
               <div className="space-y-1.5 text-xs">
-                <p className="text-zinc-400">{a.deneyim} deneyim</p>
+                {a.deneyim && <p className="text-zinc-400">{a.deneyim} deneyim</p>}
                 {a.lisans && (
                   <p className="text-zinc-400 flex items-center gap-1">
                     <Award className="h-3.5 w-3.5 text-amber-400" />
