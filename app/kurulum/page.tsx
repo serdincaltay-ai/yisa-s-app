@@ -277,7 +277,7 @@ export default function KurulumPage() {
                 />
                 {form.logo_url && (
                   <div className="mt-4 flex items-center gap-4">
-                    <Image src={form.logo_url} alt="Logo önizleme" width={64} height={64} className="h-16 w-auto object-contain rounded" unoptimized />
+                    <Image src={form.logo_url} alt="Logo önizleme" width={64} height={64} className="h-16 w-auto object-contain rounded" unoptimized onError={(e) => (e.currentTarget.style.display = 'none')} />
                   </div>
                 )}
               </div>

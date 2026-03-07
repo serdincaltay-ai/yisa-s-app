@@ -122,7 +122,7 @@ export default function TesisLanding({
         <div className="text-center mb-12">
           <div className="inline-block mb-6">
             {logoUrl ? (
-              <Image src={logoUrl} alt={siteName} width={128} height={128} className="h-32 w-auto object-contain" />
+              <Image src={logoUrl} alt={siteName} width={128} height={128} className="h-32 w-auto object-contain" unoptimized />
             ) : (
               <div className="h-32 flex items-center justify-center">
                 <span className="text-2xl font-bold text-white">{siteName}</span>
