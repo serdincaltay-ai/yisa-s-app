@@ -11,14 +11,14 @@ export async function GET(request: Request) {
   try {
     const tenantId = request.headers.get('x-tenant-id')
     if (!tenantId) {
-      return NextResponse.json({ error: 'Yetkisiz erisim' }, { status: 401 })
+      return NextResponse.json({ error: 'Yetkisiz erişim' }, { status: 401 })
     }
 
     // Tenant paket tipini bul
     const url = process.env.NEXT_PUBLIC_SUPABASE_URL
     const key = process.env.SUPABASE_SERVICE_ROLE_KEY
     if (!url || !key) {
-      return NextResponse.json({ error: 'Sunucu yapilandirma hatasi' }, { status: 500 })
+      return NextResponse.json({ error: 'Sunucu yapılandırma hatası' }, { status: 500 })
     }
 
     const supabase = createClient(url, key)
