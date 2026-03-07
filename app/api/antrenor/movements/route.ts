@@ -80,7 +80,7 @@ export async function POST(req: NextRequest) {
 
     const url = process.env.NEXT_PUBLIC_SUPABASE_URL ?? process.env.SUPABASE_URL
     const key = process.env.SUPABASE_SERVICE_ROLE_KEY ?? process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY
-    if (!url || !key) return NextResponse.json({ error: 'Sunucu hatası' })
+    if (!url || !key) return NextResponse.json({ error: 'Sunucu hatası' }, { status: 500 })
 
     const service = createServiceClient(url, key)
 
@@ -129,6 +129,6 @@ export async function POST(req: NextRequest) {
     return NextResponse.json({ ok: true, id: inserted.id })
   } catch (e) {
     console.error('[antrenor/movements POST]', e)
-    return NextResponse.json({ error: 'Sunucu hatası' })
+    return NextResponse.json({ error: 'Sunucu hatası' }, { status: 500 })
   }
 }

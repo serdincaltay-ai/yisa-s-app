@@ -31,7 +31,7 @@ export async function GET(req: NextRequest) {
 
     const { data, error } = await service
       .from('athlete_movements')
-      .select('id, name, status, completed_date, progress_percent')
+      .select('id, movement_id, tamamlandi, tamamlanma_tarihi, antrenor_notu, created_at')
       .eq('athlete_id', athleteId)
       .order('created_at', { ascending: false })
 
@@ -40,10 +40,9 @@ export async function GET(req: NextRequest) {
     }
 
     const items = (data ?? []).map((d: Record<string, unknown>) => ({
-      name: String(d.name ?? ''),
-      status: String(d.status ?? 'upcoming'),
-      date: d.completed_date ? String(d.completed_date) : undefined,
-      progress: typeof d.progress_percent === 'number' ? d.progress_percent : undefined,
+      name: d.antrenor_notu ? String(d.antrenor_notu) : 'Hareket',
+      status: d.tamamlandi ? 'completed' : 'upcoming',
+      date: d.tamamlanma_tarihi ? String(d.tamamlanma_tarihi) : undefined,
     }))
 
     return NextResponse.json({ items })
