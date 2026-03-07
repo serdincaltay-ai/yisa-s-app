@@ -14,18 +14,19 @@ type AntrenorKart = {
 
 type Props = {
   antrenorler: AntrenorKart[]
+  baslik?: string
   federasyonTemsilcisi?: string
   yarismaKulupleri?: string[]
 }
 
-export function AntrenorKartlari({ antrenorler, federasyonTemsilcisi, yarismaKulupleri }: Props) {
+export function AntrenorKartlari({ antrenorler, baslik = 'Antrenörlerimiz', federasyonTemsilcisi, yarismaKulupleri }: Props) {
   if (!antrenorler || antrenorler.length === 0) return null
 
   return (
     <div className="space-y-8">
       {/* Antrenör Kartları */}
       <div>
-        <h2 className="text-lg font-bold text-white mb-4">Antrenörlerimiz</h2>
+        <h2 className="text-lg font-bold text-white mb-4">{baslik}</h2>
         <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
           {antrenorler.map((a) => (
             <div key={a.isim} className="glass-panel p-5 border border-zinc-800 rounded-2xl space-y-3">
