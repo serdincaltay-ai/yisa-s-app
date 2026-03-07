@@ -13,6 +13,7 @@
 import { isForbiddenForAI, requiresPatronApproval, checkPatronLock, REQUIRE_PATRON_APPROVAL, FORBIDDEN_FOR_AI, type PatronLockCheck } from './patron-lock'
 import { ALARM_SEVIYELERI, SIBER_GUVENLIK_KURALLARI, type AlarmSeviyesi } from './siber-guvenlik'
 import { runCelfChecks, type DirectorKey, type CelfAuditResult } from '../robots/celf-center'
+import { executeAcilAlarm } from './acil-alarm'
 
 // ─── Types ──────────────────────────────────────────────────────────────────
 
@@ -219,6 +220,18 @@ export function ucDuvarKontrol(params: UcDuvarParams): UcDuvarResult {
     sonuc = 'engellendi'
   } else if (uyarilar.length > 0) {
     sonuc = 'uyari'
+  }
+
+  // Alarm seviyesi 'ACIL' ise dogrudan acil alarm calistir (HTTP self-call yerine)
+  if (d2.alarmSeviyesi === 'ACIL') {
+    executeAcilAlarm({
+      type: engellendi ? 'guvenlik_ihlali' : 'sistem_hatasi',
+      message: d2.detay,
+      details: engelSebebi ?? message,
+      source: 'uc-duvar',
+    }).catch((err) => {
+      console.error('[uc-duvar] Acil alarm tetiklenemedi:', err)
+    })
   }
 
   return {
