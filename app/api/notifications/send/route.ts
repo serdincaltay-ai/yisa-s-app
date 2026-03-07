@@ -15,7 +15,7 @@ import {
 
 export const dynamic = 'force-dynamic'
 
-const VALID_TYPES: NotificationType[] = ['yoklama_sonucu', 'odeme_hatirlatma', 'duyuru']
+const VALID_TYPES: NotificationType[] = ['yoklama_sonucu', 'odeme_hatirlatma', 'duyuru', 'belge_uyari', 'haftalik_rapor']
 
 export async function POST(req: NextRequest) {
   try {

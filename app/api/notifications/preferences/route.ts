@@ -40,12 +40,14 @@ export async function POST(req: NextRequest) {
     const yoklama = body.yoklama_sonucu !== false
     const odeme = body.odeme_hatirlatma !== false
     const duyuru = body.duyuru !== false
+    const haftalikRapor = body.haftalik_rapor !== false
 
     const result = await upsertNotificationPreferences({
       user_id: auth.user.id,
       yoklama_sonucu: yoklama,
       odeme_hatirlatma: odeme,
       duyuru: duyuru,
+      haftalik_rapor: haftalikRapor,
     })
 
     if (result.error) {
@@ -54,7 +56,7 @@ export async function POST(req: NextRequest) {
 
     return NextResponse.json({
       ok: true,
-      preferences: { yoklama_sonucu: yoklama, odeme_hatirlatma: odeme, duyuru: duyuru },
+      preferences: { yoklama_sonucu: yoklama, odeme_hatirlatma: odeme, duyuru: duyuru, haftalik_rapor: haftalikRapor },
     })
   } catch (e) {
     const err = e instanceof Error ? e.message : String(e)
