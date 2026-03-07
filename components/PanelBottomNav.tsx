@@ -2,7 +2,7 @@
 
 import Link from 'next/link'
 import { usePathname } from 'next/navigation'
-import { User, Calendar, Wallet, TrendingUp, Bell, LayoutDashboard, Users, ClipboardCheck, Ruler } from 'lucide-react'
+import { User, Calendar, Wallet, TrendingUp, Bell, LayoutDashboard, Users, ClipboardCheck, Ruler, Clock, CalendarDays } from 'lucide-react'
 
 type NavItem = {
   href: string
@@ -22,8 +22,8 @@ const ANTRENOR_NAV: NavItem[] = [
   { href: '/antrenor', label: 'Panel', icon: LayoutDashboard },
   { href: '/antrenor/sporcular', label: 'Sporcular', icon: Users },
   { href: '/antrenor/yoklama', label: 'Yoklama', icon: ClipboardCheck },
-  { href: '/antrenor/olcum', label: 'Ölçüm', icon: Ruler },
-  { href: '/antrenor/bildirim', label: 'Bildirim', icon: Bell },
+  { href: '/antrenor/bugunku-dersler', label: 'Dersler', icon: Calendar },
+  { href: '/antrenor/profil', label: 'Profil', icon: User },
 ]
 
 export function VeliBottomNav() {
