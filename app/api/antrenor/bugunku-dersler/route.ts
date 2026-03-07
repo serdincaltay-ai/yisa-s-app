@@ -42,7 +42,7 @@ export async function GET(req: NextRequest) {
     // Antrenöre atanmış tüm sporcuları tek seferde getir (N+1 sorgu yerine)
     const { data: allAthletes } = await service
       .from('athletes')
-      .select('id, name, surname, level, group, schedule_id')
+      .select('id, name, surname, level, "group", branch')
       .eq('tenant_id', tenantId)
       .eq('coach_user_id', user.id)
 
@@ -51,7 +51,7 @@ export async function GET(req: NextRequest) {
     // Her ders için ilgili sporcuları eşleştir
     const derslerWithStudents = dersler.map((ders) => {
       const sporcular = athleteList.filter(
-        (a) => a.schedule_id === ders.id || !a.schedule_id
+        (a) => !ders.brans || !a.branch || a.branch === ders.brans
       )
       return { ...ders, sporcular }
     })
