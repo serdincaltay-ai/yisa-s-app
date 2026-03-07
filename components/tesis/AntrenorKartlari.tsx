@@ -1,7 +1,7 @@
 'use client'
 
 import React from 'react'
-import { Dumbbell, Award, CheckCircle, XCircle } from 'lucide-react'
+import { Dumbbell, Award, CheckCircle, XCircle, FileText } from 'lucide-react'
 
 type AntrenorKart = {
   isim: string
@@ -9,6 +9,7 @@ type AntrenorKart = {
   lisans_turu?: string
   is_competitive_coach?: boolean
   foto?: string
+  bio?: string
 }
 
 interface AntrenorKartlariProps {
@@ -42,6 +43,13 @@ export function AntrenorKartlari({ antrenorler }: AntrenorKartlariProps) {
             </p>
             {a.lisans_turu && (
               <p className="text-[10px] text-zinc-500 mt-1">Lisans: {a.lisans_turu}</p>
+            )}
+            {/* Bio */}
+            {a.bio && (
+              <div className="mt-2 flex items-start gap-1.5 text-left">
+                <FileText className="h-3 w-3 text-zinc-500 mt-0.5 shrink-0" strokeWidth={1.5} />
+                <p className="text-[10px] text-zinc-400 leading-relaxed line-clamp-3">{a.bio}</p>
+              </div>
             )}
             <div className="mt-2 flex items-center justify-center gap-1">
               {a.is_competitive_coach ? (

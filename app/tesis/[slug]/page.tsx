@@ -40,6 +40,16 @@ type TesisData = {
     ilTemsilcisi?: { adi: string; bransi: string; telefon: string }
     yarisanKulupler?: { isim: string; sehir?: string }[]
   }
+  federasyonBilgileri?: {
+    federasyonAdi?: string
+    branch?: string
+    il?: string
+    ilce?: string
+    temsilciAdi?: string
+    temsilciBransi?: string
+    temsilciTelefonu?: string
+    yarismaKulupleri?: { kulup_adi: string; adres?: string; telefon?: string }[]
+  }
   bolgeAntrenorleri?: { isim: string; brans: string; ilce: string; sehir: string; adres?: string; lisans_turu?: string }[]
   basarilar?: { isim: string; basari: string; alinti: string }[]
   duyurular?: { tarih: string; baslik: string; ozet: string }[]
@@ -605,9 +615,18 @@ function SectionYarismacilar({ tesis }: { tesis: TesisData }) {
    SECTION: Federasyon Bilgileri
    ================================================================ */
 function SectionFederasyon({ tesis }: { tesis: TesisData }) {
+  const fb = tesis.federasyonBilgileri
   return (
     <div className="p-6 md:p-8 space-y-8">
       <FederasyonBilgileri
+        federasyonAdi={fb?.federasyonAdi}
+        branch={fb?.branch}
+        il={fb?.il}
+        ilce={fb?.ilce}
+        temsilciAdi={fb?.temsilciAdi}
+        temsilciBransi={fb?.temsilciBransi}
+        temsilciTelefonu={fb?.temsilciTelefonu}
+        yarismaKulupleri={fb?.yarismaKulupleri}
         ilTemsilcisi={tesis.federasyon?.ilTemsilcisi}
         yarisanKulupler={tesis.federasyon?.yarisanKulupler}
       />
