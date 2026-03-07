@@ -30,11 +30,12 @@ export async function GET(req: NextRequest) {
     const bugunGun = GUN_MAP[new Date().getDay()] ?? 'Pazartesi'
     const bugunStr = new Date().toISOString().slice(0, 10)
 
-    const [schedulesRes, athletesRes, attendanceRes, weeklyRes] = await Promise.all([
+    const [schedulesRes, athletesRes, attendanceRes, weeklyRes, todayStudentsRes] = await Promise.all([
       service.from('tenant_schedule').select('id, gun, saat, ders_adi, brans').eq('tenant_id', tenantId).eq('gun', bugunGun).order('saat'),
       service.from('athletes').select('id', { count: 'exact', head: true }).eq('tenant_id', tenantId).eq('coach_user_id', user.id),
       service.from('attendance').select('lesson_date, status').eq('tenant_id', tenantId).order('lesson_date', { ascending: false }).limit(50),
       service.from('tenant_schedule').select('id', { count: 'exact', head: true }).eq('tenant_id', tenantId),
+      service.from('athletes').select('id, name, surname, branch, level').eq('tenant_id', tenantId).eq('coach_user_id', user.id).eq('status', 'active').order('name').limit(100),
     ])
 
     const schedules = schedulesRes.data ?? []
@@ -53,6 +54,7 @@ export async function GET(req: NextRequest) {
       sonYoklamalar: Object.entries(sonYoklamalar).slice(0, 7).map(([tarih, v]) => ({ tarih, ...v })),
       bugunTarih: bugunStr,
       haftalikDersSayisi: weeklyRes.count ?? 0,
+      todayStudents: todayStudentsRes.data ?? [],
     })
   } catch (e) {
     console.error('[antrenor/dashboard]', e)

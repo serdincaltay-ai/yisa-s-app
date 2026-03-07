@@ -6,6 +6,7 @@ import { Users, Calendar, CheckCircle, XCircle, TrendingUp, ClipboardCheck, Rule
 
 type BugunDers = { id: string; gun: string; saat: string; ders_adi: string; brans?: string }
 type YoklamaOzet = { tarih: string; geldi: number; gelmedi: number }
+type StudentItem = { id: string; name: string; surname?: string; branch?: string; level?: string }
 
 export default function AntrenorDashboard() {
   const [loading, setLoading] = useState(true)
@@ -17,6 +18,7 @@ export default function AntrenorDashboard() {
     haftalikDersSayisi?: number
     toplamYoklama?: number
     devamOrani?: number
+    todayStudents: StudentItem[]
   } | null>(null)
 
   useEffect(() => {
@@ -34,6 +36,7 @@ export default function AntrenorDashboard() {
           haftalikDersSayisi: d.haftalikDersSayisi ?? 0,
           toplamYoklama: toplamHepsi,
           devamOrani: toplamHepsi > 0 ? Math.round((toplamGeldi / toplamHepsi) * 100) : 0,
+          todayStudents: d.todayStudents ?? [],
         })
       })
       .catch(() => setData(null))
@@ -48,7 +51,7 @@ export default function AntrenorDashboard() {
     )
   }
 
-  const d = data ?? { bugunDersleri: [], sporcuSayisi: 0, sonYoklamalar: [], bugunTarih: '', haftalikDersSayisi: 0, toplamYoklama: 0, devamOrani: 0 }
+  const d = data ?? { bugunDersleri: [], sporcuSayisi: 0, sonYoklamalar: [], bugunTarih: '', haftalikDersSayisi: 0, toplamYoklama: 0, devamOrani: 0, todayStudents: [] as StudentItem[] }
 
   return (
     <main className="p-4 space-y-4">
@@ -130,6 +133,32 @@ export default function AntrenorDashboard() {
           </div>
         )}
       </div>
+
+      {/* Bugünkü Öğrenci Listesi */}
+      {d.todayStudents.length > 0 && (
+        <div className="bg-zinc-900 border border-zinc-800 rounded-2xl p-4">
+          <h3 className="text-sm font-semibold text-white flex items-center gap-2 mb-1">
+            <Users className="h-4 w-4 text-cyan-400" strokeWidth={1.5} />
+            Bugünkü Öğrencilerim
+          </h3>
+          <p className="text-xs text-zinc-500 mb-3">{d.todayStudents.length} sporcu</p>
+          <div className="space-y-2">
+            {d.todayStudents.map((s) => (
+              <Link key={s.id} href={`/antrenor/sporcular/${s.id}`}>
+                <div className="flex items-center gap-3 rounded-xl border border-zinc-700 p-3 hover:border-cyan-400/30 transition-all">
+                  <div className="flex h-8 w-8 shrink-0 items-center justify-center rounded-full bg-cyan-400/10 text-cyan-400 text-xs font-semibold">
+                    {(s.name?.[0] ?? '') + (s.surname?.[0] ?? '')}
+                  </div>
+                  <div className="min-w-0">
+                    <p className="text-sm font-medium text-white truncate">{s.name} {s.surname ?? ''}</p>
+                    <p className="text-xs text-zinc-400">{s.branch ?? '—'} · {s.level ?? '—'}</p>
+                  </div>
+                </div>
+              </Link>
+            ))}
+          </div>
+        </div>
+      )}
 
       {/* Son Yoklamalar */}
       <div className="bg-zinc-900 border border-zinc-800 rounded-2xl p-4">

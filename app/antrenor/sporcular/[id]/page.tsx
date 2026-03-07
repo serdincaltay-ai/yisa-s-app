@@ -5,7 +5,7 @@ import { useParams, useRouter } from 'next/navigation'
 import Link from 'next/link'
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card'
 import { Button } from '@/components/ui/button'
-import { ArrowLeft, Save, CheckCircle, XCircle, Clock } from 'lucide-react'
+import { ArrowLeft, Save, CheckCircle, XCircle, Clock, Plus, Loader2 } from 'lucide-react'
 
 type Athlete = {
   id: string
@@ -19,6 +19,7 @@ type Athlete = {
   birth_date?: string
 }
 type Yoklama = { id: string; tarih: string; durum: string }
+type Movement = { id: string; movement_name: string; completed_at: string; notes?: string }
 
 export default function AntrenorSporcuDetayPage() {
   const params = useParams()
@@ -26,18 +27,24 @@ export default function AntrenorSporcuDetayPage() {
   const id = params?.id as string
   const [athlete, setAthlete] = useState<Athlete | null>(null)
   const [yoklamalar, setYoklamalar] = useState<Yoklama[]>([])
+  const [movements, setMovements] = useState<Movement[]>([])
   const [notes, setNotes] = useState('')
   const [loading, setLoading] = useState(true)
   const [saving, setSaving] = useState(false)
+  const [newMovement, setNewMovement] = useState('')
+  const [movementSaving, setMovementSaving] = useState(false)
 
   useEffect(() => {
     if (!id) return
-    fetch(`/api/antrenor/sporcular/${id}`)
-      .then((r) => r.json())
-      .then((d) => {
+    Promise.all([
+      fetch(`/api/antrenor/sporcular/${id}`).then((r) => r.json()),
+      fetch(`/api/antrenor/hareket?athlete_id=${id}`).then((r) => r.json()),
+    ])
+      .then(([d, m]) => {
         setAthlete(d.athlete ?? null)
         setNotes(d.athlete?.notes ?? '')
         setYoklamalar(d.yoklamalar ?? [])
+        setMovements(m.items ?? [])
       })
       .catch(() => {
         setAthlete(null)
@@ -45,6 +52,30 @@ export default function AntrenorSporcuDetayPage() {
       })
       .finally(() => setLoading(false))
   }, [id])
+
+  const handleAddMovement = async () => {
+    if (!id || !newMovement.trim()) return
+    setMovementSaving(true)
+    try {
+      const res = await fetch('/api/antrenor/hareket', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ athlete_id: id, movement_name: newMovement.trim() }),
+      })
+      const j = await res.json()
+      if (res.ok && j.ok) {
+        setNewMovement('')
+        // Refresh movements
+        const mRes = await fetch(`/api/antrenor/hareket?athlete_id=${id}`)
+        const mData = await mRes.json()
+        setMovements(mData.items ?? [])
+      }
+    } catch {
+      /* ignore */
+    } finally {
+      setMovementSaving(false)
+    }
+  }
 
   const handleNotKaydet = async () => {
     if (!id) return
@@ -137,6 +168,45 @@ export default function AntrenorSporcuDetayPage() {
             <Save className="h-4 w-4 mr-2" />
             {saving ? 'Kaydediliyor...' : 'Kaydet'}
           </Button>
+        </CardContent>
+      </Card>
+
+      {/* Hareket Tamamlama */}
+      <Card>
+        <CardHeader>
+          <CardTitle>Hareket Havuzu</CardTitle>
+          <CardDescription>Sporcunun tamamladığı hareketleri işaretleyin</CardDescription>
+        </CardHeader>
+        <CardContent className="space-y-3">
+          <div className="flex gap-2">
+            <input
+              type="text"
+              value={newMovement}
+              onChange={(e) => setNewMovement(e.target.value)}
+              className="flex-1 rounded-lg border border-input bg-background px-4 py-2 text-sm"
+              placeholder="Hareket adı (ör: Takla, Köprü, Ters Takla)"
+            />
+            <Button onClick={handleAddMovement} disabled={movementSaving || !newMovement.trim()} size="sm">
+              {movementSaving ? <Loader2 className="h-4 w-4 animate-spin" /> : <Plus className="h-4 w-4" />}
+            </Button>
+          </div>
+          {movements.length === 0 ? (
+            <p className="text-muted-foreground text-sm">Henüz tamamlanan hareket yok.</p>
+          ) : (
+            <div className="space-y-2">
+              {movements.map((m) => (
+                <div key={m.id} className="flex items-center justify-between rounded-lg border p-2">
+                  <div>
+                    <span className="text-sm font-medium">{m.movement_name}</span>
+                    {m.notes && <p className="text-xs text-muted-foreground">{m.notes}</p>}
+                  </div>
+                  <span className="text-xs text-muted-foreground">
+                    {new Date(m.completed_at).toLocaleDateString('tr-TR')}
+                  </span>
+                </div>
+              ))}
+            </div>
+          )}
         </CardContent>
       </Card>
 

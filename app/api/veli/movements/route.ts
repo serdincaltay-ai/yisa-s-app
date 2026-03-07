@@ -31,19 +31,20 @@ export async function GET(req: NextRequest) {
 
     const { data, error } = await service
       .from('athlete_movements')
-      .select('id, name, status, completed_date, progress_percent')
+      .select('id, movement_name, completed_at, notes')
       .eq('athlete_id', athleteId)
-      .order('created_at', { ascending: false })
+      .order('completed_at', { ascending: false })
+      .limit(50)
 
     if (error) {
       return NextResponse.json({ items: [] })
     }
 
-    const items = (data ?? []).map((d: Record<string, unknown>) => ({
-      name: String(d.name ?? ''),
-      status: String(d.status ?? 'upcoming'),
-      date: d.completed_date ? String(d.completed_date) : undefined,
-      progress: typeof d.progress_percent === 'number' ? d.progress_percent : undefined,
+    const items = (data ?? []).map((d: { id: string; movement_name: string; completed_at: string; notes: string | null }) => ({
+      id: d.id,
+      name: d.movement_name,
+      date: d.completed_at,
+      notes: d.notes,
     }))
 
     return NextResponse.json({ items })

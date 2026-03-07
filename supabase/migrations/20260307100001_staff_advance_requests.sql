@@ -1,0 +1,31 @@
+-- Çalışan avans talepleri tablosu
+CREATE TABLE IF NOT EXISTS staff_advance_requests (
+  id UUID PRIMARY KEY DEFAULT gen_random_uuid(),
+  tenant_id UUID NOT NULL REFERENCES tenants(id) ON DELETE CASCADE,
+  staff_id UUID NOT NULL REFERENCES staff(id) ON DELETE CASCADE,
+  user_id UUID NOT NULL REFERENCES auth.users(id) ON DELETE CASCADE,
+  amount NUMERIC(10,2) NOT NULL CHECK (amount > 0),
+  reason TEXT,
+  status TEXT NOT NULL DEFAULT 'pending' CHECK (status IN ('pending', 'approved', 'rejected')),
+  reviewed_by UUID REFERENCES auth.users(id),
+  reviewed_at TIMESTAMPTZ,
+  requested_at TIMESTAMPTZ NOT NULL DEFAULT now(),
+  created_at TIMESTAMPTZ NOT NULL DEFAULT now()
+);
+
+ALTER TABLE staff_advance_requests ENABLE ROW LEVEL SECURITY;
+
+-- Staff kendi taleplerini görebilir
+CREATE POLICY staff_advance_own_select ON staff_advance_requests
+  FOR SELECT USING (user_id = auth.uid());
+
+-- Staff yeni talep oluşturabilir
+CREATE POLICY staff_advance_own_insert ON staff_advance_requests
+  FOR INSERT WITH CHECK (user_id = auth.uid());
+
+-- Service role (franchise panel) tüm talepleri görebilir/güncelleyebilir
+CREATE POLICY staff_advance_service ON staff_advance_requests
+  FOR ALL USING (true) WITH CHECK (true);
+
+CREATE INDEX IF NOT EXISTS idx_staff_advance_tenant ON staff_advance_requests(tenant_id);
+CREATE INDEX IF NOT EXISTS idx_staff_advance_user ON staff_advance_requests(user_id);

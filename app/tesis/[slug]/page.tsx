@@ -14,6 +14,7 @@ import { useParams } from 'next/navigation'
 import RobotAvatar from '@/components/RobotAvatar'
 import { DersProgramiGrid } from '@/components/tesis/DersProgramiGrid'
 import { PaketFiyatlari } from '@/components/tesis/PaketFiyatlari'
+import { AntrenorKartlari } from '@/components/tesis/AntrenorKartlari'
 import {
   Activity, MapPin, Phone, Mail, ChevronDown, ChevronUp,
   Dumbbell, Waves, Timer, Star, Users, Calendar as CalendarIcon,
@@ -490,21 +491,15 @@ function SectionAntrenorler({ tesis }: { tesis: TesisData }) {
   return (
     <div className="p-6 md:p-8 space-y-8">
       {tesis.antrenorler && tesis.antrenorler.length > 0 && (
-        <div>
-          <h2 className="text-lg font-bold text-white mb-4">Antren\u00f6rlerimiz</h2>
-          <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
-            {tesis.antrenorler.map((a) => (
-              <div key={a.isim} className="glass-panel p-5 text-center border border-zinc-800">
-                <div className="flex h-14 w-14 mx-auto items-center justify-center rounded-full bg-cyan-400/10 text-cyan-400 font-bold text-lg mb-3">
-                  {a.isim.split(' ').map((n) => n[0]).join('')}
-                </div>
-                <h3 className="font-semibold text-white text-sm">{a.isim}</h3>
-                <p className="text-xs text-cyan-400 mt-1">{a.brans}</p>
-                <p className="text-[10px] text-zinc-500 mt-1">{a.deneyim} deneyim</p>
-              </div>
-            ))}
-          </div>
-        </div>
+        <AntrenorKartlari
+          antrenorler={tesis.antrenorler.map((a) => ({
+            isim: a.isim,
+            brans: a.brans,
+            deneyim: a.deneyim,
+          }))}
+          federasyonTemsilcisi={tesis.slug === 'bjktuzlacimnastik' ? '\u0130stanbul \u0130l Cimnastik Temsilcisi' : undefined}
+          yarismaKulupleri={tesis.slug === 'bjktuzlacimnastik' ? ['BJK Tuzla', 'Fenerbah\u00e7e SK', 'Galatasaray SK', 'Be\u015fikta\u015f JK'] : undefined}
+        />
       )}
 
       {tesis.yorumlar && tesis.yorumlar.length > 0 && (

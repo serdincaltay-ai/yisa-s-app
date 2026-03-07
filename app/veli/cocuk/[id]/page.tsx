@@ -18,6 +18,7 @@ type ChildDetail = {
 
 type AttendanceItem = { lesson_date: string; status: string }
 type PaymentItem = { period_month?: number; period_year?: number; amount: number; status: string; due_date?: string; paid_date?: string }
+type MovementItem = { id: string; name: string; date: string; notes?: string | null }
 
 const AYLAR: Record<number, string> = {
     1: 'Ocak', 2: 'Şubat', 3: 'Mart', 4: 'Nisan', 5: 'Mayıs', 6: 'Haziran',
@@ -30,22 +31,26 @@ export default function VeliCocukPage() {
   const [child, setChild] = useState<ChildDetail | null>(null)
   const [attendance, setAttendance] = useState<AttendanceItem[]>([])
   const [payments, setPayments] = useState<PaymentItem[]>([])
+  const [movements, setMovements] = useState<MovementItem[]>([])
   const [loading, setLoading] = useState(true)
 
   const fetchData = useCallback(async () => {
     if (!id) return
-    const [childrenRes, attRes, payRes] = await Promise.all([
+    const [childrenRes, attRes, payRes, movRes] = await Promise.all([
       fetch('/api/veli/children'),
       fetch(`/api/veli/attendance?athlete_id=${id}&days=30`),
       fetch(`/api/veli/payments?athlete_id=${id}`),
+      fetch(`/api/veli/movements?athlete_id=${id}`),
     ])
     const childrenData = await childrenRes.json()
     const attData = await attRes.json()
     const payData = await payRes.json()
+    const movData = await movRes.json()
     const ch = (childrenData.items ?? []).find((c: { id: string }) => c.id === id)
     setChild(ch ?? null)
     setAttendance(Array.isArray(attData.items) ? attData.items : [])
     setPayments(Array.isArray(payData.items) ? payData.items : [])
+    setMovements(Array.isArray(movData.items) ? movData.items : [])
   }, [id])
 
   useEffect(() => {
@@ -154,6 +159,28 @@ export default function VeliCocukPage() {
                     'bg-amber-500/20 text-amber-400'
                   }`}>
                     {p.status === 'paid' ? 'Ödendi' : p.status === 'overdue' ? 'Gecikmiş' : 'Bekleyen'}
+                  </span>
+                </div>
+              ))}
+            </div>
+          )}
+        </div>
+
+        {/* Tamamlanan Hareketler */}
+        <div className="bg-zinc-900 border border-zinc-800 rounded-2xl p-4">
+          <h3 className="text-sm font-semibold text-white mb-3">Tamamlanan Hareketler</h3>
+          {movements.length === 0 ? (
+            <p className="text-sm text-zinc-500">Henüz tamamlanan hareket yok.</p>
+          ) : (
+            <div className="space-y-2">
+              {movements.map((m) => (
+                <div key={m.id} className="flex items-center justify-between rounded-xl border border-zinc-700 p-3">
+                  <div>
+                    <p className="font-medium text-white text-sm">{m.name}</p>
+                    {m.notes && <p className="text-xs text-zinc-500">{m.notes}</p>}
+                  </div>
+                  <span className="text-xs text-zinc-400">
+                    {new Date(m.date).toLocaleDateString('tr-TR')}
                   </span>
                 </div>
               ))}
