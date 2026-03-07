@@ -13,8 +13,17 @@ import {
   Check,
   ArrowRight,
   Store,
+  Users,
 } from "lucide-react"
 import { YisaLogo } from "@/components/YisaLogo"
+import {
+  calculatePrice,
+  KADEME_TABLO,
+  PAKET_TIPLERI,
+  SLIDER_MIN,
+  SLIDER_MAX,
+  type PaketTipi,
+} from "@/lib/pricing/kademe"
 
 const SABLONLAR = [
   { id: "klasik", name: "Klasik", desc: "Sade ve profesyonel", ekFiyat: 0 },
@@ -322,6 +331,9 @@ export default function VitrinPage() {
           </div>
         </div>
 
+        {/* ─── Kademe Fiyatlandırma Slider ─── */}
+        <KademeFiyatSlider />
+
         <div className="mt-12 text-center">
           <p className="text-white/50 text-sm mb-4">
             Beşiktaş Tuzla Cimnastik Okulu gibi franchise müşterilerimiz bu ekrandan seçim yapıp
@@ -332,6 +344,108 @@ export default function VitrinPage() {
           </Link>
         </div>
       </main>
+    </div>
+  )
+}
+
+function KademeFiyatSlider() {
+  const [ogrenciSayisi, setOgrenciSayisi] = useState(100)
+  const [paketTipi, setPaketTipi] = useState<PaketTipi>("pro")
+
+  const sonuc = calculatePrice(ogrenciSayisi, paketTipi)
+
+  return (
+    <div className="mt-16 rounded-2xl border border-white/10 bg-white/5 p-8">
+      <div className="flex items-center gap-3 mb-6">
+        <Users className="h-6 w-6 text-cyan-400" />
+        <h2 className="text-xl font-bold text-white/95">Kademe Fiyatlandırma</h2>
+      </div>
+      <p className="text-sm text-white/50 mb-8">
+        Öğrenci sayınızı seçin, paketle birlikte canlı fiyatı görün. Fazla öğrenci = düşük birim fiyat.
+      </p>
+
+      {/* Paket secimi */}
+      <div className="flex flex-wrap gap-3 mb-8">
+        {(Object.entries(PAKET_TIPLERI) as [PaketTipi, { ad: string; aciklama: string }][]).map(
+          ([key, val]) => (
+            <button
+              key={key}
+              onClick={() => setPaketTipi(key)}
+              className={`px-5 py-2.5 rounded-xl text-sm font-medium transition border ${
+                paketTipi === key
+                  ? "border-emerald-500/50 bg-emerald-500/15 text-emerald-400"
+                  : "border-white/10 text-white/60 hover:border-white/20"
+              }`}
+            >
+              {val.ad}
+            </button>
+          ),
+        )}
+      </div>
+
+      {/* Slider */}
+      <div className="mb-8">
+        <div className="flex items-center justify-between mb-3">
+          <span className="text-sm text-white/70">Öğrenci sayısı</span>
+          <span className="text-2xl font-bold text-emerald-400">{sonuc.ogrenciSayisi}</span>
+        </div>
+        <input
+          type="range"
+          min={SLIDER_MIN}
+          max={SLIDER_MAX}
+          step={1}
+          value={ogrenciSayisi}
+          onChange={(e) => setOgrenciSayisi(Number(e.target.value))}
+          className="w-full h-2 rounded-full appearance-none cursor-pointer bg-white/10 accent-emerald-500"
+        />
+        <div className="flex justify-between text-xs text-white/40 mt-1">
+          <span>{SLIDER_MIN}</span>
+          <span>{SLIDER_MAX}</span>
+        </div>
+      </div>
+
+      {/* Kademe gostergesi */}
+      <div className="grid grid-cols-2 sm:grid-cols-5 gap-2 mb-8">
+        {KADEME_TABLO.map((k) => {
+          const aktif = sonuc.kademeEtiket === k.etiket
+          return (
+            <div
+              key={k.ust}
+              className={`p-3 rounded-xl border text-center text-xs transition ${
+                aktif
+                  ? "border-emerald-500/50 bg-emerald-500/10 text-emerald-400"
+                  : "border-white/10 text-white/40"
+              }`}
+            >
+              <div className="font-medium">{k.etiket}</div>
+              <div className="mt-1">{k.birimFiyat[paketTipi]} TL/öğrenci</div>
+            </div>
+          )
+        })}
+      </div>
+
+      {/* Fiyat sonucu */}
+      <div className="grid grid-cols-1 sm:grid-cols-3 gap-4">
+        <div className="rounded-xl border border-white/10 bg-white/5 p-5 text-center">
+          <div className="text-xs text-white/50 mb-1">Birim fiyat</div>
+          <div className="text-lg font-bold text-cyan-400">{sonuc.birimFiyat} TL</div>
+          <div className="text-xs text-white/40">/öğrenci/ay</div>
+        </div>
+        <div className="rounded-xl border border-emerald-500/30 bg-emerald-500/5 p-5 text-center">
+          <div className="text-xs text-white/50 mb-1">Aylık toplam</div>
+          <div className="text-2xl font-bold text-emerald-400">
+            {sonuc.aylikFiyat.toLocaleString("tr-TR")} TL
+          </div>
+          <div className="text-xs text-white/40">/ay</div>
+        </div>
+        <div className="rounded-xl border border-white/10 bg-white/5 p-5 text-center">
+          <div className="text-xs text-white/50 mb-1">Yıllık (%10 indirim)</div>
+          <div className="text-lg font-bold text-amber-400">
+            {sonuc.yillikFiyat.toLocaleString("tr-TR")} TL
+          </div>
+          <div className="text-xs text-white/40">/yıl</div>
+        </div>
+      </div>
     </div>
   )
 }

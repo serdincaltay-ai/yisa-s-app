@@ -35,6 +35,7 @@ export interface TenantConfig {
 export const BRANS_RENK: Record<string, { bg: string; text: string; border: string }> = {
   'Cimnastik': { bg: 'bg-pink-500/20', text: 'text-pink-300', border: 'border-pink-500/30' },
   'Artistik Cimnastik': { bg: 'bg-pink-500/20', text: 'text-pink-300', border: 'border-pink-500/30' },
+  'Ritmik Cimnastik': { bg: 'bg-rose-500/20', text: 'text-rose-300', border: 'border-rose-500/30' },
   'Yüzme': { bg: 'bg-blue-500/20', text: 'text-blue-300', border: 'border-blue-500/30' },
   'Basketbol': { bg: 'bg-amber-500/20', text: 'text-amber-300', border: 'border-amber-500/30' },
   'Voleybol': { bg: 'bg-emerald-500/20', text: 'text-emerald-300', border: 'border-emerald-500/30' },
@@ -164,6 +165,21 @@ const FENER_DERS_PROGRAMI: DersProgramiItem[] = [
   { gun: 'Cumartesi', saat: '13:00', brans: 'Basketbol', seviye: 'U14' },
 ]
 
+/** Kartal Cimnastik ders programı */
+const KARTAL_DERS_PROGRAMI: DersProgramiItem[] = [
+  { gun: 'Pazartesi', saat: '15:00', brans: 'Artistik Cimnastik', seviye: 'Mini (5-7)' },
+  { gun: 'Pazartesi', saat: '17:00', brans: 'Ritmik Cimnastik', seviye: 'Başlangıç' },
+  { gun: 'Salı', saat: '15:00', brans: 'Artistik Cimnastik', seviye: 'Midi (8-12)' },
+  { gun: 'Salı', saat: '17:00', brans: 'Ritmik Cimnastik', seviye: 'İleri' },
+  { gun: 'Çarşamba', saat: '15:00', brans: 'Artistik Cimnastik', seviye: 'Mini (5-7)' },
+  { gun: 'Çarşamba', saat: '17:00', brans: 'Artistik Cimnastik', seviye: 'İleri' },
+  { gun: 'Perşembe', saat: '15:00', brans: 'Ritmik Cimnastik', seviye: 'Mini (5-7)' },
+  { gun: 'Perşembe', saat: '17:00', brans: 'Artistik Cimnastik', seviye: 'Midi (8-12)' },
+  { gun: 'Cuma', saat: '15:00', brans: 'Ritmik Cimnastik', seviye: 'Midi (8-12)' },
+  { gun: 'Cumartesi', saat: '10:00', brans: 'Artistik Cimnastik', seviye: 'Tüm Gruplar' },
+  { gun: 'Cumartesi', saat: '13:00', brans: 'Ritmik Cimnastik', seviye: 'Tüm Gruplar' },
+]
+
 /** Demo Tesis ders programı (medium şablon) */
 const DEMO_DERS_PROGRAMI: DersProgramiItem[] = [
   { gun: 'Pazartesi', saat: '14:00', brans: 'Cimnastik', seviye: 'Mini (4-6)' },
@@ -179,7 +195,6 @@ const DEMO_DERS_PROGRAMI: DersProgramiItem[] = [
   { gun: 'Cumartesi', saat: '10:00', brans: 'Cimnastik', seviye: 'Tüm Gruplar' },
   { gun: 'Cumartesi', saat: '13:00', brans: 'Dans', seviye: 'Başlangıç' },
 ]
-
 /** Tenant konfigürasyonları */
 export const TENANT_CONFIGS: Record<string, TenantConfig> = {
   bjktuzlacimnastik: {
@@ -254,6 +269,30 @@ export const TENANT_CONFIGS: Record<string, TenantConfig> = {
     logoBadge: 'FB',
     ustBaslik: 'Fenerbahçe Spor Kulübü',
   },
+  kartalcimnastik: {
+    slug: 'kartalcimnastik',
+    ad: 'Kartal Cimnastik Spor Kulübü',
+    kisa: 'Kartal Cimnastik',
+    slogan: 'Cimnastikte Güç ve Zarafet',
+    altSlogan: 'Profesyonel cimnastik eğitimi',
+    aciklama:
+      'Kartal Cimnastik Spor Kulübü, İstanbul Kartal bölgesinde artistik ve ritmik cimnastik dallarında profesyonel eğitim vermektedir. Deneyimli antrenör kadromuz ile 4-16 yaş arası çocuklarınızın sportif gelişimini destekliyoruz.',
+    telefon: '0530 000 00 00',
+    email: 'info@kartalcimnastik.com',
+    instagram: '@kartalcimnastik',
+    instagramUrl: 'https://instagram.com/kartalcimnastik',
+    whatsapp: '905300000000',
+    adres: 'Kartal, İstanbul',
+    adresKisa: 'Kartal/İstanbul',
+    calisma: 'Hafta içi 10:00-20:00 · Cumartesi 09:00-17:00',
+    harita: 'https://maps.google.com/?q=Kartal+Istanbul',
+    haritaEmbed:
+      'https://www.google.com/maps/embed?pb=!1m18!1m12!1m3!1d12070.0!2d29.19!3d40.89!2m3!1f0!2f0!3f0!3m2!1i1024!2i768!4f13.1!3m3!1m2!1s0x0%3A0x0!2zS2FydGFs!5e0!3m2!1str!2str',
+    brans: 'Cimnastik',
+    template: 'standard',
+    logoBadge: 'KC',
+    ustBaslik: 'Kartal Cimnastik Spor Kulübü',
+  },
   demotesis: {
     slug: 'demotesis',
     ad: 'Demo Spor Akademisi',
@@ -290,6 +329,8 @@ export function getDersProgrami(slug: string): DersProgramiItem[] {
     case 'feneratasehir':
     case 'fenerbahceatasehir':
       return FENER_DERS_PROGRAMI
+    case 'kartalcimnastik':
+      return KARTAL_DERS_PROGRAMI
     case 'demotesis':
       return DEMO_DERS_PROGRAMI
     default:
