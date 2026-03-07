@@ -112,9 +112,9 @@ export default async function RootLayout({
       <body className={`${inter.className} text-white min-h-screen bg-zinc-950`}>
         <NextIntlClientProvider locale={locale} messages={messages}>
           {children}
+          <FooterWrapper />
+          <ChatWidget />
         </NextIntlClientProvider>
-        <FooterWrapper />
-        <ChatWidget />
         <SpeedInsights />
         {process.env.NEXT_PUBLIC_GA_MEASUREMENT_ID && (
           <GoogleAnalytics gaId={process.env.NEXT_PUBLIC_GA_MEASUREMENT_ID} />
