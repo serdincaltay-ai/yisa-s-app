@@ -102,6 +102,41 @@ const TESISLER: Record<string, TesisData> = {
             { soru: 'Online ödeme yapabilir miyim?', cevap: 'Evet, veli paneli üzerinden kredi kartı ile ödeme yapabilirsiniz.' },
     ],
   },
+  demotesis: {
+    adi: 'Demo Spor Akademisi',
+    slug: 'demotesis',
+    slogan: 'Sporda Mükemmelliği Keşfedin',
+    hakkimizda: 'Demo Spor Akademisi, orta şablon ile oluşturulmuş örnek bir tesis sayfasıdır. Cimnastik, yüzme ve dans branşlarında profesyonel eğitim sunuyoruz. 4-14 yaş arası çocuklarınız için güvenli, eğlenceli ve gelişim odaklı bir ortam sağlıyoruz.',
+    konum: 'Kadıköy, İstanbul',
+    telefon: '+90 (555) 123 45 67',
+    email: 'info@demotesis.yisa-s.com',
+    sablon: 'orta',
+    branslar: [
+      { isim: 'Cimnastik', icon: 'dumbbell', aciklama: 'Artistik ve ritmik cimnastik eğitimi' },
+      { isim: 'Yüzme', icon: 'waves', aciklama: 'Temel ve ileri seviye yüzme kursları' },
+      { isim: 'Dans', icon: 'timer', aciklama: 'Modern dans ve bale eğitimi' },
+    ],
+    antrenorler: [
+      { isim: 'Zeynep Aydın', brans: 'Cimnastik', deneyim: '10 yıl' },
+      { isim: 'Emre Yılmaz', brans: 'Yüzme', deneyim: '8 yıl' },
+      { isim: 'Seda Korkmaz', brans: 'Dans', deneyim: '6 yıl' },
+    ],
+    basarilar: [
+      { isim: 'Arda Demir', basari: 'İl Birincisi 2025', alinti: 'Demo Akademi sayesinde hedeflerime ulaştım!' },
+      { isim: 'Ela Çelik', basari: 'Bölge İkincisi 2025', alinti: 'Antrenörlerim hep yanımda oldu.' },
+    ],
+    duyurular: [
+      { tarih: '2026-03-05', baslik: 'Bahar Dönemi Kayıtları', ozet: '2026 bahar dönemi kayıtları başlamıştır. Erken kayıt avantajlarından yararlanın.' },
+      { tarih: '2026-02-20', baslik: 'Yeni Dans Programı', ozet: 'Modern dans ve bale programımız mart ayında başlıyor.' },
+      { tarih: '2026-02-10', baslik: 'Deneme Dersi Kampanyası', ozet: 'Tüm branşlarda ücretsiz deneme dersi fırsatı.' },
+    ],
+    sss: [
+      { soru: 'Kayıt için ne gerekiyor?', cevap: 'Kimlik fotokopisi, 2 vesikalık fotoğraf ve sağlık raporu ile kayıt olabilirsiniz.' },
+      { soru: 'Deneme dersi var mı?', cevap: 'Evet, tüm branşlarımızda 1 ücretsiz deneme dersi hakkınız bulunmaktadır.' },
+      { soru: 'Hangi yaş grupları kabul ediliyor?', cevap: '4-14 yaş arası tüm çocuklar branşlarımıza kayıt yaptırabilir.' },
+      { soru: 'Taksit seçeneği var mı?', cevap: 'Evet, Gelişim ve Şampiyon paketlerinde 2 taksit seçeneği mevcuttur.' },
+    ],
+  },
 }
 
 const BRANS_ICONS: Record<string, React.ElementType> = {

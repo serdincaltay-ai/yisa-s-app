@@ -13,6 +13,7 @@ export type ResolvedRole =
   | 'tesis_sahibi'
   | 'antrenor'
   | 'temizlik'
+  | 'kayit_gorevlisi'
   | 'veli'
 
 const PATRON_VARIANTS = ['patron', 'Patron', 'PATRON', 'ROL-0', 'rol-0']
@@ -27,6 +28,7 @@ function normalizeRole(raw: string | undefined | null): ResolvedRole | null {
   if (['isletme_muduru', 'tesis_sahibi', 'tesis müdürü'].some((v) => r.includes(v.replace(/\s/g, '')))) return 'tesis_sahibi'
   if (['antrenor', 'antrenör'].some((v) => r.includes(v))) return 'antrenor'
   if (['temizlik', 'cleaning', 'temizlik_personeli'].some((v) => r.includes(v))) return 'temizlik'
+  if (['kayit_gorevlisi', 'kayit_personeli', 'kayıt personeli', 'kayit gorevlisi'].some((v) => r.includes(v))) return 'kayit_gorevlisi'
   if (VELI_VARIANTS.some((v) => v.toLowerCase() === r)) return 'veli'
   return null
 }
@@ -75,5 +77,6 @@ export const ROLE_TO_PATH: Record<ResolvedRole, string> = {
   tesis_sahibi: '/tesis',
   antrenor: '/antrenor',
   temizlik: '/temizlik',
+  kayit_gorevlisi: '/kayit',
   veli: '/veli',
 }
