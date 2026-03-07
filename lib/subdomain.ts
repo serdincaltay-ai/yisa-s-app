@@ -10,7 +10,7 @@
 export type PanelType = 'patron' | 'franchise' | 'franchise_site' | 'veli' | 'www'
 
 /** Varsayılan subdomain'ler (DB yoksa veya boşsa) */
-export const FRANCHISE_SUBDOMAINS_DEFAULT = ['bjktuzlacimnastik', 'fenerbahceatasehir', 'feneratasehir', 'kartalcimnastik'] as const
+export const FRANCHISE_SUBDOMAINS_DEFAULT = ['bjktuzlacimnastik', 'fenerbahceatasehir', 'feneratasehir', 'kartalcimnastik', 'demotesis'] as const
 export type FranchiseSubdomain = (typeof FRANCHISE_SUBDOMAINS_DEFAULT)[number]
 
 export function getPanelFromHost(host: string | null, subdomains?: string[]): PanelType {

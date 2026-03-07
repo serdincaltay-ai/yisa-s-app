@@ -7,7 +7,7 @@ import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/com
 import { Input } from '@/components/ui/input'
 import { Label } from '@/components/ui/label'
 import { Textarea } from '@/components/ui/textarea'
-import { ArrowLeft, FileText, Upload, AlertTriangle, Loader2, Plus } from 'lucide-react'
+import { ArrowLeft, FileText, Upload, AlertTriangle, Loader2, Plus, Bell, ShieldAlert, Clock } from 'lucide-react'
 
 type HealthRecord = {
   id: string
@@ -17,35 +17,78 @@ type HealthRecord = {
   notes: string | null
   recorded_at: string
   created_at: string
+  saglik_raporu_gecerlilik?: string | null
 }
 type Warning = { athlete_id: string; athlete_name: string; recorded_at: string | null; message: string }
 type Athlete = { id: string; name: string; surname?: string | null }
+type BelgeKontrol = {
+  id: string
+  athlete_id: string
+  athlete_name: string
+  record_type: string
+  saglik_raporu_gecerlilik: string | null
+  durum: 'gecmis' | 'yaklasan' | 'gecerli' | 'belirsiz'
+  kalan_gun: number | null
+}
+
+function gecerlilikDurumBadge(durum: BelgeKontrol['durum'], kalanGun: number | null) {
+  switch (durum) {
+    case 'gecmis':
+      return (
+        <span className="inline-flex items-center gap-1 rounded-full bg-red-100 px-2.5 py-0.5 text-xs font-medium text-red-800 dark:bg-red-900/30 dark:text-red-400">
+          <ShieldAlert className="h-3 w-3" />
+          Süresi dolmuş {kalanGun !== null ? `(${Math.abs(kalanGun)} gün)` : ''}
+        </span>
+      )
+    case 'yaklasan':
+      return (
+        <span className="inline-flex items-center gap-1 rounded-full bg-yellow-100 px-2.5 py-0.5 text-xs font-medium text-yellow-800 dark:bg-yellow-900/30 dark:text-yellow-400">
+          <Clock className="h-3 w-3" />
+          {kalanGun} gün kaldı
+        </span>
+      )
+    case 'belirsiz':
+      return (
+        <span className="inline-flex items-center gap-1 rounded-full bg-gray-100 px-2.5 py-0.5 text-xs font-medium text-gray-600 dark:bg-gray-800/30 dark:text-gray-400">
+          Geçerlilik bilinmiyor
+        </span>
+      )
+    default:
+      return null
+  }
+}
 
 export default function FranchiseBelgelerPage() {
   const [items, setItems] = useState<HealthRecord[]>([])
   const [warnings, setWarnings] = useState<Warning[]>([])
+  const [belgeKontrol, setBelgeKontrol] = useState<BelgeKontrol[]>([])
   const [athletes, setAthletes] = useState<Athlete[]>([])
   const [loading, setLoading] = useState(true)
   const [showUpload, setShowUpload] = useState(false)
   const [sending, setSending] = useState(false)
-  const [form, setForm] = useState({ athlete_id: '', record_type: 'genel', notes: '' })
+  const [sendingNotif, setSendingNotif] = useState<string | null>(null)
+  const [form, setForm] = useState({ athlete_id: '', record_type: 'genel', notes: '', saglik_raporu_gecerlilik: '' })
 
   const fetchData = useCallback(async () => {
     setLoading(true)
     try {
-      const [recRes, athRes] = await Promise.all([
+      const [recRes, athRes, kontrolRes] = await Promise.all([
         fetch('/api/franchise/health-records'),
         fetch('/api/franchise/athletes'),
+        fetch('/api/franchise/belgeler/kontrol'),
       ])
       const recData = await recRes.json()
       const athData = await athRes.json()
+      const kontrolData = await kontrolRes.json()
       setItems(Array.isArray(recData?.items) ? recData.items : [])
       setWarnings(Array.isArray(recData?.warnings) ? recData.warnings : [])
       setAthletes(Array.isArray(athData?.items) ? athData.items : [])
+      setBelgeKontrol(Array.isArray(kontrolData?.items) ? kontrolData.items : [])
     } catch {
       setItems([])
       setWarnings([])
       setAthletes([])
+      setBelgeKontrol([])
     } finally {
       setLoading(false)
     }
@@ -63,11 +106,16 @@ export default function FranchiseBelgelerPage() {
       const res = await fetch('/api/franchise/health-records', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ athlete_id: form.athlete_id, record_type: form.record_type, notes: form.notes || undefined }),
+        body: JSON.stringify({
+          athlete_id: form.athlete_id,
+          record_type: form.record_type,
+          notes: form.notes || undefined,
+          saglik_raporu_gecerlilik: form.saglik_raporu_gecerlilik || undefined,
+        }),
       })
       const data = await res.json()
       if (data?.ok) {
-        setForm({ athlete_id: '', record_type: 'genel', notes: '' })
+        setForm({ athlete_id: '', record_type: 'genel', notes: '', saglik_raporu_gecerlilik: '' })
         setShowUpload(false)
         fetchData()
       } else {
@@ -79,6 +127,38 @@ export default function FranchiseBelgelerPage() {
       setSending(false)
     }
   }
+
+  const handleSendWarning = async (athleteId: string, athleteName: string) => {
+    if (sendingNotif) return
+    setSendingNotif(athleteId)
+    try {
+      const res = await fetch('/api/franchise/belgeler/uyari-gonder', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ athlete_id: athleteId }),
+      })
+      const data = await res.json()
+      if (data?.ok) {
+        alert(`${athleteName} velisine belge uyarısı gönderildi.`)
+      } else {
+        alert(data?.error ?? 'Bildirim gönderilemedi')
+      }
+    } catch {
+      alert('İstek gönderilemedi')
+    } finally {
+      setSendingNotif(null)
+    }
+  }
+
+  // Geçerlilik verisini kayıtlarla eşle
+  const gecerlilikMap = new Map<string, BelgeKontrol>()
+  for (const bk of belgeKontrol) {
+    gecerlilikMap.set(bk.id, bk)
+  }
+
+  // Gecmis ve yaklasan uyarıları ayır
+  const gecmisUyarilar = belgeKontrol.filter((b) => b.durum === 'gecmis')
+  const yaklasanUyarilar = belgeKontrol.filter((b) => b.durum === 'yaklasan')
 
   return (
     <div className="p-6 space-y-6">
@@ -96,7 +176,97 @@ export default function FranchiseBelgelerPage() {
         <p className="text-muted-foreground">Sağlık raporu, geçerlilik uyarıları, veli/eğitmen yükleme</p>
       </header>
 
-      {warnings.length > 0 && (
+      {gecmisUyarilar.length > 0 && (
+        <Card className="border-red-500/50 bg-red-500/5">
+          <CardHeader>
+            <CardTitle className="flex items-center gap-2 text-red-700 dark:text-red-400">
+              <ShieldAlert className="h-5 w-5" />
+              Süresi dolmuş belgeler ({gecmisUyarilar.length})
+            </CardTitle>
+            <CardDescription>Bu belgelerin geçerlilik süresi dolmuştur — acil yenileme gerekli</CardDescription>
+          </CardHeader>
+          <CardContent>
+            <ul className="space-y-2">
+              {gecmisUyarilar.map((b) => (
+                <li key={b.id} className="flex items-center justify-between text-sm">
+                  <div>
+                    <span className="font-medium">{b.athlete_name}</span>
+                    <span className="text-muted-foreground"> — {b.record_type}</span>
+                    {b.saglik_raporu_gecerlilik && (
+                      <span className="text-red-600 dark:text-red-400 ml-2">
+                        (Son geçerlilik: {new Date(b.saglik_raporu_gecerlilik).toLocaleDateString('tr-TR')})
+                      </span>
+                    )}
+                  </div>
+                  <Button
+                    size="sm"
+                    variant="destructive"
+                    className="ml-2 shrink-0"
+                    disabled={sendingNotif === b.athlete_id}
+                    onClick={() => handleSendWarning(b.athlete_id, b.athlete_name)}
+                  >
+                    {sendingNotif === b.athlete_id ? (
+                      <Loader2 className="h-3 w-3 animate-spin" />
+                    ) : (
+                      <>
+                        <Bell className="h-3 w-3 mr-1" />
+                        Uyarı gönder
+                      </>
+                    )}
+                  </Button>
+                </li>
+              ))}
+            </ul>
+          </CardContent>
+        </Card>
+      )}
+
+      {yaklasanUyarilar.length > 0 && (
+        <Card className="border-amber-500/50 bg-amber-500/5">
+          <CardHeader>
+            <CardTitle className="flex items-center gap-2 text-amber-700 dark:text-amber-400">
+              <AlertTriangle className="h-5 w-5" />
+              Süresi yaklaşan belgeler ({yaklasanUyarilar.length})
+            </CardTitle>
+            <CardDescription>Bu belgelerin geçerlilik süresi 30 gün içinde dolacak</CardDescription>
+          </CardHeader>
+          <CardContent>
+            <ul className="space-y-2">
+              {yaklasanUyarilar.map((b) => (
+                <li key={b.id} className="flex items-center justify-between text-sm">
+                  <div>
+                    <span className="font-medium">{b.athlete_name}</span>
+                    <span className="text-muted-foreground"> — {b.record_type}</span>
+                    {b.saglik_raporu_gecerlilik && (
+                      <span className="text-amber-600 dark:text-amber-400 ml-2">
+                        (Son geçerlilik: {new Date(b.saglik_raporu_gecerlilik).toLocaleDateString('tr-TR')}, {b.kalan_gun} gün kaldı)
+                      </span>
+                    )}
+                  </div>
+                  <Button
+                    size="sm"
+                    variant="outline"
+                    className="ml-2 shrink-0 border-amber-500 text-amber-700 hover:bg-amber-50 dark:text-amber-400 dark:hover:bg-amber-900/20"
+                    disabled={sendingNotif === b.athlete_id}
+                    onClick={() => handleSendWarning(b.athlete_id, b.athlete_name)}
+                  >
+                    {sendingNotif === b.athlete_id ? (
+                      <Loader2 className="h-3 w-3 animate-spin" />
+                    ) : (
+                      <>
+                        <Bell className="h-3 w-3 mr-1" />
+                        Uyarı gönder
+                      </>
+                    )}
+                  </Button>
+                </li>
+              ))}
+            </ul>
+          </CardContent>
+        </Card>
+      )}
+
+      {warnings.length > 0 && gecmisUyarilar.length === 0 && yaklasanUyarilar.length === 0 && (
         <Card className="border-amber-500/50 bg-amber-500/5">
           <CardHeader>
             <CardTitle className="flex items-center gap-2 text-amber-700 dark:text-amber-400">
@@ -152,6 +322,14 @@ export default function FranchiseBelgelerPage() {
                 </select>
               </div>
               <div>
+                <Label>Son geçerlilik tarihi</Label>
+                <Input
+                  type="date"
+                  value={form.saglik_raporu_gecerlilik}
+                  onChange={(e) => setForm((f) => ({ ...f, saglik_raporu_gecerlilik: e.target.value }))}
+                />
+              </div>
+              <div>
                 <Label>Not / açıklama</Label>
                 <Textarea value={form.notes} onChange={(e) => setForm((f) => ({ ...f, notes: e.target.value }))} placeholder="İsteğe bağlı" rows={2} />
               </div>
@@ -172,19 +350,60 @@ export default function FranchiseBelgelerPage() {
                   <tr className="border-b">
                     <th className="text-left py-2 font-medium">Öğrenci</th>
                     <th className="text-left py-2 font-medium">Tür</th>
-                    <th className="text-left py-2 font-medium">Tarih</th>
+                    <th className="text-left py-2 font-medium">Kayıt tarihi</th>
+                    <th className="text-left py-2 font-medium">Son geçerlilik</th>
+                    <th className="text-left py-2 font-medium">Durum</th>
                     <th className="text-left py-2 font-medium">Not</th>
+                    <th className="text-left py-2 font-medium">İşlem</th>
                   </tr>
                 </thead>
                 <tbody>
-                  {items.map((r) => (
-                    <tr key={r.id} className="border-b">
-                      <td className="py-2">{r.athlete_name}</td>
-                      <td className="py-2">{r.record_type}</td>
-                      <td className="py-2">{new Date(r.recorded_at).toLocaleDateString('tr-TR')}</td>
-                      <td className="py-2 text-muted-foreground">{r.notes || '—'}</td>
-                    </tr>
-                  ))}
+                  {items.map((r) => {
+                    const kontrol = gecerlilikMap.get(r.id)
+                    const gecerlilik = r.saglik_raporu_gecerlilik
+                    return (
+                      <tr key={r.id} className="border-b">
+                        <td className="py-2">{r.athlete_name}</td>
+                        <td className="py-2">{r.record_type}</td>
+                        <td className="py-2">{new Date(r.recorded_at).toLocaleDateString('tr-TR')}</td>
+                        <td className="py-2">
+                          {gecerlilik
+                            ? new Date(gecerlilik).toLocaleDateString('tr-TR')
+                            : <span className="text-muted-foreground">—</span>
+                          }
+                        </td>
+                        <td className="py-2">
+                          {kontrol
+                            ? gecerlilikDurumBadge(kontrol.durum, kontrol.kalan_gun)
+                            : gecerlilik
+                              ? <span className="inline-flex items-center rounded-full bg-green-100 px-2.5 py-0.5 text-xs font-medium text-green-800 dark:bg-green-900/30 dark:text-green-400">Geçerli</span>
+                              : <span className="text-muted-foreground text-xs">—</span>
+                          }
+                        </td>
+                        <td className="py-2 text-muted-foreground">{r.notes || '—'}</td>
+                        <td className="py-2">
+                          {kontrol && (kontrol.durum === 'gecmis' || kontrol.durum === 'yaklasan') && (
+                            <Button
+                              size="sm"
+                              variant="ghost"
+                              className="h-7 px-2 text-xs"
+                              disabled={sendingNotif === r.athlete_id}
+                              onClick={() => handleSendWarning(r.athlete_id, r.athlete_name)}
+                            >
+                              {sendingNotif === r.athlete_id ? (
+                                <Loader2 className="h-3 w-3 animate-spin" />
+                              ) : (
+                                <>
+                                  <Bell className="h-3 w-3 mr-1" />
+                                  Uyarı
+                                </>
+                              )}
+                            </Button>
+                          )}
+                        </td>
+                      </tr>
+                    )
+                  })}
                 </tbody>
               </table>
             </div>

@@ -180,6 +180,21 @@ const KARTAL_DERS_PROGRAMI: DersProgramiItem[] = [
   { gun: 'Cumartesi', saat: '13:00', brans: 'Ritmik Cimnastik', seviye: 'Tüm Gruplar' },
 ]
 
+/** Demo Tesis ders programı (medium şablon) */
+const DEMO_DERS_PROGRAMI: DersProgramiItem[] = [
+  { gun: 'Pazartesi', saat: '14:00', brans: 'Cimnastik', seviye: 'Mini (4-6)' },
+  { gun: 'Pazartesi', saat: '16:00', brans: 'Cimnastik', seviye: 'Midi (7-10)' },
+  { gun: 'Salı', saat: '15:00', brans: 'Yüzme', seviye: 'Başlangıç' },
+  { gun: 'Salı', saat: '17:00', brans: 'Cimnastik', seviye: 'İleri' },
+  { gun: 'Çarşamba', saat: '14:00', brans: 'Cimnastik', seviye: 'Mini (4-6)' },
+  { gun: 'Çarşamba', saat: '16:00', brans: 'Yüzme', seviye: 'Orta' },
+  { gun: 'Perşembe', saat: '15:00', brans: 'Cimnastik', seviye: 'Midi (7-10)' },
+  { gun: 'Perşembe', saat: '17:00', brans: 'Dans', seviye: 'Tüm Yaşlar' },
+  { gun: 'Cuma', saat: '14:00', brans: 'Cimnastik', seviye: 'Başlangıç' },
+  { gun: 'Cuma', saat: '16:00', brans: 'Yüzme', seviye: 'İleri' },
+  { gun: 'Cumartesi', saat: '10:00', brans: 'Cimnastik', seviye: 'Tüm Gruplar' },
+  { gun: 'Cumartesi', saat: '13:00', brans: 'Dans', seviye: 'Başlangıç' },
+]
 /** Tenant konfigürasyonları */
 export const TENANT_CONFIGS: Record<string, TenantConfig> = {
   bjktuzlacimnastik: {
@@ -278,6 +293,32 @@ export const TENANT_CONFIGS: Record<string, TenantConfig> = {
     logoBadge: 'KC',
     ustBaslik: 'Kartal Cimnastik Spor Kulübü',
   },
+  demotesis: {
+    slug: 'demotesis',
+    ad: 'Demo Spor Akademisi',
+    kisa: 'Demo Akademi',
+    slogan: 'Sporda Mükemmelliği Keşfedin',
+    altSlogan: 'Cimnastik, yüzme ve dans eğitimi',
+    aciklama:
+      'Demo Spor Akademisi, orta şablon ile oluşturulmuş örnek bir tesis sayfasıdır. ' +
+      'Cimnastik, yüzme ve dans branşlarında profesyonel eğitim sunuyoruz. ' +
+      '4-14 yaş arası çocuklarınız için güvenli ve gelişim odaklı bir ortam.',
+    telefon: '0555 123 45 67',
+    email: 'info@demotesis.yisa-s.com',
+    instagram: '@demotesis',
+    instagramUrl: 'https://instagram.com/demotesis',
+    whatsapp: '905551234567',
+    adres: 'Örnek Mah. Spor Cad. No:10, 34000 Kadıköy/İstanbul',
+    adresKisa: 'Kadıköy/İstanbul',
+    calisma: 'Hafta içi 09:00-20:00 · Cumartesi 09:00-16:00',
+    harita: 'https://maps.google.com/?q=Kadikoy+Istanbul',
+    haritaEmbed:
+      'https://www.google.com/maps/embed?pb=!1m18!1m12!1m3!1d12065.8!2d29.02!3d40.99!2m3!1f0!2f0!3f0!3m2!1i1024!2i768!4f13.1!3m3!1m2!1s0x0%3A0x0!2zS2FkxLFrw7Z5!5e0!3m2!1str!2str',
+    brans: 'Çok Branşlı',
+    template: 'medium',
+    logoBadge: 'DM',
+    ustBaslik: 'Demo Spor Akademisi',
+  },
 }
 
 /** Tenant slug'dan ders programını getir */
@@ -290,6 +331,8 @@ export function getDersProgrami(slug: string): DersProgramiItem[] {
       return FENER_DERS_PROGRAMI
     case 'kartalcimnastik':
       return KARTAL_DERS_PROGRAMI
+    case 'demotesis':
+      return DEMO_DERS_PROGRAMI
     default:
       return BJK_DERS_PROGRAMI
   }

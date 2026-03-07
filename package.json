@@ -18,12 +18,14 @@
     "test": "vitest run",
     "test:watch": "vitest",
     "test:coverage": "vitest run --coverage",
+    "check:env": "tsx scripts/check-env.ts",
     "test:e2e": "playwright test",
     "test:e2e:install": "playwright install --with-deps chromium"
   },
   "dependencies": {
     "@anthropic-ai/sdk": "^0.72.1",
     "@google/generative-ai": "^0.24.1",
+    "@next/third-parties": "^16.1.6",
     "@octokit/rest": "^22.0.1",
     "@radix-ui/react-accordion": "^1.2.12",
     "@radix-ui/react-avatar": "^1.1.11",
@@ -51,6 +53,7 @@
     "resend": "^6.9.3",
     "sanitize-html": "^2.17.1",
     "stripe": "^20.4.0",
+    "swagger-ui-react": "^5.32.0",
     "tailwind-merge": "^3.4.0",
     "twilio": "^5.12.2",
     "web-push": "^3.6.7"
@@ -73,6 +76,7 @@
     "postcss": "^8.4.0",
     "tailwindcss": "^3.4.0",
     "tailwindcss-animate": "^1.0.7",
+    "tsx": "^4.21.0",
     "typescript": "^5.0.0",
     "vitest": "^4.0.18"
   }

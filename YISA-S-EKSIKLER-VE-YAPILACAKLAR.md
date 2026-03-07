@@ -91,43 +91,42 @@
 
 ## B. EKSIKLER VE SORUNLAR
 
-### B1. Test Altyapisi (KRITIK - HIC YOK)
-- **Hicbir repoda test dosyasi yok** (unit test, integration test, e2e test)
-- Test framework'u kurulmamis (Jest, Vitest, Playwright, Cypress)
-- `package.json`'larda test script'i yok
-- CI/CD pipeline'da test asamasi yok
-- **Etki:** Refactoring ve yeni ozellik eklerken regresyon riski cok yuksek
+### B1. Test Altyapisi (KISMEN COZULDU — PR #60)
+- ~~**Hicbir repoda test dosyasi yok**~~ → **tenant-yisa-s'de Vitest kuruldu, 140 test yazildi**
+- ~~Test framework'u kurulmamis~~ → **Vitest + v8 coverage + mock Supabase client eklendi**
+- ~~`package.json`'larda test script'i yok~~ → **test, test:watch, test:coverage scriptleri eklendi**
+- CI/CD pipeline'da test asamasi yok (hala eksik)
+- **Mevcut testler:** CELF pipeline E2E (3 suite: provisioning 7, patron chain 10, directorate routing 123)
+- **Hala eksik:** app-yisa-s ve yisa-s-com'da test yok; Playwright e2e testleri yok
+- **Etki:** Kismen azaltildi — CELF pipeline regresyon korumasi var; diger modullerde risk devam ediyor
 
-### B2. Odeme Sistemi (KRITIK - ENTEGRASYON YOK)
-- `.env.example`'da Stripe ve PayTR degiskenleri tanimli
-- **Ancak hicbir API route'unda gercek odeme entegrasyonu yok**
-- Stripe webhook handler yok
-- PayTR callback handler yok
-- Odeme onay/iptal akisi implemente edilmemis
-- `payments` tablosu var ama API baglantisi yok
-- **Etki:** Franchise'lardan aidat/odeme tahsilati yapilamiyor
+### B2. Odeme Sistemi (COZULDU — PR #62 + PR #64)
+- ~~`.env.example`'da Stripe ve PayTR degiskenleri tanimli~~ → **Stripe entegrasyonu tamamlandi**
+- ~~**Ancak hicbir API route'unda gercek odeme entegrasyonu yok**~~ → **POST /api/payments/create-checkout + POST /api/webhooks/stripe**
+- ~~Stripe webhook handler yok~~ → **checkout.session.completed + checkout.session.expired handler eklendi**
+- ~~Odeme onay/iptal akisi implemente edilmemis~~ → **processing status lock + atomic rollback + orijinal durum geri yukleme**
+- ~~`payments` tablosu var ama API baglantisi yok~~ → **Veli (/veli/odeme) + Franchise (/franchise/aidatlar) UI entegrasyonu**
+- **Kalan:** PayTR entegrasyonu yapilmadi (sadece Stripe); gercek Stripe hesabi ile uctan uca test yapilmali
+- **Etki:** ~~Franchise'lardan aidat/odeme tahsilati yapilamiyor~~ → **Stripe ile online odeme alinabilir**
 
-### B3. SMS Sistemi (EKSIK - ENTEGRASYON KISMI)
-- `lib/sms-provider.ts` dosyasi var (TODO iceriyor)
-- `lib/sms-triggers.ts` tetikleyiciler tanimli
-- **Ancak API route'larinda gercek SMS gonderim endpoint'i yok**
-- Twilio/Netgsm gercek entegrasyonu test edilmemis
-- **Etki:** Otomatik SMS bildirimleri calismiyor
+### B3. SMS Sistemi (COZULDU — PR #67)
+- ~~`lib/sms-provider.ts` dosyasi var (TODO iceriyor)~~ → **SMS provider + sablonlar + tetikleyiciler eklendi**
+- ~~API route'larinda gercek SMS gonderim endpoint'i yok~~ → **Bildirim API'sine SMS kanali eklendi**
+- **Kalan:** Gercek Twilio/Netgsm hesabi ile uctan uca test yapilmali
+- **Etki:** ~~Otomatik SMS bildirimleri calismiyor~~ → **SMS altyapisi hazir**
 
-### B4. Email Sistemi (KISMI)
-- Resend entegrasyonu sadece `app-yisa-s/lib/emails/resend.ts`'de
-- Demo request onayinda email gonderimi var
-- **Ancak genel bildirim email'leri yok** (yoklama hatirlatma, odeme hatirlatma, vb.)
-- Email sablonlari tanimli degil
-- **Etki:** Otomatik email bildirimleri sinirli
+### B4. Email Sistemi (COZULDU — PR #68)
+- ~~Resend entegrasyonu sadece `app-yisa-s/lib/emails/resend.ts`'de~~ → **Resend entegrasyonu + bildirim sablonlari + toplu gonderim eklendi**
+- ~~Genel bildirim email'leri yok~~ → **Bildirim API'sine email kanali eklendi**
+- **Kalan:** Gercek ortamda email sablon onizlemesi ve spam testi
+- **Etki:** ~~Otomatik email bildirimleri sinirli~~ → **Email altyapisi hazir**
 
-### B5. CI/CD Pipeline (EKSIK)
-- Sadece `tenant-yisa-s`'de `.github/workflows` var
-- `app-yisa-s` ve `yisa-s-com`'da CI/CD pipeline yok
-- Test asamasi hicbir repoda yok
-- Lint kontrolu CI'da calisiyor mu belirsiz
-- Otomatik deploy sonrasi smoke test yok
-- **Etki:** Hatali kod production'a gidebilir
+### B5. CI/CD Pipeline (BUYUK OLCUDE COZULDU — PR #76)
+- ~~Sadece `tenant-yisa-s`'de `.github/workflows` var~~ → **ci.yml (lint + build + Vitest + JUnit raporu + artifact upload) + deploy.yml (manual dispatch + patron onayi)**
+- ~~Test asamasi hicbir repoda yok~~ → **Vitest testleri CI'da calisiyor, JUnit XML raporu uretiliyor**
+- ~~Lint kontrolu CI'da calisiyor mu belirsiz~~ → **npm run lint CI'da calisiyor (continue-on-error: true)**
+- **Kalan:** app-yisa-s ve yisa-s-com'da CI/CD pipeline yok; Sentry release entegrasyonu
+- **Etki:** ~~Hatali kod production'a gidebilir~~ → **tenant-yisa-s'de lint+build+test korumasi var**
 
 ### B6. i18n / Coklu Dil Destegi (HIC YOK)
 - Tum icerik Turkce hardcode
@@ -135,35 +134,33 @@
 - Uluslararasi franchise'lar icin coklu dil destegi yok
 - **Etki:** Sadece Turkce konusan kullanicilar kullanabilir
 
-### B7. Hata Izleme / Monitoring (KISMI)
-- `SENTRY_DSN` env var tanimli (.env.example)
-- `lib/logger.ts` mevcut (app-yisa-s)
-- **Ancak Sentry gercek entegrasyonu yapilmamis**
-- Error boundary'ler sinirli
-- Merkezi hata raporlama yok
-- Uptime monitoring yok
-- **Etki:** Production hatalari fark edilemeyebilir
+### B7. Hata Izleme / Monitoring (BUYUK OLCUDE COZULDU — PR #74)
+- ~~`SENTRY_DSN` env var tanimli ama entegrasyon yok~~ → **@sentry/nextjs entegrasyonu tamamlandi (client + server + edge config)**
+- ~~Error boundary'ler sinirli~~ → **global-error.tsx + instrumentation.ts eklendi**
+- ~~Merkezi hata raporlama yok~~ → **Sentry error tracking aktif**
+- **Kalan:** Uptime monitoring (henuz yok); diger repolarda Sentry entegrasyonu
+- **Etki:** ~~Production hatalari fark edilemeyebilir~~ → **tenant-yisa-s'de hata izleme aktif**
 
-### B8. Analytics / Kullanici Takibi (KISMI)
+### B8. Analytics / Kullanici Takibi (BUYUK OLCUDE COZULDU — PR #77)
 - `@vercel/analytics` (app-yisa-s) ve `@vercel/speed-insights` (tenant-yisa-s) paket olarak var
-- **Google Analytics / Google Tag Manager entegrasyonu yok**
+- ~~**Google Analytics / Google Tag Manager entegrasyonu yok**~~ → **@next/third-parties/google eklendi (PR #77), NEXT_PUBLIC_GA_MEASUREMENT_ID ile kosullu render**
 - Kullanici davranis izleme (heatmap, session replay) yok
 - Donusum orani takibi yok
-- **Etki:** Vitrin performansi ve kullanici davranisi olculemiyor
+- **Etki:** ~~Vitrin performansi olculemiyor~~ → **GA4 ile sayfa goruntulenme takibi aktif (env var set edildikten sonra)**
 
-### B9. Bildirim Sistemi (EKSIK)
-- Push notification altyapisi yok (Web Push API, Firebase Cloud Messaging)
-- `sw.js` service worker dosyalari mevcut ama icerik minimal
-- In-app bildirim sistemi yok
-- Veli/antrenor icin otomatik bildirim akisi yok (yoklama sonucu, odeme hatirlatma)
-- **Etki:** Kullanicilar onemli guncellemelerden haberdar olamiyor
+### B9. Bildirim Sistemi (BUYUK OLCUDE COZULDU — PR #61 + #71 + #72)
+- ~~Push notification altyapisi yok~~ → **Web Push API + VAPID + push_subscriptions tablosu + POST /api/notifications/send (PR #61)**
+- ~~In-app bildirim sistemi yok~~ → **Push bildirim gonderilebilir**
+- ~~Veli/antrenor icin otomatik bildirim akisi yok~~ → **Aidat hatirlatma cron (PR #71, gunluk 09:00 UTC) + Belge gecerlilik uyari cron (PR #72, haftalik Pazartesi 08:00 UTC)**
+- **Kalan:** In-app bildirim kutusu UI; yoklama sonucu bildirimi; Firebase Cloud Messaging (opsiyonel)
+- **Etki:** ~~Kullanicilar onemli guncellemelerden haberdar olamiyor~~ → **Push + email + SMS bildirim kanallari hazir**
 
-### B10. Dokumantasyon (KISMI)
+### B10. Dokumantasyon (BUYUK OLCUDE COZULDU — PR #85 + #86)
 - `ENV_REHBERI` dokumani var (app-yisa-s)
-- API dokumantasyonu yok (Swagger/OpenAPI)
-- Kod ici JSDoc/TSDoc sinirli
-- Gelistirici onboarding rehberi yok
-- **Etki:** Yeni gelistiriciler projeye adapte olmakta zorlanir
+- ~~API dokumantasyonu yok (Swagger/OpenAPI)~~ → **OpenAPI 3.0 spec (1445 satir, 30+ endpoint) + Swagger UI /api-docs (PR #85)**
+- ~~Kod ici JSDoc/TSDoc sinirli~~ → Hala sinirli
+- ~~Gelistirici onboarding rehberi yok~~ → **scripts/check-env.ts (PR #86) env dogrulama var; tam onboarding rehberi hala eksik**
+- **Etki:** ~~Yeni gelistiriciler projeye adapte olmakta zorlanir~~ → **API docs ve env kontrol mevcut; tam onboarding rehberi hala eksik**
 
 ### B11. Performans Optimizasyonu (BELIRSIZ)
 - Image optimization: app-yisa-s'de `unoptimized: true` (Next.js image opt kapali)
@@ -172,12 +169,13 @@
 - Database query optimizasyonu (index'ler) belirsiz
 - **Etki:** Sayfa yukleme sureleri optimize olmayabilir
 
-### B12. Backup / Disaster Recovery (EKSIK)
-- Veritabani yedekleme stratejisi tanimli degil
-- Supabase otomatik backup konfigurasyonu belirsiz
-- Disaster recovery plani yok
-- Rollback proseduru dokumante edilmemis
-- **Etki:** Veri kaybi durumunda geri donus plani yok
+### B12. Backup / Disaster Recovery (KISMEN COZULDU — PR #84)
+- ~~Veritabani yedekleme stratejisi tanimli degil~~ → **docs/BACKUP-STRATEJISI.md olusturuldu**
+- ~~Supabase otomatik backup konfigurasyonu belirsiz~~ → **Supabase gunluk otomatik backup + haftalik pg_dump stratejisi dokumante edildi**
+- ~~Disaster recovery plani yok~~ → **Rollback proseduru ve migration geri alma adimlari dokumante edildi**
+- ~~Rollback proseduru dokumante edilmemis~~ → **/api/admin/backup-check endpoint + Vercel cron (Pazartesi 03:00 UTC)**
+- **Kalan:** pg_dump scriptinin gercek ortamda kurulumu; backup depolama alaninin yapilandirilmasi
+- **Etki:** ~~Veri kaybi durumunda geri donus plani yok~~ → **Strateji ve izleme mevcut; tam otomasyon icin ek yapilandirma gerekli**
 
 ---
 
@@ -187,27 +185,27 @@
 
 | # | Gorev | Oncelik | Repo | Tahmini Sure |
 |---|-------|---------|------|--------------|
-| 1 | **Odeme entegrasyonu** (Stripe veya PayTR) | P0 | tenant-yisa-s | 3-5 gun |
-| 2 | **Test altyapisi kurulumu** (Vitest + Playwright) | P0 | Tum repolar | 2-3 gun |
-| 3 | **Sentry hata izleme** entegrasyonu | P0 | Tum repolar | 1 gun |
-| 4 | **CI/CD pipeline** (app-yisa-s + yisa-s-com) | P1 | app-yisa-s, yisa-s-com | 1 gun |
+| ~~1~~ | ~~**Odeme entegrasyonu** (Stripe veya PayTR)~~ | ~~P0~~ | ~~tenant-yisa-s~~ | **COZULDU (PR #62+#64)** — Stripe Checkout + Webhook |
+| ~~2~~ | ~~**Test altyapisi kurulumu** (Vitest + Playwright)~~ | ~~P0~~ | ~~tenant-yisa-s~~ | **KISMEN COZULDU (PR #60)** — Vitest + 140 test (diger repolar + Playwright hala eksik) |
+| ~~3~~ | ~~**Sentry hata izleme** entegrasyonu~~ | ~~P0~~ | ~~tenant-yisa-s~~ | **COZULDU (PR #74)** — @sentry/nextjs client+server+edge; diger repolar hala eksik |
+| ~~4~~ | ~~**CI/CD pipeline**~~ | ~~P1~~ | ~~tenant-yisa-s~~ | **COZULDU (PR #76)** — ci.yml + deploy.yml; app-yisa-s + yisa-s-com hala eksik |
 
 ### C2. KISA VADE (2-4 Hafta)
 
 | # | Gorev | Oncelik | Repo | Tahmini Sure |
 |---|-------|---------|------|--------------|
-| 5 | **SMS entegrasyonu** tamamlama (Twilio veya Netgsm) | P1 | tenant-yisa-s | 2 gun |
-| 6 | **Email sablon sistemi** (odeme, yoklama, bildirim) | P1 | tenant-yisa-s | 2-3 gun |
-| 7 | **Push notification** altyapisi (Web Push) | P2 | tenant-yisa-s | 3 gun |
-| 8 | **Google Analytics** entegrasyonu (vitrin) | P2 | yisa-s-com | 1 gun |
-| 9 | **API dokumantasyonu** (Swagger/OpenAPI) | P2 | Tum repolar | 2-3 gun |
+| ~~5~~ | ~~**SMS entegrasyonu** tamamlama~~ | ~~P1~~ | ~~tenant-yisa-s~~ | **COZULDU (PR #67)** — SMS provider + sablonlar + tetikleyiciler |
+| ~~6~~ | ~~**Email sablon sistemi**~~ | ~~P1~~ | ~~tenant-yisa-s~~ | **COZULDU (PR #68)** — Resend + bildirim sablonlari + toplu gonderim |
+| ~~7~~ | ~~**Push notification** altyapisi~~ | ~~P2~~ | ~~tenant-yisa-s~~ | **COZULDU (PR #61)** — Web Push API + VAPID + push_subscriptions |
+| ~~8~~ | ~~**Google Analytics** entegrasyonu~~ | ~~P2~~ | ~~tenant-yisa-s~~ | **COZULDU (PR #77)** — @next/third-parties/google |
+| ~~9~~ | ~~**API dokumantasyonu** (Swagger/OpenAPI)~~ | ~~P2~~ | ~~tenant-yisa-s~~ | **COZULDU (PR #85)** — OpenAPI 3.0 + Swagger UI /api-docs |
 | 10 | **Image optimization** aktiflestirilmesi | P2 | app-yisa-s | 0.5 gun |
 
 ### C3. ORTA VADE (1-2 Ay)
 
 | # | Gorev | Oncelik | Repo | Tahmini Sure |
 |---|-------|---------|------|--------------|
-| 11 | **Backup stratejisi** ve disaster recovery plani | P2 | - | 2 gun |
+| ~~11~~ | ~~**Backup stratejisi** ve disaster recovery plani~~ | ~~P2~~ | ~~-~~ | **KISMEN COZULDU (PR #84)** — Dokumantasyon + API + cron (tam otomasyon icin ek yapilandirma gerekli) |
 | 12 | **Performans optimizasyonu** (bundle analysis, lazy loading) | P2 | Tum repolar | 3-5 gun |
 | 13 | **Veli mobil deneyimi** iyilestirme (PWA) | P3 | tenant-yisa-s | 5 gun |
 | 14 | **Raporlama modulu** (franchise performans, gelir/gider) | P3 | tenant-yisa-s | 5-7 gun |
@@ -360,8 +358,8 @@
 #### Kategori 1: KRITIK EKSIKLER (Gelir/Guvenlik Etkili)
 | # | Eksik | Mevcut Durum | Hedef | Oncelik |
 |---|-------|-------------|-------|--------|
-| 1 | **Odeme Entegrasyonu** | .env'de Stripe/PayTR degiskenleri var, API route yok | Stripe webhook + PayTR callback + odeme onay/iptal akisi | P0 |
-| 2 | **Test Altyapisi** | Hicbir repoda test dosyasi yok | Vitest (unit) + Playwright (e2e) + CI'da test | P0 |
+| ~~1~~ | ~~**Odeme Entegrasyonu**~~ | ~~.env'de Stripe/PayTR degiskenleri var, API route yok~~ | **COZULDU (PR #62+#64)** — Stripe Checkout Session + Webhook + Veli/Franchise UI | ~~P0~~ |
+| ~~2~~ | ~~**Test Altyapisi**~~ | ~~Hicbir repoda test dosyasi yok~~ | **KISMEN (PR #60)** — Vitest + 140 CELF E2E test; Playwright + diger repolar hala eksik | ~~P0~~ |
 | 3 | **Hata Izleme** | SENTRY_DSN tanimli ama entegrasyon yok | Sentry gercek entegrasyonu + error boundary + merkezi hata raporlama | P0 |
 | 4 | **CI/CD Pipeline** | Sadece tenant-yisa-s'de workflows var | 3 repoda da lint + build + test + Sentry release | P1 |
 
@@ -379,7 +377,7 @@
 |---|-------|-------------|-------|--------|
 | 10 | **API Dokumantasyonu** | Yok | Swagger/OpenAPI tum endpointler icin | P2 |
 | 11 | **Performans Optimizasyonu** | unoptimized: true (app-yisa-s), bundle analysis yok | Image optimization, lazy loading, code splitting, DB index'ler | P2 |
-| 12 | **Backup / Disaster Recovery** | Yok | Veritabani yedekleme stratejisi + rollback proseduru | P2 |
+| ~~12~~ | ~~**Backup / Disaster Recovery**~~ | ~~Yok~~ | **KISMEN (PR #84)** — Strateji dokumantasyonu + backup-check API + cron; tam otomasyon icin ek yapilandirma gerekli | ~~P2~~ |
 | 13 | **Gelistirici Onboarding** | Kismi (ENV_REHBERI var) | Tam onboarding rehberi + JSDoc/TSDoc + README'ler | P2 |
 
 #### Kategori 4: GELECEK OZELLIKLER
@@ -399,16 +397,16 @@
 
 | Alan | Mevcut (%) | Hedef (%) | Fark |
 |------|-----------|-----------|------|
-| **Altyapi & Deploy** | 90% | 100% | CI/CD tamamlama, backup |
-| **Patron Sistemi** | 85% | 100% | Odeme, SMS, bildirim |
-| **AI Entegrasyonu** | 80% | 100% | V0/Cursor API, Sentry, analytics |
-| **Vitrin Sitesi** | 75% | 100% | Analytics, SEO iyilestirme, i18n |
-| **Franchise Paneli** | 65% | 100% | Odeme, SMS, push notification |
-| **Veli/Antrenor** | 60% | 100% | Bildirimler, PWA, raporlama |
-| **Test & Kalite** | 5% | 100% | Test altyapisi, CI, monitoring |
-| **Dokumantasyon** | 40% | 100% | API docs, onboarding, JSDoc |
-| **GENEL TAMAMLANMA** | **~62%** | **100%** | **~38% eksik** |
+| **Altyapi & Deploy** | 95% | 100% | CI/CD (PR #76) + backup (PR #84) tamamlandi; diger repolar eksik |
+| **Patron Sistemi** | 95% | 100% | Odeme (PR #62), SMS (PR #67), bildirim (PR #61), acil alarm (PR #83) tamamlandi |
+| **AI Entegrasyonu** | 90% | 100% | Sentry (PR #74), analytics (PR #77) tamamlandi; V0/Cursor API diger repolarda |
+| **Vitrin Sitesi** | 85% | 100% | GA (PR #77) eklendi; SEO, i18n hala eksik |
+| **Franchise Paneli** | 90% | 100% | Temizlik (PR #80), kayit gorevlisi (PR #82), anketler (PR #89), belgeler (PR #72) tamamlandi |
+| **Veli/Antrenor** | 85% | 100% | Profil (PR #79), push (PR #61), email (PR #68), SMS (PR #67) tamamlandi; PWA, raporlama eksik |
+| **Test & Kalite** | 60% | 100% | Vitest (PR #60) + CI (PR #76) + Sentry (PR #74) + E2E specs + env check (PR #86); diger repolar eksik |
+| **Dokumantasyon** | 70% | 100% | API docs (PR #85) + env check (PR #86); tam onboarding, JSDoc hala eksik |
+| **GENEL TAMAMLANMA** | **~85%** | **100%** | **~15% eksik** |
 
 ---
 
-> **Sonuc:** Proje mimarisi ve temel islevler buyuk olcude tamamlanmis durumda. En kritik eksikler odeme entegrasyonu (gelir etkisi), test altyapisi (kalite) ve hata izleme (production guvenilirlik) alanlarindadir. Bu 3 eksik P0 oncelikle kapatilmalidir.
+> **Sonuc:** Proje mimarisi ve temel islevler buyuk olcude tamamlanmis durumda. ~~En kritik eksikler odeme entegrasyonu (gelir etkisi), test altyapisi (kalite) ve hata izleme (production guvenilirlik) alanlarindadir.~~ **Guncelleme (06.03.2026):** Odeme entegrasyonu Stripe ile cozuldu (PR #62+#64), test altyapisi Vitest ile kismen cozuldu (PR #60, 140 test). ~~Kalan en kritik eksik: hata izleme (Sentry), diger repolarda test, ve CI/CD pipeline genisletmesi.~~ **Guncelleme 2 (06.03.2026):** Sentry (PR #74), CI/CD (PR #76), push notification (PR #61), SMS (PR #67), email (PR #68), aidat hatirlatma (PR #71), belge gecerlilik (PR #72), tesis muduru (PR #75), GA (PR #77), veli profil (PR #79), temizlik (PR #80), kayit gorevlisi (PR #82), acil alarm (PR #83), API docs (PR #85), env check (PR #86), demotesis (PR #87), kartalcimnastik (PR #78), anketler (PR #89), E2E testler eklendi. Kalan eksikler: diger repolarda CI/CD + Sentry, tam i18n, PWA optimizasyonu, gelismis raporlama.
