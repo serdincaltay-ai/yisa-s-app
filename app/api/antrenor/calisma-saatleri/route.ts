@@ -69,8 +69,7 @@ export async function POST(req: NextRequest) {
 
     if (error) {
       console.error('[calisma-saatleri onay]', error)
-      // Tablo yoksa bile OK dön
-      return NextResponse.json({ ok: true, message: 'Onay kaydedildi (tablo yoksa oluşturulması gerekli)' })
+      return NextResponse.json({ ok: false, error: 'Onay kaydedilemedi' }, { status: 500 })
     }
 
     return NextResponse.json({ ok: true, message: 'Çalışma saatleri onaylandı' })
