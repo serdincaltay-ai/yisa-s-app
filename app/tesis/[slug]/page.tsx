@@ -590,7 +590,12 @@ function SectionAntrenorler({ tesis }: { tesis: TesisData }) {
 function SectionYarismacilar({ tesis }: { tesis: TesisData }) {
   return (
     <div className="p-6 md:p-8 space-y-8">
-      <AntrenorKartlari antrenorler={tesis.yarismaciAntrenorler ?? []} />
+      <AntrenorKartlari antrenorler={(tesis.yarismaciAntrenorler ?? []).map((a) => ({
+        isim: a.isim,
+        brans: a.brans,
+        lisans: a.lisans_turu,
+        yarismaciDeneyimi: a.is_competitive_coach,
+      }))} />
       <BolgeAntrenorleri antrenorler={tesis.bolgeAntrenorleri ?? []} sehir={tesis.konum} />
     </div>
   )
