@@ -95,6 +95,7 @@ export async function upsertNotificationPreferences(params: {
   odeme_hatirlatma: boolean
   duyuru: boolean
   belge_uyari?: boolean
+  haftalik_rapor?: boolean
 }): Promise<{ error?: string }> {
   const db = getSupabaseServer()
   if (!db) return { error: 'Supabase bağlantısı yok' }
@@ -108,6 +109,7 @@ export async function upsertNotificationPreferences(params: {
         odeme_hatirlatma: params.odeme_hatirlatma,
         duyuru: params.duyuru,
         belge_uyari: params.belge_uyari ?? true,
+        haftalik_rapor: params.haftalik_rapor ?? true,
       },
       { onConflict: 'user_id' }
     )
