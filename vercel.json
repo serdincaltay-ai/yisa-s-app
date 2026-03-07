@@ -20,6 +20,10 @@
       "schedule": "0 8 * * 1"
     },
     {
+      "path": "/api/coo/haftalik-rapor",
+      "schedule": "0 9 * * 1"
+    },
+    {
       "path": "/api/admin/backup-check",
       "schedule": "0 3 * * 1"
     }
