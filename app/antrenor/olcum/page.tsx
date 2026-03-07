@@ -206,7 +206,7 @@ export default function AntrenorOlcumPage() {
       {selected && activeTab === 'temel' && (
         <div className="bg-zinc-900 border border-zinc-800 rounded-2xl p-4">
           <h3 className="text-sm font-semibold text-white mb-2">Temel Ölçüm Değerleri</h3>
-          <p className="text-xs text-zinc-500 mb-3">10 temel parametreyi girin (opsiyonel alanlar boş bırakılabilir)</p>
+          <p className="text-xs text-zinc-500 mb-3">9 temel parametreyi girin (opsiyonel alanlar boş bırakılabilir)</p>
           <div className="grid gap-3 sm:grid-cols-2">
             {temelAlanlar.map((a) => (
               <div key={a.key}>
