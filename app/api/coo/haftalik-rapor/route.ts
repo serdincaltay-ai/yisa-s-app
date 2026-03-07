@@ -178,12 +178,28 @@ export async function GET(req: NextRequest) {
       }
     }
 
+    // Bildirim tercihlerini al (haftalik_rapor: false ise atla)
+    const { data: allPrefs } = await service
+      .from('notification_preferences')
+      .select('user_id, haftalik_rapor')
+      .in('user_id', veliIds)
+
+    const prefsMap = new Map<string, boolean>()
+    for (const pref of (allPrefs ?? []) as Array<{ user_id: string; haftalik_rapor: boolean | null }>) {
+      prefsMap.set(pref.user_id, pref.haftalik_rapor ?? true)
+    }
+
     const emailConfigured = !!process.env.RESEND_API_KEY
     let gonderilen = 0
     let atlanan = 0
 
     // Her veli için rapor gönder
     for (const [veliId, veliRaporlari] of veliRaporMap) {
+      // Kullanıcı haftalık raporu kapattıysa atla
+      if (prefsMap.get(veliId) === false) {
+        atlanan++
+        continue
+      }
       const ilkSporcu = veliRaporlari[0].sporcu
       const veliEmail = ilkSporcu.parent_email
       const veliAd = ilkSporcu.parent_name ?? 'Sayın Veli'
