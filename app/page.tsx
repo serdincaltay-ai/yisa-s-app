@@ -1,170 +1,309 @@
 "use client"
 
 /**
- * YiSA-S Ana Sayfa -- TV-Buton Layout
- * Sol: Fixed dikey navbar 60px, icon+label butonlar (11 section)
- * Sag: 100vh content, butona basinca section slide (CSS transition 0.4s)
- * Sayfa ASLA asagi scroll etmez, sadece sag content degisir
- * Mobilde: Alt tab bar
+ * YiSA-S Vitrin Sayfasi — Tam Revizyon
+ * Gorsel agirlikli, tablet mockup konsepti, minimal yazi
  */
 
-import { useState, useCallback } from "react"
+import { useState, useCallback, useRef } from "react"
 import { Button } from "@/components/ui/button"
 import { Input } from "@/components/ui/input"
-import { Card, CardContent, CardDescription, CardFooter, CardHeader, CardTitle } from "@/components/ui/card"
-import {
-  Accordion,
-  AccordionContent,
-  AccordionItem,
-  AccordionTrigger,
-} from "@/components/ui/accordion"
 import {
   Bot,
   Zap,
   Users,
   BarChart3,
-  User,
-  Crown,
   Mail,
   MapPin,
   Check,
-  Home,
-  HelpCircle,
-  Calendar,
-  Layers,
-  Trophy,
+  Brain,
   CreditCard,
-  Building2,
-  Cpu,
-  Globe,
   Phone,
   MessageCircle,
-  Brain,
-  Database,
   Shield,
+  ChevronLeft,
+  ChevronRight,
+  Star,
+  Trophy,
+  Heart,
   Dumbbell,
-  Waves,
-  Target,
-  Store,
+  ClipboardCheck,
+  Play,
+  ArrowRight,
+  Coins,
+  Lock,
+  Sparkles,
 } from "lucide-react"
 import Link from "next/link"
 import { YisaLogoInline } from "@/components/YisaLogo"
 
-/* ----------------------------------------------------------------
-   NAV SECTIONS -- TV-Buton sidebar items (11 bolum)
-   ---------------------------------------------------------------- */
-const NAV_SECTIONS = [
-  { id: "hero", label: "Ana", icon: Home },
-  { id: "neden", label: "Neden", icon: Zap },
-  { id: "ders", label: "Program", icon: Calendar },
-  { id: "paneller", label: "Paneller", icon: Layers },
-  { id: "branslar", label: "Branslar", icon: Trophy },
-  { id: "kredi", label: "Fiyat", icon: CreditCard },
-  { id: "direktorler", label: "Ekip", icon: Building2 },
-  { id: "robotlar", label: "Robotlar", icon: Cpu },
-  { id: "franchise", label: "Franchise", icon: Globe },
-  { id: "sss", label: "SSS", icon: HelpCircle },
-  { id: "iletisim", label: "Iletisim", icon: Phone },
-] as const
-
-type SectionId = (typeof NAV_SECTIONS)[number]["id"]
-
-/* ----------------------------------------------------------------
-   DATA
-   ---------------------------------------------------------------- */
-const PACKAGES = [
-  {
-    name: "Starter",
-    price: "499",
-    period: "/ay",
-    features: ["50 uye", "1 sube", "Temel robotlar", "Veli paneli", "E-posta destek"],
-    highlight: false,
-  },
-  {
-    name: "Pro",
-    price: "999",
-    period: "/ay",
-    features: ["200 uye", "3 sube", "Tum robotlar", "WhatsApp entegrasyonu", "Oncelikli destek", "Gelisim grafikleri"],
-    highlight: true,
-  },
-  {
-    name: "Enterprise",
-    price: "Ozel",
-    period: "",
-    features: ["Sinirsiz uye", "Coklu sube", "Ozel entegrasyonlar", "Dedicated destek", "Ozellestirme", "API erisimi"],
-    highlight: false,
-  },
+/* ================================================================
+   TUTARLI ORNEK VERILER
+   ================================================================ */
+const OGRENCILER = [
+  { ad: "Elif Yilmaz", yas: 8, cinsiyet: "K", brans: "Cimnastik", kayitTarih: "2025-09-01", aidat: 1200, durum: "aktif" },
+  { ad: "Can Demir", yas: 10, cinsiyet: "E", brans: "Cimnastik", kayitTarih: "2025-09-15", aidat: 1200, durum: "aktif" },
+  { ad: "Zeynep Kaya", yas: 7, cinsiyet: "K", brans: "Yuzme", kayitTarih: "2025-10-01", aidat: 1500, durum: "aktif" },
+  { ad: "Baris Ozturk", yas: 9, cinsiyet: "E", brans: "Basketbol", kayitTarih: "2025-10-10", aidat: 1000, durum: "aktif" },
+  { ad: "Selin Arslan", yas: 11, cinsiyet: "K", brans: "Voleybol", kayitTarih: "2025-11-01", aidat: 1000, durum: "ayrilan" },
+  { ad: "Mert Sahin", yas: 8, cinsiyet: "E", brans: "Cimnastik", kayitTarih: "2026-01-05", aidat: 1200, durum: "aktif" },
 ]
 
-const FEATURES = [
-  { icon: Bot, title: "AI Robotlar", desc: "Mailler, demolar, aidat takibi. Karsilama ve acil destek robotlari." },
-  { icon: Zap, title: "Otomatik Yonetim", desc: "Isletmeyi robotlar yurutur. Ders programi, yoklama, kasa defteri." },
-  { icon: Users, title: "Veli Takibi", desc: "Cocuk gelisimi, olcumler, antrenman programi. Veliler panelden takip eder." },
-  { icon: BarChart3, title: "Veri ile Egitim", desc: "Parametreler, grafikler, raporlar. Bilimsel veriyle sporcu gelisimi." },
+const OZELLIKLER = [
+  { baslik: "AI Destekli Yonetim", slogan: "Yapay zeka tesisinizi yonetsin", icon: Brain, renk: "from-cyan-500 to-blue-600", tabletIcerik: "ai-panel" },
+  { baslik: "Tesis Yonetim Paneli", slogan: "Tek ekranda tum kontrol", icon: Shield, renk: "from-emerald-500 to-teal-600", tabletIcerik: "tesis-panel" },
+  { baslik: "Sporcu Gelisim Takibi", slogan: "Veriyle buyuyen sporcular", icon: BarChart3, renk: "from-amber-500 to-orange-600", tabletIcerik: "sporcu-gelisim" },
+  { baslik: "Antrenman Uzmani (AI)", slogan: "Kisisel antrenman planlari", icon: Dumbbell, renk: "from-purple-500 to-pink-600", tabletIcerik: "antrenman-ai" },
+  { baslik: "Veli Paneli", slogan: "Gelisimi canli takip edin", icon: Heart, renk: "from-pink-500 to-rose-600", tabletIcerik: "veli-panel" },
+  { baslik: "Aidat & Odeme Takibi", slogan: "Otomatik hatirlatma sistemi", icon: CreditCard, renk: "from-green-500 to-emerald-600", tabletIcerik: "aidat-takip" },
+  { baslik: "Yoklama Sistemi", slogan: "Tek tikla yoklama kaydi", icon: ClipboardCheck, renk: "from-blue-500 to-indigo-600", tabletIcerik: "yoklama" },
 ]
 
-const REFERANSLAR = [
-  { ad: "Merve Gormezler", unvan: "Firma Sahibi, Sportif Direktor" },
-  { ad: "Emre Han Dalgic", unvan: "Uzman Antrenor" },
-  { ad: "Ozlem Kuskan", unvan: "Antrenor" },
-  { ad: "Alper Gormezler", unvan: "Isletme Muduru" },
+const GELISIM_PARAMETRELERI = [
+  { ad: "Esneklik", yildiz: 4, emoji: "\uD83E\uDD38", seviye: "Harika!", renk: "bg-emerald-500", yuzde: 80, referans: "Yas grubu: 7-9" },
+  { ad: "Kuvvet", yildiz: 2, emoji: "\uD83D\uDCAA", seviye: "Gelistirelim!", renk: "bg-amber-500", yuzde: 40, referans: "Yas grubu: 7-9" },
+  { ad: "Denge", yildiz: 3, emoji: "\uD83E\uDDD8", seviye: "Iyi!", renk: "bg-blue-500", yuzde: 60, referans: "Dunya normu" },
+  { ad: "Koordinasyon", yildiz: 5, emoji: "\u2B50", seviye: "Mukemmel!", renk: "bg-purple-500", yuzde: 100, referans: "Yas grubu: 7-9" },
+  { ad: "Dayaniklilik", yildiz: 3, emoji: "\uD83C\uDFC3", seviye: "Iyi!", renk: "bg-cyan-500", yuzde: 60, referans: "Dunya normu" },
+]
+
+const TOKEN_PAKETLERI = [
+  { sure: "Aylik", fiyat: "Ucretsiz", token: 0, aktif: true },
+  { sure: "3 Aylik Analiz", fiyat: "5 Token", token: 5, aktif: false },
+  { sure: "6 Aylik Analiz", fiyat: "15 Token", token: 15, aktif: false },
+  { sure: "12 Aylik Analiz", fiyat: "30 Token", token: 30, aktif: false },
+]
+
+const YOKLAMA_VERILERI = [
+  { tarih: "2026-03-03", ogrenci: "Elif Yilmaz", durum: "katildi", aciklama: "" },
+  { tarih: "2026-03-03", ogrenci: "Can Demir", durum: "katilmadi", aciklama: "Hastalik (rapor var)" },
+  { tarih: "2026-03-03", ogrenci: "Zeynep Kaya", durum: "katildi", aciklama: "" },
+  { tarih: "2026-03-03", ogrenci: "Mert Sahin", durum: "katildi", aciklama: "" },
+  { tarih: "2026-03-05", ogrenci: "Elif Yilmaz", durum: "katildi", aciklama: "" },
+  { tarih: "2026-03-05", ogrenci: "Can Demir", durum: "katildi", aciklama: "" },
+  { tarih: "2026-03-05", ogrenci: "Zeynep Kaya", durum: "katilmadi", aciklama: "Aile izni" },
+  { tarih: "2026-03-05", ogrenci: "Mert Sahin", durum: "katildi", aciklama: "" },
+]
+
+const KAYIT_TREND = [
+  { ay: "Eyl", baslayan: 8, ayrilan: 1, kiz: 5, erkek: 3 },
+  { ay: "Eki", baslayan: 6, ayrilan: 0, kiz: 3, erkek: 3 },
+  { ay: "Kas", baslayan: 4, ayrilan: 2, kiz: 2, erkek: 2 },
+  { ay: "Ara", baslayan: 3, ayrilan: 1, kiz: 1, erkek: 2 },
+  { ay: "Oca", baslayan: 7, ayrilan: 0, kiz: 4, erkek: 3 },
+  { ay: "Sub", baslayan: 5, ayrilan: 1, kiz: 3, erkek: 2 },
+  { ay: "Mar", baslayan: 9, ayrilan: 0, kiz: 5, erkek: 4 },
+]
+
+const PAKETLER = [
+  { ad: "Starter", fiyat: "$49", periyot: "/ay", ozellikler: ["50 uye kapasitesi", "1 sube", "Temel AI robotlar", "Veli paneli", "E-posta destek"], vurgu: false },
+  { ad: "Pro", fiyat: "$99", periyot: "/ay", ozellikler: ["200 uye kapasitesi", "3 sube", "Tum AI robotlar", "WhatsApp entegrasyonu", "Oncelikli destek", "Gelisim grafikleri", "50 token/ay"], vurgu: true },
+  { ad: "Enterprise", fiyat: "$199", periyot: "/ay", ozellikler: ["Sinirsiz uye", "Sinirsiz sube", "Ozel entegrasyonlar", "Ozel destek", "Tam ozellestirme", "API erisimi", "200 token/ay"], vurgu: false },
 ]
 
 const FAQ_ITEMS = [
-  { q: "YiSA-S nedir?", a: "Spor tesislerini AI robotlarla yoneten franchise sistemidir. Cimnastik, yuzme ve benzeri tesisler icin otomatik yonetim, veli takibi ve veri odakli egitim sunar." },
-  { q: "Demo nasil talep edilir?", a: "Bu sayfadaki Demo Talep Et butonuna tiklayin, formu doldurun. 10 is gunu icinde sizinle iletisime gececegiz." },
-  { q: "Hangi paket bana uygun?", a: "Kucuk tesisler icin Starter, orta olcek icin Pro, cok subeli isletmeler icin Enterprise onerilir." },
-  { q: "Pilot tesis nedir?", a: "Tuzla Besiktas Cimnastik Okulu ilk pilot tesisimizdir. Demo girisi ile paneli deneyebilirsiniz." },
+  { q: "YiSA-S nedir?", a: "Spor tesislerini AI robotlarla yoneten franchise sistemidir." },
+  { q: "Demo nasil talep edilir?", a: "Ucretsiz Demo butonuna tiklayin, formu doldurun." },
+  { q: "Token sistemi nedir?", a: "Gelismis analizler icin kullanilan kredi sistemidir. Temel ozellikler ucretsizdir." },
+  { q: "Hangi paket bana uygun?", a: "Kucuk tesisler icin Starter, orta olcek icin Pro, buyuk isletmeler icin Enterprise." },
 ]
 
-const DERS_PROGRAMI = [
-  { gun: "Pazartesi", saat: "15:00-16:30", brans: "Cimnastik", grup: "Mini (5-7)", antrenor: "Ozlem K." },
-  { gun: "Pazartesi", saat: "17:00-18:30", brans: "Cimnastik", grup: "Midi (8-12)", antrenor: "Emre H." },
-  { gun: "Sali", saat: "15:00-16:30", brans: "Yuzme", grup: "Baslangic", antrenor: "Merve G." },
-  { gun: "Sali", saat: "17:00-18:30", brans: "Basketbol", grup: "U12", antrenor: "Alper G." },
-  { gun: "Carsamba", saat: "15:00-16:30", brans: "Cimnastik", grup: "Mini (5-7)", antrenor: "Ozlem K." },
-  { gun: "Persembe", saat: "15:00-16:30", brans: "Voleybol", grup: "U14", antrenor: "Emre H." },
-  { gun: "Cuma", saat: "15:00-16:30", brans: "Tenis", grup: "Baslangic", antrenor: "Merve G." },
-  { gun: "Cumartesi", saat: "10:00-12:00", brans: "Futbol", grup: "U10", antrenor: "Alper G." },
-]
+/* ================================================================
+   TABLET MOCKUP COMPONENT
+   ================================================================ */
+function TabletMockup({ children, className = "" }: { children: React.ReactNode; className?: string }) {
+  return (
+    <div className={`relative mx-auto ${className}`}>
+      <div className="relative rounded-[2rem] border-[6px] border-gray-700 bg-gray-900 shadow-2xl shadow-black/50 overflow-hidden">
+        <div className="absolute top-2 left-1/2 -translate-x-1/2 w-3 h-3 rounded-full bg-gray-700 z-10" />
+        <div className="bg-gray-950 overflow-hidden">{children}</div>
+      </div>
+    </div>
+  )
+}
 
-const BRANSLAR = [
-  { name: "Cimnastik", icon: Target, color: "text-pink-400", bg: "bg-pink-500/10", border: "border-pink-500/30" },
-  { name: "Yuzme", icon: Waves, color: "text-blue-400", bg: "bg-blue-500/10", border: "border-blue-500/30" },
-  { name: "Basketbol", icon: Dumbbell, color: "text-amber-400", bg: "bg-amber-500/10", border: "border-amber-500/30" },
-  { name: "Voleybol", icon: Dumbbell, color: "text-emerald-400", bg: "bg-emerald-500/10", border: "border-emerald-500/30" },
-  { name: "Futbol", icon: Dumbbell, color: "text-purple-400", bg: "bg-purple-500/10", border: "border-purple-500/30" },
-  { name: "Tenis", icon: Target, color: "text-cyan-400", bg: "bg-cyan-500/10", border: "border-cyan-500/30" },
-]
+/* ================================================================
+   TABLET SCREEN CONTENTS
+   ================================================================ */
+function TabletScreenDashboard() {
+  return (
+    <div className="p-3 space-y-2 text-[10px] min-h-[200px]">
+      <div className="flex items-center justify-between mb-2">
+        <span className="font-bold text-cyan-400 text-xs">YiSA-S Panel</span>
+        <span className="text-gray-500">Merhaba, Admin</span>
+      </div>
+      <div className="grid grid-cols-3 gap-1.5">
+        <div className="bg-cyan-500/10 border border-cyan-500/20 rounded-lg p-2 text-center">
+          <div className="text-lg font-bold text-cyan-400">42</div>
+          <div className="text-gray-400">Aktif Uye</div>
+        </div>
+        <div className="bg-emerald-500/10 border border-emerald-500/20 rounded-lg p-2 text-center">
+          <div className="text-lg font-bold text-emerald-400">6</div>
+          <div className="text-gray-400">Antrenor</div>
+        </div>
+        <div className="bg-amber-500/10 border border-amber-500/20 rounded-lg p-2 text-center">
+          <div className="text-lg font-bold text-amber-400">%94</div>
+          <div className="text-gray-400">Yoklama</div>
+        </div>
+      </div>
+      <div className="bg-gray-800/50 rounded-lg p-2">
+        <div className="text-gray-400 mb-1">Bugunun Dersleri</div>
+        <div className="space-y-1">
+          <div className="flex justify-between"><span className="text-white">Cimnastik Mini</span><span className="text-cyan-400">15:00</span></div>
+          <div className="flex justify-between"><span className="text-white">Cimnastik Midi</span><span className="text-cyan-400">17:00</span></div>
+        </div>
+      </div>
+    </div>
+  )
+}
 
-const PANELLER = [
-  { title: "Veli Paneli", desc: "Cocuk gelisimi, odeme takibi, antrenman takvimi, mesajlasma.", icon: User, color: "text-pink-400", bg: "bg-pink-500/10", border: "border-pink-500/30" },
-  { title: "Sporcu Paneli", desc: "Antrenman programi, olcum sonuclari, gelisim grafikleri.", icon: Dumbbell, color: "text-cyan-400", bg: "bg-cyan-500/10", border: "border-cyan-500/30" },
-  { title: "Antrenor Paneli", desc: "Yoklama, sinif yonetimi, sporcu olcumleri, haftalik plan.", icon: Users, color: "text-emerald-400", bg: "bg-emerald-500/10", border: "border-emerald-500/30" },
-]
+function TabletScreenVeli() {
+  return (
+    <div className="p-3 space-y-2 text-[10px] min-h-[200px]">
+      <div className="flex items-center justify-between mb-2">
+        <span className="font-bold text-pink-400 text-xs">Veli Paneli</span>
+        <span className="text-gray-500">Hos geldiniz</span>
+      </div>
+      <div className="bg-pink-500/10 border border-pink-500/20 rounded-lg p-2">
+        <div className="flex items-center gap-2 mb-1">
+          <div className="w-6 h-6 rounded-full bg-pink-500/30 flex items-center justify-center text-[8px]">EY</div>
+          <div>
+            <div className="text-white font-medium">Elif Yilmaz</div>
+            <div className="text-gray-400">8 yas - Cimnastik</div>
+          </div>
+        </div>
+      </div>
+      <div className="grid grid-cols-2 gap-1.5">
+        <div className="bg-emerald-500/10 rounded-lg p-2 text-center">
+          <div className="text-sm font-bold text-emerald-400">12/14</div>
+          <div className="text-gray-400">Yoklama</div>
+        </div>
+        <div className="bg-amber-500/10 rounded-lg p-2 text-center">
+          <div className="text-sm font-bold text-amber-400">4.2</div>
+          <div className="text-gray-400">Ort. Yildiz</div>
+        </div>
+      </div>
+      <div className="bg-gray-800/50 rounded-lg p-2">
+        <div className="text-gray-400 mb-1">Sonraki Ders</div>
+        <div className="text-white">Cimnastik — Pazartesi 15:00</div>
+      </div>
+    </div>
+  )
+}
 
-const ROBOTLAR = [
-  { name: "CELF Robotu", desc: "Merkezi karar motoru, gorev dagitimi, onay surecleri.", icon: Brain, color: "text-cyan-400", bg: "bg-cyan-500/10", border: "border-cyan-500/30" },
-  { name: "Veri Robotu", desc: "Veritabani izleme, performans metrikleri, raporlama.", icon: Database, color: "text-emerald-400", bg: "bg-emerald-500/10", border: "border-emerald-500/30" },
-  { name: "Guvenlik Robotu", desc: "Siber guvenlik, erisim kontrolu, 4 seviye alarm.", icon: Shield, color: "text-orange-400", bg: "bg-orange-500/10", border: "border-orange-500/30" },
-  { name: "YiSA-S Robotu", desc: "Sistem durumu, PWA izleme, deployment kontrolu.", icon: Bot, color: "text-purple-400", bg: "bg-purple-500/10", border: "border-purple-500/30" },
-]
+function TabletScreenGelisim() {
+  return (
+    <div className="p-3 space-y-2 text-[10px] min-h-[200px]">
+      <div className="text-xs font-bold text-amber-400 mb-2">Sporcu Gelisim — Elif Yilmaz</div>
+      {GELISIM_PARAMETRELERI.slice(0, 3).map((p) => (
+        <div key={p.ad} className="flex items-center gap-2">
+          <span className="text-sm">{p.emoji}</span>
+          <span className="text-white w-16 truncate">{p.ad}</span>
+          <div className="flex-1 h-2 bg-gray-800 rounded-full overflow-hidden">
+            <div className={`h-full ${p.renk} rounded-full`} style={{ width: `${p.yuzde}%` }} />
+          </div>
+          <span className="text-yellow-400 text-[8px]">{"\u2605".repeat(p.yildiz)}</span>
+        </div>
+      ))}
+    </div>
+  )
+}
 
-/* ----------------------------------------------------------------
+function TabletScreenYoklama() {
+  return (
+    <div className="p-3 space-y-1.5 text-[10px] min-h-[200px]">
+      <div className="text-xs font-bold text-blue-400 mb-2">Yoklama — 3 Mart 2026</div>
+      {YOKLAMA_VERILERI.slice(0, 4).map((y, i) => (
+        <div key={i} className="flex items-center gap-2 bg-gray-800/50 rounded-lg px-2 py-1.5">
+          <div className={`w-2 h-2 rounded-full ${y.durum === "katildi" ? "bg-emerald-400" : "bg-red-400"}`} />
+          <span className="text-white flex-1">{y.ogrenci}</span>
+          <span className={y.durum === "katildi" ? "text-emerald-400" : "text-red-400"}>
+            {y.durum === "katildi" ? "Katildi" : "Katilmadi"}
+          </span>
+        </div>
+      ))}
+    </div>
+  )
+}
+
+function TabletScreenAidat() {
+  return (
+    <div className="p-3 space-y-1.5 text-[10px] min-h-[200px]">
+      <div className="text-xs font-bold text-green-400 mb-2">Aidat Takibi — Mart 2026</div>
+      {OGRENCILER.slice(0, 4).map((o, i) => (
+        <div key={i} className="flex items-center gap-2 bg-gray-800/50 rounded-lg px-2 py-1.5">
+          <span className="text-white flex-1">{o.ad}</span>
+          <span className="text-gray-400">{o.aidat} TL</span>
+          <span className={`px-1.5 py-0.5 rounded text-[8px] ${i < 3 ? "bg-emerald-500/20 text-emerald-400" : "bg-red-500/20 text-red-400"}`}>
+            {i < 3 ? "Odendi" : "Bekliyor"}
+          </span>
+        </div>
+      ))}
+    </div>
+  )
+}
+
+function TabletScreenAI() {
+  return (
+    <div className="p-3 space-y-2 text-[10px] min-h-[200px]">
+      <div className="text-xs font-bold text-cyan-400 mb-2">AI Asistan</div>
+      <div className="bg-cyan-500/10 border border-cyan-500/20 rounded-lg p-2">
+        <div className="text-gray-400 mb-1">Robot Durumu</div>
+        <div className="space-y-1">
+          <div className="flex items-center gap-2"><div className="w-2 h-2 rounded-full bg-emerald-400" /><span className="text-white">CELF Robotu — Aktif</span></div>
+          <div className="flex items-center gap-2"><div className="w-2 h-2 rounded-full bg-emerald-400" /><span className="text-white">Veri Robotu — Aktif</span></div>
+          <div className="flex items-center gap-2"><div className="w-2 h-2 rounded-full bg-emerald-400" /><span className="text-white">Guvenlik — Aktif</span></div>
+        </div>
+      </div>
+      <div className="bg-gray-800/50 rounded-lg p-2">
+        <div className="text-gray-400 mb-1">Son Komut</div>
+        <div className="text-white">&quot;Yoklama raporunu ozetle&quot;</div>
+        <div className="text-cyan-400 mt-1">Bugunun yoklama orani: %94</div>
+      </div>
+    </div>
+  )
+}
+
+function TabletScreenAntrenman() {
+  return (
+    <div className="p-3 space-y-2 text-[10px] min-h-[200px]">
+      <div className="text-xs font-bold text-purple-400 mb-2">AI Antrenman Plani</div>
+      <div className="bg-purple-500/10 border border-purple-500/20 rounded-lg p-2">
+        <div className="text-white font-medium mb-1">Elif Yilmaz — Haftalik Plan</div>
+        <div className="space-y-1 text-gray-300">
+          <div className="flex justify-between"><span>Pzt: Esneklik + Denge</span><span className="text-purple-400">45dk</span></div>
+          <div className="flex justify-between"><span>Car: Kuvvet + Koordinasyon</span><span className="text-purple-400">45dk</span></div>
+          <div className="flex justify-between"><span>Cum: Genel Antrenman</span><span className="text-purple-400">60dk</span></div>
+        </div>
+      </div>
+      <div className="text-gray-500 text-center">AI tarafindan olusturuldu</div>
+    </div>
+  )
+}
+
+function getTabletContent(tip: string) {
+  switch (tip) {
+    case "ai-panel": return <TabletScreenAI />
+    case "tesis-panel": return <TabletScreenDashboard />
+    case "sporcu-gelisim": return <TabletScreenGelisim />
+    case "antrenman-ai": return <TabletScreenAntrenman />
+    case "veli-panel": return <TabletScreenVeli />
+    case "aidat-takip": return <TabletScreenAidat />
+    case "yoklama": return <TabletScreenYoklama />
+    default: return <TabletScreenDashboard />
+  }
+}
+
+/* ================================================================
    MAIN COMPONENT
-   ---------------------------------------------------------------- */
+   ================================================================ */
 export default function HomePage() {
-  const [activeSection, setActiveSection] = useState<SectionId>("hero")
   const [showForm, setShowForm] = useState(false)
-  const [formData, setFormData] = useState({ ad: "", email: "", telefon: "", tesis_turu: "", sehir: "", brans: "" })
+  const [formData, setFormData] = useState({ ad: "", email: "", telefon: "", tesis_turu: "", sehir: "" })
   const [formSending, setFormSending] = useState(false)
   const [formDone, setFormDone] = useState(false)
-  const [mobileMore, setMobileMore] = useState(false)
-
-  const handleNav = useCallback((id: SectionId) => {
-    setActiveSection(id)
-    setMobileMore(false)
-  }, [])
+  const carouselRef = useRef<HTMLDivElement>(null)
+  const [videoPlaying, setVideoPlaying] = useState(false)
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault()
@@ -180,14 +319,13 @@ export default function HomePage() {
           phone: formData.telefon || null,
           facility_type: formData.tesis_turu || null,
           city: formData.sehir || null,
-          branch: formData.brans || null,
           source: "www",
         }),
       })
       const data = await res.json()
       if (data?.ok) {
         setFormDone(true)
-        setFormData({ ad: "", email: "", telefon: "", tesis_turu: "", sehir: "", brans: "" })
+        setFormData({ ad: "", email: "", telefon: "", tesis_turu: "", sehir: "" })
         setTimeout(() => {
           setShowForm(false)
           setFormDone(false)
@@ -202,586 +340,709 @@ export default function HomePage() {
     }
   }
 
-  const renderSection = () => {
-    switch (activeSection) {
-      case "hero":
-        return <SectionHero onDemo={() => setShowForm(true)} />
-      case "neden":
-        return <SectionNeden />
-      case "ders":
-        return <SectionDers />
-      case "paneller":
-        return <SectionPaneller />
-      case "branslar":
-        return <SectionBranslar />
-      case "kredi":
-        return <SectionKredi />
-      case "direktorler":
-        return <SectionDirektorler />
-      case "robotlar":
-        return <SectionRobotlar />
-      case "franchise":
-        return <SectionFranchise onDemo={() => setShowForm(true)} />
-      case "sss":
-        return <SectionSSS />
-      case "iletisim":
-        return <SectionIletisim onDemo={() => setShowForm(true)} />
-      default:
-        return <SectionHero onDemo={() => setShowForm(true)} />
-    }
-  }
+  const scrollCarousel = useCallback((direction: "left" | "right") => {
+    if (!carouselRef.current) return
+    carouselRef.current.scrollBy({
+      left: direction === "left" ? -340 : 340,
+      behavior: "smooth",
+    })
+  }, [])
 
   return (
-    <div className="tv-layout">
-      {/* DESKTOP: Sol fixed navbar + Sag content */}
-      <div className="hidden md:flex h-screen w-screen overflow-hidden">
-        {/* Sol Navbar - 60px fixed */}
-        <nav className="tv-sidebar">
-          <Link href="/" className="mb-2 flex-shrink-0">
-            <div className="w-9 h-9 rounded-lg bg-cyan-500/20 flex items-center justify-center hover:bg-cyan-500/30 transition-colors">
-              <span className="text-cyan-400 font-bold text-sm">Y</span>
-            </div>
-          </Link>
-          <div className="flex flex-col gap-0.5 flex-1 overflow-y-auto py-1">
-            {NAV_SECTIONS.map((sec) => {
-              const Icon = sec.icon
-              const isActive = activeSection === sec.id
-              return (
-                <button
-                  key={sec.id}
-                  onClick={() => handleNav(sec.id)}
-                  className={`tv-sidebar-btn ${isActive ? "tv-sidebar-btn-active" : ""}`}
-                  title={sec.label}
+    <div className="min-h-screen bg-gray-950 text-white">
+      {/* NAVBAR */}
+      <nav className="fixed top-0 left-0 right-0 z-50 bg-gray-950/90 backdrop-blur-xl border-b border-white/5">
+        <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 h-16 flex items-center justify-between">
+          <YisaLogoInline href="/" />
+          <div className="hidden md:flex items-center gap-6 text-sm text-gray-400">
+            <a href="#ozellikler" className="hover:text-white transition-colors">Ozellikler</a>
+            <a href="#gelisim" className="hover:text-white transition-colors">Gelisim</a>
+            <a href="#fiyatlar" className="hover:text-white transition-colors">Fiyatlar</a>
+            <a href="#iletisim" className="hover:text-white transition-colors">Iletisim</a>
+            <Link href="/fuar" className="hover:text-white transition-colors">Fuar</Link>
+          </div>
+          <div className="flex items-center gap-3">
+            <Link href="/auth/login">
+              <Button variant="ghost" size="sm" className="text-gray-400 hover:text-white text-sm">
+                Giris Yap
+              </Button>
+            </Link>
+            <Button
+              onClick={() => setShowForm(true)}
+              size="sm"
+              className="bg-gradient-to-r from-cyan-500 to-emerald-500 hover:from-cyan-400 hover:to-emerald-400 text-white font-semibold rounded-xl px-5"
+            >
+              Ucretsiz Demo
+            </Button>
+          </div>
+        </div>
+      </nav>
+
+      {/* 1. HERO */}
+      <section className="relative min-h-screen flex items-center pt-16 overflow-hidden">
+        <div className="absolute inset-0">
+          <div className="absolute inset-0 bg-gradient-to-br from-gray-950 via-gray-900 to-gray-950" />
+          <div className="absolute top-1/4 left-1/4 w-[600px] h-[600px] bg-cyan-500/10 rounded-full blur-[120px] animate-pulse" />
+          <div className="absolute bottom-1/4 right-1/4 w-[400px] h-[400px] bg-emerald-500/10 rounded-full blur-[100px] animate-pulse" style={{ animationDelay: "1s" }} />
+          <div className="absolute top-1/2 left-1/2 w-[300px] h-[300px] bg-purple-500/5 rounded-full blur-[80px] animate-pulse" style={{ animationDelay: "2s" }} />
+        </div>
+        <div className="relative z-10 max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 w-full">
+          <div className="grid grid-cols-1 lg:grid-cols-2 gap-12 lg:gap-16 items-center">
+            <div className="text-center lg:text-left">
+              <h1 className="text-4xl sm:text-5xl md:text-6xl lg:text-7xl font-bold tracking-tight mb-6 leading-[1.1]">
+                <span className="bg-gradient-to-r from-cyan-400 via-emerald-400 to-cyan-400 bg-clip-text text-transparent">
+                  Teknolojiyi
+                </span>
+                <br />
+                <span className="text-white">Spora Baslattik</span>
+              </h1>
+              <p className="text-gray-400 text-lg sm:text-xl mb-10 max-w-lg mx-auto lg:mx-0">
+                AI destekli spor tesisi yonetim platformu.
+              </p>
+              <div className="flex flex-col sm:flex-row gap-4 justify-center lg:justify-start">
+                <Button
+                  onClick={() => setShowForm(true)}
+                  size="lg"
+                  className="bg-gradient-to-r from-cyan-500 to-emerald-500 hover:from-cyan-400 hover:to-emerald-400 text-white font-bold rounded-2xl px-10 h-14 text-lg shadow-lg shadow-cyan-500/25 hover:shadow-cyan-500/40 transition-all hover:scale-105"
                 >
-                  <Icon className="h-4 w-4 mb-0.5 flex-shrink-0" strokeWidth={isActive ? 2 : 1.5} />
-                  <span className="text-[9px] leading-tight font-medium truncate w-full text-center">{sec.label}</span>
-                </button>
+                  Ucretsiz Demo
+                  <ArrowRight className="ml-2 h-5 w-5" />
+                </Button>
+                <Button
+                  variant="outline"
+                  size="lg"
+                  className="border-white/10 text-gray-300 hover:text-white hover:bg-white/5 rounded-2xl px-8 h-14 text-lg"
+                  onClick={() => setVideoPlaying(true)}
+                >
+                  <Play className="mr-2 h-5 w-5" />
+                  Tanitim Izle
+                </Button>
+              </div>
+            </div>
+            <div className="flex justify-center lg:justify-end">
+              <TabletMockup className="w-[300px] sm:w-[360px] lg:w-[400px]">
+                <TabletScreenDashboard />
+              </TabletMockup>
+            </div>
+          </div>
+        </div>
+        <div className="absolute bottom-8 left-1/2 -translate-x-1/2 animate-bounce">
+          <div className="w-6 h-10 border-2 border-white/20 rounded-full flex items-start justify-center p-1.5">
+            <div className="w-1.5 h-3 bg-white/40 rounded-full animate-pulse" />
+          </div>
+        </div>
+      </section>
+
+      {/* 2. TANITIM */}
+      <section className="py-20 sm:py-28 relative">
+        <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
+          <div className="text-center mb-16">
+            <h2 className="text-3xl sm:text-4xl font-bold mb-4">
+              <span className="bg-gradient-to-r from-cyan-400 to-emerald-400 bg-clip-text text-transparent">Neden YiSA-S?</span>
+            </h2>
+            <p className="text-gray-400 text-lg max-w-xl mx-auto">Tesisinizi robotlar yonetsin, siz spora odaklanin.</p>
+          </div>
+          <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-6">
+            {[
+              { icon: Bot, title: "AI Robotlar", desc: "7/24 otomatik yonetim", renk: "cyan" },
+              { icon: Users, title: "Veli Takibi", desc: "Canli gelisim izleme", renk: "pink" },
+              { icon: BarChart3, title: "Veri Analizi", desc: "Bilimsel sporcu gelisimi", renk: "amber" },
+              { icon: Zap, title: "Otomasyon", desc: "Yoklama, aidat, hatirlatma", renk: "emerald" },
+            ].map((f) => {
+              const Icon = f.icon
+              const colorMap: Record<string, string> = {
+                cyan: "from-cyan-500/20 to-cyan-500/5 border-cyan-500/20 text-cyan-400",
+                pink: "from-pink-500/20 to-pink-500/5 border-pink-500/20 text-pink-400",
+                amber: "from-amber-500/20 to-amber-500/5 border-amber-500/20 text-amber-400",
+                emerald: "from-emerald-500/20 to-emerald-500/5 border-emerald-500/20 text-emerald-400",
+              }
+              const c = colorMap[f.renk] || colorMap.cyan
+              return (
+                <div key={f.title} className={`rounded-2xl border bg-gradient-to-b ${c} p-6 hover:scale-105 transition-transform`}>
+                  <Icon className="h-10 w-10 mb-4" />
+                  <h3 className="text-white font-semibold text-lg mb-1">{f.title}</h3>
+                  <p className="text-gray-400 text-sm">{f.desc}</p>
+                </div>
               )
             })}
           </div>
-          <Link href="/auth/login" className="flex-shrink-0 mt-1">
-            <div className="tv-sidebar-btn hover:text-cyan-400">
-              <Crown className="h-4 w-4 mb-0.5" strokeWidth={1.5} />
-              <span className="text-[9px] leading-tight font-medium">Giris</span>
+        </div>
+      </section>
+
+      {/* 3. OZELLIKLER CAROUSEL */}
+      <section id="ozellikler" className="py-20 sm:py-28 bg-gray-900/50 relative">
+        <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
+          <div className="flex items-center justify-between mb-12">
+            <div>
+              <h2 className="text-3xl sm:text-4xl font-bold mb-2">
+                <span className="bg-gradient-to-r from-cyan-400 to-emerald-400 bg-clip-text text-transparent">Ozellikler</span>
+              </h2>
+              <p className="text-gray-400">Tablet ekraninda tum ozellikler</p>
             </div>
-          </Link>
-        </nav>
-
-        {/* Sag Content - slide transition 0.4s */}
-        <main className="flex-1 h-screen overflow-hidden relative bg-gray-950">
-          <div key={activeSection} className="tv-content-slide">
-            {renderSection()}
-          </div>
-        </main>
-      </div>
-
-      {/* MOBILE: Ust header + Content + Alt tab bar */}
-      <div className="flex md:hidden flex-col h-screen w-screen overflow-hidden">
-        <header className="flex items-center justify-between px-4 py-2.5 border-b border-gray-800 bg-gray-950/95 backdrop-blur-md flex-shrink-0">
-          <YisaLogoInline href="/" />
-          <Link href="/auth/login">
-            <Button variant="ghost" size="sm" className="text-gray-300 hover:text-white text-xs h-8 px-2">
-              <Crown className="h-3.5 w-3.5 mr-1" /> Giris
-            </Button>
-          </Link>
-        </header>
-
-        <main className="flex-1 overflow-y-auto relative bg-gray-950">
-          <div key={activeSection} className="tv-content-slide">
-            {renderSection()}
-          </div>
-        </main>
-
-        {/* Mobile alt tab bar */}
-        <nav className="tv-mobile-tabbar">
-          {NAV_SECTIONS.slice(0, 5).map((sec) => {
-            const Icon = sec.icon
-            const isActive = activeSection === sec.id
-            return (
+            <div className="hidden sm:flex gap-2">
               <button
-                key={sec.id}
-                onClick={() => handleNav(sec.id)}
-                className={`tv-mobile-tab ${isActive ? "tv-mobile-tab-active" : ""}`}
+                onClick={() => scrollCarousel("left")}
+                className="w-10 h-10 rounded-full border border-white/10 flex items-center justify-center text-gray-400 hover:text-white hover:bg-white/5 transition-colors"
               >
-                <Icon className="h-4 w-4" strokeWidth={isActive ? 2 : 1.5} />
-                <span className="text-[8px] mt-0.5">{sec.label}</span>
+                <ChevronLeft className="h-5 w-5" />
               </button>
-            )
-          })}
-          <div className="relative">
-            <button
-              onClick={() => setMobileMore(!mobileMore)}
-              className={`tv-mobile-tab ${["kredi", "direktorler", "robotlar", "franchise", "sss", "iletisim"].includes(activeSection) ? "tv-mobile-tab-active" : ""}`}
-            >
-              <Layers className="h-4 w-4" strokeWidth={1.5} />
-              <span className="text-[8px] mt-0.5">Daha</span>
-            </button>
-            {mobileMore && (
-              <div className="absolute bottom-full right-0 mb-2 bg-gray-900 border border-gray-700 rounded-xl shadow-2xl p-2 min-w-[140px] z-50">
-                {NAV_SECTIONS.slice(5).map((sec) => {
-                  const Icon = sec.icon
-                  const isActive = activeSection === sec.id
-                  return (
-                    <button
-                      key={sec.id}
-                      onClick={() => handleNav(sec.id)}
-                      className={`flex items-center gap-2 w-full px-3 py-2 rounded-lg text-sm transition-colors ${
-                        isActive ? "bg-cyan-500/20 text-cyan-400" : "text-gray-400 hover:text-white hover:bg-gray-800"
-                      }`}
+              <button
+                onClick={() => scrollCarousel("right")}
+                className="w-10 h-10 rounded-full border border-white/10 flex items-center justify-center text-gray-400 hover:text-white hover:bg-white/5 transition-colors"
+              >
+                <ChevronRight className="h-5 w-5" />
+              </button>
+            </div>
+          </div>
+          <div
+            ref={carouselRef}
+            className="flex gap-6 overflow-x-auto pb-6 snap-x snap-mandatory"
+            style={{ scrollbarWidth: "none" }}
+          >
+            {OZELLIKLER.map((oz) => {
+              const Icon = oz.icon
+              return (
+                <div key={oz.baslik} className="flex-shrink-0 w-[300px] sm:w-[320px] snap-center">
+                  <div className="rounded-3xl border border-white/5 bg-gray-900 overflow-hidden hover:border-white/10 transition-colors group">
+                    <div className="p-6 pb-0">
+                      <TabletMockup className="w-full max-w-[260px]">
+                        {getTabletContent(oz.tabletIcerik)}
+                      </TabletMockup>
+                    </div>
+                    <div className="p-6 pt-4">
+                      <div className={`w-10 h-10 rounded-xl bg-gradient-to-br ${oz.renk} flex items-center justify-center mb-3`}>
+                        <Icon className="h-5 w-5 text-white" />
+                      </div>
+                      <h3 className="text-white font-semibold text-lg mb-1">{oz.baslik}</h3>
+                      <p className="text-gray-400 text-sm">{oz.slogan}</p>
+                    </div>
+                  </div>
+                </div>
+              )
+            })}
+          </div>
+        </div>
+      </section>
+
+      {/* 4. SPORCU GELISIM */}
+      <section id="gelisim" className="py-20 sm:py-28 relative">
+        <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
+          <div className="grid grid-cols-1 lg:grid-cols-2 gap-12 lg:gap-16 items-center">
+            <div className="flex justify-center">
+              <TabletMockup className="w-[300px] sm:w-[340px]">
+                <div className="p-4 space-y-3 text-xs min-h-[280px]">
+                  <div className="text-sm font-bold text-amber-400 mb-3">Sporcu Gelisim — Elif Yilmaz (8 yas)</div>
+                  {GELISIM_PARAMETRELERI.map((p) => (
+                    <div key={p.ad} className="space-y-1">
+                      <div className="flex items-center justify-between">
+                        <div className="flex items-center gap-2">
+                          <span className="text-base">{p.emoji}</span>
+                          <span className="text-white font-medium">{p.ad}</span>
+                        </div>
+                        <span className="text-[10px]">
+                          {Array.from({ length: 5 }).map((_, i) => (
+                            <span key={i} className={i < p.yildiz ? "text-yellow-400" : "text-gray-700"}>{"\u2605"}</span>
+                          ))}
+                        </span>
+                      </div>
+                      <div className="flex items-center gap-2">
+                        <div className="flex-1 h-2.5 bg-gray-800 rounded-full overflow-hidden">
+                          <div
+                            className={`h-full ${p.renk} rounded-full transition-all duration-1000`}
+                            style={{ width: `${p.yuzde}%` }}
+                          />
+                        </div>
+                        <span className="text-[10px] text-gray-500 w-20 text-right">{p.referans}</span>
+                      </div>
+                      <div className="text-[10px] text-gray-400">{p.seviye}</div>
+                    </div>
+                  ))}
+                </div>
+              </TabletMockup>
+            </div>
+            <div>
+              <h2 className="text-3xl sm:text-4xl font-bold mb-4">
+                <span className="bg-gradient-to-r from-amber-400 to-orange-400 bg-clip-text text-transparent">Sporcu Gelisim Takibi</span>
+              </h2>
+              <p className="text-gray-400 text-lg mb-8">
+                Cocuk bile kendi gelisimini anlasin. Yildizlar, rozetler ve renkli gostergelerle.
+              </p>
+              <div className="grid grid-cols-2 gap-3 mb-8">
+                {GELISIM_PARAMETRELERI.slice(0, 4).map((p) => (
+                  <div key={p.ad} className="bg-gray-900 border border-white/5 rounded-xl p-3 flex items-center gap-3">
+                    <span className="text-2xl">{p.emoji}</span>
+                    <div>
+                      <div className="text-white font-medium text-sm">{p.ad}</div>
+                      <div className="flex items-center gap-1">
+                        {Array.from({ length: p.yildiz }).map((_, i) => (
+                          <Star key={i} className="h-3 w-3 text-yellow-400 fill-yellow-400" />
+                        ))}
+                        <span className="text-xs text-gray-500 ml-1">{p.seviye}</span>
+                      </div>
+                    </div>
+                  </div>
+                ))}
+              </div>
+              {/* Token Sistemi */}
+              <div className="bg-gray-900 border border-white/5 rounded-2xl p-6">
+                <div className="flex items-center gap-2 mb-4">
+                  <Coins className="h-5 w-5 text-amber-400" />
+                  <h3 className="text-white font-semibold">Detayli Analiz — Token Sistemi</h3>
+                </div>
+                <p className="text-gray-400 text-sm mb-4">
+                  Referans degerleri yas grubuna ve dunya normlarina gore hesaplanir.
+                </p>
+                <div className="space-y-2">
+                  {TOKEN_PAKETLERI.map((t) => (
+                    <div
+                      key={t.sure}
+                      className={`flex items-center justify-between p-3 rounded-xl border ${t.aktif ? "border-emerald-500/30 bg-emerald-500/5" : "border-white/5 bg-white/[0.02]"}`}
                     >
-                      <Icon className="h-4 w-4" strokeWidth={1.5} />
-                      {sec.label}
-                    </button>
+                      <div className="flex items-center gap-2">
+                        {t.token === 0 ? (
+                          <Sparkles className="h-4 w-4 text-emerald-400" />
+                        ) : (
+                          <Lock className="h-4 w-4 text-gray-500" />
+                        )}
+                        <span className="text-white text-sm">{t.sure}</span>
+                      </div>
+                      <span className={`text-sm font-medium ${t.aktif ? "text-emerald-400" : "text-amber-400"}`}>
+                        {t.fiyat}
+                      </span>
+                    </div>
+                  ))}
+                </div>
+              </div>
+            </div>
+          </div>
+        </div>
+      </section>
+
+      {/* 5. VELI PANELI */}
+      <section className="py-20 sm:py-28 bg-gray-900/50 relative">
+        <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
+          <div className="grid grid-cols-1 lg:grid-cols-2 gap-12 lg:gap-16 items-center">
+            <div className="order-2 lg:order-1">
+              <h2 className="text-3xl sm:text-4xl font-bold mb-4">
+                <span className="bg-gradient-to-r from-pink-400 to-rose-400 bg-clip-text text-transparent">Veli Paneli</span>
+              </h2>
+              <p className="text-gray-400 text-lg mb-6">
+                Veliler cocuklarinin gelisimini canli takip etsin.
+              </p>
+              <div className="space-y-4">
+                {[
+                  "Yoklama durumu anlik goruntulensin",
+                  "Gelisim grafikleri ve yildiz puanlari",
+                  "Ders programi ve sonraki antrenman",
+                  "Aidat durumu ve odeme gecmisi",
+                ].map((item, i) => (
+                  <div key={i} className="flex items-center gap-3">
+                    <div className="w-6 h-6 rounded-full bg-pink-500/20 flex items-center justify-center flex-shrink-0">
+                      <Check className="h-3.5 w-3.5 text-pink-400" />
+                    </div>
+                    <span className="text-gray-300 text-sm">{item}</span>
+                  </div>
+                ))}
+              </div>
+              <Button
+                onClick={() => setShowForm(true)}
+                className="mt-8 bg-gradient-to-r from-pink-500 to-rose-500 hover:from-pink-400 hover:to-rose-400 text-white font-semibold rounded-xl px-8 h-12"
+              >
+                Demo Ile Deneyin
+              </Button>
+            </div>
+            <div className="order-1 lg:order-2 flex justify-center">
+              <TabletMockup className="w-[300px] sm:w-[340px]">
+                <TabletScreenVeli />
+              </TabletMockup>
+            </div>
+          </div>
+        </div>
+      </section>
+
+      {/* 6. KAYIT TRENDI */}
+      <section className="py-20 sm:py-28 relative">
+        <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
+          <div className="text-center mb-12">
+            <h2 className="text-3xl sm:text-4xl font-bold mb-4">
+              <span className="bg-gradient-to-r from-blue-400 to-cyan-400 bg-clip-text text-transparent">Aylik Kayit Trendi</span>
+            </h2>
+            <p className="text-gray-400">Ogrenci hareketlerini tek bakista gorun</p>
+          </div>
+          <div className="max-w-3xl mx-auto">
+            <div className="flex flex-wrap items-center justify-center gap-4 sm:gap-6 mb-8">
+              <div className="flex items-center gap-2"><div className="w-3 h-3 rounded-sm bg-emerald-500" /><span className="text-gray-400 text-sm">Baslayan</span></div>
+              <div className="flex items-center gap-2"><div className="w-3 h-3 rounded-sm bg-red-500" /><span className="text-gray-400 text-sm">Ayrilan</span></div>
+              <div className="flex items-center gap-2"><div className="w-3 h-3 rounded-sm bg-pink-400" /><span className="text-gray-400 text-sm">Kiz</span></div>
+              <div className="flex items-center gap-2"><div className="w-3 h-3 rounded-sm bg-blue-400" /><span className="text-gray-400 text-sm">Erkek</span></div>
+            </div>
+            <div className="bg-gray-900 border border-white/5 rounded-2xl p-6">
+              <div className="flex items-end justify-between gap-2 h-48">
+                {KAYIT_TREND.map((k) => {
+                  const maxVal = 10
+                  return (
+                    <div key={k.ay} className="flex-1 flex flex-col items-center gap-1">
+                      <div className="flex items-end gap-0.5 h-36 w-full justify-center">
+                        <div
+                          className="w-2 sm:w-3 bg-emerald-500 rounded-t-sm"
+                          style={{ height: `${(k.baslayan / maxVal) * 100}%` }}
+                          title={`Baslayan: ${k.baslayan}`}
+                        />
+                        <div
+                          className="w-2 sm:w-3 bg-red-500 rounded-t-sm"
+                          style={{ height: `${(k.ayrilan / maxVal) * 100}%`, minHeight: k.ayrilan > 0 ? "4px" : "0px" }}
+                          title={`Ayrilan: ${k.ayrilan}`}
+                        />
+                        <div
+                          className="w-2 sm:w-3 bg-pink-400 rounded-t-sm"
+                          style={{ height: `${(k.kiz / maxVal) * 100}%` }}
+                          title={`Kiz: ${k.kiz}`}
+                        />
+                        <div
+                          className="w-2 sm:w-3 bg-blue-400 rounded-t-sm"
+                          style={{ height: `${(k.erkek / maxVal) * 100}%` }}
+                          title={`Erkek: ${k.erkek}`}
+                        />
+                      </div>
+                      <span className="text-gray-500 text-xs">{k.ay}</span>
+                    </div>
                   )
                 })}
               </div>
-            )}
+            </div>
           </div>
-        </nav>
-      </div>
+        </div>
+      </section>
 
-      <FloatingWhatsApp />
+      {/* 7. YOKLAMA */}
+      <section className="py-20 sm:py-28 bg-gray-900/50 relative">
+        <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
+          <div className="grid grid-cols-1 lg:grid-cols-2 gap-12 lg:gap-16 items-center">
+            <div className="flex justify-center">
+              <TabletMockup className="w-[300px] sm:w-[340px]">
+                <TabletScreenYoklama />
+              </TabletMockup>
+            </div>
+            <div>
+              <h2 className="text-3xl sm:text-4xl font-bold mb-4">
+                <span className="bg-gradient-to-r from-blue-400 to-indigo-400 bg-clip-text text-transparent">Yoklama Sistemi</span>
+              </h2>
+              <p className="text-gray-400 text-lg mb-6">Tek tikla yoklama, detayli devamsizlik takibi.</p>
+              <div className="bg-gray-900 border border-white/5 rounded-2xl overflow-hidden">
+                <div className="px-4 py-3 border-b border-white/5 flex items-center gap-2">
+                  <ClipboardCheck className="h-4 w-4 text-blue-400" />
+                  <span className="text-sm font-medium text-white">3 Mart 2026 — Cimnastik Mini</span>
+                </div>
+                <div className="divide-y divide-white/5">
+                  {YOKLAMA_VERILERI.filter((y) => y.tarih === "2026-03-03").map((y, i) => (
+                    <div key={i} className="px-4 py-2.5 flex items-center gap-3">
+                      <div className={`w-2 h-2 rounded-full flex-shrink-0 ${y.durum === "katildi" ? "bg-emerald-400" : "bg-red-400"}`} />
+                      <span className="text-white text-sm flex-1 min-w-0">{y.ogrenci}</span>
+                      <span
+                        className={`text-xs px-2 py-0.5 rounded-full ${y.durum === "katildi" ? "bg-emerald-500/10 text-emerald-400" : "bg-red-500/10 text-red-400"}`}
+                      >
+                        {y.durum === "katildi" ? "Katildi" : "Katilmadi"}
+                      </span>
+                      {y.aciklama && (
+                        <span className="text-xs text-gray-500 hidden sm:inline">{y.aciklama}</span>
+                      )}
+                    </div>
+                  ))}
+                </div>
+              </div>
+            </div>
+          </div>
+        </div>
+      </section>
 
-      {/* Demo Form Modal */}
+      {/* 8. FIYATLANDIRMA */}
+      <section id="fiyatlar" className="py-20 sm:py-28 relative">
+        <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
+          <div className="text-center mb-12">
+            <h2 className="text-3xl sm:text-4xl font-bold mb-4">
+              <span className="bg-gradient-to-r from-emerald-400 to-cyan-400 bg-clip-text text-transparent">Fiyatlandirma</span>
+            </h2>
+            <p className="text-gray-400">Yazilim kullanma ucretidir. Donanim ve fiziksel hizmetler dahil degildir.</p>
+          </div>
+          <div className="max-w-2xl mx-auto mb-12 bg-gray-900 border border-amber-500/20 rounded-2xl p-6 text-center">
+            <div className="flex items-center justify-center gap-2 mb-3">
+              <Coins className="h-5 w-5 text-amber-400" />
+              <span className="text-white font-semibold">Token Sistemi</span>
+            </div>
+            <p className="text-gray-400 text-sm">
+              Tokenlar gelismis AI analizleri, detayli raporlar ve premium ozellikler icin kullanilir. Her paket aylik token icermektedir.
+            </p>
+          </div>
+          <div className="grid grid-cols-1 md:grid-cols-3 gap-6 lg:gap-8 max-w-5xl mx-auto">
+            {PAKETLER.map((pkg) => (
+              <div
+                key={pkg.ad}
+                className={`rounded-3xl border overflow-hidden transition-all hover:scale-105 ${pkg.vurgu ? "border-cyan-500/50 bg-gradient-to-b from-cyan-500/10 to-transparent ring-1 ring-cyan-500/20 shadow-lg shadow-cyan-500/10" : "border-white/5 bg-gray-900"}`}
+              >
+                {pkg.vurgu && (
+                  <div className="bg-gradient-to-r from-cyan-500 to-emerald-500 text-center py-1.5 text-xs font-semibold text-white">
+                    En Populer
+                  </div>
+                )}
+                <div className="p-4 pb-0">
+                  <TabletMockup className="w-full max-w-[200px]">
+                    <div className="p-2 text-[8px] min-h-[100px]">
+                      <div className="text-[10px] font-bold text-cyan-400 mb-1">{pkg.ad} Panel</div>
+                      <div className="grid grid-cols-2 gap-1">
+                        <div className="bg-cyan-500/10 rounded p-1 text-center">
+                          <div className="text-[10px] font-bold text-cyan-400">
+                            {pkg.ad === "Starter" ? "50" : pkg.ad === "Pro" ? "200" : "\u221E"}
+                          </div>
+                          <div className="text-gray-500">Uye</div>
+                        </div>
+                        <div className="bg-emerald-500/10 rounded p-1 text-center">
+                          <div className="text-[10px] font-bold text-emerald-400">
+                            {pkg.ad === "Starter" ? "1" : pkg.ad === "Pro" ? "3" : "\u221E"}
+                          </div>
+                          <div className="text-gray-500">Sube</div>
+                        </div>
+                      </div>
+                    </div>
+                  </TabletMockup>
+                </div>
+                <div className="p-6">
+                  <h3 className="text-xl font-bold text-white mb-1">{pkg.ad}</h3>
+                  <div className="mb-4">
+                    <span className={`text-3xl font-bold ${pkg.vurgu ? "text-cyan-400" : "text-white"}`}>{pkg.fiyat}</span>
+                    <span className="text-gray-500 text-sm">{pkg.periyot}</span>
+                  </div>
+                  <ul className="space-y-2 mb-6">
+                    {pkg.ozellikler.map((f, i) => (
+                      <li key={i} className="flex items-center gap-2 text-sm text-gray-300">
+                        <Check className={`h-4 w-4 flex-shrink-0 ${pkg.vurgu ? "text-cyan-400" : "text-emerald-400"}`} />
+                        {f}
+                      </li>
+                    ))}
+                  </ul>
+                  <Button
+                    onClick={() => setShowForm(true)}
+                    className={`w-full rounded-xl h-11 font-semibold ${pkg.vurgu ? "bg-gradient-to-r from-cyan-500 to-emerald-500 hover:from-cyan-400 hover:to-emerald-400 text-white" : "bg-white/5 border border-white/10 text-white hover:bg-white/10"}`}
+                  >
+                    Basvur
+                  </Button>
+                </div>
+              </div>
+            ))}
+          </div>
+        </div>
+      </section>
+
+      {/* 9. SSS */}
+      <section className="py-20 sm:py-28 bg-gray-900/50">
+        <div className="max-w-3xl mx-auto px-4 sm:px-6 lg:px-8">
+          <h2 className="text-3xl sm:text-4xl font-bold text-center mb-12">
+            <span className="bg-gradient-to-r from-cyan-400 to-emerald-400 bg-clip-text text-transparent">Sikca Sorulanlar</span>
+          </h2>
+          <div className="space-y-4">
+            {FAQ_ITEMS.map((item, i) => (
+              <FaqItem key={i} q={item.q} a={item.a} />
+            ))}
+          </div>
+        </div>
+      </section>
+
+      {/* 10. ILETISIM */}
+      <section id="iletisim" className="py-20 sm:py-28 relative">
+        <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
+          <div className="max-w-2xl mx-auto text-center">
+            <h2 className="text-3xl sm:text-4xl font-bold mb-4">
+              <span className="bg-gradient-to-r from-cyan-400 to-emerald-400 bg-clip-text text-transparent">Hemen Baslayalim</span>
+            </h2>
+            <p className="text-gray-400 text-lg mb-10">Ucretsiz demo ile tanisin, tesisinizi dijitallestirin.</p>
+            <Button
+              onClick={() => setShowForm(true)}
+              size="lg"
+              className="bg-gradient-to-r from-cyan-500 to-emerald-500 hover:from-cyan-400 hover:to-emerald-400 text-white font-bold rounded-2xl px-12 h-14 text-lg shadow-lg shadow-cyan-500/25 mb-12"
+            >
+              Ucretsiz Demo Talep Et
+              <ArrowRight className="ml-2 h-5 w-5" />
+            </Button>
+            <div className="grid grid-cols-1 sm:grid-cols-3 gap-6 mb-12">
+              <div className="flex flex-col items-center gap-2">
+                <div className="w-12 h-12 rounded-xl bg-cyan-500/10 flex items-center justify-center">
+                  <Mail className="h-5 w-5 text-cyan-400" />
+                </div>
+                <span className="text-gray-300 text-sm">info@yisa-s.com</span>
+              </div>
+              <div className="flex flex-col items-center gap-2">
+                <div className="w-12 h-12 rounded-xl bg-emerald-500/10 flex items-center justify-center">
+                  <Phone className="h-5 w-5 text-emerald-400" />
+                </div>
+                <a href="tel:+905332491903" className="text-gray-300 text-sm hover:text-white">0533 249 1903</a>
+              </div>
+              <div className="flex flex-col items-center gap-2">
+                <div className="w-12 h-12 rounded-xl bg-pink-500/10 flex items-center justify-center">
+                  <MapPin className="h-5 w-5 text-pink-400" />
+                </div>
+                <span className="text-gray-300 text-sm">Tuzla, Istanbul</span>
+              </div>
+            </div>
+            <div className="mb-8">
+              <Link
+                href="/fuar"
+                className="inline-flex items-center gap-2 text-sm text-gray-400 hover:text-cyan-400 transition-colors border border-white/5 rounded-full px-5 py-2 hover:border-cyan-500/30"
+              >
+                <Trophy className="h-4 w-4" />
+                Fuar Sayfamizi Ziyaret Edin
+                <ArrowRight className="h-3 w-3" />
+              </Link>
+            </div>
+          </div>
+        </div>
+      </section>
+
+      {/* FOOTER */}
+      <footer className="border-t border-white/5 py-8 bg-gray-950">
+        <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 flex flex-col sm:flex-row items-center justify-between gap-4">
+          <div className="flex items-center gap-4">
+            <YisaLogoInline />
+            <span className="text-gray-500 text-sm">&copy; 2026 YiSA-S — Tum haklari saklidir.</span>
+          </div>
+          <div className="flex items-center gap-4">
+            <a href="https://wa.me/905332491903" target="_blank" rel="noopener noreferrer" className="text-gray-500 hover:text-green-400 transition-colors">
+              <MessageCircle className="h-5 w-5" />
+            </a>
+            <a href="https://instagram.com/yisas" target="_blank" rel="noopener noreferrer" className="text-gray-500 hover:text-pink-400 transition-colors text-sm">
+              Instagram
+            </a>
+          </div>
+        </div>
+      </footer>
+
+      {/* FLOATING WHATSAPP */}
+      <a
+        href="https://wa.me/905332491903"
+        target="_blank"
+        rel="noopener noreferrer"
+        className="fixed bottom-6 right-6 z-40 w-14 h-14 rounded-full bg-green-600 hover:bg-green-500 flex items-center justify-center shadow-lg shadow-green-600/30 transition-all hover:scale-110"
+        aria-label="WhatsApp ile iletisime gecin"
+      >
+        <MessageCircle className="h-6 w-6 text-white" />
+      </a>
+
+      {/* VIDEO MODAL */}
+      {videoPlaying && (
+        <div
+          className="fixed inset-0 z-50 bg-black/95 backdrop-blur-xl flex items-center justify-center p-6"
+          onClick={() => setVideoPlaying(false)}
+        >
+          <div
+            className="relative max-w-4xl w-full aspect-video rounded-2xl overflow-hidden bg-gray-900 border border-white/10"
+            onClick={(e) => e.stopPropagation()}
+          >
+            <div className="absolute inset-0 flex flex-col items-center justify-center">
+              <div className="w-20 h-20 rounded-full bg-white/10 flex items-center justify-center mb-4">
+                <Play className="h-8 w-8 text-white ml-1" />
+              </div>
+              <p className="text-gray-400 text-sm">Tanitim videosu yakinda eklenecek</p>
+            </div>
+            <button
+              onClick={() => setVideoPlaying(false)}
+              className="absolute top-4 right-4 text-gray-400 hover:text-white text-2xl font-light"
+            >
+              &times;
+            </button>
+          </div>
+        </div>
+      )}
+
+      {/* DEMO FORM MODAL */}
       {showForm && (
         <div
           className="fixed inset-0 z-50 bg-black/90 backdrop-blur-xl flex items-center justify-center p-6"
           onClick={() => setShowForm(false)}
         >
-          <Card
-            className="bg-gray-900 border-gray-700 rounded-2xl p-6 sm:p-10 w-full max-w-md shadow-xl shadow-pink-500/10"
+          <div
+            className="relative bg-gray-900 border border-white/10 rounded-3xl p-6 sm:p-8 w-full max-w-md shadow-2xl"
             onClick={(e: React.MouseEvent) => e.stopPropagation()}
           >
-            <CardHeader>
-              <CardTitle className="text-2xl">Demo Talep Formu</CardTitle>
-              <CardDescription>10 is gunu icinde donus yapilacaktir.</CardDescription>
-            </CardHeader>
-            <CardContent>
-              {formDone ? (
-                <p className="text-emerald-400 text-center py-8 font-medium">Basvurunuz alindi. Tesekkurler!</p>
-              ) : (
-                <form onSubmit={handleSubmit} className="space-y-4">
-                  <Input placeholder="Ad Soyad" value={formData.ad} onChange={(e) => setFormData({ ...formData, ad: e.target.value })} className="bg-gray-800 border-gray-700 h-12 rounded-xl text-white placeholder:text-gray-500" required />
-                  <Input type="email" placeholder="E-posta" value={formData.email} onChange={(e) => setFormData({ ...formData, email: e.target.value })} className="bg-gray-800 border-gray-700 h-12 rounded-xl text-white placeholder:text-gray-500" required />
-                  <Input placeholder="Telefon" value={formData.telefon} onChange={(e) => setFormData({ ...formData, telefon: e.target.value })} className="bg-gray-800 border-gray-700 h-12 rounded-xl text-white placeholder:text-gray-500" />
-                  <Input placeholder="Tesis turu (orn. Cimnastik)" value={formData.tesis_turu} onChange={(e) => setFormData({ ...formData, tesis_turu: e.target.value })} className="bg-gray-800 border-gray-700 h-12 rounded-xl text-white placeholder:text-gray-500" />
-                  <Input placeholder="Sehir" value={formData.sehir} onChange={(e) => setFormData({ ...formData, sehir: e.target.value })} className="bg-gray-800 border-gray-700 h-12 rounded-xl text-white placeholder:text-gray-500" required />
-                  <select value={formData.brans} onChange={(e) => setFormData({ ...formData, brans: e.target.value })} className="flex h-12 w-full rounded-xl border border-gray-700 bg-gray-800 px-3 py-2 text-sm text-white">
-                    <option value="">Brans Seciniz (opsiyonel)</option>
-                    <option value="Cimnastik">Cimnastik</option>
-                    <option value="Yuzme">Yuzme</option>
-                    <option value="Basketbol">Basketbol</option>
-                    <option value="Voleybol">Voleybol</option>
-                    <option value="Futbol">Futbol</option>
-                    <option value="Tenis">Tenis</option>
-                    <option value="Diger">Diger</option>
-                  </select>
-                  <Button type="submit" disabled={formSending} className="w-full rounded-xl bg-pink-500 text-white hover:bg-pink-600 h-12 font-medium">
-                    {formSending ? "Gonderiliyor..." : "Gonder"}
-                  </Button>
-                </form>
-              )}
-            </CardContent>
-          </Card>
+            <h3 className="text-2xl font-bold text-white mb-2">Ucretsiz Demo Talep Et</h3>
+            <p className="text-gray-400 text-sm mb-6">Formu doldurun, sizinle iletisime gececegiz.</p>
+            {formDone ? (
+              <div className="py-8 text-center">
+                <div className="w-16 h-16 rounded-full bg-emerald-500/20 flex items-center justify-center mx-auto mb-4">
+                  <Check className="h-8 w-8 text-emerald-400" />
+                </div>
+                <p className="text-emerald-400 font-medium">Basvurunuz alindi. Tesekkurler!</p>
+              </div>
+            ) : (
+              <form onSubmit={handleSubmit} className="space-y-4">
+                <Input
+                  placeholder="Ad Soyad"
+                  value={formData.ad}
+                  onChange={(e) => setFormData({ ...formData, ad: e.target.value })}
+                  className="bg-white/5 border-white/10 h-12 rounded-xl text-white placeholder:text-gray-500"
+                  required
+                />
+                <Input
+                  type="email"
+                  placeholder="E-posta"
+                  value={formData.email}
+                  onChange={(e) => setFormData({ ...formData, email: e.target.value })}
+                  className="bg-white/5 border-white/10 h-12 rounded-xl text-white placeholder:text-gray-500"
+                  required
+                />
+                <Input
+                  placeholder="Telefon"
+                  value={formData.telefon}
+                  onChange={(e) => setFormData({ ...formData, telefon: e.target.value })}
+                  className="bg-white/5 border-white/10 h-12 rounded-xl text-white placeholder:text-gray-500"
+                />
+                <Input
+                  placeholder="Tesis turu (orn. Cimnastik)"
+                  value={formData.tesis_turu}
+                  onChange={(e) => setFormData({ ...formData, tesis_turu: e.target.value })}
+                  className="bg-white/5 border-white/10 h-12 rounded-xl text-white placeholder:text-gray-500"
+                />
+                <Input
+                  placeholder="Sehir"
+                  value={formData.sehir}
+                  onChange={(e) => setFormData({ ...formData, sehir: e.target.value })}
+                  className="bg-white/5 border-white/10 h-12 rounded-xl text-white placeholder:text-gray-500"
+                  required
+                />
+                <Button
+                  type="submit"
+                  disabled={formSending}
+                  className="w-full bg-gradient-to-r from-cyan-500 to-emerald-500 hover:from-cyan-400 hover:to-emerald-400 text-white font-semibold rounded-xl h-12"
+                >
+                  {formSending ? "Gonderiliyor..." : "Demo Talep Et"}
+                </Button>
+              </form>
+            )}
+            <button
+              onClick={() => setShowForm(false)}
+              className="absolute top-4 right-4 text-gray-500 hover:text-white text-xl"
+            >
+              &times;
+            </button>
+          </div>
         </div>
       )}
     </div>
   )
 }
 
-/* ----------------------------------------------------------------
-   SECTION COMPONENTS -- her biri 100vh content
-   ---------------------------------------------------------------- */
-
-function SectionHero({ onDemo }: { onDemo: () => void }) {
+/* ================================================================
+   FAQ ITEM COMPONENT
+   ================================================================ */
+function FaqItem({ q, a }: { q: string; a: string }) {
+  const [open, setOpen] = useState(false)
   return (
-    <div className="h-full flex flex-col items-center justify-center px-6 text-center relative overflow-hidden min-h-[calc(100vh-56px)] md:min-h-screen">
-      <div className="absolute inset-0 bg-gradient-to-b from-emerald-500/5 via-transparent to-pink-500/5 pointer-events-none" />
-      <h1 className="text-3xl sm:text-4xl md:text-5xl lg:text-6xl font-bold tracking-tight text-white mb-6 max-w-3xl relative">
-        Tesisinizi AI Robotlarla Yonetin
-      </h1>
-      <p className="text-gray-400 max-w-xl mb-10 text-sm sm:text-base md:text-lg relative">
-        Cimnastik ve spor tesisi yonetimi. Ders programi, yoklama, veli takibi -- hepsi otomatik.
-      </p>
-      <div className="flex flex-col sm:flex-row gap-4 relative">
-        <Link href="/auth/login">
-          <Button size="lg" className="rounded-xl bg-emerald-500 hover:bg-emerald-600 text-white px-8 h-12 font-semibold text-base shadow-lg shadow-emerald-500/25">
-            Giris Yap
-          </Button>
-        </Link>
-        <Button onClick={onDemo} size="lg" variant="outline" className="rounded-xl border-pink-500/40 text-pink-300 hover:bg-pink-500/20 px-8 h-12 font-medium">
-          Demo Talep Et
-        </Button>
-      </div>
+    <div className="border border-white/5 rounded-2xl overflow-hidden">
+      <button
+        onClick={() => setOpen(!open)}
+        className="w-full flex items-center justify-between p-5 text-left hover:bg-white/[0.02] transition-colors"
+      >
+        <span className="text-white font-medium pr-4">{q}</span>
+        <ChevronRight className={`h-5 w-5 text-gray-500 flex-shrink-0 transition-transform ${open ? "rotate-90" : ""}`} />
+      </button>
+      {open && <div className="px-5 pb-5 text-gray-400 text-sm">{a}</div>}
     </div>
-  )
-}
-
-function SectionNeden() {
-  return (
-    <div className="h-full flex flex-col items-center justify-center px-6 overflow-y-auto py-8 md:py-12">
-      <h2 className="text-2xl md:text-3xl font-bold text-center mb-4 text-white">Neler Sunuyoruz?</h2>
-      <p className="text-center text-gray-400 mb-8 md:mb-12 max-w-2xl mx-auto text-sm md:text-base">AI robotlar, otomatik yonetim ve veli takibi ile tesisinizi verimli yonetin.</p>
-      <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4 md:gap-6 max-w-6xl w-full">
-        {FEATURES.map((f, i) => {
-          const Icon = f.icon
-          const accents = [
-            { bg: "bg-pink-500/20", text: "text-pink-400", border: "border-pink-500/30" },
-            { bg: "bg-blue-500/20", text: "text-blue-400", border: "border-blue-500/30" },
-            { bg: "bg-amber-500/20", text: "text-amber-400", border: "border-amber-500/30" },
-            { bg: "bg-emerald-500/20", text: "text-emerald-400", border: "border-emerald-500/30" },
-          ]
-          const a = accents[i % accents.length]
-          return (
-            <Card key={f.title} className={`bg-gray-900 border ${a.border} rounded-2xl overflow-hidden hover:shadow-lg transition-all`}>
-              <CardHeader className="pb-2">
-                <div className={`flex h-10 w-10 md:h-12 md:w-12 items-center justify-center rounded-xl ${a.bg} ${a.text} mb-2`}>
-                  <Icon className="h-5 w-5 md:h-6 md:w-6" />
-                </div>
-                <CardTitle className="text-base md:text-lg text-white">{f.title}</CardTitle>
-              </CardHeader>
-              <CardContent>
-                <p className="text-xs md:text-sm text-gray-400">{f.desc}</p>
-              </CardContent>
-            </Card>
-          )
-        })}
-      </div>
-    </div>
-  )
-}
-
-function SectionDers() {
-  return (
-    <div className="h-full flex flex-col items-center justify-center px-4 md:px-6 overflow-y-auto py-8 md:py-12">
-      <h2 className="text-2xl md:text-3xl font-bold text-center mb-4 text-white">Ders Programi</h2>
-      <p className="text-center text-gray-400 mb-6 md:mb-8 max-w-2xl text-sm md:text-base">Pilot tesis -- Tuzla BJK Cimnastik Okulu haftalik program.</p>
-      <div className="max-w-4xl w-full overflow-x-auto">
-        <table className="w-full border-collapse text-sm">
-          <thead>
-            <tr className="border-b border-gray-700">
-              <th className="text-left p-2 md:p-3 text-gray-400 text-xs md:text-sm font-medium">Gun</th>
-              <th className="text-left p-2 md:p-3 text-gray-400 text-xs md:text-sm font-medium">Saat</th>
-              <th className="text-left p-2 md:p-3 text-gray-400 text-xs md:text-sm font-medium">Brans</th>
-              <th className="text-left p-2 md:p-3 text-gray-400 text-xs md:text-sm font-medium hidden sm:table-cell">Grup</th>
-              <th className="text-left p-2 md:p-3 text-gray-400 text-xs md:text-sm font-medium hidden sm:table-cell">Antrenor</th>
-            </tr>
-          </thead>
-          <tbody>
-            {DERS_PROGRAMI.map((d, i) => (
-              <tr key={i} className="border-b border-gray-800 hover:bg-gray-900/50 transition-colors">
-                <td className="p-2 md:p-3 text-xs md:text-sm text-white font-medium">{d.gun}</td>
-                <td className="p-2 md:p-3 text-xs md:text-sm text-cyan-400">{d.saat}</td>
-                <td className="p-2 md:p-3 text-xs md:text-sm text-white">{d.brans}</td>
-                <td className="p-2 md:p-3 text-xs md:text-sm text-gray-400 hidden sm:table-cell">{d.grup}</td>
-                <td className="p-2 md:p-3 text-xs md:text-sm text-gray-400 hidden sm:table-cell">{d.antrenor}</td>
-              </tr>
-            ))}
-          </tbody>
-        </table>
-      </div>
-      <div className="mt-6 md:mt-8">
-        <Link href="/kayit">
-          <Button className="rounded-xl bg-cyan-500 hover:bg-cyan-600 text-white px-6 h-10 md:h-11 text-sm md:text-base">
-            Deneme Dersi Al
-          </Button>
-        </Link>
-      </div>
-    </div>
-  )
-}
-
-function SectionPaneller() {
-  return (
-    <div className="h-full flex flex-col items-center justify-center px-6 overflow-y-auto py-8 md:py-12">
-      <h2 className="text-2xl md:text-3xl font-bold text-center mb-4 text-white">3 Panel, Tek Sistem</h2>
-      <p className="text-center text-gray-400 mb-8 md:mb-12 max-w-2xl text-sm md:text-base">Veli, sporcu ve antrenor panelleri ayni veritabanina bagli calisir.</p>
-      <div className="grid grid-cols-1 md:grid-cols-3 gap-6 md:gap-8 max-w-5xl w-full">
-        {PANELLER.map((panel) => {
-          const Icon = panel.icon
-          return (
-            <Card key={panel.title} className={`bg-gray-900 border ${panel.border} rounded-2xl hover:shadow-lg transition-all`}>
-              <CardHeader className="text-center">
-                <div className={`h-14 w-14 md:h-16 md:w-16 mx-auto rounded-2xl ${panel.bg} flex items-center justify-center mb-2`}>
-                  <Icon className={`h-7 w-7 md:h-8 md:w-8 ${panel.color}`} strokeWidth={1.5} />
-                </div>
-                <CardTitle className="text-lg md:text-xl text-white">{panel.title}</CardTitle>
-              </CardHeader>
-              <CardContent>
-                <p className="text-xs md:text-sm text-gray-400 text-center">{panel.desc}</p>
-              </CardContent>
-            </Card>
-          )
-        })}
-      </div>
-    </div>
-  )
-}
-
-function SectionBranslar() {
-  return (
-    <div className="h-full flex flex-col items-center justify-center px-6 overflow-y-auto py-8 md:py-12">
-      <h2 className="text-2xl md:text-3xl font-bold text-center mb-4 text-white">Spor Branslari</h2>
-      <p className="text-center text-gray-400 mb-8 md:mb-12 max-w-2xl text-sm md:text-base">6 farkli bransta profesyonel egitim ve takip sistemi.</p>
-      <div className="grid grid-cols-2 md:grid-cols-3 gap-4 md:gap-6 max-w-4xl w-full">
-        {BRANSLAR.map((b) => {
-          const Icon = b.icon
-          return (
-            <Card key={b.name} className={`bg-gray-900 border ${b.border} rounded-2xl hover:shadow-lg transition-all text-center`}>
-              <CardContent className="p-4 md:p-6">
-                <div className={`h-12 w-12 md:h-14 md:w-14 mx-auto rounded-2xl ${b.bg} flex items-center justify-center mb-3 md:mb-4`}>
-                  <Icon className={`h-6 w-6 md:h-7 md:w-7 ${b.color}`} strokeWidth={1.5} />
-                </div>
-                <p className="text-base md:text-lg font-semibold text-white">{b.name}</p>
-                <p className="text-[10px] md:text-xs text-gray-400 mt-1">Ders programi, yoklama, olcum</p>
-              </CardContent>
-            </Card>
-          )
-        })}
-      </div>
-    </div>
-  )
-}
-
-function SectionKredi() {
-  return (
-    <div className="h-full flex flex-col items-center justify-center px-6 overflow-y-auto py-8 md:py-12">
-      <h2 className="text-2xl md:text-3xl font-bold text-center mb-4 text-white">Paketler</h2>
-      <p className="text-center text-gray-400 mb-8 md:mb-12 max-w-xl text-sm md:text-base">Ihtiyaciniza uygun paketi secin.</p>
-      <div className="grid grid-cols-1 md:grid-cols-3 gap-6 md:gap-8 max-w-5xl w-full">
-        {PACKAGES.map((pkg) => (
-          <Card
-            key={pkg.name}
-            className={`rounded-2xl overflow-hidden ${
-              pkg.highlight
-                ? "border-pink-500/50 bg-pink-500/10 ring-2 ring-pink-500/30 shadow-lg shadow-pink-500/10"
-                : "bg-gray-900 border-gray-800"
-            }`}
-          >
-            <CardHeader>
-              <CardTitle className="text-lg md:text-xl text-white">{pkg.name}</CardTitle>
-              <CardDescription className="text-gray-400">
-                <span className={`text-xl md:text-2xl font-bold ${pkg.highlight ? "text-pink-400" : "text-emerald-400"}`}>{pkg.price}</span>
-                <span className="text-sm font-normal">{pkg.period}</span>
-              </CardDescription>
-            </CardHeader>
-            <CardContent>
-              <ul className="space-y-2 md:space-y-3">
-                {pkg.features.map((f, i) => (
-                  <li key={i} className="flex items-center gap-2 text-xs md:text-sm text-gray-300">
-                    <Check className={`h-3.5 w-3.5 md:h-4 md:w-4 shrink-0 ${pkg.highlight ? "text-pink-400" : "text-emerald-400"}`} />
-                    {f}
-                  </li>
-                ))}
-              </ul>
-            </CardContent>
-            <CardFooter>
-              <Link href="/fiyatlar" className="w-full">
-                <Button variant={pkg.highlight ? "default" : "outline"} className={`w-full rounded-xl text-sm ${pkg.highlight ? "bg-pink-500 hover:bg-pink-600" : "border-gray-600 text-white hover:bg-gray-800"}`}>
-                  Detay
-                </Button>
-              </Link>
-            </CardFooter>
-          </Card>
-        ))}
-      </div>
-    </div>
-  )
-}
-
-function SectionDirektorler() {
-  return (
-    <div className="h-full flex flex-col items-center justify-center px-6 overflow-y-auto py-8 md:py-12">
-      <h2 className="text-2xl md:text-3xl font-bold text-center mb-4 text-white">Ilk Pilot Tesisimiz</h2>
-      <p className="text-center text-gray-400 mb-8 md:mb-12 max-w-xl text-sm md:text-base">Tuzla Besiktas Cimnastik Okulu -- Demo girisi ile paneli deneyin.</p>
-      <div className="grid grid-cols-1 sm:grid-cols-2 gap-4 md:gap-6 max-w-3xl w-full">
-        {REFERANSLAR.map((r, i) => (
-          <Card key={i} className="bg-gray-900 border-gray-800 rounded-2xl hover:border-pink-500/30 transition-colors">
-            <CardContent className="flex items-center gap-3 md:gap-4 p-4 md:p-6">
-              <div className="flex h-10 w-10 md:h-12 md:w-12 items-center justify-center rounded-full bg-pink-500/20 text-pink-400 shrink-0">
-                <User className="h-5 w-5 md:h-6 md:w-6" />
-              </div>
-              <div>
-                <p className="font-semibold text-white text-sm md:text-base">{r.ad}</p>
-                <p className="text-xs md:text-sm text-gray-400">{r.unvan}</p>
-              </div>
-            </CardContent>
-          </Card>
-        ))}
-      </div>
-      <div className="mt-8 md:mt-10">
-        <Link href="/patron/login">
-          <Button className="rounded-xl bg-pink-500 hover:bg-pink-600 text-white px-6 h-10 md:h-11 shadow-lg shadow-pink-500/20 text-sm md:text-base">
-            Giris Yap -- Deneyin
-          </Button>
-        </Link>
-      </div>
-    </div>
-  )
-}
-
-function SectionRobotlar() {
-  return (
-    <div className="h-full flex flex-col items-center justify-center px-6 overflow-y-auto py-8 md:py-12">
-      <h2 className="text-2xl md:text-3xl font-bold text-center mb-4 text-white">4 AI Robot</h2>
-      <p className="text-center text-gray-400 mb-8 md:mb-12 max-w-2xl text-sm md:text-base">Tesisinizi 7/24 yoneten yapay zeka robotlari.</p>
-      <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4 md:gap-6 max-w-6xl w-full">
-        {ROBOTLAR.map((robot) => {
-          const Icon = robot.icon
-          return (
-            <Card key={robot.name} className={`bg-gray-900 border ${robot.border} rounded-2xl hover:shadow-lg transition-all`}>
-              <CardHeader className="pb-2">
-                <div className={`h-10 w-10 md:h-12 md:w-12 rounded-xl ${robot.bg} flex items-center justify-center mb-2`}>
-                  <Icon className={`h-5 w-5 md:h-6 md:w-6 ${robot.color}`} strokeWidth={1.5} />
-                </div>
-                <CardTitle className="text-base md:text-lg text-white">{robot.name}</CardTitle>
-              </CardHeader>
-              <CardContent>
-                <p className="text-xs md:text-sm text-gray-400">{robot.desc}</p>
-              </CardContent>
-            </Card>
-          )
-        })}
-      </div>
-      <div className="mt-8 md:mt-10">
-        <Link href="/robot">
-          <Button variant="outline" className="rounded-xl border-cyan-500/40 text-cyan-300 hover:bg-cyan-500/20 px-6 h-10 md:h-11 text-sm md:text-base">
-            Robot Komuta Merkezi
-          </Button>
-        </Link>
-      </div>
-    </div>
-  )
-}
-
-function SectionFranchise({ onDemo }: { onDemo: () => void }) {
-  return (
-    <div className="h-full flex flex-col items-center justify-center px-6 overflow-y-auto py-8 md:py-12">
-      <h2 className="text-2xl md:text-3xl font-bold text-center mb-4 text-white">Franchise Sistemi</h2>
-      <p className="text-center text-gray-400 mb-8 md:mb-12 max-w-2xl text-sm md:text-base">Kendi spor tesisinizi YiSA-S altyapisiyla yonetin. Subdomain, ozel tema, beyaz etiket destegi.</p>
-      <div className="grid grid-cols-1 md:grid-cols-3 gap-4 md:gap-6 max-w-4xl w-full">
-        <Card className="bg-gray-900 border-cyan-500/30 rounded-2xl">
-          <CardHeader className="pb-2">
-            <div className="h-10 w-10 md:h-12 md:w-12 rounded-xl bg-cyan-500/10 flex items-center justify-center mb-2">
-              <Globe className="h-5 w-5 md:h-6 md:w-6 text-cyan-400" strokeWidth={1.5} />
-            </div>
-            <CardTitle className="text-base md:text-lg text-white">Subdomain</CardTitle>
-          </CardHeader>
-          <CardContent>
-            <p className="text-xs md:text-sm text-gray-400">tesisiniz.yisa-s.com adresiyle aninda yayinda.</p>
-          </CardContent>
-        </Card>
-        <Card className="bg-gray-900 border-emerald-500/30 rounded-2xl">
-          <CardHeader className="pb-2">
-            <div className="h-10 w-10 md:h-12 md:w-12 rounded-xl bg-emerald-500/10 flex items-center justify-center mb-2">
-              <Store className="h-5 w-5 md:h-6 md:w-6 text-emerald-400" strokeWidth={1.5} />
-            </div>
-            <CardTitle className="text-base md:text-lg text-white">Ozel Domain</CardTitle>
-          </CardHeader>
-          <CardContent>
-            <p className="text-xs md:text-sm text-gray-400">CNAME ile kendi domaininizi baglayin.</p>
-          </CardContent>
-        </Card>
-        <Card className="bg-gray-900 border-pink-500/30 rounded-2xl">
-          <CardHeader className="pb-2">
-            <div className="h-10 w-10 md:h-12 md:w-12 rounded-xl bg-pink-500/10 flex items-center justify-center mb-2">
-              <Layers className="h-5 w-5 md:h-6 md:w-6 text-pink-400" strokeWidth={1.5} />
-            </div>
-            <CardTitle className="text-base md:text-lg text-white">Embed Widget</CardTitle>
-          </CardHeader>
-          <CardContent>
-            <p className="text-xs md:text-sm text-gray-400">Mevcut sitenize iframe ile entegre edin.</p>
-          </CardContent>
-        </Card>
-      </div>
-      <div className="mt-8 md:mt-10">
-        <Button onClick={onDemo} className="rounded-xl bg-amber-500 text-black hover:bg-amber-400 px-8 h-10 md:h-12 font-semibold text-sm md:text-base">
-          Franchise Basvurusu
-        </Button>
-      </div>
-    </div>
-  )
-}
-
-function SectionSSS() {
-  return (
-    <div className="h-full flex flex-col items-center justify-center px-6 overflow-y-auto py-8 md:py-12">
-      <h2 className="text-2xl md:text-3xl font-bold text-center mb-4 text-white">Sikca Sorulan Sorular</h2>
-      <p className="text-center text-gray-400 mb-8 md:mb-12 text-sm md:text-base">Merak ettiklerinizin yanitlari.</p>
-      <div className="max-w-3xl w-full">
-        <Accordion type="single" collapsible className="w-full">
-          {FAQ_ITEMS.map((item, i) => (
-            <AccordionItem key={i} value={`item-${i}`}>
-              <AccordionTrigger className="text-sm md:text-base">{item.q}</AccordionTrigger>
-              <AccordionContent className="text-xs md:text-sm">{item.a}</AccordionContent>
-            </AccordionItem>
-          ))}
-        </Accordion>
-      </div>
-    </div>
-  )
-}
-
-function SectionIletisim({ onDemo }: { onDemo: () => void }) {
-  return (
-    <div className="h-full flex flex-col items-center justify-center px-6 overflow-y-auto py-8 md:py-12">
-      <h2 className="text-2xl md:text-3xl font-bold text-center mb-4 text-white">Iletisim</h2>
-      <p className="text-center text-gray-400 mb-8 md:mb-12 max-w-xl text-sm md:text-base">Sorulariniz icin bize ulasin.</p>
-      <div className="max-w-md w-full space-y-4 md:space-y-6">
-        <Card className="bg-gray-900 border-gray-800 rounded-2xl">
-          <CardContent className="p-4 md:p-6 space-y-3 md:space-y-4">
-            <div className="flex items-center gap-3">
-              <Mail className="h-4 w-4 md:h-5 md:w-5 text-cyan-400 shrink-0" />
-              <span className="text-gray-300 text-sm md:text-base">info@yisa-s.com</span>
-            </div>
-            <div className="flex items-center gap-3">
-              <Phone className="h-4 w-4 md:h-5 md:w-5 text-emerald-400 shrink-0" />
-              <a href="tel:+905332491903" className="text-gray-300 hover:text-white transition-colors text-sm md:text-base">0533 249 1903</a>
-            </div>
-            <div className="flex items-center gap-3">
-              <MessageCircle className="h-4 w-4 md:h-5 md:w-5 text-green-400 shrink-0" />
-              <a href="https://wa.me/905332491903" target="_blank" rel="noopener noreferrer" className="text-gray-300 hover:text-white transition-colors text-sm md:text-base">
-                WhatsApp ile Yazin
-              </a>
-            </div>
-            <div className="flex items-center gap-3">
-              <MapPin className="h-4 w-4 md:h-5 md:w-5 text-pink-400 shrink-0" />
-              <span className="text-gray-300 text-sm md:text-base">Tuzla, Istanbul</span>
-            </div>
-          </CardContent>
-        </Card>
-        <div className="flex flex-col gap-3">
-          <Button onClick={onDemo} className="rounded-xl bg-amber-500 text-black hover:bg-amber-400 h-10 md:h-12 font-semibold w-full text-sm md:text-base">
-            Franchise / Demo Basvurusu
-          </Button>
-          <a href="https://wa.me/905332491903" target="_blank" rel="noopener noreferrer" className="w-full">
-            <Button variant="outline" className="rounded-xl border-green-500/40 text-green-400 hover:bg-green-500/20 h-10 md:h-12 w-full text-sm md:text-base">
-              <MessageCircle className="h-4 w-4 mr-2" /> WhatsApp
-            </Button>
-          </a>
-        </div>
-      </div>
-      <p className="text-center text-gray-500 text-xs md:text-sm mt-8 md:mt-10">&copy; 2026 YiSA-S — Tum haklari saklidir.</p>
-      <div className="flex items-center justify-center gap-4 mt-4">
-        <a href="https://instagram.com/yisas" target="_blank" rel="noopener noreferrer" className="text-gray-500 hover:text-pink-400 transition-colors text-sm">Instagram</a>
-        <a href="https://facebook.com/yisas" target="_blank" rel="noopener noreferrer" className="text-gray-500 hover:text-blue-400 transition-colors text-sm">Facebook</a>
-      </div>
-    </div>
-  )
-}
-
-/* Floating WhatsApp Button — tum sectionlarda gorunur */
-function FloatingWhatsApp() {
-  return (
-    <a
-      href="https://wa.me/905332491903"
-      target="_blank"
-      rel="noopener noreferrer"
-      className="fixed bottom-20 md:bottom-6 left-6 z-40 flex items-center gap-2 px-4 py-3 rounded-full bg-green-600 hover:bg-green-500 text-white shadow-lg shadow-green-600/30 transition-all hover:scale-105"
-      aria-label="WhatsApp ile iletisime gecin"
-    >
-      <MessageCircle className="h-5 w-5" />
-      <span className="hidden sm:inline text-sm font-medium">WhatsApp</span>
-    </a>
   )
 }
