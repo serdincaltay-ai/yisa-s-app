@@ -77,8 +77,7 @@ export async function POST(req: NextRequest) {
 
     if (error) {
       console.error('[izin-talebi insert]', error)
-      // Tablo yoksa da bilgi ver
-      return NextResponse.json({ ok: true, message: 'İzin talebi gönderildi (tablo oluşturulması gerekebilir)' })
+      return NextResponse.json({ ok: false, error: 'İzin talebi gönderilemedi' }, { status: 500 })
     }
 
     return NextResponse.json({ ok: true, talebi: data })

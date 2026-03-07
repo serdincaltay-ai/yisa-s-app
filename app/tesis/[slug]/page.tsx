@@ -335,7 +335,7 @@ export default function TesisPage() {
           <div className="relative">
             <button
               onClick={() => setMobileMore(!mobileMore)}
-              className={`tv-mobile-tab ${activeSection === 'iletisim' ? 'tv-mobile-tab-active' : ''}`}
+              className={`tv-mobile-tab ${NAV_SECTIONS.slice(5).some((s) => s.id === activeSection) ? 'tv-mobile-tab-active' : ''}`}
             >
               <Layers className="h-4 w-4" strokeWidth={1.5} />
               <span className="text-[8px] mt-0.5">Daha</span>

@@ -22,7 +22,7 @@ export function AntrenorKartlari({ antrenorler }: AntrenorKartlariProps) {
     <div>
       <h2 className="text-lg font-bold text-white mb-4 flex items-center gap-2">
         <Award className="h-5 w-5 text-cyan-400" strokeWidth={1.5} />
-        Yarismaci Antrenorler
+        Yarışmacı Antrenörler
       </h2>
       <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
         {antrenorler.map((a) => (
@@ -47,12 +47,12 @@ export function AntrenorKartlari({ antrenorler }: AntrenorKartlariProps) {
               {a.is_competitive_coach ? (
                 <span className="flex items-center gap-1 text-[10px] text-emerald-400 bg-emerald-400/10 px-2 py-0.5 rounded-full border border-emerald-500/30">
                   <CheckCircle className="h-3 w-3" strokeWidth={1.5} />
-                  Yarismaci Sporcu Calistirma: Evet
+                  Yarışmacı Sporcu Çalıştırma: Evet
                 </span>
               ) : (
                 <span className="flex items-center gap-1 text-[10px] text-zinc-400 bg-zinc-800 px-2 py-0.5 rounded-full border border-zinc-700">
                   <XCircle className="h-3 w-3" strokeWidth={1.5} />
-                  Yarismaci Sporcu Calistirma: Hayir
+                  Yarışmacı Sporcu Çalıştırma: Hayır
                 </span>
               )}
             </div>

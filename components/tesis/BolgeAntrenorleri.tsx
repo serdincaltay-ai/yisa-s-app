@@ -29,13 +29,13 @@ export function BolgeAntrenorleri({ antrenorler, sehir }: BolgeAntrenorleriProps
     <div>
       <h2 className="text-lg font-bold text-white mb-1 flex items-center gap-2">
         <MapPin className="h-5 w-5 text-cyan-400" strokeWidth={1.5} />
-        Bolge Antrenorleri
+        Bölge Antrenörleri
       </h2>
       <p className="text-xs text-zinc-400 mb-4">
-        {sehir ?? 'Tum sehirler'} — Yarismaci sporcu calistiran antrenorler
+        {sehir ?? 'Tüm şehirler'} — Yarışmacı sporcu çalıştıran antrenörler
       </p>
 
-      {/* Ilce Filtresi */}
+      {/* İlçe Filtresi */}
       {ilceler.length > 1 && (
         <div className="flex items-center gap-2 mb-4 flex-wrap">
           <Filter className="h-3.5 w-3.5 text-zinc-500" strokeWidth={1.5} />
@@ -47,7 +47,7 @@ export function BolgeAntrenorleri({ antrenorler, sehir }: BolgeAntrenorleriProps
                 : 'bg-zinc-900 text-zinc-400 border border-zinc-800 hover:border-zinc-700'
             }`}
           >
-            Tumu
+            Tümü
           </button>
           {ilceler.map((ilce) => (
             <button

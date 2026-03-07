@@ -39,21 +39,22 @@ export async function GET(req: NextRequest) {
 
     const dersler = schedules ?? []
 
-    // Her ders için atanmış sporcuları getir
-    const derslerWithStudents = await Promise.all(
-      dersler.map(async (ders) => {
-        const { data: athletes } = await service
-          .from('athletes')
-          .select('id, name, surname, level, group')
-          .eq('tenant_id', tenantId)
-          .eq('coach_user_id', user.id)
+    // Antrenöre atanmış tüm sporcuları tek seferde getir (N+1 sorgu yerine)
+    const { data: allAthletes } = await service
+      .from('athletes')
+      .select('id, name, surname, level, group, schedule_id')
+      .eq('tenant_id', tenantId)
+      .eq('coach_user_id', user.id)
 
-        return {
-          ...ders,
-          sporcular: athletes ?? [],
-        }
-      })
-    )
+    const athleteList = allAthletes ?? []
+
+    // Her ders için ilgili sporcuları eşleştir
+    const derslerWithStudents = dersler.map((ders) => {
+      const sporcular = athleteList.filter(
+        (a) => a.schedule_id === ders.id || !a.schedule_id
+      )
+      return { ...ders, sporcular }
+    })
 
     // Saate göre grupla
     const grouped: Record<string, typeof derslerWithStudents> = {}

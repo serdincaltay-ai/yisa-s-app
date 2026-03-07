@@ -30,12 +30,12 @@ export function FederasyonBilgileri({ ilTemsilcisi, yarisanKulupler }: Federasyo
       </h2>
 
       <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-        {/* Il Temsilcisi */}
+        {/* İl Temsilcisi */}
         {ilTemsilcisi && (
           <div className="glass-panel p-5 border border-zinc-800">
             <h3 className="text-sm font-semibold text-white mb-3 flex items-center gap-2">
               <Building2 className="h-4 w-4 text-cyan-400" strokeWidth={1.5} />
-              Il Temsilcisi
+              İl Temsilcisi
             </h3>
             <div className="space-y-2">
               <div>
@@ -43,7 +43,7 @@ export function FederasyonBilgileri({ ilTemsilcisi, yarisanKulupler }: Federasyo
                 <p className="text-sm text-white font-medium">{ilTemsilcisi.adi}</p>
               </div>
               <div>
-                <p className="text-xs text-zinc-500">Brans</p>
+                <p className="text-xs text-zinc-500">Branş</p>
                 <p className="text-sm text-white">{ilTemsilcisi.bransi}</p>
               </div>
               <div className="flex items-center gap-2">
@@ -61,7 +61,7 @@ export function FederasyonBilgileri({ ilTemsilcisi, yarisanKulupler }: Federasyo
           <div className="glass-panel p-5 border border-zinc-800">
             <h3 className="text-sm font-semibold text-white mb-3 flex items-center gap-2">
               <Users className="h-4 w-4 text-cyan-400" strokeWidth={1.5} />
-              Federasyonda Yarisan Kulupler
+              Federasyonda Yarışan Kulüpler
             </h3>
             <div className="space-y-2">
               {yarisanKulupler.map((k) => (

@@ -75,7 +75,7 @@ export async function POST(req: NextRequest) {
 
     if (error) {
       console.error('[avans-talebi insert]', error)
-      return NextResponse.json({ ok: true, message: 'Avans talebi gönderildi (tablo oluşturulması gerekebilir)' })
+      return NextResponse.json({ ok: false, error: 'Avans talebi gönderilemedi' }, { status: 500 })
     }
 
     return NextResponse.json({ ok: true, talebi: data })
