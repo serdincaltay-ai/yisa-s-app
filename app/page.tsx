@@ -98,7 +98,7 @@ const KAYIT_TREND = [
 const PAKETLER = [
   { ad: "Starter", fiyat: "$49", periyot: "/ay", ozellikler: ["50 uye kapasitesi", "1 sube", "Temel AI robotlar", "Veli paneli", "E-posta destek"], vurgu: false },
   { ad: "Pro", fiyat: "$99", periyot: "/ay", ozellikler: ["200 uye kapasitesi", "3 sube", "Tum AI robotlar", "WhatsApp entegrasyonu", "Oncelikli destek", "Gelisim grafikleri", "50 token/ay"], vurgu: true },
-  { ad: "Enterprise", fiyat: "$199", periyot: "/ay", ozellikler: ["Sinirsiz uye", "Sinirsiz sube", "Ozel entegrasyonlar", "Dedicated destek", "Tam ozellestirme", "API erisimi", "200 token/ay"], vurgu: false },
+  { ad: "Enterprise", fiyat: "$199", periyot: "/ay", ozellikler: ["Sinirsiz uye", "Sinirsiz sube", "Ozel entegrasyonlar", "Ozel destek", "Tam ozellestirme", "API erisimi", "200 token/ay"], vurgu: false },
 ]
 
 const FAQ_ITEMS = [
