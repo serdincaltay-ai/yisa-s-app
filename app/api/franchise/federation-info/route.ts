@@ -65,6 +65,7 @@ export async function POST(request: Request) {
       il,
       ilce,
       temsilci_adi,
+      temsilci_bransi,
       temsilci_telefonu,
       federasyon_adi,
       yarisma_kulupleri,
@@ -73,6 +74,7 @@ export async function POST(request: Request) {
       il?: string
       ilce?: string
       temsilci_adi?: string
+      temsilci_bransi?: string
       temsilci_telefonu?: string
       federasyon_adi?: string
       yarisma_kulupleri?: unknown[]
@@ -91,6 +93,7 @@ export async function POST(request: Request) {
         il: il ?? null,
         ilce: ilce ?? null,
         temsilci_adi: temsilci_adi ?? null,
+        temsilci_bransi: temsilci_bransi ?? null,
         temsilci_telefonu: temsilci_telefonu ?? null,
         federasyon_adi: federasyon_adi ?? null,
         yarisma_kulupleri: yarisma_kulupleri ?? null,
@@ -130,8 +133,8 @@ export async function PATCH(request: Request) {
 
     // Sadece izin verilen alanları güncelle
     const allowedFields = [
-      'branch', 'il', 'ilce', 'temsilci_adi', 'temsilci_telefonu',
-      'federasyon_adi', 'yarisma_kulupleri',
+      'branch', 'il', 'ilce', 'temsilci_adi', 'temsilci_bransi',
+      'temsilci_telefonu', 'federasyon_adi', 'yarisma_kulupleri',
     ]
     const filteredUpdates: Record<string, unknown> = {}
     for (const key of allowedFields) {
@@ -147,7 +150,7 @@ export async function PATCH(request: Request) {
     const supabase = getSupabaseAdmin()
     const { data, error } = await supabase
       .from('federation_info')
-      .update(filteredUpdates)
+      .update({ ...filteredUpdates, updated_at: new Date().toISOString() })
       .eq('id', id)
       .eq('tenant_id', tenantId)
       .select()
