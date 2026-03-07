@@ -218,7 +218,7 @@ function TabletScreenYoklama() {
           <div className={`w-2 h-2 rounded-full ${y.durum === "katildi" ? "bg-emerald-400" : "bg-red-400"}`} />
           <span className="text-white flex-1">{y.ogrenci}</span>
           <span className={y.durum === "katildi" ? "text-emerald-400" : "text-red-400"}>
-            {y.durum === "katildi" ? "Katildi" : "Gelmedi"}
+            {y.durum === "katildi" ? "Katildi" : "Katilmadi"}
           </span>
         </div>
       ))}
