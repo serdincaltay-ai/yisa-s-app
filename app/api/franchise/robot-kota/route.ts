@@ -1,17 +1,27 @@
-import { NextResponse } from 'next/server'
-import { createClient } from '@supabase/supabase-js'
+import { NextRequest, NextResponse } from 'next/server'
+import { createClient } from '@/lib/supabase/server'
+import { createClient as createServiceClient } from '@supabase/supabase-js'
+import { getTenantIdWithFallback } from '@/lib/franchise-tenant'
 import { getQuotaSummary } from '@/lib/robots/quota'
+
+export const dynamic = 'force-dynamic'
 
 /**
  * GET /api/franchise/robot-kota
- * Franchise panelinde robot kota ozeti gosterir.
- * Header: x-tenant-id (middleware tarafindan eklenir)
+ * Franchise panelinde robot kota özeti gösterir.
+ * Kullanıcı kimlik doğrulaması + tenant çözümlemesi yapar.
  */
-export async function GET(request: Request) {
+export async function GET(req: NextRequest) {
   try {
-    const tenantId = request.headers.get('x-tenant-id')
+    const supabase = await createClient()
+    const { data: { user } } = await supabase.auth.getUser()
+    if (!user) {
+      return NextResponse.json({ error: 'Giriş gerekli' }, { status: 401 })
+    }
+
+    const tenantId = await getTenantIdWithFallback(user.id, req)
     if (!tenantId) {
-      return NextResponse.json({ error: 'Yetkisiz erişim' }, { status: 401 })
+      return NextResponse.json({ error: 'Tenant atanmamış' }, { status: 403 })
     }
 
     // Tenant paket tipini bul
@@ -21,8 +31,8 @@ export async function GET(request: Request) {
       return NextResponse.json({ error: 'Sunucu yapılandırma hatası' }, { status: 500 })
     }
 
-    const supabase = createClient(url, key)
-    const { data: tenant } = await supabase
+    const service = createServiceClient(url, key)
+    const { data: tenant } = await service
       .from('tenants')
       .select('package_type')
       .eq('id', tenantId)
