@@ -69,6 +69,9 @@ export async function PATCH(req: NextRequest) {
     if (!url || !key) return NextResponse.json({ error: 'Sunucu hatası' }, { status: 500 })
 
     const service = createServiceClient(url, key)
+    const tenantId = await getTenantIdWithFallback(user.id, req)
+    if (!tenantId) return NextResponse.json({ error: 'Tesis atanmamış' }, { status: 400 })
+
     const body = await req.json()
     const { id, status } = body
 
@@ -91,6 +94,7 @@ export async function PATCH(req: NextRequest) {
       .from('staff_leave_requests')
       .update(updatePayload)
       .eq('id', id)
+      .eq('tenant_id', tenantId)
 
     if (error) return NextResponse.json({ error: 'Güncelleme başarısız' }, { status: 500 })
 

@@ -79,13 +79,13 @@ export async function POST(req: NextRequest) {
 
     // Ölçüm günü kontrolü: gelisim_olcum tablosunda o tarihte kayıt var mı
     let isOlcumDay = false
-    const { data: olcumCheck } = await service
+    const { count: olcumCount } = await service
       .from('gelisim_olcum')
       .select('id', { count: 'exact', head: true })
       .eq('tenant_id', tenantId)
       .eq('olcum_tarihi', leaveDate)
 
-    if (olcumCheck && (olcumCheck as unknown[]).length > 0) {
+    if (olcumCount && olcumCount > 0) {
       isOlcumDay = true
     }
 

@@ -25,9 +25,16 @@ CREATE POLICY staff_leave_own_select ON staff_leave_requests
 CREATE POLICY staff_leave_own_insert ON staff_leave_requests
   FOR INSERT WITH CHECK (user_id = auth.uid());
 
--- Service role tüm talepleri görebilir/güncelleyebilir
-CREATE POLICY staff_leave_service ON staff_leave_requests
-  FOR ALL USING (true) WITH CHECK (true);
+-- Franchise/patron kendi tesisinin taleplerini görebilir ve güncelleyebilir
+CREATE POLICY staff_leave_tenant_select ON staff_leave_requests
+  FOR SELECT USING (
+    tenant_id IN (SELECT tenant_id FROM user_tenants WHERE user_id = auth.uid())
+  );
+
+CREATE POLICY staff_leave_tenant_update ON staff_leave_requests
+  FOR UPDATE USING (
+    tenant_id IN (SELECT tenant_id FROM user_tenants WHERE user_id = auth.uid())
+  );
 
 CREATE INDEX IF NOT EXISTS idx_staff_leave_tenant ON staff_leave_requests(tenant_id);
 CREATE INDEX IF NOT EXISTS idx_staff_leave_user ON staff_leave_requests(user_id);

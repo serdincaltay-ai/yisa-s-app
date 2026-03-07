@@ -23,9 +23,16 @@ CREATE POLICY staff_advance_own_select ON staff_advance_requests
 CREATE POLICY staff_advance_own_insert ON staff_advance_requests
   FOR INSERT WITH CHECK (user_id = auth.uid());
 
--- Service role (franchise panel) tüm talepleri görebilir/güncelleyebilir
-CREATE POLICY staff_advance_service ON staff_advance_requests
-  FOR ALL USING (true) WITH CHECK (true);
+-- Franchise/patron kendi tesisinin taleplerini görebilir ve güncelleyebilir
+CREATE POLICY staff_advance_tenant_select ON staff_advance_requests
+  FOR SELECT USING (
+    tenant_id IN (SELECT tenant_id FROM user_tenants WHERE user_id = auth.uid())
+  );
+
+CREATE POLICY staff_advance_tenant_update ON staff_advance_requests
+  FOR UPDATE USING (
+    tenant_id IN (SELECT tenant_id FROM user_tenants WHERE user_id = auth.uid())
+  );
 
 CREATE INDEX IF NOT EXISTS idx_staff_advance_tenant ON staff_advance_requests(tenant_id);
 CREATE INDEX IF NOT EXISTS idx_staff_advance_user ON staff_advance_requests(user_id);

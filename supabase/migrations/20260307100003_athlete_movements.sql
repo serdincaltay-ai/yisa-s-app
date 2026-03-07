@@ -20,9 +20,11 @@ CREATE POLICY athlete_movements_coach_select ON athlete_movements
 CREATE POLICY athlete_movements_coach_insert ON athlete_movements
   FOR INSERT WITH CHECK (marked_by = auth.uid());
 
--- Veli çocuğunun hareketlerini görebilir (service client üzerinden)
-CREATE POLICY athlete_movements_service ON athlete_movements
-  FOR ALL USING (true) WITH CHECK (true);
+-- Veli kendi çocuğunun hareketlerini görebilir
+CREATE POLICY athlete_movements_parent_select ON athlete_movements
+  FOR SELECT USING (
+    athlete_id IN (SELECT id FROM athletes WHERE parent_user_id = auth.uid())
+  );
 
 CREATE INDEX IF NOT EXISTS idx_athlete_movements_athlete ON athlete_movements(athlete_id);
 CREATE INDEX IF NOT EXISTS idx_athlete_movements_tenant ON athlete_movements(tenant_id);
