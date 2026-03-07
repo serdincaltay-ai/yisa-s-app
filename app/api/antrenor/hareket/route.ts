@@ -26,6 +26,16 @@ export async function GET(req: NextRequest) {
     const athleteId = req.nextUrl.searchParams.get('athlete_id')
     if (!athleteId) return NextResponse.json({ error: 'athlete_id gerekli' }, { status: 400 })
 
+    // Antrenör sahiplik kontrolü
+    const { data: athleteCheck } = await service
+      .from('athletes')
+      .select('id')
+      .eq('id', athleteId)
+      .eq('tenant_id', tenantId)
+      .eq('coach_user_id', user.id)
+      .maybeSingle()
+    if (!athleteCheck) return NextResponse.json({ error: 'Sporcu bulunamadı' }, { status: 404 })
+
     const { data, error } = await service
       .from('athlete_movements')
       .select('id, movement_name, completed_at, notes')
@@ -67,6 +77,16 @@ export async function POST(req: NextRequest) {
     if (!movementName || typeof movementName !== 'string') {
       return NextResponse.json({ error: 'movement_name gerekli' }, { status: 400 })
     }
+
+    // Antrenör sahiplik kontrolü
+    const { data: athleteCheck } = await service
+      .from('athletes')
+      .select('id')
+      .eq('id', athleteId)
+      .eq('tenant_id', tenantId)
+      .eq('coach_user_id', user.id)
+      .maybeSingle()
+    if (!athleteCheck) return NextResponse.json({ error: 'Sporcu bulunamadı' }, { status: 404 })
 
     const { error } = await service
       .from('athlete_movements')
