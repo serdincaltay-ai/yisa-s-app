@@ -6,7 +6,7 @@
  */
 
 import { NextRequest, NextResponse } from 'next/server'
-import { getSupabaseServer } from '@/lib/supabase'
+import { createClient } from '@supabase/supabase-js'
 
 export const dynamic = 'force-dynamic'
 export const maxDuration = 30
@@ -40,17 +40,21 @@ export async function GET(req: NextRequest) {
       }
     }
 
-    const supabase = getSupabaseServer()
-    if (!supabase) {
+    // Service role key zorunlu — anon key ile RLS nedeniyle yanlis sonuc doner
+    const url = process.env.NEXT_PUBLIC_SUPABASE_URL ?? process.env.SUPABASE_URL
+    const key = process.env.SUPABASE_SERVICE_ROLE_KEY
+    if (!url || !key) {
       return NextResponse.json(
         {
           ok: false,
-          error: 'Supabase baglantisi kurulamadi. SUPABASE_SERVICE_ROLE_KEY veya NEXT_PUBLIC_SUPABASE_URL eksik.',
+          error: 'Supabase bağlantısı kurulamadı. SUPABASE_SERVICE_ROLE_KEY veya NEXT_PUBLIC_SUPABASE_URL eksik.',
           checkedAt: new Date().toISOString(),
         },
         { status: 500 }
       )
     }
+
+    const supabase = createClient(url, key)
 
     // Supabase baglanti testi
     const { error: pingError } = await supabase.from('tenants').select('id').limit(1)
