@@ -14,10 +14,13 @@ import { useParams } from 'next/navigation'
 import RobotAvatar from '@/components/RobotAvatar'
 import { DersProgramiGrid } from '@/components/tesis/DersProgramiGrid'
 import { PaketFiyatlari } from '@/components/tesis/PaketFiyatlari'
+import { AntrenorKartlari } from '@/components/tesis/AntrenorKartlari'
+import { FederasyonBilgileri } from '@/components/tesis/FederasyonBilgileri'
+import { BolgeAntrenorleri } from '@/components/tesis/BolgeAntrenorleri'
 import {
   Activity, MapPin, Phone, Mail, ChevronDown, ChevronUp,
   Dumbbell, Waves, Timer, Star, Users, Calendar as CalendarIcon,
-  Play, Image as ImageIcon, X, Layers, CreditCard,
+  Play, Image as ImageIcon, X, Layers, CreditCard, Award, Shield,
 } from 'lucide-react'
 
 /* ── Tesis data ── */
@@ -32,6 +35,12 @@ type TesisData = {
   sablon: 'standart' | 'orta' | 'premium'
   branslar: { isim: string; icon: string; aciklama: string }[]
   antrenorler?: { isim: string; brans: string; deneyim: string }[]
+  yarismaciAntrenorler?: { isim: string; brans: string; lisans_turu?: string; is_competitive_coach?: boolean; foto?: string }[]
+  federasyon?: {
+    ilTemsilcisi?: { adi: string; bransi: string; telefon: string }
+    yarisanKulupler?: { isim: string; sehir?: string }[]
+  }
+  bolgeAntrenorleri?: { isim: string; brans: string; ilce: string; sehir: string; adres?: string; lisans_turu?: string }[]
   basarilar?: { isim: string; basari: string; alinti: string }[]
   duyurular?: { tarih: string; baslik: string; ozet: string }[]
   sss?: { soru: string; cevap: string }[]
@@ -58,6 +67,23 @@ const TESISLER: Record<string, TesisData> = {
       { isim: 'Ali Y\u0131lmaz', brans: 'Cimnastik', deneyim: '12 y\u0131l' },
       { isim: 'Ay\u015fe Demir', brans: 'Y\u00fczme', deneyim: '8 y\u0131l' },
       { isim: 'Mehmet Kaya', brans: 'Atletizm', deneyim: '10 y\u0131l' },
+    ],
+    yarismaciAntrenorler: [
+      { isim: 'Ali Y\u0131lmaz', brans: 'Cimnastik', lisans_turu: '3. Kademe', is_competitive_coach: true },
+      { isim: 'Mehmet Kaya', brans: 'Atletizm', lisans_turu: '2. Kademe', is_competitive_coach: true },
+    ],
+    federasyon: {
+      ilTemsilcisi: { adi: 'Ahmet \u00d6z\u00e7elik', bransi: 'Cimnastik', telefon: '+90 (532) 000 00 00' },
+      yarisanKulupler: [
+        { isim: 'BJK Tuzla Cimnastik', sehir: '\u0130stanbul' },
+        { isim: 'Fener Ata\u015fehir SK', sehir: '\u0130stanbul' },
+        { isim: 'Kartal Cimnastik SK', sehir: '\u0130stanbul' },
+      ],
+    },
+    bolgeAntrenorleri: [
+      { isim: 'Ali Y\u0131lmaz', brans: 'Cimnastik', ilce: 'Tuzla', sehir: '\u0130stanbul', lisans_turu: '3. Kademe', adres: 'BJK Tuzla Tesisleri' },
+      { isim: 'Burak \u00c7elik', brans: 'Cimnastik', ilce: 'Ata\u015fehir', sehir: '\u0130stanbul', lisans_turu: '2. Kademe', adres: 'Fener Ata\u015fehir Salonu' },
+      { isim: 'Serkan Y\u0131lmaz', brans: 'Artistik Cimnastik', ilce: 'Kartal', sehir: '\u0130stanbul', lisans_turu: '3. Kademe', adres: 'Kartal Spor Salonu' },
     ],
     basarilar: [
       { isim: 'Elif \u00d6zt\u00fcrk', basari: 'T\u00fcrkiye \u015eampiyonu 2025', alinti: 'BJK Tuzla beni \u015fampiyon yapt\u0131!' },
@@ -185,6 +211,8 @@ const NAV_SECTIONS = [
   { id: 'program', label: 'Program', icon: CalendarIcon },
   { id: 'fiyatlar', label: 'Fiyatlar', icon: CreditCard },
   { id: 'antrenorler', label: 'Ekip', icon: Users },
+  { id: 'yarismacilar', label: 'Yar\u0131\u015fma', icon: Award },
+  { id: 'federasyon', label: 'Federasyon', icon: Shield },
   { id: 'galeri', label: 'Galeri', icon: ImageIcon },
   { id: 'iletisim', label: '\u0130leti\u015fim', icon: Phone },
 ] as const
@@ -223,6 +251,8 @@ export default function TesisPage() {
       case 'program': return <SectionProgram />
       case 'fiyatlar': return <SectionFiyatlar />
       case 'antrenorler': return <SectionAntrenorler tesis={tesis} />
+      case 'yarismacilar': return <SectionYarismacilar tesis={tesis} />
+      case 'federasyon': return <SectionFederasyon tesis={tesis} />
       case 'galeri': return <SectionGaleri tesis={tesis} />
       case 'iletisim': return <SectionIletisim tesis={tesis} />
       default: return <SectionBranslar tesis={tesis} />
@@ -305,7 +335,7 @@ export default function TesisPage() {
           <div className="relative">
             <button
               onClick={() => setMobileMore(!mobileMore)}
-              className={`tv-mobile-tab ${activeSection === 'iletisim' ? 'tv-mobile-tab-active' : ''}`}
+              className={`tv-mobile-tab ${NAV_SECTIONS.slice(5).some((s) => s.id === activeSection) ? 'tv-mobile-tab-active' : ''}`}
             >
               <Layers className="h-4 w-4" strokeWidth={1.5} />
               <span className="text-[8px] mt-0.5">Daha</span>
@@ -555,6 +585,32 @@ function SectionAntrenorler({ tesis }: { tesis: TesisData }) {
           </div>
         </div>
       )}
+    </div>
+  )
+}
+
+/* ================================================================
+   SECTION: Yarismaci Antrenorler + Bolge Antrenorleri
+   ================================================================ */
+function SectionYarismacilar({ tesis }: { tesis: TesisData }) {
+  return (
+    <div className="p-6 md:p-8 space-y-8">
+      <AntrenorKartlari antrenorler={tesis.yarismaciAntrenorler ?? []} />
+      <BolgeAntrenorleri antrenorler={tesis.bolgeAntrenorleri ?? []} sehir={tesis.konum} />
+    </div>
+  )
+}
+
+/* ================================================================
+   SECTION: Federasyon Bilgileri
+   ================================================================ */
+function SectionFederasyon({ tesis }: { tesis: TesisData }) {
+  return (
+    <div className="p-6 md:p-8 space-y-8">
+      <FederasyonBilgileri
+        ilTemsilcisi={tesis.federasyon?.ilTemsilcisi}
+        yarisanKulupler={tesis.federasyon?.yarisanKulupler}
+      />
     </div>
   )
 }

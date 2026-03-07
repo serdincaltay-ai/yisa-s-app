@@ -2,7 +2,7 @@
 
 import { useEffect, useState } from 'react'
 import Link from 'next/link'
-import { Users, Calendar, CheckCircle, XCircle, TrendingUp, ClipboardCheck, Ruler, Loader2 } from 'lucide-react'
+import { Users, Calendar, CheckCircle, XCircle, TrendingUp, ClipboardCheck, Ruler, Loader2, Clock, User, CalendarDays, Wallet } from 'lucide-react'
 
 type BugunDers = { id: string; gun: string; saat: string; ders_adi: string; brans?: string }
 type YoklamaOzet = { tarih: string; geldi: number; gelmedi: number }
@@ -103,6 +103,40 @@ export default function AntrenorDashboard() {
           <div className="bg-zinc-900 border border-zinc-800 rounded-2xl p-4 hover:border-cyan-400/30 transition-all duration-300 text-center">
             <Ruler className="h-6 w-6 text-cyan-400 mx-auto mb-2" strokeWidth={1.5} />
             <p className="text-xs font-medium text-white">Ölçüm Girişi</p>
+          </div>
+        </Link>
+      </div>
+
+      {/* Yeni Hızlı Erişim */}
+      <div className="grid grid-cols-3 gap-3">
+        <Link href="/antrenor/bugunku-dersler">
+          <div className="bg-zinc-900 border border-zinc-800 rounded-2xl p-4 hover:border-cyan-400/30 transition-all duration-300 text-center">
+            <Calendar className="h-6 w-6 text-cyan-400 mx-auto mb-2" strokeWidth={1.5} />
+            <p className="text-xs font-medium text-white">Bugünkü Dersler</p>
+          </div>
+        </Link>
+        <Link href="/antrenor/calisma-saatleri">
+          <div className="bg-zinc-900 border border-zinc-800 rounded-2xl p-4 hover:border-cyan-400/30 transition-all duration-300 text-center">
+            <Clock className="h-6 w-6 text-cyan-400 mx-auto mb-2" strokeWidth={1.5} />
+            <p className="text-xs font-medium text-white">Çalışma Saatleri</p>
+          </div>
+        </Link>
+        <Link href="/antrenor/profil">
+          <div className="bg-zinc-900 border border-zinc-800 rounded-2xl p-4 hover:border-cyan-400/30 transition-all duration-300 text-center">
+            <User className="h-6 w-6 text-cyan-400 mx-auto mb-2" strokeWidth={1.5} />
+            <p className="text-xs font-medium text-white">Profilim</p>
+          </div>
+        </Link>
+        <Link href="/antrenor/izin-talebi">
+          <div className="bg-zinc-900 border border-zinc-800 rounded-2xl p-4 hover:border-cyan-400/30 transition-all duration-300 text-center">
+            <CalendarDays className="h-6 w-6 text-cyan-400 mx-auto mb-2" strokeWidth={1.5} />
+            <p className="text-xs font-medium text-white">İzin Talebi</p>
+          </div>
+        </Link>
+        <Link href="/antrenor/avans-talebi">
+          <div className="bg-zinc-900 border border-zinc-800 rounded-2xl p-4 hover:border-cyan-400/30 transition-all duration-300 text-center">
+            <Wallet className="h-6 w-6 text-cyan-400 mx-auto mb-2" strokeWidth={1.5} />
+            <p className="text-xs font-medium text-white">Avans Talebi</p>
           </div>
         </Link>
       </div>
