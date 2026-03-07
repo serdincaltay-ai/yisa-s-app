@@ -169,10 +169,10 @@ export default function VeliCocukPage() {
         {/* Tamamlanan Hareketler */}
         <div className="bg-zinc-900 border border-zinc-800 rounded-2xl p-4">
           <h3 className="text-sm font-semibold text-white flex items-center gap-2 mb-3">
-            <Activity className="h-4 w-4 text-cyan-400" strokeWidth={1.5} /> Tamamlanan Hareketler
+            <Activity className="h-4 w-4 text-cyan-400" strokeWidth={1.5} /> Hareketler
           </h3>
           {movements.length === 0 ? (
-            <p className="text-sm text-zinc-500">Henüz tamamlanan hareket yok.</p>
+            <p className="text-sm text-zinc-500">Henüz hareket kaydı yok.</p>
           ) : (
             <div className="space-y-2">
               {movements.map((m, i) => (

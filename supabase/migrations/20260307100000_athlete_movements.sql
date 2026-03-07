@@ -4,7 +4,7 @@
 
 CREATE TABLE IF NOT EXISTS athlete_movements (
   id UUID PRIMARY KEY DEFAULT gen_random_uuid(),
-  athlete_id UUID REFERENCES athletes(id) ON DELETE CASCADE,
+  athlete_id UUID NOT NULL REFERENCES athletes(id) ON DELETE CASCADE,
   movement_id UUID,  -- movements tablosuna FK (ileride oluşturulacak)
   tamamlandi BOOLEAN DEFAULT false,
   tamamlanma_tarihi DATE,
