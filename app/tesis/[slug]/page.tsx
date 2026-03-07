@@ -15,6 +15,7 @@ import RobotAvatar from '@/components/RobotAvatar'
 import { DersProgramiGrid } from '@/components/tesis/DersProgramiGrid'
 import { PaketFiyatlari } from '@/components/tesis/PaketFiyatlari'
 import { AntrenorKartlari } from '@/components/tesis/AntrenorKartlari'
+import { getTenantConfig } from '@/lib/tenant-template-config'
 import {
   Activity, MapPin, Phone, Mail, ChevronDown, ChevronUp,
   Dumbbell, Waves, Timer, Star, Users, Calendar as CalendarIcon,
@@ -497,8 +498,8 @@ function SectionAntrenorler({ tesis }: { tesis: TesisData }) {
             brans: a.brans,
             deneyim: a.deneyim,
           }))}
-          federasyonTemsilcisi={tesis.slug === 'bjktuzlacimnastik' ? '\u0130stanbul \u0130l Cimnastik Temsilcisi' : undefined}
-          yarismaKulupleri={tesis.slug === 'bjktuzlacimnastik' ? ['BJK Tuzla', 'Fenerbah\u00e7e SK', 'Galatasaray SK', 'Be\u015fikta\u015f JK'] : undefined}
+          federasyonTemsilcisi={getTenantConfig(tesis.slug)?.federationInfo?.ilTemsilcisi}
+          yarismaKulupleri={getTenantConfig(tesis.slug)?.federationInfo?.yarismaKulupleri}
         />
       )}
 

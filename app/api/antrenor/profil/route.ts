@@ -38,7 +38,7 @@ export async function GET(req: NextRequest) {
     if (tenantId) {
       const { data } = await service
         .from('staff')
-        .select('id, branch, employment_type, is_competitive_coach, license_type, employment_start_date, bio')
+        .select('id, branch, employment_type, is_competitive_coach, license_type, employment_start_date, bio, address, city, district, previous_work, chronic_condition, has_driving_license, languages')
         .eq('user_id', user.id)
         .eq('tenant_id', tenantId)
         .maybeSingle()
@@ -54,6 +54,13 @@ export async function GET(req: NextRequest) {
         license_type: '',
         employment_start_date: null,
         bio: '',
+        address: '',
+        city: '',
+        district: '',
+        previous_work: '',
+        chronic_condition: '',
+        has_driving_license: false,
+        languages: '',
       },
     })
   } catch (e) {
@@ -98,7 +105,14 @@ export async function PATCH(req: NextRequest) {
       if (typeof body.is_competitive_coach === 'boolean') staffUpdate.is_competitive_coach = body.is_competitive_coach
       if (typeof body.license_type === 'string') staffUpdate.license_type = body.license_type
       if (typeof body.bio === 'string') staffUpdate.bio = body.bio
-      if (body.employment_start_date !== undefined) staffUpdate.employment_start_date = body.employment_start_date
+      if (body.employment_start_date !== undefined) staffUpdate.employment_start_date = (typeof body.employment_start_date === 'string' || body.employment_start_date === null) ? body.employment_start_date : null
+      if (typeof body.address === 'string') staffUpdate.address = body.address.trim()
+      if (typeof body.city === 'string') staffUpdate.city = body.city.trim()
+      if (typeof body.district === 'string') staffUpdate.district = body.district.trim()
+      if (typeof body.previous_work === 'string') staffUpdate.previous_work = body.previous_work.trim()
+      if (typeof body.chronic_condition === 'string') staffUpdate.chronic_condition = body.chronic_condition.trim()
+      if (typeof body.has_driving_license === 'boolean') staffUpdate.has_driving_license = body.has_driving_license
+      if (typeof body.languages === 'string') staffUpdate.languages = body.languages.trim()
 
       if (Object.keys(staffUpdate).length > 0) {
         const { error: staffErr } = await service

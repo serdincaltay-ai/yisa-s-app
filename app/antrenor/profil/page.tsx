@@ -17,6 +17,13 @@ type StaffInfo = {
   license_type: string
   employment_start_date: string | null
   bio: string
+  address: string
+  city: string
+  district: string
+  previous_work: string
+  chronic_condition: string
+  has_driving_license: boolean
+  languages: string
 }
 
 export default function AntrenorProfilPage() {
@@ -28,6 +35,13 @@ export default function AntrenorProfilPage() {
     license_type: '',
     employment_start_date: null,
     bio: '',
+    address: '',
+    city: '',
+    district: '',
+    previous_work: '',
+    chronic_condition: '',
+    has_driving_license: false,
+    languages: '',
   })
   const [loading, setLoading] = useState(true)
   const [saving, setSaving] = useState(false)
@@ -53,6 +67,13 @@ export default function AntrenorProfilPage() {
           license_type: data.staff.license_type ?? '',
           employment_start_date: data.staff.employment_start_date ?? null,
           bio: data.staff.bio ?? '',
+          address: data.staff.address ?? '',
+          city: data.staff.city ?? '',
+          district: data.staff.district ?? '',
+          previous_work: data.staff.previous_work ?? '',
+          chronic_condition: data.staff.chronic_condition ?? '',
+          has_driving_license: data.staff.has_driving_license ?? false,
+          languages: data.staff.languages ?? '',
         })
       }
     } catch {
@@ -80,6 +101,13 @@ export default function AntrenorProfilPage() {
           license_type: staff.license_type,
           employment_start_date: staff.employment_start_date,
           bio: staff.bio,
+          address: staff.address,
+          city: staff.city,
+          district: staff.district,
+          previous_work: staff.previous_work,
+          chronic_condition: staff.chronic_condition,
+          has_driving_license: staff.has_driving_license,
+          languages: staff.languages,
         }),
       })
       const data = await res.json()
@@ -214,6 +242,100 @@ export default function AntrenorProfilPage() {
             <span
               className={`pointer-events-none inline-block h-5 w-5 transform rounded-full bg-white shadow-lg ring-0 transition duration-200 ease-in-out ${
                 staff.is_competitive_coach ? 'translate-x-5' : 'translate-x-0'
+              }`}
+            />
+          </button>
+        </div>
+      </section>
+
+      {/* Kişisel Detaylar */}
+      <section className="bg-zinc-900 border border-zinc-800 rounded-2xl p-4 space-y-4">
+        <h2 className="text-sm font-medium text-zinc-400 uppercase tracking-wide">Kişisel Detaylar</h2>
+
+        <div>
+          <label className="block text-xs text-zinc-500 mb-1">Adres</label>
+          <input
+            type="text"
+            value={staff.address}
+            onChange={(e) => setStaff((s) => ({ ...s, address: e.target.value }))}
+            className="w-full rounded-lg bg-zinc-800 border border-zinc-700 px-3 py-2 text-sm text-white placeholder-zinc-500 focus:outline-none focus:border-cyan-400 transition-colors"
+            placeholder="Oturduğunuz adres"
+          />
+        </div>
+
+        <div className="grid grid-cols-2 gap-3">
+          <div>
+            <label className="block text-xs text-zinc-500 mb-1">İl</label>
+            <input
+              type="text"
+              value={staff.city}
+              onChange={(e) => setStaff((s) => ({ ...s, city: e.target.value }))}
+              className="w-full rounded-lg bg-zinc-800 border border-zinc-700 px-3 py-2 text-sm text-white placeholder-zinc-500 focus:outline-none focus:border-cyan-400 transition-colors"
+              placeholder="İstanbul"
+            />
+          </div>
+          <div>
+            <label className="block text-xs text-zinc-500 mb-1">İlçe</label>
+            <input
+              type="text"
+              value={staff.district}
+              onChange={(e) => setStaff((s) => ({ ...s, district: e.target.value }))}
+              className="w-full rounded-lg bg-zinc-800 border border-zinc-700 px-3 py-2 text-sm text-white placeholder-zinc-500 focus:outline-none focus:border-cyan-400 transition-colors"
+              placeholder="Tuzla"
+            />
+          </div>
+        </div>
+
+        <div>
+          <label className="block text-xs text-zinc-500 mb-1">Önceki İş Deneyimi</label>
+          <input
+            type="text"
+            value={staff.previous_work}
+            onChange={(e) => setStaff((s) => ({ ...s, previous_work: e.target.value }))}
+            className="w-full rounded-lg bg-zinc-800 border border-zinc-700 px-3 py-2 text-sm text-white placeholder-zinc-500 focus:outline-none focus:border-cyan-400 transition-colors"
+            placeholder="Daha önce çalıştığınız yer"
+          />
+        </div>
+
+        <div>
+          <label className="block text-xs text-zinc-500 mb-1">Sürekli Rahatsızlık</label>
+          <input
+            type="text"
+            value={staff.chronic_condition}
+            onChange={(e) => setStaff((s) => ({ ...s, chronic_condition: e.target.value }))}
+            className="w-full rounded-lg bg-zinc-800 border border-zinc-700 px-3 py-2 text-sm text-white placeholder-zinc-500 focus:outline-none focus:border-cyan-400 transition-colors"
+            placeholder="Varsa belirtiniz"
+          />
+        </div>
+
+        <div>
+          <label className="block text-xs text-zinc-500 mb-1">Dil Bilgileri</label>
+          <input
+            type="text"
+            value={staff.languages}
+            onChange={(e) => setStaff((s) => ({ ...s, languages: e.target.value }))}
+            className="w-full rounded-lg bg-zinc-800 border border-zinc-700 px-3 py-2 text-sm text-white placeholder-zinc-500 focus:outline-none focus:border-cyan-400 transition-colors"
+            placeholder="Türkçe, İngilizce"
+          />
+        </div>
+
+        <div className="flex items-center justify-between gap-3">
+          <div className="min-w-0">
+            <p className="text-sm font-medium text-white">Ehliyet</p>
+            <p className="text-xs text-zinc-500">Araba kullanabiliyor musunuz?</p>
+          </div>
+          <button
+            type="button"
+            role="switch"
+            aria-checked={staff.has_driving_license}
+            onClick={() => setStaff((s) => ({ ...s, has_driving_license: !s.has_driving_license }))}
+            className={`relative inline-flex h-6 w-11 shrink-0 cursor-pointer rounded-full border-2 border-transparent transition-colors duration-200 ease-in-out focus:outline-none ${
+              staff.has_driving_license ? 'bg-cyan-500' : 'bg-zinc-700'
+            }`}
+          >
+            <span
+              className={`pointer-events-none inline-block h-5 w-5 transform rounded-full bg-white shadow-lg ring-0 transition duration-200 ease-in-out ${
+                staff.has_driving_license ? 'translate-x-5' : 'translate-x-0'
               }`}
             />
           </button>
