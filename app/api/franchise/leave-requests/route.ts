@@ -24,6 +24,17 @@ export async function GET(req: NextRequest) {
     const tenantId = await getTenantIdWithFallback(user.id, req)
     if (!tenantId) return NextResponse.json({ error: 'Tesis atanmamış' }, { status: 400 })
 
+    // Rol yetki kontrolü
+    const { data: roleCheck } = await service
+      .from('user_tenants')
+      .select('role')
+      .eq('user_id', user.id)
+      .eq('tenant_id', tenantId)
+      .maybeSingle()
+    if (!roleCheck || !['patron', 'franchise', 'mudur'].includes(roleCheck.role)) {
+      return NextResponse.json({ error: 'Yetki yetersiz' }, { status: 403 })
+    }
+
     const { data, error } = await service
       .from('staff_leave_requests')
       .select('id, leave_date, reason, status, is_olcum_day, substitute_needed, requested_at, reviewed_at, staff_id, user_id')
@@ -71,6 +82,17 @@ export async function PATCH(req: NextRequest) {
     const service = createServiceClient(url, key)
     const tenantId = await getTenantIdWithFallback(user.id, req)
     if (!tenantId) return NextResponse.json({ error: 'Tesis atanmamış' }, { status: 400 })
+
+    // Rol yetki kontrolü
+    const { data: roleCheck } = await service
+      .from('user_tenants')
+      .select('role')
+      .eq('user_id', user.id)
+      .eq('tenant_id', tenantId)
+      .maybeSingle()
+    if (!roleCheck || !['patron', 'franchise', 'mudur'].includes(roleCheck.role)) {
+      return NextResponse.json({ error: 'Yetki yetersiz' }, { status: 403 })
+    }
 
     const body = await req.json()
     const { id, status } = body
