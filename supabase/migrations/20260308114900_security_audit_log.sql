@@ -9,7 +9,7 @@
 -- ============================================================
 ALTER TABLE public.security_logs
   ADD COLUMN IF NOT EXISTS device TEXT,
-  ADD COLUMN IF NOT EXISTS success BOOLEAN DEFAULT TRUE;
+  ADD COLUMN IF NOT EXISTS success BOOLEAN DEFAULT NULL;
 
 COMMENT ON COLUMN public.security_logs.device IS 'Cihaz bilgisi (user-agent veya tablet/masaustu)';
 COMMENT ON COLUMN public.security_logs.success IS 'Giris basarili mi? false = basarisiz deneme';
