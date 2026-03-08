@@ -29,6 +29,11 @@ export interface TenantConfig {
   logoBadge: string
   /** Üst başlık (kurum adı) */
   ustBaslik: string
+  /** Federasyon bilgileri (opsiyonel) */
+  federationInfo?: {
+    ilTemsilcisi?: string
+    yarismaKulupleri?: string[]
+  }
 }
 
 /** Branş renk haritası — schedule grid'de kullanılır */
@@ -220,6 +225,10 @@ export const TENANT_CONFIGS: Record<string, TenantConfig> = {
     template: 'premium',
     logoBadge: 'BJK',
     ustBaslik: 'Beşiktaş JK Spor Okulları',
+    federationInfo: {
+      ilTemsilcisi: 'İstanbul İl Cimnastik Temsilcisi',
+      yarismaKulupleri: ['BJK Tuzla', 'Fenerbahçe SK', 'Galatasaray SK', 'Beşiktaş JK'],
+    },
   },
   fenerbahceatasehir: {
     slug: 'fenerbahceatasehir',

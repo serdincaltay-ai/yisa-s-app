@@ -1,5 +1,7 @@
 /**
- * Antrenör: Profil düzenleme — bio, lisans türü, yarışmacı deneyimi
+ * Antrenör profil: GET (bilgi getir) + PATCH (güncelle)
+ * staff tablosundan employment_type, is_competitive_coach, license_type, bio vb.
+ * user_metadata'dan ad, soyad, telefon
  */
 
 import { NextRequest, NextResponse } from 'next/server'
@@ -15,74 +17,119 @@ export async function GET(req: NextRequest) {
     const { data: { user } } = await supabase.auth.getUser()
     if (!user) return NextResponse.json({ error: 'Giriş gerekli' }, { status: 401 })
 
-    const tenantId = await getTenantIdWithFallback(user.id, req)
-    if (!tenantId) return NextResponse.json({ error: 'Tesis atanmamış' })
-
     const url = process.env.NEXT_PUBLIC_SUPABASE_URL ?? process.env.SUPABASE_URL
     const key = process.env.SUPABASE_SERVICE_ROLE_KEY ?? process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY
-    if (!url || !key) return NextResponse.json({ error: 'Sunucu hatası' })
+    if (!url || !key) return NextResponse.json({ error: 'Sunucu hatası' }, { status: 500 })
 
     const service = createServiceClient(url, key)
+    const tenantId = await getTenantIdWithFallback(user.id, req)
 
-    const { data: staff } = await service
-      .from('staff')
-      .select('id, name, surname, email, phone, role, branch, bio, license_type, is_competitive_coach, competitive_experience, city, district, address')
-      .eq('tenant_id', tenantId)
-      .eq('user_id', user.id)
-      .maybeSingle()
+    const meta = user.user_metadata ?? {}
+    const profile = {
+      id: user.id,
+      email: user.email ?? '',
+      name: (meta.name as string) ?? (meta.full_name as string) ?? '',
+      surname: (meta.surname as string) ?? '',
+      phone: (meta.phone as string) ?? (user.phone ?? ''),
+    }
 
-    return NextResponse.json({ profil: staff ?? null })
+    // staff tablosundan ek bilgiler
+    let staffData = null
+    if (tenantId) {
+      const { data } = await service
+        .from('staff')
+        .select('id, branch, employment_type, is_competitive_coach, license_type, employment_start_date, bio, address, city, district, previous_work, chronic_condition, has_driving_license, languages')
+        .eq('user_id', user.id)
+        .eq('tenant_id', tenantId)
+        .maybeSingle()
+      staffData = data
+    }
+
+    return NextResponse.json({
+      profile,
+      staff: staffData ?? {
+        branch: '',
+        employment_type: 'full_time',
+        is_competitive_coach: false,
+        license_type: '',
+        employment_start_date: null,
+        bio: '',
+        address: '',
+        city: '',
+        district: '',
+        previous_work: '',
+        chronic_condition: '',
+        has_driving_license: false,
+        languages: '',
+      },
+    })
   } catch (e) {
     console.error('[antrenor/profil GET]', e)
-    return NextResponse.json({ error: 'Sunucu hatası' })
+    return NextResponse.json({ error: 'Sunucu hatası' }, { status: 500 })
   }
 }
 
-export async function PUT(req: NextRequest) {
+export async function PATCH(req: NextRequest) {
   try {
     const supabase = await createClient()
     const { data: { user } } = await supabase.auth.getUser()
     if (!user) return NextResponse.json({ error: 'Giriş gerekli' }, { status: 401 })
 
-    const tenantId = await getTenantIdWithFallback(user.id, req)
-    if (!tenantId) return NextResponse.json({ error: 'Tesis atanmamış' }, { status: 403 })
-
-    const body = await req.json()
-
     const url = process.env.NEXT_PUBLIC_SUPABASE_URL ?? process.env.SUPABASE_URL
     const key = process.env.SUPABASE_SERVICE_ROLE_KEY ?? process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY
-    if (!url || !key) return NextResponse.json({ error: 'Sunucu hatası' })
+    if (!url || !key) return NextResponse.json({ error: 'Sunucu hatası' }, { status: 500 })
 
     const service = createServiceClient(url, key)
+    const tenantId = await getTenantIdWithFallback(user.id, req)
+    const body = await req.json()
 
-    const updates: Record<string, unknown> = {}
-    if (typeof body.bio === 'string') updates.bio = body.bio.trim()
-    if (typeof body.license_type === 'string') updates.license_type = body.license_type.trim()
-    if (typeof body.is_competitive_coach === 'boolean') updates.is_competitive_coach = body.is_competitive_coach
-    if (typeof body.competitive_experience === 'string') updates.competitive_experience = body.competitive_experience.trim()
-    if (typeof body.phone === 'string') updates.phone = body.phone.trim()
-    if (typeof body.city === 'string') updates.city = body.city.trim()
-    if (typeof body.district === 'string') updates.district = body.district.trim()
-    if (typeof body.address === 'string') updates.address = body.address.trim()
+    // user_metadata güncelle (ad, soyad, telefon)
+    if (body.name !== undefined || body.surname !== undefined || body.phone !== undefined) {
+      const metaUpdate: Record<string, string> = {}
+      if (typeof body.name === 'string') metaUpdate.name = body.name.trim()
+      if (typeof body.surname === 'string') metaUpdate.surname = body.surname.trim()
+      if (typeof body.phone === 'string') metaUpdate.phone = body.phone.trim()
 
-    if (Object.keys(updates).length === 0) {
-      return NextResponse.json({ error: 'Güncellenecek alan yok' }, { status: 400 })
+      const { error: authErr } = await service.auth.admin.updateUserById(user.id, {
+        user_metadata: { ...user.user_metadata, ...metaUpdate },
+      })
+      if (authErr) {
+        return NextResponse.json({ error: 'Profil güncellenemedi' }, { status: 500 })
+      }
     }
 
-    const { error } = await service
-      .from('staff')
-      .update(updates)
-      .eq('tenant_id', tenantId)
-      .eq('user_id', user.id)
+    // staff tablosu güncelle
+    if (tenantId) {
+      const staffUpdate: Record<string, unknown> = {}
+      if (typeof body.employment_type === 'string') staffUpdate.employment_type = body.employment_type
+      if (typeof body.is_competitive_coach === 'boolean') staffUpdate.is_competitive_coach = body.is_competitive_coach
+      if (typeof body.license_type === 'string') staffUpdate.license_type = body.license_type
+      if (typeof body.bio === 'string') staffUpdate.bio = body.bio
+      if (body.employment_start_date !== undefined) staffUpdate.employment_start_date = (typeof body.employment_start_date === 'string' || body.employment_start_date === null) ? body.employment_start_date : null
+      if (typeof body.address === 'string') staffUpdate.address = body.address.trim()
+      if (typeof body.city === 'string') staffUpdate.city = body.city.trim()
+      if (typeof body.district === 'string') staffUpdate.district = body.district.trim()
+      if (typeof body.previous_work === 'string') staffUpdate.previous_work = body.previous_work.trim()
+      if (typeof body.chronic_condition === 'string') staffUpdate.chronic_condition = body.chronic_condition.trim()
+      if (typeof body.has_driving_license === 'boolean') staffUpdate.has_driving_license = body.has_driving_license
+      if (typeof body.languages === 'string') staffUpdate.languages = body.languages.trim()
 
-    if (error) {
-      console.error('[profil update]', error)
-      return NextResponse.json({ error: error.message }, { status: 500 })
+      if (Object.keys(staffUpdate).length > 0) {
+        const { error: staffErr } = await service
+          .from('staff')
+          .update(staffUpdate)
+          .eq('user_id', user.id)
+          .eq('tenant_id', tenantId)
+
+        if (staffErr) {
+          return NextResponse.json({ error: 'Personel bilgileri güncellenemedi' }, { status: 500 })
+        }
+      }
     }
 
-    return NextResponse.json({ ok: true, message: 'Profil güncellendi' })
+    return NextResponse.json({ ok: true })
   } catch (e) {
-    console.error('[antrenor/profil PUT]', e)
+    console.error('[antrenor/profil PATCH]', e)
     return NextResponse.json({ error: 'Sunucu hatası' }, { status: 500 })
   }
 }

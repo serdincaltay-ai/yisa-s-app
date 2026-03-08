@@ -17,6 +17,7 @@ import { PaketFiyatlari } from '@/components/tesis/PaketFiyatlari'
 import { AntrenorKartlari } from '@/components/tesis/AntrenorKartlari'
 import { FederasyonBilgileri } from '@/components/tesis/FederasyonBilgileri'
 import { BolgeAntrenorleri } from '@/components/tesis/BolgeAntrenorleri'
+import { getTenantConfig } from '@/lib/tenant-template-config'
 import {
   Activity, MapPin, Phone, Mail, ChevronDown, ChevronUp,
   Dumbbell, Waves, Timer, Star, Users, Calendar as CalendarIcon,
@@ -530,21 +531,15 @@ function SectionAntrenorler({ tesis }: { tesis: TesisData }) {
   return (
     <div className="p-6 md:p-8 space-y-8">
       {tesis.antrenorler && tesis.antrenorler.length > 0 && (
-        <div>
-          <h2 className="text-lg font-bold text-white mb-4">Antren\u00f6rlerimiz</h2>
-          <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
-            {tesis.antrenorler.map((a) => (
-              <div key={a.isim} className="glass-panel p-5 text-center border border-zinc-800">
-                <div className="flex h-14 w-14 mx-auto items-center justify-center rounded-full bg-cyan-400/10 text-cyan-400 font-bold text-lg mb-3">
-                  {a.isim.split(' ').map((n) => n[0]).join('')}
-                </div>
-                <h3 className="font-semibold text-white text-sm">{a.isim}</h3>
-                <p className="text-xs text-cyan-400 mt-1">{a.brans}</p>
-                <p className="text-[10px] text-zinc-500 mt-1">{a.deneyim} deneyim</p>
-              </div>
-            ))}
-          </div>
-        </div>
+        <AntrenorKartlari
+          antrenorler={tesis.antrenorler.map((a) => ({
+            isim: a.isim,
+            brans: a.brans,
+            deneyim: a.deneyim,
+          }))}
+          federasyonTemsilcisi={getTenantConfig(tesis.slug)?.federationInfo?.ilTemsilcisi}
+          yarismaKulupleri={getTenantConfig(tesis.slug)?.federationInfo?.yarismaKulupleri}
+        />
       )}
 
       {tesis.yorumlar && tesis.yorumlar.length > 0 && (
@@ -605,7 +600,12 @@ function SectionAntrenorler({ tesis }: { tesis: TesisData }) {
 function SectionYarismacilar({ tesis }: { tesis: TesisData }) {
   return (
     <div className="p-6 md:p-8 space-y-8">
-      <AntrenorKartlari antrenorler={tesis.yarismaciAntrenorler ?? []} />
+      <AntrenorKartlari baslik="Yarışmacı Antrenörler" antrenorler={(tesis.yarismaciAntrenorler ?? []).map((a) => ({
+        isim: a.isim,
+        brans: a.brans,
+        lisans: a.lisans_turu,
+        yarismaciDeneyimi: a.is_competitive_coach,
+      }))} />
       <BolgeAntrenorleri antrenorler={tesis.bolgeAntrenorleri ?? []} sehir={tesis.konum} />
     </div>
   )
