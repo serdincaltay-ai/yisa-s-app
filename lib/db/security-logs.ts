@@ -14,6 +14,8 @@ export interface CreateSecurityLogParams {
   user_id?: string
   ip_address?: string
   blocked?: boolean
+  device?: string
+  success?: boolean
 }
 
 export async function createSecurityLog(
@@ -31,6 +33,8 @@ export async function createSecurityLog(
       user_id: params.user_id ?? null,
       ip_address: params.ip_address ?? null,
       blocked: params.blocked ?? false,
+      device: params.device ?? null,
+      success: params.success ?? null,
     })
     .select('id')
     .single()
